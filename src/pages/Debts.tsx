@@ -1,54 +1,115 @@
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ArrowUpRight, ArrowDownLeft, Plus, Check } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Plus, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const debts = [
-  { id: 1, type: "i_owe", person: "Kouassi Aya", amount: 15000, due: "28 Fév 2026", status: "pending" },
-  { id: 2, type: "owed_to_me", person: "Traoré Moussa", amount: 25000, due: "15 Mars 2026", status: "pending" },
-  { id: 3, type: "i_owe", person: "Bamba Salif", amount: 10000, due: "01 Fév 2026", status: "paid" },
-];
+const Debts = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [debts, setDebts] = useState<any[]>([]);
+  const [filter, setFilter] = useState<"all" | "i_owe" | "owed_to_me">("all");
+  const [showAdd, setShowAdd] = useState(false);
+  const [newType, setNewType] = useState<"i_owe" | "owed_to_me">("i_owe");
+  const [personName, setPersonName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [note, setNote] = useState("");
 
-const Debts = () => (
-  <DashboardLayout title="Dettes">
-    <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
-      <button className="flex-1 py-2 rounded-lg text-sm font-medium gradient-primary text-primary-foreground">Tout</button>
-      <button className="flex-1 py-2 rounded-lg text-sm font-medium text-muted-foreground">Je dois</button>
-      <button className="flex-1 py-2 rounded-lg text-sm font-medium text-muted-foreground">On me doit</button>
-    </div>
+  const fetchDebts = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("debts").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    setDebts(data || []);
+  };
 
-    <div className="space-y-2 mb-4">
-      {debts.map((d) => (
-        <div key={d.id} className={`glass-card rounded-xl p-4 flex items-center gap-3 ${d.status === "paid" ? "opacity-50" : ""}`}>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            d.type === "i_owe" ? "bg-destructive/20" : "bg-primary/20"
-          }`}>
-            {d.type === "i_owe" ? (
-              <ArrowUpRight className="w-5 h-5 text-destructive" />
-            ) : (
-              <ArrowDownLeft className="w-5 h-5 text-primary" />
-            )}
+  useEffect(() => { fetchDebts(); }, [user]);
+
+  const handleAdd = async () => {
+    if (!personName || !amount || !user) return;
+    await supabase.from("debts").insert({
+      user_id: user.id, type: newType, person_name: personName,
+      amount: Number(amount), due_date: dueDate || null, note: note || null,
+    });
+    toast({ title: "Dette ajoutée ✅" });
+    setPersonName(""); setAmount(""); setDueDate(""); setNote(""); setShowAdd(false);
+    fetchDebts();
+  };
+
+  const togglePaid = async (id: string, currentStatus: string) => {
+    await supabase.from("debts").update({ status: currentStatus === "paid" ? "pending" : "paid" }).eq("id", id);
+    fetchDebts();
+  };
+
+  const handleDelete = async (id: string) => {
+    await supabase.from("debts").delete().eq("id", id);
+    fetchDebts();
+  };
+
+  const filtered = debts.filter(d => filter === "all" || d.type === filter);
+
+  return (
+    <DashboardLayout title="Dettes">
+      <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
+        {[{ key: "all", label: "Tout" }, { key: "i_owe", label: "Je dois" }, { key: "owed_to_me", label: "On me doit" }].map((f) => (
+          <button key={f.key} onClick={() => setFilter(f.key as any)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium ${filter === f.key ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-2 mb-4">
+        {filtered.map((d) => (
+          <div key={d.id} className={`glass-card rounded-xl p-4 flex items-center gap-3 ${d.status === "paid" ? "opacity-50" : ""}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${d.type === "i_owe" ? "bg-destructive/20" : "bg-primary/20"}`}>
+              {d.type === "i_owe" ? <ArrowUpRight className="w-5 h-5 text-destructive" /> : <ArrowDownLeft className="w-5 h-5 text-primary" />}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">{d.person_name}</p>
+              <p className="text-xs text-muted-foreground">
+                {d.type === "i_owe" ? "Je dois" : "On me doit"}{d.due_date ? ` · ${new Date(d.due_date).toLocaleDateString("fr-FR")}` : ""}
+              </p>
+            </div>
+            <div className="text-right flex items-center gap-2">
+              <p className="text-sm font-bold text-foreground">{Number(d.amount).toLocaleString("fr-FR")} F</p>
+              <button onClick={() => togglePaid(d.id, d.status)} className={d.status === "paid" ? "text-primary" : "text-muted-foreground"}>
+                <Check className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleDelete(d.id)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">{d.person}</p>
-            <p className="text-xs text-muted-foreground">
-              {d.type === "i_owe" ? "Je dois" : "On me doit"} · {d.due}
-            </p>
+        ))}
+        {filtered.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">Aucune dette</p>}
+      </div>
+
+      {showAdd ? (
+        <div className="glass-card rounded-2xl p-4 space-y-3">
+          <div className="flex gap-2">
+            <button onClick={() => setNewType("i_owe")} className={`flex-1 py-2 rounded-lg text-sm ${newType === "i_owe" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>Je dois</button>
+            <button onClick={() => setNewType("owed_to_me")} className={`flex-1 py-2 rounded-lg text-sm ${newType === "owed_to_me" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>On me doit</button>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-bold text-foreground">{d.amount.toLocaleString("fr-FR")} F</p>
-            {d.status === "paid" && (
-              <span className="text-xs text-primary flex items-center gap-1 justify-end">
-                <Check className="w-3 h-3" /> Payé
-              </span>
-            )}
+          <Input placeholder="Nom de la personne" value={personName} onChange={(e) => setPersonName(e.target.value)} className="bg-secondary border-border" />
+          <Input type="number" placeholder="Montant (FCFA)" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-secondary border-border" />
+          <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="bg-secondary border-border" />
+          <Input placeholder="Note (optionnel)" value={note} onChange={(e) => setNote(e.target.value)} className="bg-secondary border-border" />
+          <div className="flex gap-2">
+            <Button variant="glass" onClick={() => setShowAdd(false)} className="flex-1">Annuler</Button>
+            <Button variant="hero" onClick={handleAdd} className="flex-1">Ajouter</Button>
           </div>
         </div>
-      ))}
-    </div>
-    <Button variant="glass" size="lg" className="w-full">
-      <Plus className="w-4 h-4" /> Ajouter une dette
-    </Button>
-  </DashboardLayout>
-);
+      ) : (
+        <Button variant="glass" size="lg" className="w-full" onClick={() => setShowAdd(true)}>
+          <Plus className="w-4 h-4" /> Ajouter une dette
+        </Button>
+      )}
+    </DashboardLayout>
+  );
+};
 
 export default Debts;
