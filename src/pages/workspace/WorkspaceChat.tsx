@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import WorkspaceLayout from "@/components/workspace/WorkspaceLayout";
+import AiSuggestionCard from "@/components/workspace/AiSuggestionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Image as ImageIcon } from "lucide-react";
+import { Send, Paperclip, Bot, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -22,10 +23,23 @@ interface ChatMessage {
   created_at: string;
 }
 
+interface AiSuggestion {
+  amount: number;
+  currency: string;
+  converted_amount_xof: number | null;
+  exchange_rate: number | null;
+  exchange_rate_source: string | null;
+  date: string;
+  merchant: string;
+  type: string;
+  category: string;
+  wallet: string;
+}
+
 const roleBadgeColor: Record<string, string> = {
   owner: "bg-primary/20 text-primary",
   admin: "bg-accent/20 text-accent",
-  accountant: "bg-neon-yellow/20 text-neon-yellow",
+  accountant: "bg-yellow-500/20 text-yellow-400",
   member: "bg-secondary text-secondary-foreground",
   viewer: "bg-muted text-muted-foreground",
 };
@@ -38,6 +52,8 @@ const WorkspaceChat = () => {
   const [input, setInput] = useState("");
   const [roomId, setRoomId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState<string | null>(null); // messageId being analyzed
+  const [suggestions, setSuggestions] = useState<Record<string, AiSuggestion>>({}); // messageId -> suggestion
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +120,85 @@ const WorkspaceChat = () => {
     setSending(false);
   };
 
+  const runOcr = async (fileUrl: string, messageId: string) => {
+    setOcrLoading(messageId);
+    try {
+      // Fetch image as base64
+      const resp = await fetch(fileUrl);
+      const blob = await resp.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+        reader.readAsDataURL(blob);
+      });
+
+      const mimeType = blob.type || "image/jpeg";
+
+      // Call scan-receipt edge function
+      const { data: scanData, error: scanErr } = await supabase.functions.invoke("scan-receipt", {
+        body: { image: base64, scanType: "screenshot", mimeType },
+      });
+
+      if (scanErr) throw new Error(scanErr.message);
+
+      const parsed = scanData?.parsed;
+      if (!parsed?.amount) {
+        toast({ title: "OCR", description: "Aucun montant détecté sur cette image.", variant: "destructive" });
+        return;
+      }
+
+      // Convert currency if not XOF
+      let converted_amount_xof: number | null = null;
+      let exchange_rate: number | null = null;
+      let exchange_rate_source: string | null = null;
+
+      const currency = (parsed.currency || "XOF").toUpperCase();
+      if (currency !== "XOF") {
+        const { data: convData, error: convErr } = await supabase.functions.invoke("convert-currency", {
+          body: { amount: parsed.amount, from_currency: currency, to_currency: "XOF" },
+        });
+        if (!convErr && convData) {
+          converted_amount_xof = convData.converted_amount;
+          exchange_rate = convData.exchange_rate;
+          exchange_rate_source = convData.source;
+        }
+      }
+
+      const suggestion: AiSuggestion = {
+        amount: parsed.amount,
+        currency,
+        converted_amount_xof,
+        exchange_rate,
+        exchange_rate_source,
+        date: parsed.date || new Date().toISOString().split("T")[0],
+        merchant: parsed.merchant || "",
+        type: parsed.type || "expense",
+        category: parsed.category || "",
+        wallet: parsed.wallet || "",
+      };
+
+      setSuggestions(prev => ({ ...prev, [messageId]: suggestion }));
+
+      // Send AI suggestion system message
+      if (roomId && user && activeMember && workspaceId) {
+        const displayAmt = converted_amount_xof ?? parsed.amount;
+        await supabase.from("workspace_chat_messages").insert({
+          room_id: roomId,
+          workspace_id: workspaceId,
+          sender_id: user.id,
+          sender_display_name: "🤖 Assistant IA",
+          sender_role: "system",
+          content: JSON.stringify(suggestion),
+          message_type: "ai_suggestion",
+        });
+      }
+    } catch (e: any) {
+      toast({ title: "Erreur OCR", description: e.message, variant: "destructive" });
+    } finally {
+      setOcrLoading(null);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !roomId || !user || !activeMember || !workspaceId) return;
@@ -111,7 +206,8 @@ const WorkspaceChat = () => {
     const { error: uploadErr } = await supabase.storage.from("chat-files").upload(path, file);
     if (uploadErr) { toast({ title: "Erreur upload", description: uploadErr.message, variant: "destructive" }); return; }
     const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
-    await supabase.from("workspace_chat_messages").insert({
+
+    const { data: msgData } = await supabase.from("workspace_chat_messages").insert({
       room_id: roomId,
       workspace_id: workspaceId,
       sender_id: user.id,
@@ -121,8 +217,26 @@ const WorkspaceChat = () => {
       message_type: "file",
       file_url: urlData.publicUrl,
       file_name: file.name,
-    });
+    }).select("id").single();
+
+    // Auto-trigger OCR for image files
+    if (file.type.startsWith("image/") && msgData?.id) {
+      runOcr(urlData.publicUrl, msgData.id);
+    }
+
     e.target.value = "";
+  };
+
+  const isImageFile = (url: string | null) =>
+    url ? /\.(jpg|jpeg|png|gif|webp)$/i.test(url) : false;
+
+  const parseAiSuggestion = (content: string | null): AiSuggestion | null => {
+    if (!content) return null;
+    try {
+      return JSON.parse(content);
+    } catch {
+      return null;
+    }
   };
 
   return (
@@ -135,6 +249,22 @@ const WorkspaceChat = () => {
           )}
           {messages.map(msg => {
             const isMe = msg.sender_id === user?.id;
+            const isAiSuggestion = msg.message_type === "ai_suggestion";
+
+            if (isAiSuggestion) {
+              const suggestion = parseAiSuggestion(msg.content);
+              if (!suggestion || !workspaceId || !user) return null;
+              return (
+                <div key={msg.id} className="flex justify-center my-2">
+                  <AiSuggestionCard
+                    suggestion={suggestion}
+                    workspaceId={workspaceId}
+                    userId={user.id}
+                  />
+                </div>
+              );
+            }
+
             return (
               <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
                 <div className={cn("max-w-[80%] rounded-2xl px-4 py-2.5", isMe ? "bg-primary/20 rounded-tr-md" : "glass-card rounded-tl-md")}>
@@ -148,8 +278,26 @@ const WorkspaceChat = () => {
                   )}
                   {msg.message_type === "file" && msg.file_url ? (
                     <div>
-                      {msg.file_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                        <img src={msg.file_url} alt={msg.file_name || "image"} className="max-w-full rounded-lg mb-1" />
+                      {isImageFile(msg.file_url) ? (
+                        <div className="space-y-2">
+                          <img src={msg.file_url} alt={msg.file_name || "image"} className="max-w-full rounded-lg" />
+                          {/* OCR button for images not yet analyzed */}
+                          {ocrLoading === msg.id ? (
+                            <div className="flex items-center gap-2 text-primary text-xs">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Analyse OCR en cours...
+                            </div>
+                          ) : !suggestions[msg.id] ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs h-7 border-primary/30 text-primary"
+                              onClick={() => runOcr(msg.file_url!, msg.id)}
+                            >
+                              <Bot className="w-3 h-3 mr-1" /> Analyser ce reçu
+                            </Button>
+                          ) : null}
+                        </div>
                       ) : (
                         <a href={msg.file_url} target="_blank" rel="noopener" className="text-primary underline text-sm">
                           📎 {msg.file_name || "Fichier"}
