@@ -1,52 +1,57 @@
 
 
-## Integration du calendrier avec presets dans le Dashboard
+## Configuration PWA pour Mon Jeton
 
-### Probleme de compatibilite
+### Ce que tu obtiendras
+- Une icone "Mon Jeton" sur l'ecran d'accueil de ton telephone
+- Un ecran de chargement (splash screen) avec le logo et la couleur verte du theme
+- L'application s'ouvre en plein ecran, comme une vraie app native
+- Fonctionne meme hors-ligne (les pages deja visitees restent accessibles)
+- Une page `/install` avec les instructions d'installation pour tes utilisateurs
 
-Le composant fourni utilise l'API de **react-day-picker v9** (classNames comme `month_caption`, `button_previous`, `day_button`, etc.), mais le projet utilise **react-day-picker v8**. Il faut donc adapter le composant pour fonctionner avec la v8, ou bien le reimplementer avec l'API v8 tout en conservant le style premium.
+### Instructions d'installation (apres la mise en place)
+- **Android (Chrome)** : Ouvre l'app dans Chrome, le navigateur proposera automatiquement "Ajouter a l'ecran d'accueil"
+- **iPhone (Safari)** : Ouvre l'app dans Safari, appuie sur le bouton Partager, puis "Sur l'ecran d'accueil"
 
-### Approche retenue
-
-Creer un nouveau composant `calendar-with-presets.tsx` adapte a la v8 et l'integrer dans le Dashboard avec des presets en francais.
-
-### Fichiers concernes
-
-1. **Creer `src/components/ui/calendar-with-presets.tsx`**
-   - Composant base sur `DayPicker` v8 (API existante)
-   - Styles premium : coins arrondis, indicateur "today" avec un point vert, selection en vert (`bg-primary`)
-   - Range selection stylee : `range_start` et `range_end` en `bg-primary` arrondi, `range_middle` en `bg-primary/20`
-   - Sidebar de presets integree directement dans le composant
-
-2. **Modifier `src/pages/Dashboard.tsx`**
-   - Remplacer le `Calendar` actuel dans le `PopoverContent` par le nouveau composant avec presets
-   - Ajouter des presets en francais adaptes au contexte financier :
-     - Aujourd'hui
-     - Hier
-     - 7 derniers jours
-     - 14 derniers jours
-     - 30 derniers jours
-     - Ce mois
-     - Mois dernier
-   - Quand un preset est clique, mettre a jour `customRange` et fermer le popover
-   - Quand une plage est selectionnee manuellement sur le calendrier, meme comportement qu'actuellement (ferme a la selection de la 2e date)
+---
 
 ### Details techniques
 
-**`calendar-with-presets.tsx`** : Le composant encapsulera :
-- A gauche : une liste de boutons preset (scrollable si necessaire)
-- A droite : le calendrier `DayPicker` en mode `range`
-- Sur mobile : layout empile (presets en haut, calendrier en dessous)
-- Utilisation des classNames v8 (`day_selected`, `day_range_middle`, `day_today`, `nav_button`, etc.)
-- Couleurs : `bg-primary` pour la selection (vert du theme), `bg-primary/10` pour today, `bg-primary/20` pour le milieu de la plage
+**1. Installer `vite-plugin-pwa`**
+- Ajout de la dependance `vite-plugin-pwa` au projet
 
-**`Dashboard.tsx`** :
-- Import du nouveau composant a la place de `Calendar`
-- Le `PopoverContent` sera elargi (`w-auto min-w-[320px]`) pour accueillir le layout presets + calendrier
-- Les fonctions `subDays`, `startOfMonth`, `endOfMonth` de `date-fns` (deja installe) seront utilisees pour calculer les plages des presets
-- Aucune nouvelle dependance NPM necessaire -- tout est deja installe
+**2. Configurer `vite.config.ts`**
+- Ajout du plugin `VitePWA` avec :
+  - Manifest incluant le nom "Mon Jeton", la description, les couleurs du theme (vert `#4a9a1e` et fond sombre `#0a1a0d`)
+  - Icons PWA (192x192 et 512x512) generees en SVG dans le dossier `public/`
+  - Mode `standalone` pour l'affichage plein ecran
+  - `navigateFallbackDenylist` incluant `/~oauth` pour ne pas cacher les redirections d'authentification
+  - Service worker en mode `generateSW` pour le cache automatique
 
-### Aucun changement de base de donnees
+**3. Creer les icones PWA**
+- `public/pwa-icon-192.svg` et `public/pwa-icon-512.svg` : icones SVG representant une piece de monnaie stylisee en vert sur fond sombre (coherent avec le theme)
 
-Le filtrage reste cote client/requete Supabase existante, aucune migration necessaire.
+**4. Mettre a jour `index.html`**
+- Ajout des meta tags pour iOS :
+  - `apple-mobile-web-app-capable`
+  - `apple-mobile-web-app-status-bar-style`
+  - `apple-touch-icon`
+- Ajout du `theme-color` vert du theme
 
+**5. Creer la page `/install`**
+- Nouvelle page `src/pages/Install.tsx` avec :
+  - Detection automatique du systeme (Android/iOS)
+  - Instructions visuelles etape par etape pour installer l'app
+  - Bouton "Installer" qui declenche le prompt natif sur Android (via `beforeinstallprompt`)
+  - Design coherent avec le reste de l'application
+- Ajout de la route `/install` dans `App.tsx` (route publique)
+
+**6. Fichiers concernes**
+- `vite.config.ts` — ajout du plugin VitePWA
+- `index.html` — meta tags mobiles
+- `public/pwa-icon-192.svg` — icone 192px (nouveau)
+- `public/pwa-icon-512.svg` — icone 512px (nouveau)
+- `src/pages/Install.tsx` — page d'installation (nouveau)
+- `src/App.tsx` — ajout de la route `/install`
+
+Aucune modification de base de donnees necessaire.
