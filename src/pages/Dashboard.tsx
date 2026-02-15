@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { useState, useEffect, useMemo } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, Wallet, MessageCircle, Camera } from "lucide-react";
@@ -10,11 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { CardSkeleton, ListItemSkeleton, ChartSkeleton } from "@/components/DashboardSkeleton";
 
 const periods = ["Semaine", "Mois", "Année"];
+const trendModes = ["Semaine", "Mois"];
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
   const [activePeriod, setActivePeriod] = useState(1);
+  const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +68,41 @@ const Dashboard = () => {
   const chartData: { name: string; amount: number; color: string }[] = Object.values(expenseByCategory);
   const recentTx = transactions.slice(0, 5);
 
+  // Trend line chart data
+  const trendData = useMemo(() => {
+    const expenses = transactions.filter(t => t.type === "expense");
+    if (expenses.length === 0) return [];
+
+    if (trendMode === 0) {
+      // Group by day of week
+      const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+      const byDay: Record<number, number> = {};
+      expenses.forEach(t => {
+        let d = new Date(t.date).getDay();
+        d = d === 0 ? 6 : d - 1; // Mon=0
+        byDay[d] = (byDay[d] || 0) + Number(t.amount);
+      });
+      return days.map((name, i) => ({ name, amount: byDay[i] || 0 }));
+    } else {
+      // Group by month
+      const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+      const byMonth: Record<number, number> = {};
+      expenses.forEach(t => {
+        const m = new Date(t.date).getMonth();
+        byMonth[m] = (byMonth[m] || 0) + Number(t.amount);
+      });
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      // Show last 6 months
+      const result = [];
+      for (let i = 5; i >= 0; i--) {
+        const m = (currentMonth - i + 12) % 12;
+        result.push({ name: months[m], amount: byMonth[m] || 0 });
+      }
+      return result;
+    }
+  }, [transactions, trendMode]);
+
   return (
     <DashboardLayout>
       <div className="pt-6 pb-4">
@@ -112,6 +149,35 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">FCFA</p>
             </motion.div>
           </div>
+
+          {/* Trend Line Chart */}
+          {transactions.filter(t => t.type === "expense").length > 0 && (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card rounded-2xl p-5 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-foreground">Évolution des dépenses</h2>
+                <div className="flex gap-1 p-0.5 bg-secondary rounded-lg">
+                  {trendModes.map((m, i) => (
+                    <button key={m} onClick={() => setTrendMode(i)} className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${i === trendMode ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,20%)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(0,0%,60%)" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(0,0%,60%)" }} axisLine={false} tickLine={false} width={45} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+                  <RTooltip
+                    contentStyle={{ backgroundColor: "hsl(0,0%,10%)", border: "1px solid hsl(0,0%,20%)", borderRadius: 12, fontSize: 12 }}
+                    labelStyle={{ color: "hsl(0,0%,70%)" }}
+                    formatter={(value: number) => [`${value.toLocaleString("fr-FR")} F`, "Dépenses"]}
+                  />
+                  <Line type="monotone" dataKey="amount" stroke="hsl(84,81%,44%)" strokeWidth={2.5} dot={{ fill: "hsl(84,81%,44%)", r: 3 }} activeDot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
+          )}
 
           {chartData.length > 0 && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card rounded-2xl p-5 mb-6">

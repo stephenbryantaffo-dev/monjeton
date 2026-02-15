@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Wallet, Plus } from "lucide-react";
+import { Wallet, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePrivacy } from "@/contexts/PrivacyContext";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 
@@ -21,19 +22,33 @@ const WALLET_COLORS: Record<string, string> = {
 const Wallets = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatAmount } = usePrivacy();
   const [wallets, setWallets] = useState<any[]>([]);
+  const [balances, setBalances] = useState<Record<string, { income: number; expense: number }>>({});
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchWallets = async () => {
+  const fetchData = async () => {
     if (!user) return;
-    const { data } = await supabase.from("wallets").select("*").eq("user_id", user.id);
-    setWallets(data || []);
+    const [{ data: walletsData }, { data: txData }] = await Promise.all([
+      supabase.from("wallets").select("*").eq("user_id", user.id),
+      supabase.from("transactions").select("wallet_id, type, amount").eq("user_id", user.id),
+    ]);
+    setWallets(walletsData || []);
+
+    const bal: Record<string, { income: number; expense: number }> = {};
+    (txData || []).forEach((t: any) => {
+      if (!t.wallet_id) return;
+      if (!bal[t.wallet_id]) bal[t.wallet_id] = { income: 0, expense: 0 };
+      if (t.type === "income") bal[t.wallet_id].income += Number(t.amount);
+      else bal[t.wallet_id].expense += Number(t.amount);
+    });
+    setBalances(bal);
     setLoading(false);
   };
 
-  useEffect(() => { fetchWallets(); }, [user]);
+  useEffect(() => { fetchData(); }, [user]);
 
   const handleAdd = async () => {
     if (!newName.trim() || !user) return;
@@ -41,13 +56,13 @@ const Wallets = () => {
     toast({ title: "Portefeuille ajouté ✅" });
     setNewName("");
     setShowAdd(false);
-    fetchWallets();
+    fetchData();
   };
 
   const handleDelete = async (id: string) => {
     await supabase.from("wallets").delete().eq("id", id);
     toast({ title: "Portefeuille supprimé" });
-    fetchWallets();
+    fetchData();
   };
 
   return (
@@ -57,6 +72,8 @@ const Wallets = () => {
           ? Array.from({ length: 4 }).map((_, i) => <ListItemSkeleton key={i} />)
           : wallets.map((w, i) => {
             const color = WALLET_COLORS[w.wallet_name] || "hsl(200, 70%, 50%)";
+            const b = balances[w.id] || { income: 0, expense: 0 };
+            const solde = b.income - b.expense;
             return (
               <motion.div
                 key={w.id}
@@ -68,9 +85,21 @@ const Wallets = () => {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
                   <Wallet className="w-6 h-6" style={{ color }} />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{w.wallet_name}</p>
-                  <p className="text-xs text-muted-foreground">{w.currency}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {solde >= 0 ? (
+                      <TrendingUp className="w-3 h-3 text-primary" />
+                    ) : (
+                      <TrendingDown className="w-3 h-3 text-destructive" />
+                    )}
+                    <span className={`text-sm font-semibold ${solde >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {formatAmount(solde)} F
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    +{formatAmount(b.income)} / -{formatAmount(b.expense)}
+                  </p>
                 </div>
                 <ConfirmDeleteDialog onConfirm={() => handleDelete(w.id)} title="Supprimer ce portefeuille ?" />
               </motion.div>
