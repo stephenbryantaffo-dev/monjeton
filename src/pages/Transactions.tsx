@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 
 const Transactions = () => {
   const { user } = useAuth();
@@ -46,23 +48,23 @@ const Transactions = () => {
       </div>
 
       <div className="space-y-2">
-        {filtered.map((t, i) => (
-          <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }} className="glass-card rounded-xl p-3 flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === "income" ? "bg-primary/20" : "bg-secondary"}`}>
-              <Wallet className={`w-5 h-5 ${t.type === "income" ? "text-primary" : "text-muted-foreground"}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
-              <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
-            </div>
-            <span className={`text-sm font-semibold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-              {t.type === "income" ? "+" : "-"}{Number(t.amount).toLocaleString("fr-FR")} F
-            </span>
-            <button onClick={() => handleDelete(t.id)} className="text-muted-foreground hover:text-destructive">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </motion.div>
-        ))}
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)
+          : filtered.map((t, i) => (
+            <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }} className="glass-card rounded-xl p-3 flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === "income" ? "bg-primary/20" : "bg-secondary"}`}>
+                <Wallet className={`w-5 h-5 ${t.type === "income" ? "text-primary" : "text-muted-foreground"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
+                <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
+              </div>
+              <span className={`text-sm font-semibold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
+                {t.type === "income" ? "+" : "-"}{Number(t.amount).toLocaleString("fr-FR")} F
+              </span>
+              <ConfirmDeleteDialog onConfirm={() => handleDelete(t.id)} title="Supprimer cette transaction ?" />
+            </motion.div>
+          ))}
         {!loading && filtered.length === 0 && (
           <p className="text-center text-muted-foreground text-sm py-8">Aucune transaction</p>
         )}
