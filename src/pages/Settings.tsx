@@ -1,8 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrivacy } from "@/contexts/PrivacyContext";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
   { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
@@ -15,11 +20,31 @@ const menuItems = [
 
 const Settings = () => {
   const { user, profile, signOut } = useAuth();
+  const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
+  const { toast } = useToast();
   const navigate = useNavigate();
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [newPin, setNewPin] = useState("");
 
   const handleLogout = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleSetPin = () => {
+    if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+      toast({ title: "Le PIN doit contenir 4 chiffres", variant: "destructive" });
+      return;
+    }
+    setPin(newPin);
+    setNewPin("");
+    setShowPinSetup(false);
+    toast({ title: "Code PIN activé 🔒" });
+  };
+
+  const handleRemovePin = () => {
+    removePin();
+    toast({ title: "Code PIN désactivé" });
   };
 
   return (
@@ -32,6 +57,51 @@ const Settings = () => {
           <p className="text-lg font-bold text-foreground">{profile?.full_name || "Utilisateur"}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
+      </div>
+
+      {/* Privacy section */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Lock className="w-4 h-4" /> Confidentialité
+        </h3>
+
+        {/* Discreet mode */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <EyeOff className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-foreground">Mode discret</span>
+          </div>
+          <Switch checked={isDiscreetMode} onCheckedChange={toggleDiscreetMode} />
+        </div>
+
+        {/* PIN lock */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-foreground">Verrouillage PIN</span>
+          </div>
+          {pinEnabled ? (
+            <Button variant="ghost" size="sm" onClick={handleRemovePin} className="text-destructive text-xs">Désactiver</Button>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => setShowPinSetup(true)} className="text-primary text-xs">Activer</Button>
+          )}
+        </div>
+
+        {showPinSetup && (
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="4 chiffres"
+              value={newPin}
+              onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
+              className="bg-secondary border-border flex-1"
+            />
+            <Button variant="hero" size="sm" onClick={handleSetPin}>OK</Button>
+            <Button variant="ghost" size="sm" onClick={() => { setShowPinSetup(false); setNewPin(""); }}>✕</Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-1 mb-6">

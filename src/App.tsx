@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PinLockScreen from "@/components/PinLockScreen";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -28,6 +30,37 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const { isLocked } = usePrivacy();
+
+  if (isLocked) return <PinLockScreen />;
+
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/subscribe" element={<Subscribe />} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+      <Route path="/transactions/new" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
+      <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+      <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/savings" element={<ProtectedRoute><Savings /></ProtectedRoute>} />
+      <Route path="/debts" element={<ProtectedRoute><Debts /></ProtectedRoute>} />
+      <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
+      <Route path="/tontine" element={<ProtectedRoute><Tontine /></ProtectedRoute>} />
+      <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,28 +68,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/subscribe" element={<Subscribe />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
-            <Route path="/transactions/new" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
-            <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
-            <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            <Route path="/savings" element={<ProtectedRoute><Savings /></ProtectedRoute>} />
-            <Route path="/debts" element={<ProtectedRoute><Debts /></ProtectedRoute>} />
-            <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
-            <Route path="/tontine" element={<ProtectedRoute><Tontine /></ProtectedRoute>} />
-            <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <PrivacyProvider>
+            <AppContent />
+          </PrivacyProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
