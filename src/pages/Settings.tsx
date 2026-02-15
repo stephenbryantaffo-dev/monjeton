@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -19,6 +19,7 @@ const menuItems = [
   { icon: Users, label: "Tontine", path: "/tontine" },
   { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
   { icon: CreditCard, label: "Abonnement", path: "/subscribe" },
+  { icon: Download, label: "Installer l'app", path: "/install" },
 ];
 
 const Settings = () => {
