@@ -562,6 +562,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          initial_balance: number
           user_id: string
           wallet_name: string
         }
@@ -569,6 +570,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          initial_balance?: number
           user_id: string
           wallet_name: string
         }
@@ -576,6 +578,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          initial_balance?: number
           user_id?: string
           wallet_name?: string
         }
