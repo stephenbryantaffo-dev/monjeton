@@ -9,14 +9,16 @@ interface ScanUploadAreaProps {
 }
 
 const ScanUploadArea = ({ scanType, onFileSelected }: ScanUploadAreaProps) => {
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) onFileSelected(f);
-    // Reset input so same file can be re-selected
     e.target.value = "";
   };
+
+  const acceptTypes = scanType === "receipt" ? "image/*,.pdf,application/pdf" : "image/*";
 
   return (
     <motion.div
@@ -43,18 +45,28 @@ const ScanUploadArea = ({ scanType, onFileSelected }: ScanUploadAreaProps) => {
         </p>
       </div>
 
+      {/* Camera input - with capture attribute */}
       <input
-        ref={fileRef}
+        ref={cameraRef}
         type="file"
-        accept={scanType === "receipt" ? "image/*,application/pdf" : "image/*"}
+        accept={acceptTypes}
         capture="environment"
+        onChange={handleFile}
+        className="hidden"
+      />
+
+      {/* Gallery input - without capture attribute */}
+      <input
+        ref={galleryRef}
+        type="file"
+        accept={acceptTypes}
         onChange={handleFile}
         className="hidden"
       />
 
       <div className="flex gap-3">
         <Button
-          onClick={() => fileRef.current?.click()}
+          onClick={() => cameraRef.current?.click()}
           className="gradient-primary text-primary-foreground"
         >
           <Camera className="w-4 h-4 mr-2" /> Photo
@@ -62,13 +74,7 @@ const ScanUploadArea = ({ scanType, onFileSelected }: ScanUploadAreaProps) => {
         <Button
           variant="outline"
           className="glass"
-          onClick={() => {
-            if (fileRef.current) {
-              fileRef.current.removeAttribute("capture");
-              fileRef.current.click();
-              fileRef.current.setAttribute("capture", "environment");
-            }
-          }}
+          onClick={() => galleryRef.current?.click()}
         >
           <Upload className="w-4 h-4 mr-2" /> Galerie
         </Button>
