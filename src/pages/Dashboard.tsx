@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, Wallet, MessageCircle, Camera } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera } from "lucide-react";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -224,9 +225,10 @@ const Dashboard = () => {
             <div className="space-y-2">
               {recentTx.map((t, i) => (
                 <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }} className="glass-card rounded-xl p-3 flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === "income" ? "bg-primary/20" : "bg-secondary"}`}>
-                    <Wallet className={`w-5 h-5 ${t.type === "income" ? "text-primary" : "text-muted-foreground"}`} />
-                  </div>
+                  {(() => { const CatIcon = getCategoryIcon((t.categories as any)?.name); return (
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}>
+                    <CatIcon className="w-5 h-5" style={{ color: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,60%)") }} />
+                  </div>); })()}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
                     <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
