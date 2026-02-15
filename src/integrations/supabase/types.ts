@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      budgets: {
+        Row: {
+          created_at: string
+          id: string
+          month: number
+          total_budget: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: number
+          total_budget?: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: number
+          total_budget?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -67,6 +94,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      category_budgets: {
+        Row: {
+          budget_amount: number
+          category_id: string
+          created_at: string
+          id: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          budget_amount?: number
+          category_id: string
+          created_at?: string
+          id?: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          budget_amount?: number
+          category_id?: string
+          created_at?: string
+          id?: string
+          month?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       debts: {
         Row: {
@@ -173,6 +238,54 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_scans: {
+        Row: {
+          created_at: string
+          extracted_text: string | null
+          id: string
+          image_url: string | null
+          parsed_amount: number | null
+          parsed_category: string | null
+          parsed_date: string | null
+          parsed_merchant: string | null
+          parsed_type: string | null
+          parsed_wallet: string | null
+          scan_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_text?: string | null
+          id?: string
+          image_url?: string | null
+          parsed_amount?: number | null
+          parsed_category?: string | null
+          parsed_date?: string | null
+          parsed_merchant?: string | null
+          parsed_type?: string | null
+          parsed_wallet?: string | null
+          scan_type?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extracted_text?: string | null
+          id?: string
+          image_url?: string | null
+          parsed_amount?: number | null
+          parsed_category?: string | null
+          parsed_date?: string | null
+          parsed_merchant?: string | null
+          parsed_type?: string | null
+          parsed_wallet?: string | null
+          scan_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       savings_goals: {
         Row: {
           created_at: string
@@ -235,6 +348,109 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tontine_members: {
+        Row: {
+          created_at: string
+          id: string
+          member_name: string
+          member_phone: string | null
+          tontine_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_name: string
+          member_phone?: string | null
+          tontine_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_name?: string
+          member_phone?: string | null
+          tontine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_members_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tontine_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          member_name: string
+          status: string
+          tontine_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          member_name: string
+          status?: string
+          tontine_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          member_name?: string
+          status?: string
+          tontine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_payments_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tontines: {
+        Row: {
+          contribution_amount: number
+          created_at: string
+          frequency: string
+          id: string
+          members_count: number
+          name: string
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          contribution_amount?: number
+          created_at?: string
+          frequency?: string
+          id?: string
+          members_count?: number
+          name: string
+          start_date?: string
+          user_id: string
+        }
+        Update: {
+          contribution_amount?: number
+          created_at?: string
+          frequency?: string
+          id?: string
+          members_count?: number
+          name?: string
+          start_date?: string
           user_id?: string
         }
         Relationships: []

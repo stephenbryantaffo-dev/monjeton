@@ -21,6 +21,9 @@ import Debts from "./pages/Debts";
 import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
+import Budgets from "./pages/Budgets";
+import Tontine from "./pages/Tontine";
+import Scan from "./pages/Scan";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +51,9 @@ const App = () => (
             <Route path="/debts" element={<ProtectedRoute><Debts /></ProtectedRoute>} />
             <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
+            <Route path="/tontine" element={<ProtectedRoute><Tontine /></ProtectedRoute>} />
+            <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
