@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Wallet, Plus, TrendingUp, TrendingDown, Pencil, Check, X } from "lucide-react";
+import { Wallet, Plus, TrendingUp, TrendingDown, Pencil, Check, X, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,19 @@ import { useToast } from "@/hooks/use-toast";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const WALLET_COLORS: Record<string, string> = {
   "Orange Money": "hsl(25, 95%, 53%)",
@@ -32,6 +45,13 @@ const Wallets = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBalance, setEditBalance] = useState("");
 
+  // Transfer state
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [fromWalletId, setFromWalletId] = useState("");
+  const [toWalletId, setToWalletId] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferring, setTransferring] = useState(false);
+
   const fetchData = async () => {
     if (!user) return;
     const [{ data: walletsData }, { data: txData }] = await Promise.all([
@@ -52,6 +72,12 @@ const Wallets = () => {
   };
 
   useEffect(() => { fetchData(); }, [user]);
+
+  const getWalletSolde = (w: any) => {
+    const b = balances[w.id] || { income: 0, expense: 0 };
+    const initBal = Number(w.initial_balance) || 0;
+    return initBal + b.income - b.expense;
+  };
 
   const handleAdd = async () => {
     if (!newName.trim() || !user) return;
@@ -77,6 +103,62 @@ const Wallets = () => {
     await supabase.from("wallets").delete().eq("id", id);
     toast({ title: "Portefeuille supprimé" });
     fetchData();
+  };
+
+  const handleTransfer = async () => {
+    if (!user || !fromWalletId || !toWalletId || fromWalletId === toWalletId) return;
+    const amount = parseFloat(transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "Montant invalide", variant: "destructive" });
+      return;
+    }
+
+    const fromWallet = wallets.find(w => w.id === fromWalletId);
+    const toWallet = wallets.find(w => w.id === toWalletId);
+    if (!fromWallet || !toWallet) return;
+
+    const fromSolde = getWalletSolde(fromWallet);
+    if (amount > fromSolde) {
+      toast({ title: "Solde insuffisant", description: `Le solde de ${fromWallet.wallet_name} est de ${formatAmount(fromSolde)} F`, variant: "destructive" });
+      return;
+    }
+
+    setTransferring(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      // Create two transactions: expense from source, income to destination
+      const { error } = await supabase.from("transactions").insert([
+        {
+          user_id: user.id,
+          type: "expense",
+          amount,
+          date: today,
+          note: `Transfert vers ${toWallet.wallet_name}`,
+          wallet_id: fromWalletId,
+        },
+        {
+          user_id: user.id,
+          type: "income",
+          amount,
+          date: today,
+          note: `Transfert depuis ${fromWallet.wallet_name}`,
+          wallet_id: toWalletId,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({ title: "Transfert effectué ✅", description: `${formatAmount(amount)} F de ${fromWallet.wallet_name} → ${toWallet.wallet_name}` });
+      setShowTransfer(false);
+      setTransferAmount("");
+      setFromWalletId("");
+      setToWalletId("");
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Erreur de transfert", description: err.message, variant: "destructive" });
+    } finally {
+      setTransferring(false);
+    }
   };
 
   return (
@@ -149,7 +231,23 @@ const Wallets = () => {
           })}
       </div>
 
-      {showAdd ? (
+      {/* Action buttons */}
+      <div className="flex gap-2 mb-4">
+        {!showAdd && (
+          <>
+            <Button variant="glass" size="lg" className="flex-1" onClick={() => setShowAdd(true)}>
+              <Plus className="w-4 h-4" /> Ajouter
+            </Button>
+            {wallets.length >= 2 && (
+              <Button variant="glass" size="lg" className="flex-1" onClick={() => setShowTransfer(true)}>
+                <ArrowRightLeft className="w-4 h-4" /> Transférer
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+
+      {showAdd && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 space-y-3">
           <Input placeholder="Nom du portefeuille" value={newName} onChange={(e) => setNewName(e.target.value)} className="bg-secondary border-border" />
           <Input placeholder="Solde initial (ex: 50000)" type="number" value={newInitialBalance} onChange={(e) => setNewInitialBalance(e.target.value)} className="bg-secondary border-border" />
@@ -158,11 +256,77 @@ const Wallets = () => {
             <Button variant="hero" onClick={handleAdd} className="flex-1">Ajouter</Button>
           </div>
         </motion.div>
-      ) : (
-        <Button variant="glass" size="lg" className="w-full" onClick={() => setShowAdd(true)}>
-          <Plus className="w-4 h-4" /> Ajouter un portefeuille
-        </Button>
       )}
+
+      {/* Transfer Dialog */}
+      <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="w-5 h-5 text-primary" />
+              Transfert entre portefeuilles
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">De</label>
+              <Select value={fromWalletId} onValueChange={setFromWalletId}>
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue placeholder="Portefeuille source" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wallets.filter(w => w.id !== toWalletId).map(w => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.wallet_name} ({formatAmount(getWalletSolde(w))} F)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Vers</label>
+              <Select value={toWalletId} onValueChange={setToWalletId}>
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue placeholder="Portefeuille destination" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wallets.filter(w => w.id !== fromWalletId).map(w => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.wallet_name} ({formatAmount(getWalletSolde(w))} F)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Montant (F CFA)</label>
+              <Input
+                type="number"
+                placeholder="Ex: 5000"
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+                className="bg-secondary border-border"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="glass" onClick={() => setShowTransfer(false)} className="flex-1" disabled={transferring}>
+                Annuler
+              </Button>
+              <Button
+                variant="hero"
+                onClick={handleTransfer}
+                className="flex-1"
+                disabled={transferring || !fromWalletId || !toWalletId || !transferAmount}
+              >
+                {transferring ? "Transfert..." : "Confirmer"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
