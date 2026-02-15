@@ -1,112 +1,143 @@
 
 
-# Plan : Assistant IA ameliore - Reponses courtes, vocaux et fichiers
+# Plan d'implementation -- Track E-Money (fonctionnalites manquantes)
 
-## Objectif
-Transformer l'assistant en un vrai agent IA conversationnel avec :
-1. Des reponses courtes et percutantes (max 2-3 phrases)
-2. Envoi et reception de messages vocaux
-3. Envoi et reception de fichiers/images
-4. L'assistant pose des questions pour affiner ses reponses
+## Etat actuel du projet
 
----
+Le projet a deja une base solide avec : Landing, Login/Signup, Dashboard, Transactions, Categories, Wallets, Reports, Savings, Debts, Assistant IA (avec streaming, vocaux, fichiers), Settings, Admin, Auth (email/password + reset), RLS, dark theme glassmorphism, bottom nav mobile-first.
 
-## 1. Prompt systeme ameliore (Backend)
-
-**Fichier : `supabase/functions/chat/index.ts`**
-
-Modifier le prompt systeme pour :
-- Forcer des reponses ultra-courtes (1-3 phrases max, jamais de paragraphes)
-- Poser des questions de clarification avant de repondre si le contexte manque
-- Adopter un ton direct et conversationnel comme un vrai coach en face-a-face
-- Utiliser des questions ouvertes pour mieux comprendre la situation financiere
-
-Exemple de nouveau prompt :
-```
-Tu reponds TOUJOURS en 1 a 3 phrases maximum. Jamais plus.
-Si tu manques d'info, pose UNE question precise avant de conseiller.
-Parle comme un ami coach, pas comme un article de blog.
-```
+## Ce qui manque (par priorite)
 
 ---
 
-## 2. Messages vocaux (Frontend)
+## PHASE A -- Tables et pages manquantes (priorite haute)
 
-**Fichier : `src/pages/Assistant.tsx`**
+### A1. Nouvelles tables en base de donnees
 
-### Enregistrement vocal (utilisateur vers IA)
-- Ajouter un bouton micro a cote du bouton envoyer
-- Utiliser l'API `MediaRecorder` du navigateur pour capturer l'audio
-- Convertir l'audio en texte via une nouvelle Edge Function `speech-to-text` qui utilise le modele Gemini (supporte l'audio nativement)
-- Afficher un indicateur d'enregistrement en cours (animation pulse rouge)
+Creer via migration SQL :
 
-### Lecture vocale (IA vers utilisateur)
-- Ajouter un bouton "play" sur chaque message de l'assistant
-- Utiliser l'API `SpeechSynthesis` du navigateur (gratuit, pas besoin d'API externe) pour lire les reponses a voix haute
-- Indicateur visuel pendant la lecture
+- **budgets** : id, user_id, month, year, total_budget, created_at
+- **category_budgets** : id, user_id, category_id (FK categories), month, year, budget_amount, created_at
+- **tontines** : id, user_id, name, contribution_amount, frequency, start_date, members_count, created_at
+- **tontine_members** : id, tontine_id (FK tontines), member_name, member_phone, created_at
+- **tontine_payments** : id, tontine_id (FK tontines), member_name, amount, date, status, created_at
+- **receipt_scans** : id, user_id, scan_type, image_url, extracted_text, parsed_amount, parsed_date, parsed_merchant, parsed_wallet, parsed_type, parsed_category, status, created_at
 
-### Nouveau type de message
-```typescript
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  type: "text" | "audio";
-  audioUrl?: string; // URL blob pour les vocaux enregistres
-};
-```
+RLS sur toutes les tables : utilisateur voit uniquement ses donnees, admin voit tout.
 
----
+### A2. Storage bucket
 
-## 3. Edge Function Speech-to-Text
+- Creer le bucket `receipts` (public: false) pour stocker les photos de tickets et screenshots mobile money.
 
-**Fichier : `supabase/functions/speech-to-text/index.ts`**
+### A3. Nouvelles pages
 
-- Recevoir un fichier audio (FormData)
-- Envoyer l'audio au modele Gemini via Lovable AI Gateway (Gemini supporte les fichiers audio en entree)
-- Retourner la transcription texte
-- Le texte transcrit est ensuite envoye a la fonction `chat` existante
+| Route | Description |
+|-------|------------|
+| `/budgets` | Gestion des budgets mensuels globaux et par categorie, avec alertes depassement |
+| `/tontine` | Creation/gestion de tontines, ajout de membres, suivi des paiements |
+| `/scan` | Scanner de tickets de caisse et screenshots mobile money (OCR via Gemini) |
+
+### A4. Mise a jour des routes
+
+- Ajouter `/budgets`, `/tontine`, `/scan` dans `App.tsx` comme routes protegees
+- Ajouter les liens correspondants dans la navigation (Settings ou DashboardLayout)
 
 ---
 
-## 4. Envoi de fichiers et images
+## PHASE B -- Fonctionnalites Pro manquantes (priorite moyenne)
 
-**Fichier : `src/pages/Assistant.tsx`**
+### B1. Budgets avances (`/budgets`)
 
-- Ajouter un bouton "piece jointe" (icone trombone) dans la barre de saisie
-- Supporter : images (JPG, PNG), PDF, documents
-- Afficher un apercu du fichier dans le message avant envoi
-- Les fichiers sont convertis en base64 et envoyes au backend
-- Pour les images, utiliser la capacite multimodale de Gemini pour les analyser (ex: photo de ticket de caisse)
+- Interface pour definir un budget mensuel global
+- Budget par categorie avec barre de progression
+- Alerte visuelle (toast + badge rouge) quand une categorie depasse son budget
+- Calcul automatique base sur les transactions du mois en cours
 
-### Rendu des messages avec fichiers
-- Images : apercu miniature cliquable dans la bulle de message
-- Fichiers : icone + nom du fichier avec indicateur de type
+### B2. Export PDF
+
+- Bouton "Exporter PDF" sur la page Reports
+- Generer un rapport mensuel/annuel en PDF cote client (utiliser une librairie comme jspdf ou html2canvas)
+- Contenu : resume revenus/depenses, graphique par categorie, liste des transactions
+
+### B3. Detection de fuites d'argent
+
+- Section dans Reports ou Dashboard
+- Identifier les petites depenses frequentes (ex: 3+ transactions <2000F dans la meme categorie par semaine)
+- Afficher un message de conseil contextuel
+
+### B4. Fonctionnalites de confidentialite
+
+- **Code PIN** : demander un PIN au lancement de l'app (stocke en localStorage ou profil)
+- **Mode discret** : bouton pour masquer tous les montants (remplacer par "***")
 
 ---
 
-## 5. Mise a jour du backend pour fichiers
+## PHASE C -- Ultra Pro (priorite basse, plus complexe)
 
-**Fichier : `supabase/functions/chat/index.ts`**
+### C1. Scan de tickets de caisse (`/scan`)
 
-- Accepter un champ `attachments` en plus de `messages`
-- Pour les images : les inclure dans le message Gemini en format multimodal (image_url)
-- Pour les fichiers texte/PDF : extraire le contenu et l'ajouter au contexte du message
+- Bouton pour prendre une photo ou uploader une image
+- Upload vers le bucket `receipts/{user_id}/`
+- Envoyer l'image a une Edge Function qui utilise Gemini (multimodal) pour extraire : montant, date, commercant, type
+- Afficher les donnees extraites pour confirmation par l'utilisateur
+- Si confirme, creer la transaction automatiquement
+
+### C2. Scan de screenshots Mobile Money
+
+- Meme logique que C1 mais pour les captures d'ecran Wave/Orange/MTN
+- Detecter si c'est un envoi ou une reception (revenu/depense)
+- Extraire montant, date, portefeuille
+
+### C3. Tontine / Cotisation (`/tontine`)
+
+- Creer une tontine (nom, montant, frequence, date de debut)
+- Ajouter des membres (nom + telephone)
+- Tracker les paiements de chaque membre
+- Vue calendrier des echeances
+
+### C4. Rappel WhatsApp pour dettes
+
+- Bouton "Rappeler via WhatsApp" sur chaque dette de type "on me doit"
+- Ouvre WhatsApp avec un message pre-rempli : "Salut [nom], tu me dois [montant] FCFA, stp n'oublie pas."
+- Utilise le lien `https://wa.me/?text=...`
+
+### C5. Saisie vocale de transaction
+
+- Sur la page `/transactions/new`, ajouter un bouton micro
+- L'utilisateur dit "J'ai depense 1500 en taxi"
+- Envoyer au modele Gemini pour parser : montant, categorie, type
+- Pre-remplir le formulaire avec les donnees extraites
 
 ---
 
-## 6. Interface amelioree
+## PHASE D -- Admin et polish
 
-**Fichier : `src/pages/Assistant.tsx`**
+### D1. Admin Dashboard reel (`/admin`)
 
-Barre de saisie enrichie avec 3 boutons :
-```
-[Piece jointe] [________Input________] [Micro] [Envoyer]
-```
+- Requetes Supabase pour afficher les vrais chiffres :
+  - Nombre total d'utilisateurs (via profiles count)
+  - Abonnements actifs (via subscriptions where status = 'active')
+  - Total transactions (count)
+  - Revenus mensuels estimes
+- Proteger la route : verifier le role admin via `has_role()`
 
-- Bouton micro : maintenir pour enregistrer, relacher pour envoyer
-- Bouton piece jointe : ouvre le selecteur de fichiers
-- Animation d'enregistrement vocal (cercle rouge pulsant)
-- Preview des fichiers attaches avant envoi
+### D2. Modales de confirmation
+
+- Ajouter des modales de confirmation (AlertDialog) avant chaque suppression (transactions, categories, wallets, debts, etc.)
+
+### D3. Skeleton loaders
+
+- Remplacer les etats de chargement actuels par des skeleton loaders pour une UX premium
+
+### D4. Animations
+
+- Ajouter des transitions Framer Motion sur les changements de page et les actions CRUD
+
+---
+
+## PHASE E -- Stripe (separe)
+
+L'integration Stripe pour le paiement des abonnements necessite d'activer le connecteur Stripe. Pour l'instant, toutes les fonctionnalites sont deverrouillees. L'integration Stripe sera faite quand tu seras pret a passer en production.
 
 ---
 
@@ -115,16 +146,26 @@ Barre de saisie enrichie avec 3 boutons :
 ### Fichiers a creer
 | Fichier | Description |
 |---------|------------|
-| `supabase/functions/speech-to-text/index.ts` | Transcription audio via Gemini |
+| `src/pages/Budgets.tsx` | Page budgets mensuels et par categorie |
+| `src/pages/Tontine.tsx` | Page gestion des tontines |
+| `src/pages/Scan.tsx` | Page OCR scanner de tickets |
+| `supabase/functions/scan-receipt/index.ts` | Edge Function OCR via Gemini multimodal |
 
 ### Fichiers a modifier
 | Fichier | Modifications |
-|---------|--------------|
-| `supabase/functions/chat/index.ts` | Nouveau prompt court + support attachments multimodaux |
-| `src/pages/Assistant.tsx` | Boutons micro/fichier, enregistrement audio, apercu fichiers, lecture vocale |
-| `supabase/config.toml` | Ajouter la nouvelle fonction speech-to-text |
+|---------|------------|
+| `src/App.tsx` | Ajouter les 3 nouvelles routes protegees |
+| `src/pages/Settings.tsx` | Ajouter liens vers Budgets, Tontine, Scan |
+| `src/pages/Reports.tsx` | Ajouter bouton Export PDF + section fuites |
+| `src/pages/Admin.tsx` | Requetes reelles vers la DB |
+| `src/pages/NewTransaction.tsx` | Bouton saisie vocale |
+| `src/pages/Debts.tsx` | Bouton rappel WhatsApp |
+| Toutes les pages avec suppression | Ajouter AlertDialog de confirmation |
 
-### Dependances
-- Aucune nouvelle dependance npm requise
-- APIs navigateur utilisees : `MediaRecorder`, `SpeechSynthesis`, `FileReader`
+### Ordre d'implementation recommande
+1. Phase A (tables + pages) -- fondation
+2. Phase B (budgets, PDF, fuites, confidentialite) -- valeur pro
+3. Phase D (admin, modales, polish) -- qualite
+4. Phase C (scan, tontine, WhatsApp, vocal) -- fonctionnalites avancees
+5. Phase E (Stripe) -- monetisation
 
