@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CardSkeleton, ListItemSkeleton, ChartSkeleton } from "@/components/DashboardSkeleton";
-import { Calendar } from "@/components/ui/calendar";
+import { CalendarWithPresets } from "@/components/ui/calendar-with-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -141,20 +141,15 @@ const Dashboard = () => {
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="center">
-            <Calendar
-              mode="range"
+            <CalendarWithPresets
               selected={customRange}
               onSelect={(range) => {
                 setCustomRange(range);
                 if (range?.from && range?.to) setCalendarOpen(false);
               }}
-              numberOfMonths={1}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-              classNames={{
-                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                day_range_middle: "aria-selected:bg-primary/20 aria-selected:text-primary-foreground",
-                day_today: "bg-primary/10 text-primary",
+              onPresetSelect={(range) => {
+                setCustomRange(range);
+                setCalendarOpen(false);
               }}
             />
           </PopoverContent>
