@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Wallet, MessageCircle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,6 +164,14 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Floating AI Assistant Bubble */}
+      <Link
+        to="/assistant"
+        className="fixed bottom-24 right-5 z-50 w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
+      >
+        <MessageCircle className="w-6 h-6 text-primary-foreground" />
+      </Link>
     </DashboardLayout>
   );
 };
