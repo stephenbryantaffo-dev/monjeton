@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, Wallet, MessageCircle } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Wallet, MessageCircle, Camera } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -178,12 +178,20 @@ const Dashboard = () => {
         </>
       )}
 
-      <Link
-        to="/assistant"
-        className="fixed bottom-24 right-5 z-50 w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
-      >
-        <MessageCircle className="w-6 h-6 text-primary-foreground" />
-      </Link>
+      <div className="fixed bottom-24 right-5 z-50 flex flex-col gap-3">
+        <Link
+          to="/scan"
+          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30"
+        >
+          <Camera className="w-5 h-5 text-primary" />
+        </Link>
+        <Link
+          to="/assistant"
+          className="w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
+        >
+          <MessageCircle className="w-6 h-6 text-primary-foreground" />
+        </Link>
+      </div>
     </DashboardLayout>
   );
 };
