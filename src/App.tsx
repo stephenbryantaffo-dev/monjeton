@@ -27,6 +27,7 @@ import Budgets from "./pages/Budgets";
 import Tontine from "./pages/Tontine";
 import Scan from "./pages/Scan";
 import Install from "./pages/Install";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const AppContent = () => {
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/subscribe" element={<Subscribe />} />
       <Route path="/install" element={<Install />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
       <Route path="/transactions/new" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
