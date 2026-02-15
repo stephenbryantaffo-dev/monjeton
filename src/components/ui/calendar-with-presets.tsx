@@ -49,15 +49,16 @@ function CalendarWithPresets({
   const [month, setMonth] = React.useState(selected?.to || new Date());
 
   return (
-    <div className={cn("flex", isMobile ? "flex-col" : "flex-row")}>
+    <div className={cn("flex max-w-[calc(100vw-2rem)]", isMobile ? "flex-col" : "flex-row")}>
       {/* Presets sidebar */}
       <div
         className={cn(
-          "flex gap-1 p-2",
+          "flex gap-1 p-2 scrollbar-none",
           isMobile
-            ? "flex-row overflow-x-auto border-b border-border"
+            ? "flex-row overflow-x-auto border-b border-border -mx-0"
             : "flex-col overflow-y-auto border-r border-border min-w-[140px] max-h-[300px]"
         )}
+        style={isMobile ? { scrollbarWidth: "none" } : undefined}
       >
         {presets.map((preset) => (
           <button
@@ -90,9 +91,9 @@ function CalendarWithPresets({
         onMonthChange={setMonth}
         numberOfMonths={1}
         showOutsideDays
-        className={cn("p-3 pointer-events-auto")}
+        className={cn("p-3 pointer-events-auto w-full")}
         classNames={{
-          months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+          months: "flex flex-col space-y-4",
           month: "space-y-4",
           caption: "flex justify-center pt-1 relative items-center",
           caption_label: "text-sm font-medium",
