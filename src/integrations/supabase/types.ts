@@ -74,6 +74,7 @@ export type Database = {
           name: string
           type: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           color?: string | null
@@ -83,6 +84,7 @@ export type Database = {
           name: string
           type: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           color?: string | null
@@ -92,8 +94,17 @@ export type Database = {
           name?: string
           type?: string
           user_id?: string
+          workspace_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       category_budgets: {
         Row: {
@@ -470,6 +481,51 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_attachments: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_type: string
+          file_url: string
+          id: string
+          transaction_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          file_type?: string
+          file_url: string
+          id?: string
+          transaction_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          transaction_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_attachments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_attachments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -477,16 +533,20 @@ export type Database = {
           conversion_date: string | null
           converted_amount_xof: number | null
           created_at: string
+          created_by: string | null
           date: string
           exchange_rate_source: string | null
           exchange_rate_used: number | null
           id: string
+          merchant_name: string | null
           note: string | null
           original_amount: number | null
           original_currency: string | null
+          status: string
           type: string
           user_id: string
           wallet_id: string | null
+          workspace_id: string | null
         }
         Insert: {
           amount: number
@@ -494,16 +554,20 @@ export type Database = {
           conversion_date?: string | null
           converted_amount_xof?: number | null
           created_at?: string
+          created_by?: string | null
           date?: string
           exchange_rate_source?: string | null
           exchange_rate_used?: number | null
           id?: string
+          merchant_name?: string | null
           note?: string | null
           original_amount?: number | null
           original_currency?: string | null
+          status?: string
           type: string
           user_id: string
           wallet_id?: string | null
+          workspace_id?: string | null
         }
         Update: {
           amount?: number
@@ -511,16 +575,20 @@ export type Database = {
           conversion_date?: string | null
           converted_amount_xof?: number | null
           created_at?: string
+          created_by?: string | null
           date?: string
           exchange_rate_source?: string | null
           exchange_rate_used?: number | null
           id?: string
+          merchant_name?: string | null
           note?: string | null
           original_amount?: number | null
           original_currency?: string | null
+          status?: string
           type?: string
           user_id?: string
           wallet_id?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -535,6 +603,13 @@ export type Database = {
             columns: ["wallet_id"]
             isOneToOne: false
             referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -565,6 +640,7 @@ export type Database = {
           initial_balance: number
           user_id: string
           wallet_name: string
+          workspace_id: string | null
         }
         Insert: {
           created_at?: string
@@ -573,6 +649,7 @@ export type Database = {
           initial_balance?: number
           user_id: string
           wallet_name: string
+          workspace_id?: string | null
         }
         Update: {
           created_at?: string
@@ -581,6 +658,267 @@ export type Database = {
           initial_balance?: number
           user_id?: string
           wallet_name?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_chat_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          message_type: string
+          room_id: string
+          sender_display_name: string
+          sender_id: string
+          sender_role: string
+          workspace_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          room_id: string
+          sender_display_name: string
+          sender_id: string
+          sender_role?: string
+          workspace_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          room_id?: string
+          sender_display_name?: string
+          sender_id?: string
+          sender_role?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_chat_messages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_chat_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          transaction_id: string | null
+          type: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          transaction_id?: string | null
+          type?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          transaction_id?: string | null
+          type?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_chat_rooms_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_chat_rooms_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string | null
+          expires_at: string
+          id: string
+          invite_code: string
+          invite_link_token: string
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          invite_link_token?: string
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          invite_link_token?: string
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_members: {
+        Row: {
+          avatar_url: string | null
+          display_name: string
+          id: string
+          joined_at: string
+          member_color: string | null
+          role: Database["public"]["Enums"]["workspace_role"]
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          display_name: string
+          id?: string
+          joined_at?: string
+          member_color?: string | null
+          role?: Database["public"]["Enums"]["workspace_role"]
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          display_name?: string
+          id?: string
+          joined_at?: string
+          member_color?: string | null
+          role?: Database["public"]["Enums"]["workspace_role"]
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_notifications_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          created_at: string
+          created_by: string
+          default_currency: string
+          id: string
+          logo_url: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          default_currency?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          default_currency?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
         }
         Relationships: []
       }
@@ -596,9 +934,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_workspace_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["workspace_role"][]
+          _user_id: string
+          _workspace_id: string
+        }
+        Returns: boolean
+      }
+      is_workspace_member: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      workspace_role: "owner" | "admin" | "accountant" | "member" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -727,6 +1078,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      workspace_role: ["owner", "admin", "accountant", "member", "viewer"],
     },
   },
 } as const
