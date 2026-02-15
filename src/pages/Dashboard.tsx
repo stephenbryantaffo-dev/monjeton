@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,12 +25,12 @@ const Dashboard = () => {
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [customDate, setCustomDate] = useState<Date | undefined>();
+  const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    if (activePeriod === 2 && !customDate) return;
+    if (activePeriod === 2 && !customRange?.from) return;
 
     const fetchData = async () => {
       setLoading(true);
@@ -44,8 +45,8 @@ const Dashboard = () => {
       } else if (activePeriod === 1) {
         startDate = endDate = now.toISOString().split("T")[0];
       } else {
-        const d = customDate!;
-        startDate = endDate = d.toISOString().split("T")[0];
+        startDate = customRange!.from!.toISOString().split("T")[0];
+        endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
       }
 
       const { data } = await supabase
@@ -61,7 +62,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [user, activePeriod, customDate]);
+  }, [user, activePeriod, customRange]);
 
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
@@ -132,16 +133,29 @@ const Dashboard = () => {
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
             <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activePeriod === 2 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-              {activePeriod === 2 && customDate ? format(customDate, "d MMM", { locale: fr }) : <CalendarIcon className="w-4 h-4" />}
+              {activePeriod === 2 && customRange?.from
+                ? customRange.to
+                  ? `${format(customRange.from, "d MMM", { locale: fr })} - ${format(customRange.to, "d MMM", { locale: fr })}`
+                  : format(customRange.from, "d MMM", { locale: fr })
+                : <CalendarIcon className="w-4 h-4" />}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="center">
             <Calendar
-              mode="single"
-              selected={customDate}
-              onSelect={(date) => { setCustomDate(date); setCalendarOpen(false); }}
+              mode="range"
+              selected={customRange}
+              onSelect={(range) => {
+                setCustomRange(range);
+                if (range?.from && range?.to) setCalendarOpen(false);
+              }}
+              numberOfMonths={1}
               initialFocus
               className={cn("p-3 pointer-events-auto")}
+              classNames={{
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                day_range_middle: "aria-selected:bg-primary/20 aria-selected:text-primary-foreground",
+                day_today: "bg-primary/10 text-primary",
+              }}
             />
           </PopoverContent>
         </Popover>
