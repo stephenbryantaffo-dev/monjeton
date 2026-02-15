@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   session: Session | null;
@@ -14,6 +13,10 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const DEMO_EMAIL = "demo@trackemoney.app";
+const DEMO_PASSWORD = "demo123456";
+const DEMO_NAME = "Utilisateur Demo";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -28,6 +31,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .single();
     setProfile(data);
+  };
+
+  const autoSignIn = async () => {
+    // Try sign in first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    });
+    if (!signInError) return;
+
+    // If sign in fails, create the account
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      options: { data: { full_name: DEMO_NAME } },
+    });
+    if (signUpError) {
+      console.error("Auto sign-in failed:", signUpError.message);
+      setLoading(false);
+      return;
+    }
+    // Sign in after signup
+    await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    });
   };
 
   useEffect(() => {
@@ -49,8 +78,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        setLoading(false);
+      } else {
+        // No session - auto sign in demo user
+        autoSignIn();
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -78,6 +110,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setUser(null);
     setProfile(null);
+    // Re-login demo user after sign out
+    autoSignIn();
   };
 
   return (
