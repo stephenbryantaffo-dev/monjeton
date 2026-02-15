@@ -14,6 +14,8 @@ const ScanUploadArea = ({ scanType, onFileSelected }: ScanUploadAreaProps) => {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) onFileSelected(f);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
   };
 
   return (
@@ -36,7 +38,7 @@ const ScanUploadArea = ({ scanType, onFileSelected }: ScanUploadAreaProps) => {
         </h3>
         <p className="text-sm text-muted-foreground">
           {scanType === "receipt"
-            ? "Prenez en photo votre ticket de caisse bien à plat et bien éclairé"
+            ? "Prenez en photo ou importez votre ticket de caisse (image ou PDF)"
             : "Uploadez votre capture d'écran Mobile Money (Wave, Orange, MTN, Moov)"}
         </p>
       </div>
@@ -44,7 +46,7 @@ const ScanUploadArea = ({ scanType, onFileSelected }: ScanUploadAreaProps) => {
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept={scanType === "receipt" ? "image/*,application/pdf" : "image/*"}
         capture="environment"
         onChange={handleFile}
         className="hidden"

@@ -14,6 +14,7 @@ import ScanHistory from "@/components/scan/ScanHistory";
 const Scan = () => {
   const { user } = useAuth();
   const [preview, setPreview] = useState<string | null>(null);
+  const [isPdf, setIsPdf] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [scanType, setScanType] = useState<"receipt" | "screenshot">("receipt");
   const [loading, setLoading] = useState(false);
@@ -42,6 +43,8 @@ const Scan = () => {
   const handleFileSelected = (f: File) => {
     setFile(f);
     setResult(null);
+    const pdf = f.type === "application/pdf";
+    setIsPdf(pdf);
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result as string);
     reader.readAsDataURL(f);
@@ -137,6 +140,7 @@ const Scan = () => {
     setFile(null);
     setResult(null);
     setScanId(null);
+    setIsPdf(false);
   };
 
   const refreshHistory = async () => {
@@ -159,12 +163,22 @@ const Scan = () => {
       ) : (
         <div className="space-y-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl overflow-hidden">
-            <img src={preview} alt="Scan" className="w-full max-h-64 object-contain" />
+            {isPdf ? (
+              <div className="p-6 flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-xl bg-destructive/10 flex items-center justify-center">
+                  <span className="text-2xl">📄</span>
+                </div>
+                <p className="text-sm font-medium text-foreground">{file?.name}</p>
+                <p className="text-xs text-muted-foreground">Fichier PDF prêt pour l'analyse</p>
+              </div>
+            ) : (
+              <img src={preview} alt="Scan" className="w-full max-h-64 object-contain" />
+            )}
           </motion.div>
 
           {!result && !loading && (
             <Button onClick={analyze} className="w-full gradient-primary text-primary-foreground">
-              Analyser l'image
+              {isPdf ? "Analyser le PDF" : "Analyser l'image"}
             </Button>
           )}
 
