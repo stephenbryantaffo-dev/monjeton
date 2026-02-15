@@ -24,7 +24,6 @@ const Scan = () => {
   const [wallets, setWallets] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
 
-  // For now, all premium features are unlocked for testing
   const isPremium = true;
 
   useEffect(() => {
@@ -50,6 +49,24 @@ const Scan = () => {
     reader.readAsDataURL(f);
   };
 
+  const convertCurrency = async (amount: number, currency: string): Promise<{
+    converted_amount: number;
+    exchange_rate: number;
+    source: string;
+    date: string;
+  } | null> => {
+    try {
+      const resp = await supabase.functions.invoke("convert-currency", {
+        body: { amount, from_currency: currency, to_currency: "XOF" },
+      });
+      if (resp.error) throw resp.error;
+      return resp.data;
+    } catch (err) {
+      console.error("Currency conversion failed:", err);
+      return null;
+    }
+  };
+
   const analyze = async () => {
     if (!user || !file || !preview) return;
     setLoading(true);
@@ -68,6 +85,23 @@ const Scan = () => {
 
       if (resp.error) throw resp.error;
       const parsed: ParsedResult = resp.data?.parsed || {};
+
+      // Currency detection & conversion
+      const detectedCurrency = (parsed.currency || "XOF").toUpperCase();
+      parsed.currency = detectedCurrency;
+      parsed.original_amount = parsed.amount;
+
+      if (detectedCurrency !== "XOF" && parsed.amount) {
+        const conversion = await convertCurrency(parsed.amount, detectedCurrency);
+        if (conversion) {
+          parsed.converted_amount_xof = conversion.converted_amount;
+          parsed.exchange_rate_used = conversion.exchange_rate;
+          parsed.exchange_rate_source = conversion.source;
+        } else {
+          parsed.conversion_error = "Impossible de récupérer le taux de change. Veuillez saisir manuellement.";
+        }
+      }
+
       setResult(parsed);
 
       const { data: scanData } = await supabase.from("receipt_scans").insert({
@@ -81,8 +115,13 @@ const Scan = () => {
         parsed_type: parsed.type || null,
         parsed_category: parsed.category || null,
         parsed_wallet: parsed.wallet || null,
+        parsed_currency: detectedCurrency,
+        parsed_original_amount: parsed.original_amount || null,
+        parsed_converted_amount_xof: parsed.converted_amount_xof || null,
+        parsed_exchange_rate_used: parsed.exchange_rate_used || null,
+        parsed_exchange_rate_source: parsed.exchange_rate_source || null,
         status: "pending",
-      }).select().single();
+      } as any).select().single();
 
       if (scanData) setScanId(scanData.id);
     } catch (err: any) {
@@ -107,15 +146,26 @@ const Scan = () => {
       if (match) walletIdVal = match.id;
     }
 
+    const needsConversion = data.currency && data.currency !== "XOF";
+    const finalAmountXof = needsConversion && data.converted_amount_xof
+      ? data.converted_amount_xof
+      : data.amount || 0;
+
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
       type: data.type || "expense",
-      amount: data.amount || 0,
+      amount: finalAmountXof,
       date: data.date || new Date().toISOString().split("T")[0],
       note: data.merchant ? `Scan: ${data.merchant}` : "Scan",
       category_id: categoryId,
       wallet_id: walletIdVal,
-    });
+      original_amount: data.original_amount || data.amount || 0,
+      original_currency: data.currency || "XOF",
+      converted_amount_xof: needsConversion ? finalAmountXof : null,
+      exchange_rate_used: data.exchange_rate_used || null,
+      exchange_rate_source: data.exchange_rate_source || null,
+      conversion_date: needsConversion ? new Date().toISOString().split("T")[0] : null,
+    } as any);
 
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });

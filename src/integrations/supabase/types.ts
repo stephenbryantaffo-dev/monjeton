@@ -246,8 +246,13 @@ export type Database = {
           image_url: string | null
           parsed_amount: number | null
           parsed_category: string | null
+          parsed_converted_amount_xof: number | null
+          parsed_currency: string | null
           parsed_date: string | null
+          parsed_exchange_rate_source: string | null
+          parsed_exchange_rate_used: number | null
           parsed_merchant: string | null
+          parsed_original_amount: number | null
           parsed_type: string | null
           parsed_wallet: string | null
           scan_type: string
@@ -261,8 +266,13 @@ export type Database = {
           image_url?: string | null
           parsed_amount?: number | null
           parsed_category?: string | null
+          parsed_converted_amount_xof?: number | null
+          parsed_currency?: string | null
           parsed_date?: string | null
+          parsed_exchange_rate_source?: string | null
+          parsed_exchange_rate_used?: number | null
           parsed_merchant?: string | null
+          parsed_original_amount?: number | null
           parsed_type?: string | null
           parsed_wallet?: string | null
           scan_type?: string
@@ -276,8 +286,13 @@ export type Database = {
           image_url?: string | null
           parsed_amount?: number | null
           parsed_category?: string | null
+          parsed_converted_amount_xof?: number | null
+          parsed_currency?: string | null
           parsed_date?: string | null
+          parsed_exchange_rate_source?: string | null
+          parsed_exchange_rate_used?: number | null
           parsed_merchant?: string | null
+          parsed_original_amount?: number | null
           parsed_type?: string | null
           parsed_wallet?: string | null
           scan_type?: string
@@ -459,10 +474,16 @@ export type Database = {
         Row: {
           amount: number
           category_id: string | null
+          conversion_date: string | null
+          converted_amount_xof: number | null
           created_at: string
           date: string
+          exchange_rate_source: string | null
+          exchange_rate_used: number | null
           id: string
           note: string | null
+          original_amount: number | null
+          original_currency: string | null
           type: string
           user_id: string
           wallet_id: string | null
@@ -470,10 +491,16 @@ export type Database = {
         Insert: {
           amount: number
           category_id?: string | null
+          conversion_date?: string | null
+          converted_amount_xof?: number | null
           created_at?: string
           date?: string
+          exchange_rate_source?: string | null
+          exchange_rate_used?: number | null
           id?: string
           note?: string | null
+          original_amount?: number | null
+          original_currency?: string | null
           type: string
           user_id: string
           wallet_id?: string | null
@@ -481,10 +508,16 @@ export type Database = {
         Update: {
           amount?: number
           category_id?: string | null
+          conversion_date?: string | null
+          converted_amount_xof?: number | null
           created_at?: string
           date?: string
+          exchange_rate_source?: string | null
+          exchange_rate_used?: number | null
           id?: string
           note?: string | null
+          original_amount?: number | null
+          original_currency?: string | null
           type?: string
           user_id?: string
           wallet_id?: string | null

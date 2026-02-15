@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { GridItemSkeleton } from "@/components/DashboardSkeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { z } from "zod";
 
 const COLOR_PALETTE = [
   "hsl(84,81%,44%)",
@@ -25,6 +29,12 @@ const COLOR_PALETTE = [
   "hsl(60,70%,50%)",
   "hsl(0,0%,60%)",
 ];
+
+const categorySchema = z.object({
+  name: z.string().trim().min(1, "Le nom est requis").max(50, "50 caractères max"),
+  type: z.enum(["expense", "income"]),
+  color: z.string().min(1),
+});
 
 const ColorPicker = ({ value, onChange }: { value: string; onChange: (c: string) => void }) => (
   <div className="grid grid-cols-4 gap-2">
@@ -48,6 +58,15 @@ const Categories = () => {
   const [newType, setNewType] = useState<"expense" | "income">("expense");
   const [newColor, setNewColor] = useState(COLOR_PALETTE[3]);
   const [loading, setLoading] = useState(true);
+
+  // Edit dialog state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState<"expense" | "income">("expense");
+  const [editColor, setEditColor] = useState(COLOR_PALETTE[3]);
+  const [editError, setEditError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const fetchCategories = async () => {
     if (!user) return;
@@ -79,8 +98,43 @@ const Categories = () => {
     fetchCategories();
   };
 
+  const openEdit = (cat: any) => {
+    setEditId(cat.id);
+    setEditName(cat.name);
+    setEditType(cat.type);
+    setEditColor(cat.color || COLOR_PALETTE[3]);
+    setEditError("");
+    setEditOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    const result = categorySchema.safeParse({ name: editName, type: editType, color: editColor });
+    if (!result.success) {
+      setEditError(result.error.errors[0]?.message || "Erreur de validation");
+      return;
+    }
+    if (!editId) return;
+    setSaving(true);
+    const { error } = await supabase.from("categories").update({
+      name: result.data.name,
+      type: result.data.type,
+      color: result.data.color,
+    }).eq("id", editId);
+    setSaving(false);
+
+    if (error) {
+      setEditError(error.message);
+      return;
+    }
+
+    setCategories(prev => prev.map(c => c.id === editId ? { ...c, name: result.data.name, type: result.data.type, color: result.data.color } : c));
+    toast({ title: "Catégorie modifiée ✅" });
+    setEditOpen(false);
+  };
+
   return (
     <DashboardLayout title="Catégories">
+      <TooltipProvider>
       <div className="grid grid-cols-2 gap-3 mb-4">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => <GridItemSkeleton key={i} />)
@@ -92,6 +146,19 @@ const Categories = () => {
               transition={{ delay: 0.04 * i }}
               className="glass-card rounded-2xl p-4 flex flex-col items-center gap-2 relative"
             >
+              {/* Edit pencil */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => openEdit(c)}
+                    className="absolute top-2 left-2 p-1.5 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-secondary/50 transition-all"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top"><p>Modifier</p></TooltipContent>
+              </Tooltip>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <button className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style={{ backgroundColor: `${c.color || 'hsl(200,70%,50%)'}20` }}>
@@ -132,6 +199,47 @@ const Categories = () => {
           <Plus className="w-4 h-4" /> Ajouter une catégorie
         </Button>
       )}
+      </TooltipProvider>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifier la catégorie</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Nom</Label>
+              <Input
+                value={editName}
+                onChange={(e) => { setEditName(e.target.value); setEditError(""); }}
+                className="bg-secondary border-border"
+                maxLength={50}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Type</Label>
+              <div className="flex gap-2 mt-1">
+                <button onClick={() => setEditType("expense")} className={`flex-1 py-2 rounded-lg text-sm ${editType === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground border border-border"}`}>Dépense</button>
+                <button onClick={() => setEditType("income")} className={`flex-1 py-2 rounded-lg text-sm ${editType === "income" ? "gradient-primary text-primary-foreground" : "text-muted-foreground border border-border"}`}>Revenu</button>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Couleur</Label>
+              <div className="mt-2">
+                <ColorPicker value={editColor} onChange={setEditColor} />
+              </div>
+            </div>
+            {editError && <p className="text-xs text-destructive">{editError}</p>}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setEditOpen(false)}>Annuler</Button>
+            <Button onClick={handleEditSave} disabled={saving} className="gradient-primary text-primary-foreground">
+              {saving ? "..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
