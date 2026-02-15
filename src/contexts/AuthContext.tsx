@@ -14,9 +14,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEMO_EMAIL = "demo@trackemoney.app";
+const DEMO_EMAIL = "stephenbryantaffo@gmail.com";
 const DEMO_PASSWORD = "demo123456";
-const DEMO_NAME = "Utilisateur Demo";
+const DEMO_NAME = "Stephen Bryant Affo";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
