@@ -14,10 +14,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEMO_EMAIL = "stephenbryantaffo@gmail.com";
-const DEMO_PASSWORD = "demo123456";
-const DEMO_NAME = "Stephen Bryant Affo";
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -33,31 +29,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfile(data);
   };
 
-  const autoSignIn = async () => {
-    // Try sign in first
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
-    });
-    if (!signInError) return;
-
-    // If sign in fails, create the account
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
-      options: { data: { full_name: DEMO_NAME } },
-    });
-    if (signUpError) {
-      console.error("Auto sign-in failed:", signUpError.message);
-      setLoading(false);
-      return;
-    }
-    // Sign in after signup
-    await supabase.auth.signInWithPassword({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
-    });
-  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -80,8 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id);
         setLoading(false);
       } else {
-        // No session - auto sign in demo user
-        autoSignIn();
+        setLoading(false);
       }
     });
 
@@ -110,8 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setUser(null);
     setProfile(null);
-    // Re-login demo user after sign out
-    autoSignIn();
   };
 
   return (
