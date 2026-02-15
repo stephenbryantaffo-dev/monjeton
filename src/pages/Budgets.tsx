@@ -138,6 +138,7 @@ const Budgets = () => {
 
   const budgetUsedPercent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
   const isOverBudget = totalSpent > totalBudget && totalBudget > 0;
+  const fmt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0");
 
   return (
     <DashboardLayout title="Budgets">
@@ -166,12 +167,12 @@ const Budgets = () => {
           {isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
         </div>
         <p className="text-3xl font-bold text-foreground mb-1">
-          {totalSpent.toLocaleString("fr-FR")} / {totalBudget.toLocaleString("fr-FR")} F
+          {fmt(totalSpent)} / {fmt(totalBudget)} F
         </p>
         <Progress value={budgetUsedPercent} className="h-2 mb-3" />
         {isOverBudget && (
           <p className="text-xs text-destructive font-medium">
-            ⚠️ Budget dépassé de {(totalSpent - totalBudget).toLocaleString("fr-FR")} F
+            ⚠️ Budget dépassé de {fmt(totalSpent - totalBudget)} F
           </p>
         )}
         <div className="flex gap-2 mt-3">
@@ -232,7 +233,7 @@ const Budgets = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
                 <span className={`text-xs font-semibold ${over ? "text-destructive" : "text-muted-foreground"}`}>
-                  {(cb.spent || 0).toLocaleString("fr-FR")} / {cb.budget_amount.toLocaleString("fr-FR")} F
+                  {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
                 </span>
               </div>
               <Progress value={pct} className="h-1.5" />
