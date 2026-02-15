@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -10,10 +10,13 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
+  { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
   { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
   { icon: Tag, label: "Catégories", path: "/categories" },
   { icon: Target, label: "Épargne", path: "/savings" },
   { icon: Shield, label: "Dettes", path: "/debts" },
+  { icon: PieChart, label: "Budgets", path: "/budgets" },
+  { icon: Users, label: "Tontine", path: "/tontine" },
   { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
   { icon: CreditCard, label: "Abonnement", path: "/subscribe" },
 ];
