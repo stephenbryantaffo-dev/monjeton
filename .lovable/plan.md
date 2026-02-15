@@ -1,46 +1,44 @@
 
 
-## Corrections mobile pour Mon Jeton
+## Probleme identifie
 
-### Problemes identifies
+L'erreur **"new row violates row-level security policy for table workspaces"** est causee par le fait que la politique RLS d'insertion sur la table `workspaces` est de type **RESTRICTIVE** au lieu de **PERMISSIVE**.
 
-1. **Scan - Upload depuis la galerie ne fonctionne pas sur mobile** : L'attribut `capture="environment"` force l'ouverture de la camera. La manipulation dynamique de cet attribut (retirer puis remettre) est instable sur mobile. Solution : utiliser deux inputs separes.
+En PostgreSQL, les politiques restrictives ne font que **reduire** l'acces accorde par les politiques permissives. S'il n'y a **aucune** politique permissive, alors aucun acces n'est accorde, meme si la politique restrictive devrait passer.
 
-2. **Enregistrement vocal ne fonctionne pas sur iOS** : Le format `audio/webm` n'est pas supporte par Safari/iOS. Il faut detecter le format supporte (`audio/mp4` sur iOS, `audio/webm` sur Android/desktop).
+Ce meme probleme affecte probablement toutes les tables qui utilisent des politiques restrictives pour INSERT.
 
-3. **Bouton vocal de l'Assistant** : Les evenements `onTouchStart`/`onTouchEnd` peuvent provoquer un scroll ou un comportement inattendu sur mobile. Il faut ajouter `preventDefault` pour eviter ca.
+## Solution
 
-4. **Input clavier mobile** : Sur l'assistant, appuyer sur "Entrer" sur le clavier mobile ne fonctionne pas toujours. Il faut gerer aussi l'evenement `compositionEnd`.
+Executer une migration SQL qui remplace les politiques RLS restrictives par des politiques **permissives** sur toutes les tables concernees :
 
----
+- `workspaces` (INSERT)
+- `workspace_members` (INSERT pour "Users can join workspace" et "Owner/admin can manage members")
+- `workspace_invites` (INSERT)
+- `workspace_chat_rooms` (INSERT)
+- `workspace_chat_messages` (INSERT)
+- `workspace_notifications` (INSERT)
+- `transaction_attachments` (INSERT)
 
-### Details techniques
+Pour chaque politique affectee :
+1. DROP la politique existante (RESTRICTIVE)
+2. Re-creer la meme politique en mode PERMISSIVE (sans le mot-cle `RESTRICTIVE`)
 
-**Fichier 1 : `src/components/scan/ScanUploadArea.tsx`**
-- Separer en deux inputs `<input type="file">` distincts :
-  - Un avec `capture="environment"` pour le bouton "Photo" (ouvre la camera)
-  - Un sans attribut `capture` pour le bouton "Galerie" (ouvre le selecteur de fichiers)
-- Chaque bouton reference son propre input
+Les politiques SELECT, UPDATE et DELETE resteront inchangees car elles fonctionnent correctement en mode restrictif quand il y a deja d'autres politiques permissives pour le meme type d'operation.
 
-**Fichier 2 : `src/pages/Assistant.tsx`**
-- Ajouter une fonction utilitaire pour detecter le mimeType audio supporte :
-  ```
-  const getSupportedMimeType = () => {
-    if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
-    if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
-    if (MediaRecorder.isTypeSupported("audio/ogg")) return "audio/ogg";
-    return "";
-  }
-  ```
-- Utiliser ce mimeType dans `new MediaRecorder(stream, { mimeType })`
-- Ajouter `e.preventDefault()` sur `onTouchStart`/`onTouchEnd` du bouton micro pour eviter le scroll
+## Details techniques
 
-**Fichier 3 : `src/pages/NewTransaction.tsx`**
-- Meme correction du mimeType audio que pour l'Assistant
-- Ajouter la detection du format supporte avant la creation du MediaRecorder
+Exemple pour la table `workspaces` :
 
-**Fichier 4 : `src/components/scan/ScanUploadArea.tsx` (complement)**
-- Sur mobile, certains navigateurs ne supportent pas `application/pdf` dans `accept`. Ajouter `.pdf` en complement pour une meilleure compatibilite
+```sql
+DROP POLICY IF EXISTS "Authenticated users can create workspaces" ON public.workspaces;
+CREATE POLICY "Authenticated users can create workspaces"
+  ON public.workspaces FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = created_by);
+```
 
-**Aucune modification de base de donnees necessaire.**
+Le mot-cle `TO authenticated` garantit que seuls les utilisateurs connectes peuvent inserer, et le `WITH CHECK` verifie que le `created_by` correspond bien a l'utilisateur connecte.
+
+La meme transformation sera appliquee a toutes les politiques INSERT des autres tables listees ci-dessus.
 
