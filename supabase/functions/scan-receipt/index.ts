@@ -14,24 +14,46 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const prompt = scanType === "screenshot"
-      ? `Analyse cette capture d'écran de transaction Mobile Money (Wave, Orange Money, MTN, Moov). Extrais les informations suivantes au format JSON:
+      ? `Analyse cette capture d'écran de transaction Mobile Money ou paiement. Extrais les informations suivantes au format JSON:
 {
-  "amount": nombre (montant en FCFA, sans espaces ni symboles),
+  "amount": nombre (montant exact tel qu'affiché, sans espaces ni symboles de devise),
+  "currency": "code ISO de la devise détectée (USD, EUR, GBP, XOF, NGN, GHS, etc.)",
   "date": "YYYY-MM-DD",
   "merchant": "nom du destinataire ou expéditeur",
   "type": "expense" ou "income" (envoi = expense, réception = income),
-  "wallet": "Wave" ou "Orange Money" ou "MTN" ou "Moov",
+  "wallet": "Wave" ou "Orange Money" ou "MTN" ou "Moov" ou "PayPal" ou autre,
   "category": "catégorie probable"
 }
+
+IMPORTANT pour la devise:
+- $ → USD
+- € → EUR
+- £ → GBP
+- CFA ou FCFA ou XOF → XOF
+- ₦ → NGN
+- GH₵ → GHS
+- Si aucune devise n'est détectée, utilise "XOF" par défaut.
+
 Retourne UNIQUEMENT le JSON, sans texte autour.`
       : `Analyse ce ticket de caisse. Extrais les informations suivantes au format JSON:
 {
-  "amount": nombre (montant total en FCFA),
+  "amount": nombre (montant total exact tel qu'affiché, sans symboles de devise),
+  "currency": "code ISO de la devise détectée (USD, EUR, GBP, XOF, NGN, GHS, etc.)",
   "date": "YYYY-MM-DD",
   "merchant": "nom du magasin/commerçant",
   "type": "expense",
   "category": "catégorie probable (Alimentation, Shopping, Santé, etc.)"
 }
+
+IMPORTANT pour la devise:
+- $ → USD
+- € → EUR
+- £ → GBP
+- CFA ou FCFA ou XOF → XOF
+- ₦ → NGN
+- GH₵ → GHS
+- Si aucune devise n'est détectée, utilise "XOF" par défaut.
+
 Retourne UNIQUEMENT le JSON, sans texte autour.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

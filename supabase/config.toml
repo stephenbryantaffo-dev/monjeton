@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.parse-voice]
 verify_jwt = false
+
+[functions.convert-currency]
+verify_jwt = false
