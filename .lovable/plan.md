@@ -1,49 +1,46 @@
 
 
-## Section "Aujourd'hui" sur le tableau de bord
+## Remplacement du selecteur de periode sur le Dashboard
 
 ### Objectif
-Ajouter une section **resume journalier** en haut du dashboard, juste apres le message de bienvenue, pour afficher en un coup d'oeil les depenses et revenus du jour.
+Transformer la barre de selection de periode actuelle (`Semaine | Mois | Annee`) en un nouveau systeme plus pratique : `Hier | Aujourd'hui | [icone calendrier]`.
 
-### Ce qui sera affiche
-
-La section contiendra :
-1. **Carte "Depenses du jour"** -- total des depenses de la journee en cours
-2. **Carte "Revenus du jour"** -- total des revenus de la journee en cours
-3. **Liste des transactions du jour** -- toutes les transactions datees d'aujourd'hui, avec categorie, note et montant
-
-Si aucune transaction n'a eu lieu aujourd'hui, un message "Aucune depense aujourd'hui" sera affiche.
-
-### Placement dans la page
+### Ce qui change visuellement
 
 ```text
-+-------------------------------+
-| Bonjour, [nom]                |
-+-------------------------------+
-| === Aujourd'hui (15 fev) ===  |  <-- NOUVELLE SECTION
-| [Depenses: X F] [Revenus: Y F]|
-| - Alimentation  -2 500 F     |
-| - Transport      -1 000 F    |
-+-------------------------------+
-| [Semaine] [Mois] [Annee]     |  <-- existant
-| Revenus / Depenses cards      |
-| Graphiques, etc.              |
-+-------------------------------+
+AVANT :  [ Semaine ] [ Mois ] [ Annee ]
+
+APRES :  [  Hier  ] [ Aujourd'hui ] [ icone calendrier ]
 ```
+
+Le troisieme bouton affichera une icone `CalendarIcon` de Lucide. En cliquant dessus, un **Popover** s'ouvrira avec un **calendrier** (composant `Calendar` de shadcn) permettant de choisir une date ou un intervalle personnalise.
 
 ### Details techniques
 
 **Fichier modifie** : `src/pages/Dashboard.tsx`
 
-1. **Calcul des donnees du jour** : Filtrer `transactions` ou la date correspond a `new Date().toISOString().split("T")[0]` (date du jour). Calculer `todayIncome` et `todayExpense` via `useMemo`.
+1. **Constantes** : Remplacer `const periods = ["Semaine", "Mois", "Annee"]` par une logique a 3 modes :
+   - Mode 0 = "Hier" (filtre sur la date d'hier)
+   - Mode 1 = "Aujourd'hui" (filtre sur la date du jour) -- selectionne par defaut
+   - Mode 2 = "Calendrier" (date/intervalle personnalise via un date picker)
 
-2. **Nouvelle section UI** : Inserer un bloc entre le message de bienvenue et le selecteur de periode contenant :
-   - Le titre "Aujourd'hui" avec la date formatee en francais (`new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long" })`)
-   - Deux mini-cartes cote a cote (grid 2 colonnes) : depenses du jour et revenus du jour, stylees avec `glass-card` et `motion.div` comme les cartes existantes
-   - La liste des transactions du jour avec le meme design que les "Transactions recentes"
+2. **Logique de filtrage (useEffect)** : Adapter le calcul de `startDate` et ajouter un `endDate` :
+   - **Hier** : `startDate = endDate = hier`
+   - **Aujourd'hui** : `startDate = endDate = aujourd'hui`
+   - **Calendrier** : utiliser les dates selectionnees par l'utilisateur (nouvel etat `customDate`)
 
-3. **Gestion du mode privacy** : Utiliser `formatAmount()` deja en place pour masquer les montants si active.
+3. **Requete Supabase** : Ajouter un filtre `.lte("date", endDate)` en plus du `.gte("date", startDate)` existant pour borner correctement l'intervalle.
 
-4. **Skeleton loading** : Afficher des skeletons (`CardSkeleton`, `ListItemSkeleton`) pendant le chargement.
+4. **Nouvel etat** : Ajouter `const [customDate, setCustomDate] = useState<Date | undefined>()` pour stocker la date choisie dans le calendrier.
 
-Aucune modification de base de donnees ni de requete supplementaire n'est necessaire -- les transactions sont deja chargees et filtrees cote client.
+5. **UI du troisieme bouton** : Remplacer le texte "Annee" par l'icone `CalendarIcon` de Lucide, entoure d'un composant `Popover` + `PopoverContent` contenant le `Calendar` de shadcn. Quand une date est selectionnee, le bouton affichera la date formatee (ex: "15 fev") a la place de l'icone.
+
+6. **Imports supplementaires** :
+   - `CalendarIcon` depuis `lucide-react`
+   - `Calendar` depuis `@/components/ui/calendar`
+   - `Popover`, `PopoverTrigger`, `PopoverContent` depuis `@/components/ui/popover`
+
+7. **Trend modes** : Adapter `trendModes` pour correspondre aux nouveaux termes (ex: `["Jour", "Semaine"]`).
+
+8. **Couleurs** : Aucun changement -- le bouton actif gardera le style `gradient-primary text-primary-foreground` existant, et le calendrier utilisera les couleurs shadcn deja configurees.
+
