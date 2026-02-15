@@ -1,14 +1,29 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
+import { Download, AlertTriangle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
+import { generateMonthlyPdf } from "@/lib/generatePdf";
+import { useToast } from "@/hooks/use-toast";
+
+interface Leak {
+  category: string;
+  count: number;
+  total: number;
+}
 
 const Reports = () => {
   const { user } = useAuth();
+  const { formatAmount } = usePrivacy();
+  const { toast } = useToast();
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [leaks, setLeaks] = useState<Leak[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -23,6 +38,7 @@ const Reports = () => {
         .eq("user_id", user.id);
 
       if (!transactions) return;
+      setAllTransactions(transactions);
 
       // Category breakdown for current month
       const monthTx = transactions.filter(t => t.date >= startOfMonth && t.type === "expense");
@@ -50,15 +66,70 @@ const Reports = () => {
         }
       });
       setMonthlyData(Object.values(monthly));
+
+      // Money leak detection: small expenses (<2000) appearing 3+ times in same category this month
+      const smallExpenses = monthTx.filter(t => Number(t.amount) < 2000);
+      const leakMap: Record<string, { category: string; count: number; total: number }> = {};
+      smallExpenses.forEach(t => {
+        const cat = t.categories?.name || "Autre";
+        if (!leakMap[cat]) leakMap[cat] = { category: cat, count: 0, total: 0 };
+        leakMap[cat].count++;
+        leakMap[cat].total += Number(t.amount);
+      });
+      setLeaks(Object.values(leakMap).filter(l => l.count >= 3));
     };
 
     fetchData();
   }, [user]);
 
   const total = categoryData.reduce((s, c) => s + c.value, 0);
+  const totalIncome = allTransactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+
+  const handleExportPdf = () => {
+    const now = new Date();
+    const monthLabel = now.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    generateMonthlyPdf({
+      month: monthLabel,
+      totalIncome,
+      totalExpense: total,
+      categories: categoryData.map(c => ({ name: c.name, value: c.value })),
+      monthlyData,
+    });
+    toast({ title: "PDF exporté ✅" });
+  };
 
   return (
     <DashboardLayout title="Rapports">
+      {/* Export PDF */}
+      <div className="mb-4">
+        <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
+          <Download className="w-4 h-4" /> Exporter le rapport PDF
+        </Button>
+      </div>
+
+      {/* Money Leaks */}
+      {leaks.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4 border border-neon-yellow/30" style={{ borderColor: "hsl(45, 96%, 58%, 0.3)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-5 h-5" style={{ color: "hsl(45, 96%, 58%)" }} />
+            <h2 className="text-sm font-semibold text-foreground">Fuites d'argent détectées</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">Petites dépenses fréquentes (&lt;2000 F) ce mois-ci :</p>
+          <div className="space-y-2">
+            {leaks.map((l) => (
+              <div key={l.category} className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm text-foreground">{l.category}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{l.count} fois</span>
+                </div>
+                <span className="text-sm font-semibold" style={{ color: "hsl(45, 96%, 58%)" }}>{formatAmount(l.total)} F</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">💡 Ces petites dépenses s'accumulent. Essayez de les regrouper ou les réduire.</p>
+        </motion.div>
+      )}
+
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
         <h2 className="text-sm font-semibold text-foreground mb-4">Dépenses par catégorie</h2>
         {categoryData.length > 0 ? (
@@ -72,7 +143,7 @@ const Reports = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-lg font-bold text-foreground">{total.toLocaleString("fr-FR")}</p>
+                <p className="text-lg font-bold text-foreground">{formatAmount(total)}</p>
                 <p className="text-xs text-muted-foreground">FCFA</p>
               </div>
             </div>
@@ -83,7 +154,7 @@ const Reports = () => {
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
                     <span className="text-sm text-foreground">{c.name}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{c.value.toLocaleString("fr-FR")} F</span>
+                  <span className="text-sm text-muted-foreground">{formatAmount(c.value)} F</span>
                 </div>
               ))}
             </div>

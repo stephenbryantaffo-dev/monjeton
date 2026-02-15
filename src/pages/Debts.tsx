@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ArrowUpRight, ArrowDownLeft, Plus, Check, Trash2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Plus, Check, Trash2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Debts = () => {
   const { user } = useAuth();
+  const { formatAmount } = usePrivacy();
   const { toast } = useToast();
   const [debts, setDebts] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "i_owe" | "owed_to_me">("all");
@@ -49,6 +50,11 @@ const Debts = () => {
     fetchDebts();
   };
 
+  const sendWhatsAppReminder = (debt: any) => {
+    const msg = `Salut ${debt.person_name}, tu me dois ${Number(debt.amount).toLocaleString("fr-FR")} FCFA, stp n'oublie pas 🙏`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   const filtered = debts.filter(d => filter === "all" || d.type === filter);
 
   return (
@@ -74,8 +80,13 @@ const Debts = () => {
                 {d.type === "i_owe" ? "Je dois" : "On me doit"}{d.due_date ? ` · ${new Date(d.due_date).toLocaleDateString("fr-FR")}` : ""}
               </p>
             </div>
-            <div className="text-right flex items-center gap-2">
-              <p className="text-sm font-bold text-foreground">{Number(d.amount).toLocaleString("fr-FR")} F</p>
+            <div className="text-right flex items-center gap-1.5">
+              <p className="text-sm font-bold text-foreground">{formatAmount(Number(d.amount))} F</p>
+              {d.type === "owed_to_me" && d.status !== "paid" && (
+                <button onClick={() => sendWhatsAppReminder(d)} className="text-primary" title="Rappeler via WhatsApp">
+                  <MessageCircle className="w-4 h-4" />
+                </button>
+              )}
               <button onClick={() => togglePaid(d.id, d.status)} className={d.status === "paid" ? "text-primary" : "text-muted-foreground"}>
                 <Check className="w-4 h-4" />
               </button>

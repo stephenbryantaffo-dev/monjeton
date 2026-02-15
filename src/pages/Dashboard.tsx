@@ -5,21 +5,16 @@ import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, Wallet, MessageCircle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
-
-const CATEGORY_COLORS = [
-  "hsl(84, 81%, 44%)", "hsl(270, 70%, 60%)", "hsl(45, 96%, 58%)",
-  "hsl(200, 70%, 50%)", "hsl(0, 70%, 55%)", "hsl(340, 70%, 55%)",
-  "hsl(180, 60%, 45%)", "hsl(30, 80%, 50%)",
-];
 
 const periods = ["Semaine", "Mois", "Année"];
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
+  const { formatAmount } = usePrivacy();
   const [activePeriod, setActivePeriod] = useState(1);
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,13 +33,14 @@ const Dashboard = () => {
         startDate = new Date(now.getFullYear(), 0, 1);
       }
 
-      const [txRes, catRes] = await Promise.all([
-        supabase.from("transactions").select("*, categories(name, icon, color)").eq("user_id", user.id).gte("date", startDate.toISOString().split("T")[0]).order("date", { ascending: false }),
-        supabase.from("categories").select("*").eq("user_id", user.id),
-      ]);
+      const { data } = await supabase
+        .from("transactions")
+        .select("*, categories(name, icon, color)")
+        .eq("user_id", user.id)
+        .gte("date", startDate.toISOString().split("T")[0])
+        .order("date", { ascending: false });
 
-      setTransactions(txRes.data || []);
-      setCategories(catRes.data || []);
+      setTransactions(data || []);
       setLoading(false);
     };
 
@@ -89,7 +85,7 @@ const Dashboard = () => {
             <ArrowDownLeft className="w-4 h-4 text-primary" />
             <span className="text-xs text-muted-foreground">Revenus</span>
           </div>
-          <p className="text-xl font-bold text-foreground">{totalIncome.toLocaleString("fr-FR")}</p>
+          <p className="text-xl font-bold text-foreground">{formatAmount(totalIncome)}</p>
           <p className="text-xs text-muted-foreground">FCFA</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-4">
@@ -97,7 +93,7 @@ const Dashboard = () => {
             <ArrowUpRight className="w-4 h-4 text-destructive" />
             <span className="text-xs text-muted-foreground">Dépenses</span>
           </div>
-          <p className="text-xl font-bold text-foreground">{totalExpense.toLocaleString("fr-FR")}</p>
+          <p className="text-xl font-bold text-foreground">{formatAmount(totalExpense)}</p>
           <p className="text-xs text-muted-foreground">FCFA</p>
         </motion.div>
       </div>
@@ -117,7 +113,7 @@ const Dashboard = () => {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-lg font-bold text-foreground">{totalExpense.toLocaleString("fr-FR")}</p>
+              <p className="text-lg font-bold text-foreground">{formatAmount(totalExpense)}</p>
               <p className="text-xs text-muted-foreground">FCFA</p>
             </div>
           </div>
@@ -155,7 +151,7 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
               </div>
               <span className={`text-sm font-semibold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-                {t.type === "income" ? "+" : "-"}{Number(t.amount).toLocaleString("fr-FR")}
+                {t.type === "income" ? "+" : "-"}{formatAmount(Number(t.amount))}
               </span>
             </motion.div>
           ))}
@@ -165,7 +161,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Floating AI Assistant Bubble */}
       <Link
         to="/assistant"
         className="fixed bottom-24 right-5 z-50 w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
