@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Wallet, Trash2 } from "lucide-react";
+import { Search, Wallet, Filter, X } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,39 +15,164 @@ const Transactions = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [wallets, setWallets] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const fetchTransactions = async () => {
+  // Filters
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterWallet, setFilterWallet] = useState("all");
+  const [filterPeriod, setFilterPeriod] = useState("all");
+  const [filterMinAmount, setFilterMinAmount] = useState("");
+  const [filterMaxAmount, setFilterMaxAmount] = useState("");
+
+  const fetchData = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("transactions")
-      .select("*, categories(name, icon, color)")
-      .eq("user_id", user.id)
-      .order("date", { ascending: false });
-    setTransactions(data || []);
+    const [{ data: txData }, { data: catData }, { data: walData }] = await Promise.all([
+      supabase.from("transactions").select("*, categories(name, icon, color)").eq("user_id", user.id).order("date", { ascending: false }),
+      supabase.from("categories").select("id, name").eq("user_id", user.id),
+      supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
+    ]);
+    setTransactions(txData || []);
+    setCategories(catData || []);
+    setWallets(walData || []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchTransactions(); }, [user]);
+  useEffect(() => { fetchData(); }, [user]);
 
   const handleDelete = async (id: string) => {
     await supabase.from("transactions").delete().eq("id", id);
     toast({ title: "Transaction supprimée" });
-    fetchTransactions();
+    fetchData();
   };
 
-  const filtered = transactions.filter(t =>
-    (t.note || "").toLowerCase().includes(search.toLowerCase()) ||
-    (t.categories?.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const clearFilters = () => {
+    setFilterCategory("all");
+    setFilterWallet("all");
+    setFilterPeriod("all");
+    setFilterMinAmount("");
+    setFilterMaxAmount("");
+  };
+
+  const hasActiveFilters = filterCategory !== "all" || filterWallet !== "all" || filterPeriod !== "all" || filterMinAmount || filterMaxAmount;
+
+  const filtered = useMemo(() => {
+    let result = transactions;
+
+    // Text search
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(t =>
+        (t.note || "").toLowerCase().includes(s) ||
+        (t.categories?.name || "").toLowerCase().includes(s)
+      );
+    }
+
+    // Category filter
+    if (filterCategory !== "all") {
+      result = result.filter(t => t.category_id === filterCategory);
+    }
+
+    // Wallet filter
+    if (filterWallet !== "all") {
+      result = result.filter(t => t.wallet_id === filterWallet);
+    }
+
+    // Period filter
+    if (filterPeriod !== "all") {
+      const now = new Date();
+      let startDate: Date;
+      if (filterPeriod === "week") {
+        startDate = new Date(now); startDate.setDate(now.getDate() - 7);
+      } else if (filterPeriod === "month") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (filterPeriod === "3months") {
+        startDate = new Date(now); startDate.setMonth(now.getMonth() - 3);
+      } else {
+        startDate = new Date(now.getFullYear(), 0, 1);
+      }
+      result = result.filter(t => new Date(t.date) >= startDate);
+    }
+
+    // Amount filters
+    if (filterMinAmount) {
+      result = result.filter(t => Number(t.amount) >= Number(filterMinAmount));
+    }
+    if (filterMaxAmount) {
+      result = result.filter(t => Number(t.amount) <= Number(filterMaxAmount));
+    }
+
+    return result;
+  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount]);
 
   return (
     <DashboardLayout title="Transactions">
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-secondary border-border" />
+      <div className="flex gap-2 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-secondary border-border" />
+        </div>
+        <Button
+          variant={hasActiveFilters ? "hero" : "glass"}
+          size="icon"
+          onClick={() => setShowFilters(!showFilters)}
+          className="shrink-0"
+        >
+          <Filter className="w-4 h-4" />
+        </Button>
       </div>
+
+      {showFilters && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-foreground">Filtres avancés</p>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="text-xs text-primary flex items-center gap-1">
+                <X className="w-3 h-3" /> Réinitialiser
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="bg-secondary border-border text-sm"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterWallet} onValueChange={setFilterWallet}>
+              <SelectTrigger className="bg-secondary border-border text-sm"><SelectValue placeholder="Portefeuille" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous portefeuilles</SelectItem>
+                {wallets.map(w => <SelectItem key={w.id} value={w.id}>{w.wallet_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+              <SelectTrigger className="bg-secondary border-border text-sm"><SelectValue placeholder="Période" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toute période</SelectItem>
+                <SelectItem value="week">7 derniers jours</SelectItem>
+                <SelectItem value="month">Ce mois</SelectItem>
+                <SelectItem value="3months">3 derniers mois</SelectItem>
+                <SelectItem value="year">Cette année</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-1">
+              <Input type="number" placeholder="Min" value={filterMinAmount} onChange={e => setFilterMinAmount(e.target.value)} className="bg-secondary border-border text-sm" />
+              <Input type="number" placeholder="Max" value={filterMaxAmount} onChange={e => setFilterMaxAmount(e.target.value)} className="bg-secondary border-border text-sm" />
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground text-center">{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</p>
+        </motion.div>
+      )}
 
       <div className="space-y-2">
         {loading
