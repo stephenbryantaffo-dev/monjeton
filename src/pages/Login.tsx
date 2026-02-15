@@ -81,7 +81,7 @@ const Login = () => {
                 return;
               }
               const { error } = await (await import("@/integrations/supabase/client")).supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + "/login",
+                redirectTo: window.location.origin + "/reset-password",
               });
               if (error) {
                 toast({ title: "Erreur", description: error.message, variant: "destructive" });
