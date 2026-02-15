@@ -1,78 +1,49 @@
 
-# Changement de couleur des categories + Idees d'amelioration
 
-## 1. Changement de couleur des categories
+## Section "Aujourd'hui" sur le tableau de bord
 
-### Fonctionnalite
+### Objectif
+Ajouter une section **resume journalier** en haut du dashboard, juste apres le message de bienvenue, pour afficher en un coup d'oeil les depenses et revenus du jour.
 
-Chaque carte de categorie aura un bouton pour changer sa couleur. Au clic, une palette de couleurs predefinies (adaptees au theme sombre de l'app) s'affichera via un Popover. La couleur selectionnee sera sauvegardee en base de donnees immediatement.
+### Ce qui sera affiche
 
-### UX
+La section contiendra :
+1. **Carte "Depenses du jour"** -- total des depenses de la journee en cours
+2. **Carte "Revenus du jour"** -- total des revenus de la journee en cours
+3. **Liste des transactions du jour** -- toutes les transactions datees d'aujourd'hui, avec categorie, note et montant
 
-- Cliquer sur le rond colore de la categorie ouvre un Popover avec une grille de couleurs
-- La palette proposera 12 couleurs harmonieuses (vert lime, violet, jaune, rouge, bleu, orange, rose, cyan, etc.)
-- Le choix d'une couleur se repercute instantanement sur la carte (apercu en temps reel)
-- La nouvelle couleur est aussi utilisee lors de la creation d'une categorie (selecteur dans le formulaire d'ajout)
+Si aucune transaction n'a eu lieu aujourd'hui, un message "Aucune depense aujourd'hui" sera affiche.
+
+### Placement dans la page
+
+```text
++-------------------------------+
+| Bonjour, [nom]                |
++-------------------------------+
+| === Aujourd'hui (15 fev) ===  |  <-- NOUVELLE SECTION
+| [Depenses: X F] [Revenus: Y F]|
+| - Alimentation  -2 500 F     |
+| - Transport      -1 000 F    |
++-------------------------------+
+| [Semaine] [Mois] [Annee]     |  <-- existant
+| Revenus / Depenses cards      |
+| Graphiques, etc.              |
++-------------------------------+
+```
 
 ### Details techniques
 
-| Fichier | Modification |
-|---------|-------------|
-| `src/pages/Categories.tsx` | Ajouter un Popover sur le cercle de couleur de chaque categorie, avec une grille de 12 pastilles cliquables. Au clic, appel `supabase.from("categories").update({ color }).eq("id", id)`. Ajouter aussi le selecteur de couleur dans le formulaire de creation. |
+**Fichier modifie** : `src/pages/Dashboard.tsx`
 
-Palette prevue :
-```text
-hsl(84,81%,44%)   - Vert lime (accent principal)
-hsl(270,70%,60%)  - Violet
-hsl(45,96%,58%)   - Jaune
-hsl(200,70%,50%)  - Bleu
-hsl(0,70%,55%)    - Rouge
-hsl(340,70%,55%)  - Rose
-hsl(180,60%,45%)  - Cyan
-hsl(30,80%,50%)   - Orange
-hsl(150,60%,45%)  - Vert emeraude
-hsl(220,70%,60%)  - Indigo
-hsl(60,70%,50%)   - Jaune-vert
-hsl(0,0%,60%)     - Gris
-```
+1. **Calcul des donnees du jour** : Filtrer `transactions` ou la date correspond a `new Date().toISOString().split("T")[0]` (date du jour). Calculer `todayIncome` et `todayExpense` via `useMemo`.
 
----
+2. **Nouvelle section UI** : Inserer un bloc entre le message de bienvenue et le selecteur de periode contenant :
+   - Le titre "Aujourd'hui" avec la date formatee en francais (`new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long" })`)
+   - Deux mini-cartes cote a cote (grid 2 colonnes) : depenses du jour et revenus du jour, stylees avec `glass-card` et `motion.div` comme les cartes existantes
+   - La liste des transactions du jour avec le meme design que les "Transactions recentes"
 
-## 2. Idees d'amelioration des fonctionnalites existantes
+3. **Gestion du mode privacy** : Utiliser `formatAmount()` deja en place pour masquer les montants si active.
 
-Voici des pistes concretes pour enrichir l'application :
+4. **Skeleton loading** : Afficher des skeletons (`CardSkeleton`, `ListItemSkeleton`) pendant le chargement.
 
-### A. Transactions
-- **Transactions recurrentes** : Permettre de programmer des depenses/revenus automatiques (loyer, salaire, abonnements). Creation automatique chaque mois.
-- **Filtrage avance** : Filtrer par categorie, portefeuille, periode, montant min/max.
-- **Export CSV/Excel** : Telecharger ses transactions en fichier tableur.
-
-### B. Dashboard
-- **Graphique d'evolution** : Ajouter un graphe de tendance des depenses par semaine/mois (line chart avec Recharts).
-- **Top 3 categories du mois** : Afficher les categories ou l'utilisateur depense le plus.
-- **Comparaison mois precedent** : Indicateur "vous avez depense X% de plus/moins que le mois dernier".
-
-### C. Budgets
-- **Alertes de depassement** : Notification toast quand une categorie depasse 80% puis 100% du budget.
-- **Budget par categorie** : Repartir le budget global par categorie avec des barres de progression individuelles (la table `category_budgets` existe deja).
-
-### D. Portefeuilles (Wallets)
-- **Solde par portefeuille** : Calculer et afficher le solde reel de chaque portefeuille (revenus - depenses).
-- **Transfert entre portefeuilles** : Deplacer de l'argent de Wave vers Cash par exemple.
-
-### E. Scan OCR
-- **Scan en lot** : Scanner plusieurs tickets a la suite et les confirmer en batch.
-- **Historique avec recherche** : Chercher dans ses anciens scans par marchand ou montant.
-
-### F. Epargne (Savings)
-- **Notifications d'echeance** : Rappel quand la deadline d'un objectif approche.
-- **Ajout rapide de montant** : Bouton "+500F", "+1000F", "+5000F" pour alimenter rapidement un objectif.
-
-### G. Dettes
-- **Rappels automatiques** : Notifications avant la date d'echeance d'une dette.
-- **Historique de paiements partiels** : Suivre les remboursements progressifs d'une dette.
-
-### H. General
-- **Mode hors-ligne** : Permettre d'ajouter des transactions sans connexion et synchroniser plus tard.
-- **Multi-devise** : Support EUR et USD en plus du XOF avec conversion.
-- **Partage de rapport** : Generer un resume mensuel en PDF/image partageable via WhatsApp.
+Aucune modification de base de donnees ni de requete supplementaire n'est necessaire -- les transactions sont deja chargees et filtrees cote client.
