@@ -73,7 +73,28 @@ const Login = () => {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
+          <button
+            type="button"
+            onClick={async () => {
+              if (!email) {
+                toast({ title: "Entre ton email", description: "Remplis le champ email avant de réinitialiser.", variant: "destructive" });
+                return;
+              }
+              const { error } = await (await import("@/integrations/supabase/client")).supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + "/login",
+              });
+              if (error) {
+                toast({ title: "Erreur", description: error.message, variant: "destructive" });
+              } else {
+                toast({ title: "Email envoyé ✅", description: "Vérifie ta boîte mail pour réinitialiser ton mot de passe." });
+              }
+            }}
+            className="w-full text-center text-sm text-primary hover:underline mt-2"
+          >
+            Mot de passe oublié ?
+          </button>
+
+          <p className="text-center text-sm text-muted-foreground mt-4">
             Pas encore de compte ?{" "}
             <Link to="/signup" className="text-primary hover:underline font-medium">S'inscrire</Link>
           </p>
