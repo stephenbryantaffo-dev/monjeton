@@ -2,47 +2,58 @@ import { useState, useEffect, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CardSkeleton, ListItemSkeleton, ChartSkeleton } from "@/components/DashboardSkeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
-const periods = ["Semaine", "Mois", "Année"];
-const trendModes = ["Semaine", "Mois"];
+const trendModes = ["Jour", "Semaine"];
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
-  const [activePeriod, setActivePeriod] = useState(1);
+  const [activePeriod, setActivePeriod] = useState(1); // 0=Hier, 1=Aujourd'hui, 2=Calendrier
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [customDate, setCustomDate] = useState<Date | undefined>();
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+    if (activePeriod === 2 && !customDate) return;
 
     const fetchData = async () => {
       setLoading(true);
       const now = new Date();
-      let startDate: Date;
+      let startDate: string;
+      let endDate: string;
 
       if (activePeriod === 0) {
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        startDate = endDate = yesterday.toISOString().split("T")[0];
       } else if (activePeriod === 1) {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate = endDate = now.toISOString().split("T")[0];
       } else {
-        startDate = new Date(now.getFullYear(), 0, 1);
+        const d = customDate!;
+        startDate = endDate = d.toISOString().split("T")[0];
       }
 
       const { data } = await supabase
         .from("transactions")
         .select("*, categories(name, icon, color)")
         .eq("user_id", user.id)
-        .gte("date", startDate.toISOString().split("T")[0])
+        .gte("date", startDate)
+        .lte("date", endDate)
         .order("date", { ascending: false });
 
       setTransactions(data || []);
@@ -50,7 +61,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [user, activePeriod]);
+  }, [user, activePeriod, customDate]);
 
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
@@ -112,11 +123,28 @@ const Dashboard = () => {
       </div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
-        {periods.map((p, i) => (
-          <button key={p} onClick={() => setActivePeriod(i)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${i === activePeriod ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-            {p}
-          </button>
-        ))}
+        <button onClick={() => setActivePeriod(0)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activePeriod === 0 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+          Hier
+        </button>
+        <button onClick={() => setActivePeriod(1)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activePeriod === 1 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+          Aujourd'hui
+        </button>
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger asChild>
+            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activePeriod === 2 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              {activePeriod === 2 && customDate ? format(customDate, "d MMM", { locale: fr }) : <CalendarIcon className="w-4 h-4" />}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={customDate}
+              onSelect={(date) => { setCustomDate(date); setCalendarOpen(false); }}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {loading ? (
