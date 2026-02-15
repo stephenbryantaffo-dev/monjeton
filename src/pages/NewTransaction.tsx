@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,12 @@ const NewTransaction = () => {
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Voice states
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
   useEffect(() => {
     if (!user) return;
     Promise.all([
@@ -36,6 +43,94 @@ const NewTransaction = () => {
   }, [user]);
 
   const filteredCategories = categories.filter(c => c.type === type);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        await processVoice(blob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch {
+      toast({ title: "Microphone non disponible", variant: "destructive" });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const processVoice = async (audioBlob: Blob) => {
+    setIsProcessing(true);
+    try {
+      // Step 1: Transcribe
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "voice.webm");
+
+      const sttResp = await supabase.functions.invoke("speech-to-text", { body: formData });
+      if (sttResp.error) throw sttResp.error;
+
+      const transcript = sttResp.data?.transcript;
+      if (!transcript) throw new Error("Transcription vide");
+
+      toast({ title: `🎙️ "${transcript}"` });
+
+      // Step 2: Parse with AI
+      const parseResp = await supabase.functions.invoke("parse-voice", {
+        body: {
+          transcript,
+          categories: categories.map(c => ({ name: c.name, type: c.type, id: c.id })),
+          wallets: wallets.map(w => ({ wallet_name: w.wallet_name, id: w.id })),
+        },
+      });
+
+      if (parseResp.error) throw parseResp.error;
+      const parsed = parseResp.data?.parsed;
+      if (!parsed) throw new Error("Parsing échoué");
+
+      // Fill form
+      if (parsed.amount) setAmount(String(parsed.amount));
+      if (parsed.type) setType(parsed.type);
+      if (parsed.note) setNote(parsed.note);
+
+      // Match category by name
+      if (parsed.category) {
+        const match = categories.find(c =>
+          c.name.toLowerCase() === parsed.category.toLowerCase()
+        );
+        if (match) setCategoryId(match.id);
+      }
+
+      // Match wallet by name
+      if (parsed.wallet) {
+        const match = wallets.find(w =>
+          w.wallet_name.toLowerCase() === parsed.wallet.toLowerCase()
+        );
+        if (match) setWalletId(match.id);
+      }
+
+      toast({ title: "Formulaire pré-rempli ✅" });
+    } catch (err: any) {
+      toast({ title: "Erreur vocale", description: err.message, variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +164,41 @@ const NewTransaction = () => {
         </button>
         <h1 className="text-2xl font-bold text-foreground">Nouvelle transaction</h1>
       </div>
+
+      {/* Voice Input */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card rounded-2xl p-4 mb-6 flex items-center gap-4"
+      >
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={isProcessing}
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+            isRecording
+              ? "bg-destructive text-destructive-foreground animate-pulse"
+              : "gradient-primary text-primary-foreground neon-glow"
+          }`}
+        >
+          {isProcessing ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : isRecording ? (
+            <MicOff className="w-6 h-6" />
+          ) : (
+            <Mic className="w-6 h-6" />
+          )}
+        </button>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-foreground">
+            {isProcessing ? "Analyse en cours..." : isRecording ? "Écoute en cours..." : "Saisie vocale"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isRecording
+              ? "Dites ex: « J'ai dépensé 1500 en taxi »"
+              : "Appuyez pour dicter votre transaction"}
+          </p>
+        </div>
+      </motion.div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
         <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>

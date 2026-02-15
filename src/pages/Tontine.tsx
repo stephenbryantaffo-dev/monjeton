@@ -1,29 +1,17 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Users, Phone, CheckCircle, Clock, Trash2 } from "lucide-react";
+import { Plus, Users, Phone, CheckCircle, Clock, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 
 interface Tontine {
   id: string;
@@ -50,7 +38,7 @@ interface Payment {
   status: string;
 }
 
-const Tontine = () => {
+const TontinePage = () => {
   const { user } = useAuth();
   const [tontines, setTontines] = useState<Tontine[]>([]);
   const [selectedTontine, setSelectedTontine] = useState<Tontine | null>(null);
@@ -58,7 +46,6 @@ const Tontine = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Form states
   const [newName, setNewName] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newFreq, setNewFreq] = useState("monthly");
@@ -146,6 +133,25 @@ const Tontine = () => {
     loadTontines();
   };
 
+  const sendWhatsAppReminder = (member: Member) => {
+    if (!selectedTontine) return;
+    const msg = `Salut ${member.member_name}, n'oublie pas ta cotisation de ${selectedTontine.contribution_amount.toLocaleString("fr-FR")} FCFA pour la tontine "${selectedTontine.name}" 🙏`;
+    const phone = member.member_phone?.replace(/\D/g, "") || "";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const sendGroupReminder = () => {
+    if (!selectedTontine) return;
+    const unpaid = members.filter(m => {
+      const today = new Date().toISOString().split("T")[0];
+      const memberPayments = payments.filter(p => p.member_name === m.member_name && p.date === today && p.status === "paid");
+      return memberPayments.length === 0;
+    });
+    const names = unpaid.map(m => m.member_name).join(", ");
+    const msg = `📢 Rappel tontine "${selectedTontine.name}" : cotisation de ${selectedTontine.contribution_amount.toLocaleString("fr-FR")} FCFA.\nMembres en attente : ${names || "aucun"}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   const freqLabel: Record<string, string> = { weekly: "Hebdo", monthly: "Mensuel", daily: "Quotidien" };
 
   // Detail view
@@ -156,11 +162,16 @@ const Tontine = () => {
           ← Retour
         </Button>
 
-        <div className="glass-card rounded-2xl p-4 mb-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 mb-4">
           <p className="text-sm text-muted-foreground">{freqLabel[selectedTontine.frequency] || selectedTontine.frequency}</p>
           <p className="text-2xl font-bold text-foreground">{selectedTontine.contribution_amount.toLocaleString("fr-FR")} F</p>
           <p className="text-xs text-muted-foreground">{selectedTontine.members_count} membres</p>
-        </div>
+        </motion.div>
+
+        {/* WhatsApp group reminder */}
+        <Button variant="outline" className="w-full mb-4 glass" onClick={sendGroupReminder}>
+          <MessageCircle className="w-4 h-4 mr-2 text-primary" /> Rappel WhatsApp groupe
+        </Button>
 
         {/* Members */}
         <div className="flex items-center justify-between mb-3">
@@ -173,7 +184,7 @@ const Tontine = () => {
               <DialogHeader><DialogTitle>Nouveau membre</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <Input placeholder="Nom" value={memberName} onChange={(e) => setMemberName(e.target.value)} className="glass" />
-                <Input placeholder="Téléphone (optionnel)" value={memberPhone} onChange={(e) => setMemberPhone(e.target.value)} className="glass" />
+                <Input placeholder="Téléphone (ex: +225...)" value={memberPhone} onChange={(e) => setMemberPhone(e.target.value)} className="glass" />
                 <Button onClick={addMember} className="w-full">Ajouter</Button>
               </div>
             </DialogContent>
@@ -181,17 +192,24 @@ const Tontine = () => {
         </div>
 
         <div className="space-y-2 mb-6">
-          {members.map((m) => (
-            <div key={m.id} className="glass-card rounded-xl p-3 flex items-center justify-between">
+          {members.map((m, i) => (
+            <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * i }} className="glass-card rounded-xl p-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-foreground">{m.member_name}</span>
                 {m.member_phone && <Phone className="w-3 h-3 text-muted-foreground" />}
               </div>
-              <Button size="sm" variant="ghost" onClick={() => addPayment(m.member_name)}>
-                <CheckCircle className="w-4 h-4 text-primary" />
-              </Button>
-            </div>
+              <div className="flex items-center gap-1">
+                {m.member_phone && (
+                  <button onClick={() => sendWhatsAppReminder(m)} className="text-primary p-1" title="Rappel WhatsApp">
+                    <MessageCircle className="w-4 h-4" />
+                  </button>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => addPayment(m.member_name)}>
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                </Button>
+              </div>
+            </motion.div>
           ))}
           {members.length === 0 && <p className="text-center text-muted-foreground text-sm py-4">Aucun membre</p>}
         </div>
@@ -199,8 +217,8 @@ const Tontine = () => {
         {/* Recent payments */}
         <h3 className="font-semibold text-foreground mb-3">Paiements récents</h3>
         <div className="space-y-2">
-          {payments.slice(0, 10).map((p) => (
-            <div key={p.id} className="glass-card rounded-xl p-3 flex items-center justify-between">
+          {payments.slice(0, 10).map((p, i) => (
+            <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }} className="glass-card rounded-xl p-3 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">{p.member_name}</p>
                 <p className="text-xs text-muted-foreground">{new Date(p.date).toLocaleDateString("fr-FR")}</p>
@@ -209,7 +227,7 @@ const Tontine = () => {
                 <span className="text-sm font-bold text-primary">{p.amount.toLocaleString("fr-FR")} F</span>
                 {p.status === "paid" ? <CheckCircle className="w-4 h-4 text-primary" /> : <Clock className="w-4 h-4 text-muted-foreground" />}
               </div>
-            </div>
+            </motion.div>
           ))}
           {payments.length === 0 && <p className="text-center text-muted-foreground text-sm py-4">Aucun paiement</p>}
         </div>
@@ -245,31 +263,21 @@ const Tontine = () => {
       </Dialog>
 
       <div className="space-y-3">
-        {tontines.map((t) => (
-          <div key={t.id} className="glass-card rounded-2xl p-4 flex items-center justify-between">
-            <button onClick={() => selectTontine(t)} className="flex-1 text-left">
-              <p className="font-semibold text-foreground">{t.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {t.contribution_amount.toLocaleString("fr-FR")} F · {freqLabel[t.frequency] || t.frequency} · {t.members_count} membres
-              </p>
-            </button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+        {loading
+          ? Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
+          : tontines.map((t, i) => (
+            <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }} className="glass-card rounded-2xl p-4 flex items-center justify-between">
+              <button onClick={() => selectTontine(t)} className="flex-1 text-left">
+                <p className="font-semibold text-foreground">{t.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t.contribution_amount.toLocaleString("fr-FR")} F · {freqLabel[t.frequency] || t.frequency} · {t.members_count} membres
+                </p>
+              </button>
+              <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
                 <Button size="icon" variant="ghost"><Trash2 className="w-4 h-4 text-destructive" /></Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="glass-card border-border">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer cette tontine ?</AlertDialogTitle>
-                  <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteTontine(t.id)}>Supprimer</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        ))}
+              </ConfirmDeleteDialog>
+            </motion.div>
+          ))}
         {tontines.length === 0 && !loading && (
           <p className="text-center text-muted-foreground text-sm py-12">Aucune tontine créée</p>
         )}
@@ -278,4 +286,4 @@ const Tontine = () => {
   );
 };
 
-export default Tontine;
+export default TontinePage;
