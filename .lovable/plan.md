@@ -1,46 +1,52 @@
 
 
-## Remplacement du selecteur de periode sur le Dashboard
+## Integration du calendrier avec presets dans le Dashboard
 
-### Objectif
-Transformer la barre de selection de periode actuelle (`Semaine | Mois | Annee`) en un nouveau systeme plus pratique : `Hier | Aujourd'hui | [icone calendrier]`.
+### Probleme de compatibilite
 
-### Ce qui change visuellement
+Le composant fourni utilise l'API de **react-day-picker v9** (classNames comme `month_caption`, `button_previous`, `day_button`, etc.), mais le projet utilise **react-day-picker v8**. Il faut donc adapter le composant pour fonctionner avec la v8, ou bien le reimplementer avec l'API v8 tout en conservant le style premium.
 
-```text
-AVANT :  [ Semaine ] [ Mois ] [ Annee ]
+### Approche retenue
 
-APRES :  [  Hier  ] [ Aujourd'hui ] [ icone calendrier ]
-```
+Creer un nouveau composant `calendar-with-presets.tsx` adapte a la v8 et l'integrer dans le Dashboard avec des presets en francais.
 
-Le troisieme bouton affichera une icone `CalendarIcon` de Lucide. En cliquant dessus, un **Popover** s'ouvrira avec un **calendrier** (composant `Calendar` de shadcn) permettant de choisir une date ou un intervalle personnalise.
+### Fichiers concernes
+
+1. **Creer `src/components/ui/calendar-with-presets.tsx`**
+   - Composant base sur `DayPicker` v8 (API existante)
+   - Styles premium : coins arrondis, indicateur "today" avec un point vert, selection en vert (`bg-primary`)
+   - Range selection stylee : `range_start` et `range_end` en `bg-primary` arrondi, `range_middle` en `bg-primary/20`
+   - Sidebar de presets integree directement dans le composant
+
+2. **Modifier `src/pages/Dashboard.tsx`**
+   - Remplacer le `Calendar` actuel dans le `PopoverContent` par le nouveau composant avec presets
+   - Ajouter des presets en francais adaptes au contexte financier :
+     - Aujourd'hui
+     - Hier
+     - 7 derniers jours
+     - 14 derniers jours
+     - 30 derniers jours
+     - Ce mois
+     - Mois dernier
+   - Quand un preset est clique, mettre a jour `customRange` et fermer le popover
+   - Quand une plage est selectionnee manuellement sur le calendrier, meme comportement qu'actuellement (ferme a la selection de la 2e date)
 
 ### Details techniques
 
-**Fichier modifie** : `src/pages/Dashboard.tsx`
+**`calendar-with-presets.tsx`** : Le composant encapsulera :
+- A gauche : une liste de boutons preset (scrollable si necessaire)
+- A droite : le calendrier `DayPicker` en mode `range`
+- Sur mobile : layout empile (presets en haut, calendrier en dessous)
+- Utilisation des classNames v8 (`day_selected`, `day_range_middle`, `day_today`, `nav_button`, etc.)
+- Couleurs : `bg-primary` pour la selection (vert du theme), `bg-primary/10` pour today, `bg-primary/20` pour le milieu de la plage
 
-1. **Constantes** : Remplacer `const periods = ["Semaine", "Mois", "Annee"]` par une logique a 3 modes :
-   - Mode 0 = "Hier" (filtre sur la date d'hier)
-   - Mode 1 = "Aujourd'hui" (filtre sur la date du jour) -- selectionne par defaut
-   - Mode 2 = "Calendrier" (date/intervalle personnalise via un date picker)
+**`Dashboard.tsx`** :
+- Import du nouveau composant a la place de `Calendar`
+- Le `PopoverContent` sera elargi (`w-auto min-w-[320px]`) pour accueillir le layout presets + calendrier
+- Les fonctions `subDays`, `startOfMonth`, `endOfMonth` de `date-fns` (deja installe) seront utilisees pour calculer les plages des presets
+- Aucune nouvelle dependance NPM necessaire -- tout est deja installe
 
-2. **Logique de filtrage (useEffect)** : Adapter le calcul de `startDate` et ajouter un `endDate` :
-   - **Hier** : `startDate = endDate = hier`
-   - **Aujourd'hui** : `startDate = endDate = aujourd'hui`
-   - **Calendrier** : utiliser les dates selectionnees par l'utilisateur (nouvel etat `customDate`)
+### Aucun changement de base de donnees
 
-3. **Requete Supabase** : Ajouter un filtre `.lte("date", endDate)` en plus du `.gte("date", startDate)` existant pour borner correctement l'intervalle.
-
-4. **Nouvel etat** : Ajouter `const [customDate, setCustomDate] = useState<Date | undefined>()` pour stocker la date choisie dans le calendrier.
-
-5. **UI du troisieme bouton** : Remplacer le texte "Annee" par l'icone `CalendarIcon` de Lucide, entoure d'un composant `Popover` + `PopoverContent` contenant le `Calendar` de shadcn. Quand une date est selectionnee, le bouton affichera la date formatee (ex: "15 fev") a la place de l'icone.
-
-6. **Imports supplementaires** :
-   - `CalendarIcon` depuis `lucide-react`
-   - `Calendar` depuis `@/components/ui/calendar`
-   - `Popover`, `PopoverTrigger`, `PopoverContent` depuis `@/components/ui/popover`
-
-7. **Trend modes** : Adapter `trendModes` pour correspondre aux nouveaux termes (ex: `["Jour", "Semaine"]`).
-
-8. **Couleurs** : Aucun changement -- le bouton actif gardera le style `gradient-primary text-primary-foreground` existant, et le calendrier utilisera les couleurs shadcn deja configurees.
+Le filtrage reste cote client/requete Supabase existante, aucune migration necessaire.
 
