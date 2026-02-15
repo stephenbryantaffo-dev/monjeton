@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
-import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PinLockScreen from "@/components/PinLockScreen";
 import Landing from "./pages/Landing";
@@ -29,16 +28,6 @@ import Tontine from "./pages/Tontine";
 import Scan from "./pages/Scan";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
-
-// Workspace pages
-import CreateWorkspace from "./pages/workspace/CreateWorkspace";
-import JoinWorkspace from "./pages/workspace/JoinWorkspace";
-import WorkspaceDashboard from "./pages/workspace/WorkspaceDashboard";
-import WorkspaceTransactions from "./pages/workspace/WorkspaceTransactions";
-import WorkspaceChat from "./pages/workspace/WorkspaceChat";
-import WorkspaceMembers from "./pages/workspace/WorkspaceMembers";
-import WorkspaceWallets from "./pages/workspace/WorkspaceWallets";
-import WorkspaceSettings from "./pages/workspace/WorkspaceSettings";
 
 const queryClient = new QueryClient();
 
@@ -69,17 +58,6 @@ const AppContent = () => {
       <Route path="/tontine" element={<ProtectedRoute><Tontine /></ProtectedRoute>} />
       <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-
-      {/* Workspace routes */}
-      <Route path="/workspace/create" element={<ProtectedRoute><CreateWorkspace /></ProtectedRoute>} />
-      <Route path="/workspace/join" element={<ProtectedRoute><JoinWorkspace /></ProtectedRoute>} />
-      <Route path="/workspace/:workspaceId/dashboard" element={<ProtectedRoute><WorkspaceDashboard /></ProtectedRoute>} />
-      <Route path="/workspace/:workspaceId/transactions" element={<ProtectedRoute><WorkspaceTransactions /></ProtectedRoute>} />
-      <Route path="/workspace/:workspaceId/chat" element={<ProtectedRoute><WorkspaceChat /></ProtectedRoute>} />
-      <Route path="/workspace/:workspaceId/members" element={<ProtectedRoute><WorkspaceMembers /></ProtectedRoute>} />
-      <Route path="/workspace/:workspaceId/wallets" element={<ProtectedRoute><WorkspaceWallets /></ProtectedRoute>} />
-      <Route path="/workspace/:workspaceId/settings" element={<ProtectedRoute><WorkspaceSettings /></ProtectedRoute>} />
-
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -92,11 +70,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <WorkspaceProvider>
-            <PrivacyProvider>
-              <AppContent />
-            </PrivacyProvider>
-          </WorkspaceProvider>
+          <PrivacyProvider>
+            <AppContent />
+          </PrivacyProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
