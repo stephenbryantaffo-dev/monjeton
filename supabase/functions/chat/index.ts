@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, attachments } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -27,7 +27,6 @@ serve(async (req) => {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Fetch recent transactions for context
         const { data: txs } = await supabase
           .from("transactions")
           .select("amount, type, note, date, categories(name)")
@@ -44,27 +43,57 @@ serve(async (req) => {
         if (txs && txs.length > 0) {
           const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
           const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
-          userContext = `\n\nContexte financier de l'utilisateur (${profile?.full_name || "utilisateur"}):\n- Dernières transactions: ${txs.length} transactions récentes\n- Revenus récents: ${totalIncome.toLocaleString()} FCFA\n- Dépenses récentes: ${totalExpense.toLocaleString()} FCFA\n- Catégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
+          userContext = `\n\nContexte financier (${profile?.full_name || "utilisateur"}):\n- ${txs.length} transactions récentes\n- Revenus: ${totalIncome.toLocaleString()} FCFA\n- Dépenses: ${totalExpense.toLocaleString()} FCFA\n- Catégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
         }
       }
     }
 
-    const systemPrompt = `Tu es un coach financier IA bienveillant et expert, spécialisé pour les utilisateurs d'Afrique de l'Ouest (zone FCFA). Tu parles français de manière naturelle et accessible.
+    const systemPrompt = `Tu es un coach financier IA pour l'Afrique de l'Ouest (zone FCFA).
 
-Ton rôle:
-- Analyser les habitudes de dépenses et revenus de l'utilisateur
-- Donner des conseils pratiques et personnalisés pour mieux gérer son argent
-- Proposer des stratégies d'épargne adaptées au contexte africain
-- Aider à réduire les dépenses inutiles
-- Encourager et motiver l'utilisateur dans sa gestion financière
-
-Règles:
-- Réponds toujours en français
-- Sois concis (2-4 paragraphes max)
-- Utilise des emojis avec modération pour rendre la conversation agréable
-- Donne des montants en FCFA
-- Ne donne jamais de conseils d'investissement spécifiques (actions, crypto, etc.)
+RÈGLES ABSOLUES :
+- Réponds TOUJOURS en 1 à 3 phrases maximum. JAMAIS plus. Pas de paragraphes, pas de listes longues.
+- Si tu manques d'info, pose UNE question précise avant de conseiller. Ne devine pas.
+- Parle comme un ami coach en face-à-face : direct, naturel, bienveillant.
+- Utilise 1-2 emojis max par message.
+- Montants en FCFA uniquement.
+- Pas de conseils d'investissement (actions, crypto).
+- Si on t'envoie une image (ticket, reçu, relevé), analyse-la et donne un feedback court.
+- Si on t'envoie un fichier, résume son contenu en 1-2 phrases.
 ${userContext}`;
+
+    // Build messages with multimodal support
+    const aiMessages: any[] = [{ role: "system", content: systemPrompt }];
+
+    for (const msg of messages) {
+      if (msg.role === "user" && attachments && attachments.length > 0) {
+        // Only attach to the last user message
+        const isLastUser = msg === messages[messages.length - 1] || 
+          messages.indexOf(msg) === messages.map((m: any, i: number) => m.role === "user" ? i : -1).filter((i: number) => i >= 0).pop();
+        
+        if (isLastUser) {
+          const content: any[] = [{ type: "text", text: msg.content || "Analyse ce fichier." }];
+          for (const att of attachments) {
+            if (att.type?.startsWith("image/")) {
+              content.push({
+                type: "image_url",
+                image_url: { url: `data:${att.type};base64,${att.data}` }
+              });
+            } else {
+              // Text-based files: add content as text
+              try {
+                const decoded = atob(att.data);
+                content.push({ type: "text", text: `[Fichier: ${att.name}]\n${decoded.slice(0, 3000)}` });
+              } catch {
+                content.push({ type: "text", text: `[Fichier joint: ${att.name}]` });
+              }
+            }
+          }
+          aiMessages.push({ role: "user", content });
+          continue;
+        }
+      }
+      aiMessages.push({ role: msg.role, content: msg.content });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -74,10 +103,7 @@ ${userContext}`;
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
+        messages: aiMessages,
         stream: true,
       }),
     });

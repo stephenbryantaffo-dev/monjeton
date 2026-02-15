@@ -2,3 +2,6 @@ project_id = "xmganxsmfvcbuffeelej"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.speech-to-text]
+verify_jwt = false
