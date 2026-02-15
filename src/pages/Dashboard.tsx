@@ -8,7 +8,6 @@ import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import DashboardLayout from "@/components/DashboardLayout";
-import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -124,7 +123,7 @@ const Dashboard = () => {
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
           <h1 className="text-2xl font-bold text-foreground">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
-        <WorkspaceSwitcher />
+        
       </div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">

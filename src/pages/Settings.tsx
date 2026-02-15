@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Building2, UserPlus } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -10,8 +10,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
-  { icon: Building2, label: "Créer un espace entreprise", path: "/workspace/create" },
-  { icon: UserPlus, label: "Rejoindre un espace", path: "/workspace/join" },
   { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
   { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
   { icon: Tag, label: "Catégories", path: "/categories" },
