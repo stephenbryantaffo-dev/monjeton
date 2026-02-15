@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CardSkeleton, ListItemSkeleton, ChartSkeleton } from "@/components/DashboardSkeleton";
+import TodaySection from "@/components/dashboard/TodaySection";
 
 const periods = ["Semaine", "Mois", "Année"];
 const trendModes = ["Semaine", "Mois"];
@@ -53,6 +54,11 @@ const Dashboard = () => {
 
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayTx = useMemo(() => transactions.filter(t => t.date === todayStr), [transactions, todayStr]);
+  const todayIncome = useMemo(() => todayTx.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0), [todayTx]);
+  const todayExpense = useMemo(() => todayTx.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0), [todayTx]);
 
   const expenseByCategory = transactions
     .filter(t => t.type === "expense")
@@ -109,6 +115,8 @@ const Dashboard = () => {
         <p className="text-muted-foreground text-sm">Bonjour 👋</p>
         <h1 className="text-2xl font-bold text-foreground">{profile?.full_name || "Tableau de bord"}</h1>
       </div>
+
+      <TodaySection todayIncome={todayIncome} todayExpense={todayExpense} todayTransactions={todayTx} loading={loading} />
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
         {periods.map((p, i) => (
