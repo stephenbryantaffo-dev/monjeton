@@ -1,44 +1,36 @@
 
+# Correction du flux "Mot de passe oublié"
 
 ## Probleme identifie
 
-L'erreur **"new row violates row-level security policy for table workspaces"** est causee par le fait que la politique RLS d'insertion sur la table `workspaces` est de type **RESTRICTIVE** au lieu de **PERMISSIVE**.
-
-En PostgreSQL, les politiques restrictives ne font que **reduire** l'acces accorde par les politiques permissives. S'il n'y a **aucune** politique permissive, alors aucun acces n'est accorde, meme si la politique restrictive devrait passer.
-
-Ce meme probleme affecte probablement toutes les tables qui utilisent des politiques restrictives pour INSERT.
+Quand un utilisateur clique sur "Mot de passe oublié" sur la page de connexion, un email de réinitialisation est envoyé avec un lien qui redirige vers `/login`. Cependant, quand l'utilisateur clique sur ce lien, il arrive sur la page de connexion normale sans aucun moyen de saisir un nouveau mot de passe. Le token de récupération dans l'URL n'est pas détecté ni traité.
 
 ## Solution
 
-Executer une migration SQL qui remplace les politiques RLS restrictives par des politiques **permissives** sur toutes les tables concernees :
+Créer une page dédiée `/reset-password` qui permet à l'utilisateur de saisir son nouveau mot de passe, et détecter automatiquement le token de récupération.
 
-- `workspaces` (INSERT)
-- `workspace_members` (INSERT pour "Users can join workspace" et "Owner/admin can manage members")
-- `workspace_invites` (INSERT)
-- `workspace_chat_rooms` (INSERT)
-- `workspace_chat_messages` (INSERT)
-- `workspace_notifications` (INSERT)
-- `transaction_attachments` (INSERT)
+## Etapes techniques
 
-Pour chaque politique affectee :
-1. DROP la politique existante (RESTRICTIVE)
-2. Re-creer la meme politique en mode PERMISSIVE (sans le mot-cle `RESTRICTIVE`)
+### 1. Creer la page `src/pages/ResetPassword.tsx`
+- Un formulaire avec deux champs : nouveau mot de passe + confirmation
+- Detecter l'evenement `PASSWORD_RECOVERY` via `onAuthStateChange` de Supabase
+- Appeler `supabase.auth.updateUser({ password })` pour mettre a jour le mot de passe
+- Afficher un message de succes et rediriger vers `/login`
 
-Les politiques SELECT, UPDATE et DELETE resteront inchangees car elles fonctionnent correctement en mode restrictif quand il y a deja d'autres politiques permissives pour le meme type d'operation.
+### 2. Ajouter la route dans `src/App.tsx`
+- Ajouter `<Route path="/reset-password" element={<ResetPassword />} />`
 
-## Details techniques
+### 3. Modifier la redirection dans `src/pages/Login.tsx`
+- Changer le `redirectTo` de `resetPasswordForEmail` de `/login` vers `/reset-password`
+- Cela garantit que le lien dans l'email amene directement sur le formulaire de nouveau mot de passe
 
-Exemple pour la table `workspaces` :
+### 4. Gerer le token dans `AuthContext.tsx`
+- Detecter l'evenement `PASSWORD_RECOVERY` dans le listener `onAuthStateChange`
+- Rediriger automatiquement vers `/reset-password` quand cet evenement est detecte
 
-```sql
-DROP POLICY IF EXISTS "Authenticated users can create workspaces" ON public.workspaces;
-CREATE POLICY "Authenticated users can create workspaces"
-  ON public.workspaces FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = created_by);
-```
-
-Le mot-cle `TO authenticated` garantit que seuls les utilisateurs connectes peuvent inserer, et le `WITH CHECK` verifie que le `created_by` correspond bien a l'utilisateur connecte.
-
-La meme transformation sera appliquee a toutes les politiques INSERT des autres tables listees ci-dessus.
-
+## Resultat attendu
+1. L'utilisateur entre son email et clique "Mot de passe oublié"
+2. Il recoit un email avec un lien
+3. Le lien ouvre la page `/reset-password`
+4. Il saisit son nouveau mot de passe
+5. Le mot de passe est mis a jour et il est redirige vers la connexion
