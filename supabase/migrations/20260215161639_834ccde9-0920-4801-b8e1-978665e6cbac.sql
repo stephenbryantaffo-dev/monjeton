@@ -1,0 +1,1 @@
+ALTER TABLE public.wallets ADD COLUMN initial_balance numeric NOT NULL DEFAULT 0;
