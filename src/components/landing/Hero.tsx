@@ -1,24 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMemo } from "react";
 
-/* ── Floating banknote ── */
-const FloatingBill = ({ delay, x, size, duration }: { delay: number; x: string; size: number; duration: number }) => (
-  <motion.div
-    initial={{ y: "110vh", rotate: 0, opacity: 0 }}
-    animate={{ y: "-20vh", rotate: [0, 15, -10, 20, -5, 0], opacity: [0, 0.7, 0.7, 0.5, 0] }}
-    transition={{ delay, duration, repeat: Infinity, ease: "linear" }}
-    className="absolute pointer-events-none"
-    style={{ left: x, width: size, height: size * 0.5 }}
-  >
-    <div className="w-full h-full rounded-md bg-[#8DD621]/10 border border-[#8DD621]/20 backdrop-blur-sm flex items-center justify-center">
-      <span className="text-[#8DD621]/40 font-bold" style={{ fontSize: size * 0.22 }}>FCFA</span>
-    </div>
-  </motion.div>
-);
-
-/* ── Glass card ── */
 const FloatingCard = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => (
   <motion.div
     initial={{ opacity: 0, y: 30 }}
@@ -30,35 +13,9 @@ const FloatingCard = ({ children, className, delay = 0 }: { children: React.Reac
   </motion.div>
 );
 
-/* ── Bills data (stable across renders) ── */
-const billsData = [
-  { delay: 0, x: "8%", size: 54, duration: 14 },
-  { delay: 3, x: "22%", size: 40, duration: 18 },
-  { delay: 6, x: "45%", size: 48, duration: 16 },
-  { delay: 2, x: "65%", size: 36, duration: 20 },
-  { delay: 8, x: "80%", size: 52, duration: 15 },
-  { delay: 5, x: "35%", size: 30, duration: 22 },
-  { delay: 10, x: "90%", size: 44, duration: 17 },
-  { delay: 7, x: "12%", size: 38, duration: 19 },
-];
-
 const Hero = () => {
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-
-      {/* ── Moon glow ── */}
-      <div className="absolute top-[8%] right-[12%] w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-[#8DD621]/5 shadow-[0_0_120px_60px_rgba(141,214,33,0.12),0_0_300px_120px_rgba(141,214,33,0.06)]" />
-      <motion.div
-        animate={{ scale: [1, 1.08, 1], opacity: [0.55, 0.75, 0.55] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[8%] right-[12%] w-28 h-28 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-[#8DD621]/20 to-transparent border border-[#8DD621]/10"
-      />
-
-      {/* ── Floating bills ── */}
-      {billsData.map((b, i) => (
-        <FloatingBill key={i} {...b} />
-      ))}
-
       {/* Gradient blobs */}
       <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#8DD621]/10 blur-[120px]" />
       <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-[#516640]/20 blur-[100px]" />
