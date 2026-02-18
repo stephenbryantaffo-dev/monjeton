@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -43,14 +43,11 @@ const ParticleCanvas = () => {
         if (p.x > canvas.width) p.x = 0;
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
-
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(124,255,58,${p.a})`;
         ctx.fill();
       });
-
-      // Network lines (low density)
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -78,7 +75,6 @@ const ParticleCanvas = () => {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
 };
 
-/* ── Scanline ── */
 const Scanline = () => (
   <div className="absolute inset-0 z-[3] pointer-events-none overflow-hidden">
     <motion.div
@@ -89,7 +85,6 @@ const Scanline = () => (
   </div>
 );
 
-/* ── Film grain ── */
 const FilmGrain = () => (
   <div
     className="absolute inset-0 z-[4] pointer-events-none opacity-[0.03]"
@@ -106,17 +101,25 @@ const badges = [
 ];
 
 const Hero = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Parallax: image moves slower than scroll
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* BG image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroPlanet}
-          alt=""
-          className="w-full h-full object-cover"
-        />
+    <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* BG image with parallax */}
+      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale }}>
+        <img src={heroPlanet} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#05070A]/80 via-[#05070A]/60 to-[#05070A]" />
-      </div>
+      </motion.div>
 
       {/* Halo */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] z-[1] pointer-events-none">
@@ -131,8 +134,11 @@ const Hero = () => {
       <Scanline />
       <FilmGrain />
 
-      {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-5 pt-28 pb-20 text-center">
+      {/* Content with parallax */}
+      <motion.div
+        className="relative z-10 max-w-5xl mx-auto px-5 pt-28 pb-20 text-center"
+        style={{ y: contentY, opacity: contentOpacity }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -169,7 +175,6 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Mini badges */}
           <div className="flex flex-wrap justify-center gap-3">
             {badges.map((b, i) => (
               <motion.div
@@ -185,7 +190,7 @@ const Hero = () => {
             ))}
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 };

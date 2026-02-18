@@ -7,19 +7,20 @@ import Enterprise from "@/components/landing/Enterprise";
 import Pricing from "@/components/landing/Pricing";
 import FAQ from "@/components/landing/FAQ";
 import FinalCTA from "@/components/landing/FinalCTA";
+import SectionReveal from "@/components/landing/SectionReveal";
 
 const Landing = () => {
   return (
     <div className="min-h-screen bg-[#05070A]">
       <Navbar />
       <Hero />
-      <Stats />
-      <Features />
-      <AIScan />
-      <Enterprise />
-      <Pricing />
-      <FAQ />
-      <FinalCTA />
+      <SectionReveal><Stats /></SectionReveal>
+      <SectionReveal><Features /></SectionReveal>
+      <SectionReveal><AIScan /></SectionReveal>
+      <SectionReveal><Enterprise /></SectionReveal>
+      <SectionReveal><Pricing /></SectionReveal>
+      <SectionReveal><FAQ /></SectionReveal>
+      <SectionReveal><FinalCTA /></SectionReveal>
     </div>
   );
 };
