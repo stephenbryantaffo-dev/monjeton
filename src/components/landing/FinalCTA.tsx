@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Smartphone } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const FinalCTA = () => (
   <section className="py-24 px-5">
@@ -8,32 +9,23 @@ const FinalCTA = () => (
       initial={{ opacity: 0, scale: 0.97 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
-      className="max-w-3xl mx-auto text-center rounded-3xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] p-10 sm:p-16 relative overflow-hidden"
+      className="max-w-3xl mx-auto text-center rounded-3xl bg-[rgba(124,255,58,0.04)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[22px] p-10 sm:p-16 relative overflow-hidden"
     >
-      <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#8DD621]/10 blur-[80px]" />
+      <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[rgba(124,255,58,0.08)] blur-[80px]" />
+      <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-[rgba(61,255,154,0.06)] blur-[60px]" />
       <div className="relative z-10">
-        <Smartphone className="w-10 h-10 text-[#8DD621] mx-auto mb-6" />
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#D5D7D6] mb-4">
+        <Zap className="w-10 h-10 text-[#7CFF3A] mx-auto mb-6" />
+        <h2 className="text-3xl sm:text-4xl font-bold text-[#EAFBEA] mb-4">
           Prêt à voir clair dans ton jeton ?
         </h2>
-        <p className="text-[#79847E] mb-8 max-w-md mx-auto">
-          Télécharge Mon Jeton maintenant et prends le contrôle de tes finances.
+        <p className="text-[rgba(234,251,234,0.72)] mb-8 max-w-md mx-auto">
+          Créez votre compte maintenant et prenez le contrôle de vos finances.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="https://play.google.com/store/apps/details?id=monjeton" target="_blank" rel="noopener noreferrer">
-            <Button className="w-full sm:w-auto bg-[#8DD621] text-[#151C18] font-bold px-8 h-12 hover:bg-[#8DD621]/90 shadow-[0_0_30px_rgba(141,214,33,0.25)]">
-              📱 Android
-            </Button>
-          </a>
-          <a href="https://apps.apple.com/app/monjeton" target="_blank" rel="noopener noreferrer">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto h-12 px-8 border-[rgba(255,255,255,0.08)] text-[#D5D7D6] bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)]"
-            >
-              🍎 iPhone
-            </Button>
-          </a>
-        </div>
+        <Link to="/signup">
+          <Button className="bg-[#7CFF3A] text-[#05070A] font-bold px-10 h-12 text-base hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]">
+            Créer un compte
+          </Button>
+        </Link>
       </div>
     </motion.div>
   </section>

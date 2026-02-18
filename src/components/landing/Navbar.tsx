@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { label: "Fonctionnalités", href: "#features" },
-  { label: "IA Scan", href: "#ai-scan" },
-  { label: "Mode Entreprise", href: "#enterprise" },
+  { label: "Scan AI", href: "#ai-scan" },
+  { label: "Sécurité", href: "#enterprise" },
   { label: "Tarifs", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -35,25 +35,24 @@ const Navbar = () => {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[#151C18]/80 backdrop-blur-xl border-b border-[rgba(255,255,255,0.08)]"
+          ? "bg-[#05070A]/70 backdrop-blur-[22px] border-b border-[rgba(124,255,58,0.12)]"
           : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#8DD621] flex items-center justify-center">
-            <span className="text-[#151C18] font-black text-sm">MJ</span>
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#7CFF3A] flex items-center justify-center shadow-[0_0_20px_rgba(124,255,58,0.4)]">
+            <span className="text-[#05070A] font-black text-sm">MJ</span>
           </div>
-          <span className="text-lg font-bold text-[#D5D7D6]">Mon Jeton</span>
+          <span className="text-lg font-bold text-[#EAFBEA]">Mon Jeton</span>
         </Link>
 
-        {/* Desktop */}
         <div className="hidden lg:flex items-center gap-8">
           {navLinks.map((l) => (
             <button
               key={l.href}
               onClick={() => scrollTo(l.href)}
-              className="text-sm text-[#79847E] hover:text-[#8DD621] transition-colors"
+              className="text-sm text-[rgba(234,251,234,0.72)] hover:text-[#7CFF3A] transition-colors"
             >
               {l.label}
             </button>
@@ -64,52 +63,50 @@ const Navbar = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-[#79847E] hover:text-[#D5D7D6] hover:bg-[rgba(255,255,255,0.04)]"
+            className="text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.06)]"
             onClick={() => scrollTo("#hero")}
           >
             Voir la démo
           </Button>
-          <a href="https://play.google.com/store/apps/details?id=monjeton" target="_blank" rel="noopener noreferrer">
+          <Link to="/signup">
             <Button
               size="sm"
-              className="bg-[#8DD621] text-[#151C18] font-bold hover:bg-[#8DD621]/90 shadow-[0_0_30px_rgba(141,214,33,0.25)]"
+              className="bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_25px_rgba(124,255,58,0.3)]"
             >
-              Télécharger
+              Créer un compte
             </Button>
-          </a>
+          </Link>
         </div>
 
-        {/* Mobile toggle */}
-        <button className="lg:hidden text-[#D5D7D6]" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="lg:hidden text-[#EAFBEA]" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-[#151C18]/95 backdrop-blur-xl border-b border-[rgba(255,255,255,0.08)]"
+            className="lg:hidden bg-[#05070A]/95 backdrop-blur-[22px] border-b border-[rgba(124,255,58,0.12)]"
           >
             <div className="flex flex-col px-5 py-4 gap-4">
               {navLinks.map((l) => (
                 <button
                   key={l.href}
                   onClick={() => scrollTo(l.href)}
-                  className="text-left text-[#79847E] hover:text-[#8DD621] transition-colors"
+                  className="text-left text-[rgba(234,251,234,0.72)] hover:text-[#7CFF3A] transition-colors"
                 >
                   {l.label}
                 </button>
               ))}
               <div className="flex gap-3 pt-2">
-                <a href="https://play.google.com/store/apps/details?id=monjeton" target="_blank" rel="noopener noreferrer" className="flex-1">
-                  <Button className="w-full bg-[#8DD621] text-[#151C18] font-bold hover:bg-[#8DD621]/90">
-                    Télécharger
+                <Link to="/signup" className="flex-1">
+                  <Button className="w-full bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90">
+                    Créer un compte
                   </Button>
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>

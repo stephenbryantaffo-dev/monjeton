@@ -1,107 +1,190 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import heroPlanet from "@/assets/hero-planet.png";
 
-const FloatingCard = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.8, ease: "easeOut" }}
-    className={`absolute rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] backdrop-blur-xl p-4 ${className}`}
-  >
-    {children}
-  </motion.div>
+/* ── Particle canvas ── */
+const ParticleCanvas = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    let animId: number;
+    const particles: { x: number; y: number; vx: number; vy: number; r: number; a: number }[] = [];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 2 + 0.5,
+        a: Math.random() * 0.6 + 0.2,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(124,255,58,${p.a})`;
+        ctx.fill();
+      });
+
+      // Network lines (low density)
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(124,255,58,${0.06 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
+};
+
+/* ── Scanline ── */
+const Scanline = () => (
+  <div className="absolute inset-0 z-[3] pointer-events-none overflow-hidden">
+    <motion.div
+      className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[rgba(124,255,58,0.25)] to-transparent"
+      animate={{ y: ["0vh", "100vh"] }}
+      transition={{ duration: 7, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+    />
+  </div>
 );
+
+/* ── Film grain ── */
+const FilmGrain = () => (
+  <div
+    className="absolute inset-0 z-[4] pointer-events-none opacity-[0.03]"
+    style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+    }}
+  />
+);
+
+const badges = [
+  { icon: Zap, text: "Conversion automatique des devises" },
+  { icon: ScanLine, text: "Scan AI des factures" },
+  { icon: Building2, text: "Mode Entreprise (équipe + chat)" },
+];
 
 const Hero = () => {
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Gradient blobs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#8DD621]/10 blur-[120px]" />
-      <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-[#516640]/20 blur-[100px]" />
+    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* BG image */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src={heroPlanet}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05070A]/80 via-[#05070A]/60 to-[#05070A]" />
+      </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-5 grid lg:grid-cols-2 gap-12 items-center">
-        {/* Left */}
+      {/* Halo */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] z-[1] pointer-events-none">
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-sm text-[#79847E]">
-            <span className="w-2 h-2 rounded-full bg-[#8DD621] animate-pulse" />
-            Disponible sur Android & iOS
-          </div>
+          className="w-full h-full rounded-full bg-[radial-gradient(circle,rgba(124,255,58,0.12)_0%,transparent_70%)]"
+          animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] mb-6">
-            <span className="text-[#D5D7D6]">Tu vas voir clair</span>
+      <ParticleCanvas />
+      <Scanline />
+      <FilmGrain />
+
+      {/* Content */}
+      <div className="relative z-10 max-w-5xl mx-auto px-5 pt-28 pb-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] mb-6">
+            <span className="text-[#EAFBEA]">Gérez vos dépenses.</span>
             <br />
-            <span className="bg-gradient-to-r from-[#8DD621] to-[#516640] bg-clip-text text-transparent">
-              dans ton jeton.
+            <span className="text-[#EAFBEA]">Comprenez votre argent.</span>
+            <br />
+            <span className="bg-gradient-to-r from-[#7CFF3A] to-[#3DFF9A] bg-clip-text text-transparent">
+              Scannez vos factures.
             </span>
           </h1>
 
-          <p className="text-lg text-[#79847E] max-w-xl mb-8 leading-relaxed">
-            Mon Jeton t'aide à suivre tes dépenses et revenus automatiquement, avec une IA qui scanne tes factures et tes captures Mobile Money.
+          <p className="text-lg sm:text-xl text-[rgba(234,251,234,0.72)] max-w-2xl mx-auto mb-10 leading-relaxed">
+            Mon Jeton vous aide à suivre vos dépenses en Franc CFA, analyser vos transactions, et convertir automatiquement les devises.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <a href="https://play.google.com/store/apps/details?id=monjeton" target="_blank" rel="noopener noreferrer">
-              <Button className="w-full sm:w-auto bg-[#8DD621] text-[#151C18] font-bold text-base px-8 h-12 hover:bg-[#8DD621]/90 shadow-[0_0_30px_rgba(141,214,33,0.25)]">
-                Télécharger l'app
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link to="/signup">
+              <Button className="w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]">
+                Créer un compte
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-            </a>
+            </Link>
             <Button
               variant="outline"
-              className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(255,255,255,0.08)] text-[#D5D7D6] bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)]"
+              className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
               onClick={() => document.querySelector("#ai-scan")?.scrollIntoView({ behavior: "smooth" })}
             >
               <Play className="w-4 h-4 mr-1" />
-              Voir comment ça marche
+              Voir la démo
             </Button>
           </div>
+
+          {/* Mini badges */}
+          <div className="flex flex-wrap justify-center gap-3">
+            {badges.map((b, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 + i * 0.15 }}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(124,255,58,0.06)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[18px] text-xs text-[rgba(234,251,234,0.72)]"
+              >
+                <b.icon className="w-3.5 h-3.5 text-[#7CFF3A]" />
+                {b.text}
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
-
-        {/* Right — floating glass mockups */}
-        <div className="relative hidden lg:block h-[500px]">
-          <FloatingCard className="top-4 left-8 w-56" delay={0.3}>
-            <div className="text-xs text-[#79847E] mb-1">Dépenses du mois</div>
-            <div className="text-2xl font-bold text-[#D5D7D6]">245 000 <span className="text-sm text-[#79847E]">FCFA</span></div>
-            <div className="mt-3 h-2 rounded-full bg-[#202722]">
-              <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-[#8DD621] to-[#516640]" />
-            </div>
-          </FloatingCard>
-
-          <FloatingCard className="top-32 right-4 w-52" delay={0.5}>
-            <div className="text-xs text-[#79847E] mb-2">Scan IA</div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#8DD621]/20 flex items-center justify-center text-[#8DD621] text-xs font-bold">✓</div>
-              <div>
-                <div className="text-sm text-[#D5D7D6] font-medium">Facture détectée</div>
-                <div className="text-xs text-[#79847E]">15 000 FCFA</div>
-              </div>
-            </div>
-          </FloatingCard>
-
-          <FloatingCard className="bottom-20 left-16 w-60" delay={0.7}>
-            <div className="text-xs text-[#79847E] mb-2">Répartition</div>
-            <div className="flex gap-2">
-              {[
-                { label: "Transport", w: "w-1/3", color: "bg-[#8DD621]" },
-                { label: "Nourriture", w: "w-1/4", color: "bg-[#516640]" },
-                { label: "Autre", w: "w-1/5", color: "bg-[#79847E]" },
-              ].map((c) => (
-                <div key={c.label} className={`${c.w} h-16 ${c.color} rounded-lg opacity-60`} />
-              ))}
-            </div>
-          </FloatingCard>
-
-          <FloatingCard className="bottom-4 right-12 w-48" delay={0.9}>
-            <div className="text-xs text-[#79847E] mb-1">Solde total</div>
-            <div className="text-xl font-bold text-[#8DD621]">1 250 000</div>
-            <div className="text-xs text-[#79847E]">FCFA</div>
-          </FloatingCard>
-        </div>
       </div>
     </section>
   );
