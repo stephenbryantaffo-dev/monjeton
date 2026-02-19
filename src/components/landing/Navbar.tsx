@@ -59,7 +59,7 @@ const Navbar = () => {
               variant="ghost"
               size="sm"
               className="text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.06)]"
-              onClick={() => scrollToEl("#hero")}
+              onClick={() => scrollToEl("#features")}
             >
               Voir la démo
             </Button>
