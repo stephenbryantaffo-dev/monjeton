@@ -8,19 +8,45 @@ import Pricing from "@/components/landing/Pricing";
 import FAQ from "@/components/landing/FAQ";
 import FinalCTA from "@/components/landing/FinalCTA";
 import SectionReveal from "@/components/landing/SectionReveal";
+import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
+import FloatingFCFA from "@/components/landing/FloatingFCFA";
+import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
 
 const Landing = () => {
   return (
-    <div className="min-h-screen bg-[#05070A]">
+    <div className="min-h-screen bg-[#05070A] relative">
+      <GlobalDigitalEffects />
+      <FloatingFCFA />
       <Navbar />
       <Hero />
-      <SectionReveal><Stats /></SectionReveal>
-      <SectionReveal><Features /></SectionReveal>
-      <SectionReveal><AIScan /></SectionReveal>
-      <SectionReveal><Enterprise /></SectionReveal>
-      <SectionReveal><Pricing /></SectionReveal>
-      <SectionReveal><FAQ /></SectionReveal>
-      <SectionReveal><FinalCTA /></SectionReveal>
+
+      <AnimatedSectionBackground variant={0} glow glowBottom>
+        <SectionReveal><Stats /></SectionReveal>
+      </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={1} glow>
+        <SectionReveal><Features /></SectionReveal>
+      </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={2} glow glowBottom>
+        <SectionReveal><AIScan /></SectionReveal>
+      </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={0} glow>
+        <SectionReveal><Enterprise /></SectionReveal>
+      </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={1} glow glowBottom>
+        <SectionReveal><Pricing /></SectionReveal>
+      </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={2} glow>
+        <SectionReveal><FAQ /></SectionReveal>
+      </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={0} glow glowBottom>
+        <SectionReveal><FinalCTA /></SectionReveal>
+      </AnimatedSectionBackground>
     </div>
   );
 };
