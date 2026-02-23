@@ -126,29 +126,50 @@ const NewTransaction = () => {
   const processVoice = async (audioBlob: Blob, retryCount = 0) => {
     setIsProcessing(true);
     try {
-      // Step 1: Transcribe
+      // Step 1: Transcribe via direct fetch (FormData works better with fetch than supabase.functions.invoke)
+      const sttUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
       const formData = new FormData();
       formData.append("audio", audioBlob, "voice.webm");
 
-      const sttResp = await supabase.functions.invoke("speech-to-text", { body: formData });
-      if (sttResp.error) throw sttResp.error;
+      const sttResp = await fetch(sttUrl, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        body: formData,
+      });
 
-      const transcript = sttResp.data?.transcript;
-      if (!transcript) throw new Error("Transcription vide");
+      if (!sttResp.ok) {
+        const errBody = await sttResp.json().catch(() => ({}));
+        throw new Error(errBody.error || "Transcription échouée");
+      }
+
+      const sttData = await sttResp.json();
+      const transcript = sttData?.transcript;
+      if (!transcript?.trim()) throw new Error("Transcription vide");
 
       toast({ title: `🎙️ "${transcript}"` });
 
-      // Step 2: Parse with AI (multi-transaction)
-      const parseResp = await supabase.functions.invoke("parse-voice", {
-        body: {
+      // Step 2: Parse with AI (multi-transaction) via direct fetch for reliability
+      const parseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-voice`;
+      const parseResp = await fetch(parseUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
           transcript,
           categories: categories.map(c => ({ name: c.name, type: c.type, id: c.id })),
           wallets: wallets.map(w => ({ wallet_name: w.wallet_name, id: w.id })),
-        },
+        }),
       });
 
-      if (parseResp.error) throw parseResp.error;
-      const parsed = parseResp.data?.parsed;
+      if (!parseResp.ok) {
+        const errBody = await parseResp.json().catch(() => ({}));
+        throw new Error(errBody.error || "Analyse IA échouée");
+      }
+
+      const parseData = await parseResp.json();
+      const parsed = parseData?.parsed;
 
       if (!parsed?.transactions?.length) throw new Error("Aucune transaction détectée");
 
@@ -168,6 +189,7 @@ const NewTransaction = () => {
       setVoiceTransactions(mappedTxs);
 
     } catch (err: any) {
+      console.error("processVoice error:", err);
       // Auto-retry once on transient errors
       if (retryCount < 1 && err?.message !== "Transcription vide") {
         toast({ title: "Réessai en cours..." });
