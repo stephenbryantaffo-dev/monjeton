@@ -63,14 +63,15 @@ const Navbar = () => {
             >
               Voir la démo
             </Button>
-            <Link to="/signup">
-              <Button
-                size="sm"
-                className="bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_25px_rgba(124,255,58,0.3)]"
-              >
+            <Button
+              asChild
+              size="sm"
+              className="bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_25px_rgba(124,255,58,0.3)]"
+            >
+              <Link to="/signup">
                 Créer un compte
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
           <button className="lg:hidden text-[#EAFBEA]" onClick={() => setMobileOpen(!mobileOpen)}>

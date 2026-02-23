@@ -187,18 +187,19 @@ const Pricing = () => {
                 ))}
               </ul>
 
-              <Link to="/signup">
-                <Button
-                  className={cn(
-                    "w-full font-semibold transition-all",
-                    plan.popular
-                      ? "bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_20px_rgba(124,255,58,0.3)] hover:shadow-[0_0_30px_rgba(124,255,58,0.5)]"
-                      : "bg-[rgba(124,255,58,0.08)] border border-[rgba(124,255,58,0.18)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.15)]"
-                  )}
-                >
+              <Button
+                asChild
+                className={cn(
+                  "w-full font-semibold transition-all",
+                  plan.popular
+                    ? "bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_20px_rgba(124,255,58,0.3)] hover:shadow-[0_0_30px_rgba(124,255,58,0.5)]"
+                    : "bg-[rgba(124,255,58,0.08)] border border-[rgba(124,255,58,0.18)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.15)]"
+                )}
+              >
+                <Link to="/signup">
                   {plan.buttonText}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </motion.div>
           ))}
         </div>

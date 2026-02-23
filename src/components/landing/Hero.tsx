@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import heroPlanet from "@/assets/hero-planet.png";
 
 /* ── Particle canvas ── */
@@ -101,6 +101,7 @@ const badges = [
 ];
 
 const Hero = () => {
+  const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -114,9 +115,7 @@ const Hero = () => {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
-    /* contain: layout — prevents parallax reflows from propagating to siblings.
-       will-change on motion children ensures GPU-composited layers for smooth scroll. */
-    <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ contain: "layout" }}>
+    <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* BG image with parallax — will-change: transform promotes to GPU layer */}
       <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale, willChange: "transform" }}>
         {/* Explicit dimensions prevent CLS (Cumulative Layout Shift) */}
@@ -162,12 +161,13 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link to="/signup">
-              <Button className="w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]">
-                Créer un compte
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
+            <Button
+              className="w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]"
+              onClick={() => navigate("/signup")}
+            >
+              Créer un compte
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
             <Button
               variant="outline"
               className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
