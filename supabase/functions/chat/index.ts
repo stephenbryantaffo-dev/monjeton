@@ -6,13 +6,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MAX_MESSAGE_LENGTH = 5000;
+const MAX_MESSAGES = 50;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, attachments } = await req.json();
+    const body = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
+
+    // Validate messages
+    let messages = Array.isArray(body.messages) ? body.messages.slice(-MAX_MESSAGES) : [];
+    messages = messages.map((m: any) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: typeof m.content === "string" ? m.content.slice(0, MAX_MESSAGE_LENGTH) : "",
+    }));
+
+    const attachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : [];
 
     // Get user context from auth
     const authHeader = req.headers.get("Authorization") || "";
@@ -66,7 +78,6 @@ ${userContext}`;
 
     for (const msg of messages) {
       if (msg.role === "user" && attachments && attachments.length > 0) {
-        // Only attach to the last user message
         const isLastUser = msg === messages[messages.length - 1] || 
           messages.indexOf(msg) === messages.map((m: any, i: number) => m.role === "user" ? i : -1).filter((i: number) => i >= 0).pop();
         
@@ -79,12 +90,11 @@ ${userContext}`;
                 image_url: { url: `data:${att.type};base64,${att.data}` }
               });
             } else {
-              // Text-based files: add content as text
               try {
                 const decoded = atob(att.data);
-                content.push({ type: "text", text: `[Fichier: ${att.name}]\n${decoded.slice(0, 3000)}` });
+                content.push({ type: "text", text: `[Fichier: ${String(att.name || "").slice(0, 100)}]\n${decoded.slice(0, 3000)}` });
               } catch {
-                content.push({ type: "text", text: `[Fichier joint: ${att.name}]` });
+                content.push({ type: "text", text: `[Fichier joint: ${String(att.name || "").slice(0, 100)}]` });
               }
             }
           }
@@ -119,8 +129,7 @@ ${userContext}`;
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("AI gateway error:", response.status);
       return new Response(JSON.stringify({ error: "Erreur du service IA" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -131,7 +140,7 @@ ${userContext}`;
     });
   } catch (e) {
     console.error("chat error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }), {
+    return new Response(JSON.stringify({ error: "Erreur de traitement" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

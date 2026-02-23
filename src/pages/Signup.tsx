@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { checkRateLimit, validatePasswordStrength, sanitizeText } from "@/lib/security";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,16 +20,34 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) {
-      toast({ title: "Mot de passe trop court", description: "Minimum 6 caractères", variant: "destructive" });
+
+    // Rate limiting
+    const rl = checkRateLimit("signup", 3, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      toast({ title: "Trop de tentatives", description: `Réessayez plus tard`, variant: "destructive" });
       return;
     }
+
+    // Password strength
+    const pwCheck = validatePasswordStrength(password);
+    if (!pwCheck.strong) {
+      toast({ title: "Mot de passe faible", description: pwCheck.errors.join(", "), variant: "destructive" });
+      return;
+    }
+
+    // Sanitize name
+    const safeName = sanitizeText(fullName).slice(0, 100);
+    if (!safeName) {
+      toast({ title: "Nom invalide", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, safeName);
     setLoading(false);
 
     if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible de créer le compte", variant: "destructive" });
     } else {
       toast({ title: "Compte créé ! ✅", description: "Vérifie ton email pour confirmer ton compte." });
       navigate("/login");

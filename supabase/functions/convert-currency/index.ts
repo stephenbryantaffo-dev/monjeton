@@ -5,19 +5,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ALLOWED_CURRENCIES = ["XOF", "USD", "EUR", "GBP", "NGN", "GHS", "MAD", "TND", "XAF", "CVE", "JPY", "CNY", "CAD", "CHF"];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { amount, from_currency, to_currency = "XOF" } = await req.json();
+    const body = await req.json();
+    const amount = Number(body.amount);
+    const from_currency = String(body.from_currency || "").toUpperCase().slice(0, 3);
+    const to_currency = String(body.to_currency || "XOF").toUpperCase().slice(0, 3);
 
-    if (!amount || !from_currency) {
-      return new Response(JSON.stringify({ error: "amount and from_currency required" }), {
+    // Validate inputs
+    if (isNaN(amount) || amount <= 0 || amount > 999_999_999_999) {
+      return new Response(JSON.stringify({ error: "Montant invalide" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (from_currency.toUpperCase() === to_currency.toUpperCase()) {
+    if (!ALLOWED_CURRENCIES.includes(from_currency)) {
+      return new Response(JSON.stringify({ error: "Devise source non supportée" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (from_currency === to_currency) {
       return new Response(JSON.stringify({
         converted_amount: amount,
         exchange_rate: 1,
@@ -26,42 +38,33 @@ serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Try frankfurter.app (free, no key needed, supports major currencies)
-    const from = from_currency.toUpperCase();
-    const to = to_currency.toUpperCase();
-
-    // Frankfurter doesn't support XOF directly, but supports EUR
-    // XOF is pegged to EUR at 1 EUR = 655.957 XOF
     const XOF_EUR_RATE = 655.957;
 
     let rate: number;
     let source: string;
 
-    if (from === "EUR") {
+    if (from_currency === "EUR") {
       rate = XOF_EUR_RATE;
       source = "fixed_peg (1 EUR = 655.957 XOF)";
-    } else if (from === "XOF") {
+    } else if (from_currency === "XOF") {
       rate = 1;
       source = "same_currency";
     } else {
-      // Convert from_currency to EUR first via frankfurter, then EUR to XOF
-      const resp = await fetch(`https://api.frankfurter.dev/v1/latest?base=${from}&symbols=EUR`);
+      const resp = await fetch(`https://api.frankfurter.dev/v1/latest?base=${encodeURIComponent(from_currency)}&symbols=EUR`);
       if (!resp.ok) {
-        const txt = await resp.text();
-        console.error("Frankfurter error:", resp.status, txt);
-        return new Response(JSON.stringify({ error: "Exchange rate unavailable", details: txt }), {
+        return new Response(JSON.stringify({ error: "Taux de change indisponible" }), {
           status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const data = await resp.json();
       const toEurRate = data.rates?.EUR;
       if (!toEurRate) {
-        return new Response(JSON.stringify({ error: `No rate found for ${from} to EUR` }), {
+        return new Response(JSON.stringify({ error: "Taux introuvable" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       rate = toEurRate * XOF_EUR_RATE;
-      source = `frankfurter.app (${from}→EUR) + fixed peg (EUR→XOF)`;
+      source = `frankfurter.app (${from_currency}→EUR) + fixed peg (EUR→XOF)`;
     }
 
     const converted_amount = Math.round(amount * rate);
@@ -75,7 +78,7 @@ serve(async (req) => {
 
   } catch (e) {
     console.error("convert-currency error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Erreur de traitement" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
