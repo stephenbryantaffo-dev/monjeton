@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { formatMoneySmart } from "@/lib/formatMoney";
 
 interface PrivacyContextType {
   isLocked: boolean;
@@ -60,7 +61,7 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
 
   const formatAmount = (amount: number): string => {
     if (isDiscreetMode) return "•••••";
-    return amount.toLocaleString("fr-FR");
+    return formatMoneySmart(amount);
   };
 
   return (

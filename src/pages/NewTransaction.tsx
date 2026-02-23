@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
+import VoiceConfirmationDialog, { type ParsedTransaction } from "@/components/voice/VoiceConfirmationDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,10 @@ const NewTransaction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Conversational AI states
+  const [voiceTransactions, setVoiceTransactions] = useState<ParsedTransaction[] | null>(null);
+  const [isSubmittingVoice, setIsSubmittingVoice] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -87,6 +92,30 @@ const NewTransaction = () => {
     }
   };
 
+  const matchCategoryId = (name: string, txType: string): string => {
+    const match = categories.find(c =>
+      c.name.toLowerCase() === name.toLowerCase() && c.type === txType
+    );
+    if (match) return match.id;
+    // Fuzzy match
+    const fuzzy = categories.find(c =>
+      c.type === txType && c.name.toLowerCase().includes(name.toLowerCase())
+    );
+    return fuzzy?.id || "";
+  };
+
+  const matchWalletId = (name: string | null): string => {
+    if (!name) return "";
+    const match = wallets.find(w =>
+      w.wallet_name.toLowerCase() === name.toLowerCase()
+    );
+    if (match) return match.id;
+    const fuzzy = wallets.find(w =>
+      w.wallet_name.toLowerCase().includes(name.toLowerCase())
+    );
+    return fuzzy?.id || "";
+  };
+
   const processVoice = async (audioBlob: Blob) => {
     setIsProcessing(true);
     try {
@@ -102,7 +131,7 @@ const NewTransaction = () => {
 
       toast({ title: `🎙️ "${transcript}"` });
 
-      // Step 2: Parse with AI
+      // Step 2: Parse with AI (multi-transaction)
       const parseResp = await supabase.functions.invoke("parse-voice", {
         body: {
           transcript,
@@ -113,34 +142,93 @@ const NewTransaction = () => {
 
       if (parseResp.error) throw parseResp.error;
       const parsed = parseResp.data?.parsed;
-      if (!parsed) throw new Error("Parsing échoué");
 
-      // Fill form
-      if (parsed.amount) setAmount(String(parsed.amount));
-      if (parsed.type) setType(parsed.type);
-      if (parsed.note) setNote(parsed.note);
+      if (!parsed?.transactions?.length) throw new Error("Aucune transaction détectée");
 
-      // Match category by name
-      if (parsed.category) {
-        const match = categories.find(c =>
-          c.name.toLowerCase() === parsed.category.toLowerCase()
-        );
-        if (match) setCategoryId(match.id);
-      }
+      // Map parsed transactions with matched IDs
+      const mappedTxs: ParsedTransaction[] = parsed.transactions.map((tx: any) => ({
+        amount: tx.amount || 0,
+        type: tx.type || "expense",
+        category: tx.category || "",
+        wallet: tx.wallet || null,
+        note: tx.note || "",
+        currency: tx.currency || "XOF",
+        categoryId: matchCategoryId(tx.category || "", tx.type || "expense"),
+        walletId: matchWalletId(tx.wallet),
+      }));
 
-      // Match wallet by name
-      if (parsed.wallet) {
-        const match = wallets.find(w =>
-          w.wallet_name.toLowerCase() === parsed.wallet.toLowerCase()
-        );
-        if (match) setWalletId(match.id);
-      }
+      // Show confirmation dialog
+      setVoiceTransactions(mappedTxs);
 
-      toast({ title: "Formulaire pré-rempli ✅" });
     } catch (err: any) {
       toast({ title: "Erreur vocale", description: err.message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleVoiceConfirm = async (transactions: ParsedTransaction[]) => {
+    if (!user) return;
+    setIsSubmittingVoice(true);
+
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      for (const tx of transactions) {
+        const catId = tx.categoryId || matchCategoryId(tx.category, tx.type);
+        const walId = tx.walletId || matchWalletId(tx.wallet);
+
+        // Handle currency conversion for non-XOF
+        let finalAmount = tx.amount;
+        let originalAmount: number | null = null;
+        let originalCurrency: string | null = null;
+        let convertedAmountXof: number | null = null;
+        let exchangeRateUsed: number | null = null;
+        let exchangeRateSource: string | null = null;
+
+        if (tx.currency && tx.currency !== "XOF") {
+          originalAmount = tx.amount;
+          originalCurrency = tx.currency;
+
+          try {
+            const convResp = await supabase.functions.invoke("convert-currency", {
+              body: { amount: tx.amount, from: tx.currency, to: "XOF" },
+            });
+            if (convResp.data?.convertedAmount) {
+              finalAmount = Math.round(convResp.data.convertedAmount);
+              convertedAmountXof = finalAmount;
+              exchangeRateUsed = convResp.data.rate;
+              exchangeRateSource = convResp.data.source || "api";
+            }
+          } catch {
+            // Fallback: keep original amount
+            toast({ title: `⚠️ Conversion ${tx.currency}→XOF échouée, montant conservé`, variant: "destructive" });
+          }
+        }
+
+        await supabase.from("transactions").insert({
+          user_id: user.id,
+          type: tx.type,
+          amount: finalAmount,
+          note: tx.note,
+          date: today,
+          category_id: catId || null,
+          wallet_id: walId || null,
+          original_amount: originalAmount,
+          original_currency: originalCurrency,
+          converted_amount_xof: convertedAmountXof,
+          exchange_rate_used: exchangeRateUsed,
+          exchange_rate_source: exchangeRateSource,
+        });
+      }
+
+      toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      setVoiceTransactions(null);
+      navigate("/transactions");
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    } finally {
+      setIsSubmittingVoice(false);
     }
   };
 
@@ -186,7 +274,7 @@ const NewTransaction = () => {
         <button
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isProcessing}
-          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
             isRecording
               ? "bg-destructive text-destructive-foreground animate-pulse"
               : "gradient-primary text-primary-foreground neon-glow"
@@ -200,71 +288,90 @@ const NewTransaction = () => {
             <Mic className="w-6 h-6" />
           )}
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
-            {isProcessing ? "Analyse en cours..." : isRecording ? "Écoute en cours..." : "Saisie vocale"}
+            {isProcessing ? "Analyse IA en cours..." : isRecording ? "Écoute en cours..." : "Saisie vocale intelligente"}
           </p>
           <p className="text-xs text-muted-foreground">
             {isRecording
-              ? "Dites ex: « J'ai dépensé 1500 en taxi »"
-              : "Appuyez pour dicter votre transaction"}
+              ? "Parlez librement, ex : « J'ai payé taxi 3000 et restaurant 25000 »"
+              : "Détecte plusieurs transactions, devises et montants automatiquement"}
           </p>
         </div>
       </motion.div>
 
-      <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
-        <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>
-          Dépense
-        </button>
-        <button onClick={() => setType("income")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "income" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
-          Revenu
-        </button>
-      </div>
+      {/* Conversational AI Confirmation */}
+      <AnimatePresence>
+        {voiceTransactions && (
+          <VoiceConfirmationDialog
+            transactions={voiceTransactions}
+            categories={categories.map(c => ({ id: c.id, name: c.name, type: c.type }))}
+            wallets={wallets.map(w => ({ id: w.id, wallet_name: w.wallet_name }))}
+            onConfirm={handleVoiceConfirm}
+            onCancel={() => setVoiceTransactions(null)}
+            isSubmitting={isSubmittingVoice}
+          />
+        )}
+      </AnimatePresence>
 
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <Label>Montant (FCFA)</Label>
-          <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-secondary border-border text-2xl font-bold h-14" required />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Catégorie</Label>
-          <div className="flex flex-wrap gap-2">
-            {filteredCategories.map((c) => (
-              <button key={c.id} type="button" onClick={() => setCategoryId(c.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${categoryId === c.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
-                {c.name}
-              </button>
-            ))}
+      {/* Manual form - only show when no voice confirmation is active */}
+      {!voiceTransactions && (
+        <>
+          <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
+            <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>
+              Dépense
+            </button>
+            <button onClick={() => setType("income")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "income" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
+              Revenu
+            </button>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label>Portefeuille</Label>
-          <div className="flex flex-wrap gap-2">
-            {wallets.map((w) => (
-              <button key={w.id} type="button" onClick={() => setWalletId(w.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${walletId === w.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
-                {w.wallet_name}
-              </button>
-            ))}
-          </div>
-        </div>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <Label>Montant (FCFA)</Label>
+              <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-secondary border-border text-2xl font-bold h-14" required />
+            </div>
 
-        <div className="space-y-2">
-          <Label>Note</Label>
-          <Textarea placeholder="Détails de la transaction..." value={note} onChange={(e) => setNote(e.target.value)} className="bg-secondary border-border" />
-        </div>
+            <div className="space-y-2">
+              <Label>Catégorie</Label>
+              <div className="flex flex-wrap gap-2">
+                {filteredCategories.map((c) => (
+                  <button key={c.id} type="button" onClick={() => setCategoryId(c.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${categoryId === c.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="space-y-2">
-          <Label>Date</Label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-secondary border-border" />
-        </div>
+            <div className="space-y-2">
+              <Label>Portefeuille</Label>
+              <div className="flex flex-wrap gap-2">
+                {wallets.map((w) => (
+                  <button key={w.id} type="button" onClick={() => setWalletId(w.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${walletId === w.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
+                    {w.wallet_name}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <Button variant="hero" size="lg" className="w-full" disabled={loading}>
-          {loading ? "Enregistrement..." : "Enregistrer"}
-        </Button>
-      </form>
+            <div className="space-y-2">
+              <Label>Note</Label>
+              <Textarea placeholder="Détails de la transaction..." value={note} onChange={(e) => setNote(e.target.value)} className="bg-secondary border-border" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-secondary border-border" />
+            </div>
+
+            <Button variant="hero" size="lg" className="w-full" disabled={loading}>
+              {loading ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </form>
+        </>
+      )}
     </DashboardLayout>
   );
 };
