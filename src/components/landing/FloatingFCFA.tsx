@@ -18,7 +18,7 @@ const FloatingFCFA = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-[1]" style={{ willChange: "transform" }}>
       {items.map((item) => (
         <motion.span
           key={item.id}
