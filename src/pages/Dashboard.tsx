@@ -49,14 +49,18 @@ const Dashboard = () => {
         endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("transactions")
         .select("*, categories(name, icon, color)")
         .eq("user_id", user.id)
         .gte("date", startDate)
         .lte("date", endDate)
-        .order("date", { ascending: false });
+        .order("date", { ascending: false })
+        .limit(500);
 
+      if (error) {
+        console.error("[Dashboard] fetch error:", error.message);
+      }
       setTransactions(data || []);
       setLoading(false);
     };
@@ -173,20 +177,20 @@ const Dashboard = () => {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 overflow-hidden">
               <div className="flex items-center gap-2 mb-2">
-                <ArrowDownLeft className="w-4 h-4 text-primary" />
+                <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
                 <span className="text-xs text-muted-foreground">Revenus</span>
               </div>
-              <p className="text-xl font-bold text-foreground">{formatAmount(totalIncome)}</p>
+              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalIncome)}</p>
               <p className="text-xs text-muted-foreground">FCFA</p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-4">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-4 overflow-hidden">
               <div className="flex items-center gap-2 mb-2">
-                <ArrowUpRight className="w-4 h-4 text-destructive" />
+                <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
                 <span className="text-xs text-muted-foreground">Dépenses</span>
               </div>
-              <p className="text-xl font-bold text-foreground">{formatAmount(totalExpense)}</p>
+              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalExpense)}</p>
               <p className="text-xs text-muted-foreground">FCFA</p>
             </motion.div>
           </div>
@@ -233,9 +237,9 @@ const Dashboard = () => {
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-2">
                   <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-lg font-bold text-foreground">{formatAmount(totalExpense)}</p>
+                  <p className="text-base sm:text-lg font-bold text-foreground truncate max-w-full">{formatAmount(totalExpense)}</p>
                   <p className="text-xs text-muted-foreground">FCFA</p>
                 </div>
               </div>
@@ -273,7 +277,7 @@ const Dashboard = () => {
                     <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
                     <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
                   </div>
-                  <span className={`text-sm font-semibold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
+                  <span className={`text-sm font-semibold whitespace-nowrap ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
                     {t.type === "income" ? "+" : "-"}{formatAmount(Number(t.amount))}
                   </span>
                 </motion.div>

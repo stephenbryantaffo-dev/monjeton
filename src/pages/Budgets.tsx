@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Wallet, TrendingDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { CardSkeleton } from "@/components/DashboardSkeleton";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,7 @@ interface CategoryBudget {
 
 const Budgets = () => {
   const { user } = useAuth();
+  const { formatAmount } = usePrivacy();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -138,7 +141,7 @@ const Budgets = () => {
 
   const budgetUsedPercent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
   const isOverBudget = totalSpent > totalBudget && totalBudget > 0;
-  const fmt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0");
+  const fmt = (n: number) => formatAmount(n);
 
   return (
     <DashboardLayout title="Budgets">
@@ -157,6 +160,13 @@ const Budgets = () => {
         ))}
       </div>
 
+      {loading ? (
+        <div className="space-y-4">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      ) : (
+        <>
       {/* Global budget card */}
       <div className={`glass-card rounded-2xl p-5 mb-4 ${isOverBudget ? "border border-destructive/50" : ""}`}>
         <div className="flex items-center justify-between mb-3">
@@ -166,7 +176,7 @@ const Budgets = () => {
           </div>
           {isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
         </div>
-        <p className="text-3xl font-bold text-foreground mb-1">
+        <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1 truncate">
           {fmt(totalSpent)} / {fmt(totalBudget)} F
         </p>
         <Progress value={budgetUsedPercent} className="h-2 mb-3" />
@@ -245,6 +255,8 @@ const Budgets = () => {
           <p className="text-center text-muted-foreground text-sm py-8">Aucun budget par catégorie défini</p>
         )}
       </div>
+        </>
+      )}
     </DashboardLayout>
   );
 };

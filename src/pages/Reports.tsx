@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Download, AlertTriangle } from "lucide-react";
+import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,11 +25,13 @@ const Reports = () => {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [leaks, setLeaks] = useState<Leak[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
+      setLoading(true);
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
 
@@ -77,6 +80,7 @@ const Reports = () => {
         leakMap[cat].total += Number(t.amount);
       });
       setLeaks(Object.values(leakMap).filter(l => l.count >= 3));
+      setLoading(false);
     };
 
     fetchData();
@@ -100,6 +104,14 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Rapports">
+      {loading ? (
+        <div className="space-y-4">
+          <CardSkeleton />
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+      ) : (
+        <>
       {/* Export PDF */}
       <div className="mb-4">
         <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
@@ -142,8 +154,8 @@ const Reports = () => {
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-lg font-bold text-foreground">{formatAmount(total)}</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-2">
+                <p className="text-base sm:text-lg font-bold text-foreground truncate max-w-full">{formatAmount(total)}</p>
                 <p className="text-xs text-muted-foreground">FCFA</p>
               </div>
             </div>
@@ -186,6 +198,8 @@ const Reports = () => {
           <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée</p>
         )}
       </motion.div>
+        </>
+      )}
     </DashboardLayout>
   );
 };

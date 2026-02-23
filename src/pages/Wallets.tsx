@@ -192,7 +192,7 @@ const Wallets = () => {
                       ) : (
                         <TrendingDown className="w-3 h-3 text-destructive" />
                       )}
-                      <span className={`text-sm font-semibold ${solde >= 0 ? "text-primary" : "text-destructive"}`}>
+                      <span className={`text-sm font-semibold whitespace-nowrap ${solde >= 0 ? "text-primary" : "text-destructive"}`}>
                         {formatAmount(solde)} F
                       </span>
                     </div>
