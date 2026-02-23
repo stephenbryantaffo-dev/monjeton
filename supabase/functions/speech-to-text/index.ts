@@ -16,9 +16,16 @@ serve(async (req) => {
     const audioFile = formData.get("audio") as File;
     if (!audioFile) throw new Error("No audio file provided");
 
-    // Convert audio to base64
+    // Convert audio to base64 in chunks to avoid stack overflow
     const arrayBuffer = await audioFile.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    const base64Audio = btoa(binary);
 
     // Use Gemini's native audio understanding
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
