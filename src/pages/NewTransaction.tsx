@@ -11,6 +11,7 @@ import VoiceConfirmationDialog, { type ParsedTransaction } from "@/components/vo
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES } from "@/lib/security";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
@@ -75,6 +76,12 @@ const NewTransaction = () => {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunksRef.current, { type: getSupportedMimeType() || "audio/webm" });
+        
+        // Validate payload size
+        if (!validatePayloadSize(blob, MAX_AUDIO_SIZE_BYTES)) {
+          toast({ title: "Audio trop volumineux", description: "Maximum 10 Mo", variant: "destructive" });
+          return;
+        }
         await processVoice(blob);
       };
 
@@ -235,13 +242,21 @@ const NewTransaction = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !categoryId || !user) return;
+
+    // Validate amount
+    const amountCheck = validateAmount(amount);
+    if (!amountCheck.valid) {
+      toast({ title: amountCheck.error || "Montant invalide", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
       type,
-      amount: Number(amount),
-      note,
+      amount: amountCheck.value,
+      note: sanitizeNote(note),
       date,
       category_id: categoryId,
       wallet_id: walletId || null,
@@ -249,7 +264,7 @@ const NewTransaction = () => {
 
     setLoading(false);
     if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la transaction", variant: "destructive" });
     } else {
       toast({ title: "Transaction enregistrée ✅" });
       navigate("/transactions");

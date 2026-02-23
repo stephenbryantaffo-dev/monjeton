@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { checkRateLimit, resetRateLimit } from "@/lib/security";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +19,19 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Rate limiting
+    const rl = checkRateLimit(`login:${email}`, 5, 5 * 60 * 1000);
+    if (!rl.allowed) {
+      const seconds = Math.ceil(rl.retryAfterMs / 1000);
+      toast({
+        title: "Trop de tentatives",
+        description: `Réessayez dans ${seconds}s`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     const { error } = await signIn(email, password);
     setLoading(false);
@@ -25,12 +39,11 @@ const Login = () => {
     if (error) {
       toast({
         title: "Erreur de connexion",
-        description: error.message === "Invalid login credentials"
-          ? "Email ou mot de passe incorrect"
-          : error.message,
+        description: "Email ou mot de passe incorrect",
         variant: "destructive",
       });
     } else {
+      resetRateLimit(`login:${email}`);
       navigate("/dashboard");
     }
   };

@@ -5,15 +5,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+const MAX_BASE64_LENGTH = 7 * 1024 * 1024; // ~5MB decoded
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { image, scanType, mimeType } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
 
-    const prompt = scanType === "screenshot"
+    // Input validation
+    if (!image || typeof image !== "string") {
+      return new Response(JSON.stringify({ error: "Image manquante" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (image.length > MAX_BASE64_LENGTH) {
+      return new Response(JSON.stringify({ error: "Image trop volumineuse (max 5 Mo)" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const safeMimeType = ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : "image/jpeg";
+    const safeScanType = scanType === "screenshot" ? "screenshot" : "receipt";
+
+    const prompt = safeScanType === "screenshot"
       ? `Analyse cette capture d'écran de transaction Mobile Money ou paiement. Extrais les informations suivantes au format JSON:
 {
   "amount": nombre (montant exact tel qu'affiché, sans espaces ni symboles de devise),
@@ -26,12 +45,7 @@ serve(async (req) => {
 }
 
 IMPORTANT pour la devise:
-- $ → USD
-- € → EUR
-- £ → GBP
-- CFA ou FCFA ou XOF → XOF
-- ₦ → NGN
-- GH₵ → GHS
+- $ → USD, € → EUR, £ → GBP, CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
 - Si aucune devise n'est détectée, utilise "XOF" par défaut.
 
 Retourne UNIQUEMENT le JSON, sans texte autour.`
@@ -46,12 +60,7 @@ Retourne UNIQUEMENT le JSON, sans texte autour.`
 }
 
 IMPORTANT pour la devise:
-- $ → USD
-- € → EUR
-- £ → GBP
-- CFA ou FCFA ou XOF → XOF
-- ₦ → NGN
-- GH₵ → GHS
+- $ → USD, € → EUR, £ → GBP, CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
 - Si aucune devise n'est détectée, utilise "XOF" par défaut.
 
 Retourne UNIQUEMENT le JSON, sans texte autour.`;
@@ -69,7 +78,7 @@ Retourne UNIQUEMENT le JSON, sans texte autour.`;
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: `data:${mimeType || "image/jpeg"};base64,${image}` } },
+              { type: "image_url", image_url: { url: `data:${safeMimeType};base64,${image}` } },
             ],
           },
         ],
@@ -77,9 +86,8 @@ Retourne UNIQUEMENT le JSON, sans texte autour.`;
     });
 
     if (!response.ok) {
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI analysis failed" }), {
+      console.error("AI gateway error:", response.status);
+      return new Response(JSON.stringify({ error: "Erreur d'analyse" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -88,13 +96,24 @@ Retourne UNIQUEMENT le JSON, sans texte autour.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Extract JSON from response
-    let parsed = {};
+    let parsed: Record<string, any> = {};
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+      if (jsonMatch) {
+        const raw = JSON.parse(jsonMatch[0]);
+        // Sanitize output
+        parsed = {
+          amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
+          currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
+          date: String(raw.date || "").slice(0, 10),
+          merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
+          type: raw.type === "income" ? "income" : "expense",
+          wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
+          category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+        };
+      }
     } catch {
-      console.error("Failed to parse AI response:", content);
+      // Parse failure
     }
 
     return new Response(JSON.stringify({ parsed, raw: content }), {
@@ -102,7 +121,7 @@ Retourne UNIQUEMENT le JSON, sans texte autour.`;
     });
   } catch (e) {
     console.error("scan-receipt error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Erreur de traitement" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

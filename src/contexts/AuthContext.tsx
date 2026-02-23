@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { initSessionMonitor } from "@/lib/security";
 
 interface AuthContextType {
   session: Session | null;
@@ -81,12 +82,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
     setProfile(null);
-  };
+  }, []);
+
+  // Auto-logout on inactivity (30 min)
+  useEffect(() => {
+    if (!user) return;
+    const cleanup = initSessionMonitor(() => {
+      signOut();
+    });
+    return cleanup;
+  }, [user, signOut]);
 
   return (
     <AuthContext.Provider value={{ session, user, profile, loading, signUp, signIn, signOut }}>
