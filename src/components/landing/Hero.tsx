@@ -171,7 +171,13 @@ const Hero = () => {
             <Button
               variant="outline"
               className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
-              onClick={() => document.querySelector("#ai-scan")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => {
+                const el = document.getElementById("ai-scan");
+                if (el) {
+                  const top = el.getBoundingClientRect().top + window.scrollY - 80;
+                  window.scrollTo({ top, behavior: "smooth" });
+                }
+              }}
             >
               <Play className="w-4 h-4 mr-1" />
               Voir la démo
