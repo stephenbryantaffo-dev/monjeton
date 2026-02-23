@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { formatMoneySmart } from "@/lib/formatMoney";
 import { motion } from "framer-motion";
 import { Search, Filter, X } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
@@ -189,7 +190,7 @@ const Transactions = () => {
                 <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
               </div>
               <span className={`text-sm font-semibold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-                {t.type === "income" ? "+" : "-"}{Number(t.amount).toLocaleString("fr-FR")} F
+                {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))} F
               </span>
               <ConfirmDeleteDialog onConfirm={() => handleDelete(t.id)} title="Supprimer cette transaction ?" />
             </motion.div>

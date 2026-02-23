@@ -29,23 +29,64 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un assistant financier. L'utilisateur dicte une transaction vocalement. Extrais les informations et retourne un JSON:
+            content: `Tu es un assistant financier expert en extraction de transactions depuis du texte parlé en français, y compris le français ivoirien et ouest-africain.
+
+L'utilisateur dicte une ou PLUSIEURS transactions vocalement. Tu dois détecter TOUTES les transactions dans le texte.
+
+Retourne un JSON avec un tableau "transactions":
 {
-  "amount": nombre,
-  "type": "expense" ou "income",
-  "category": "nom de catégorie",
-  "wallet": "nom du portefeuille" ou null,
-  "note": "description courte"
+  "transactions": [
+    {
+      "amount": nombre,
+      "type": "expense" ou "income",
+      "category": "nom de catégorie",
+      "wallet": "nom du portefeuille" ou null,
+      "note": "description courte",
+      "currency": "XOF" ou "USD" ou "EUR" ou "GBP" ou "NGN" ou "GHS"
+    }
+  ]
 }
 
 Catégories disponibles: ${catList}
 Portefeuilles disponibles: ${walletList}
 
-Règles:
-- Si pas de montant clair, mets 0
-- Par défaut type = "expense"
-- Choisis la catégorie la plus proche
-- Retourne UNIQUEMENT le JSON`
+RÈGLES D'EXTRACTION:
+
+1. SEGMENTATION: Détecte les séparations par "et", "puis", "ensuite", "après", "aussi", virgules, points. Chaque segment avec un montant = une transaction.
+
+2. MONTANTS - Détecte tous les formats:
+   - Nombres: 1500, 25000, 2500000
+   - "mille" ou "mil" = ×1000 (ex: "2 mille" = 2000, "25 mille" = 25000)
+   - "million(s)" = ×1000000
+   - "milliard(s)" = ×1000000000
+   - "k" = ×1000 (ex: "25k" = 25000)
+   - "M" = ×1000000
+   - Nombres en lettres: "cinq cents" = 500, "deux mille" = 2000
+   - Argot ivoirien: "balles" = francs CFA, "briques" = 1000 FCFA (ex: "3 briques" = 3000)
+   - "2 mille 5" ou "2 mille 500" = 2500
+
+3. DEVISES:
+   - "franc(s)", "FCFA", "CFA", "F CFA", par défaut → XOF
+   - "dollar(s)", "USD", "$" → USD
+   - "euro(s)", "EUR", "€" → EUR
+   - "livre(s)", "GBP", "£" → GBP
+   - "naira", "NGN" → NGN
+   - "cedi(s)", "GHS" → GHS
+   - Si aucune devise mentionnée → XOF
+
+4. CATÉGORIES - Associe intelligemment:
+   - taxi, uber, transport, bus, gbaka → Transport
+   - restaurant, manger, nourriture, bouffe, garba, alloco → Alimentation
+   - crédit, recharge, forfait, data, internet → Téléphone
+   - hôpital, pharmacie, médicament, docteur → Santé
+   - vêtements, habits, chaussures, sape → Shopping
+   - électricité, eau, loyer, facture → Factures
+   - salaire, paye, virement → type income, Salaire
+   - Choisis la catégorie la plus proche parmi celles disponibles
+
+5. Si pas de montant clair, mets 0
+6. Par défaut type = "expense" sauf si contexte indique un revenu
+7. Retourne UNIQUEMENT le JSON, rien d'autre`
           },
           { role: "user", content: transcript }
         ],
@@ -71,10 +112,19 @@ Règles:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    let parsed = {};
+    let parsed: any = { transactions: [] };
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+      if (jsonMatch) {
+        const result = JSON.parse(jsonMatch[0]);
+        // Support both old single-transaction and new multi-transaction format
+        if (result.transactions && Array.isArray(result.transactions)) {
+          parsed = result;
+        } else if (result.amount !== undefined) {
+          // Legacy single transaction format - wrap in array
+          parsed = { transactions: [result] };
+        }
+      }
     } catch {
       console.error("Failed to parse:", content);
     }
