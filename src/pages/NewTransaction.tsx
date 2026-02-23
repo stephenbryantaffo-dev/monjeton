@@ -123,7 +123,7 @@ const NewTransaction = () => {
     return fuzzy?.id || "";
   };
 
-  const processVoice = async (audioBlob: Blob) => {
+  const processVoice = async (audioBlob: Blob, retryCount = 0) => {
     setIsProcessing(true);
     try {
       // Step 1: Transcribe
@@ -168,7 +168,12 @@ const NewTransaction = () => {
       setVoiceTransactions(mappedTxs);
 
     } catch (err: any) {
-      toast({ title: "Erreur vocale", description: err.message, variant: "destructive" });
+      // Auto-retry once on transient errors
+      if (retryCount < 1 && err?.message !== "Transcription vide") {
+        toast({ title: "Réessai en cours..." });
+        return processVoice(audioBlob, retryCount + 1);
+      }
+      toast({ title: "Erreur vocale", description: err?.message || "Veuillez réessayer", variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
