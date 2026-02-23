@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 
 /** Full-page film grain + periodic scanline */
+// z-[5] instead of z-[50] — high z-index was blocking scroll events on some browsers
+// will-change: transform ensures this layer is GPU-composited without triggering repaints
 const GlobalDigitalEffects = () => (
-  <div className="fixed inset-0 pointer-events-none z-[50]" style={{ mixBlendMode: "screen" }}>
+  <div className="fixed inset-0 pointer-events-none z-[5]" style={{ mixBlendMode: "screen", willChange: "transform" }}>
     {/* Film grain */}
     <div
       className="absolute inset-0 opacity-[0.025]"

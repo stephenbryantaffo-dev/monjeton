@@ -13,7 +13,8 @@ interface Props {
 
 const AnimatedSectionBackground = ({ children, variant = 0, glow = true, glowBottom = false }: Props) => {
   return (
-    <div className="relative overflow-hidden">
+    // contain: content prevents glow animations from triggering layout recalc in sibling sections
+    <div className="relative overflow-hidden" style={{ contain: "content" }}>
       {/* Floating radial halos */}
       {glow && (
         <motion.div

@@ -24,7 +24,8 @@ const TrendLinesSVG = ({ variant = 0, className = "" }: TrendLinesSVGProps) => {
   const path = paths[variant % paths.length];
 
   return (
-    <div ref={ref} className={`absolute inset-0 overflow-hidden pointer-events-none z-[0] ${className}`}>
+    // will-change promotes SVG stroke animation to GPU layer
+    <div ref={ref} className={`absolute inset-0 overflow-hidden pointer-events-none z-[0] ${className}`} style={{ willChange: "transform" }}>
       <svg
         viewBox="0 0 1200 180"
         fill="none"

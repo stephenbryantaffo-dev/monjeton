@@ -114,10 +114,13 @@ const Hero = () => {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
-    <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* BG image with parallax */}
-      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale }}>
-        <img src={heroPlanet} alt="" className="w-full h-full object-cover" />
+    /* contain: layout — prevents parallax reflows from propagating to siblings.
+       will-change on motion children ensures GPU-composited layers for smooth scroll. */
+    <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ contain: "layout" }}>
+      {/* BG image with parallax — will-change: transform promotes to GPU layer */}
+      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale, willChange: "transform" }}>
+        {/* Explicit dimensions prevent CLS (Cumulative Layout Shift) */}
+        <img src={heroPlanet} alt="" className="w-full h-full object-cover" width={1920} height={1080} loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#05070A]/80 via-[#05070A]/60 to-[#05070A]" />
       </motion.div>
 
@@ -134,10 +137,10 @@ const Hero = () => {
       <Scanline />
       <FilmGrain />
 
-      {/* Content with parallax */}
+      {/* Content with parallax — GPU-promoted to avoid scroll jank */}
       <motion.div
         className="relative z-10 max-w-5xl mx-auto px-5 pt-28 pb-20 text-center"
-        style={{ y: contentY, opacity: contentOpacity }}
+        style={{ y: contentY, opacity: contentOpacity, willChange: "transform, opacity" }}
       >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
