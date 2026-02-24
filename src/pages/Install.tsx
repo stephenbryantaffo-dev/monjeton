@@ -60,7 +60,7 @@ const Install = () => {
         </button>
 
         <div className="text-center space-y-3">
-          <img src="/pwa-icon-192.svg" alt="Mon Jeton" className="w-20 h-20 mx-auto rounded-2xl" />
+          <img src="/pwa-icon-192.png" alt="Mon Jeton" className="w-20 h-20 mx-auto rounded-2xl" />
           <h1 className="text-2xl font-bold text-foreground">Installer Mon Jeton</h1>
           <p className="text-muted-foreground">Ajoute l'app sur ton écran d'accueil pour y accéder en un clic.</p>
         </div>
