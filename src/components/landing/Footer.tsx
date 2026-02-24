@@ -2,37 +2,37 @@ import { Separator } from "@/components/ui/separator";
 import logoImg from "@/assets/logo-monjeton.png";
 
 const Footer = () => (
-  <footer className="py-12 px-5 border-t border-border/30">
+  <footer className="py-12 px-5 border-t border-[rgba(255,255,255,0.08)]">
     <div className="max-w-6xl mx-auto">
       <div className="grid sm:grid-cols-3 gap-8 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-3">
             <img src={logoImg} alt="Mon Jeton" className="h-8 w-auto rounded-md" />
-            <span className="font-bold text-foreground">Mon Jeton</span>
+            <span className="font-bold text-[#D5D7D6]">Mon Jeton</span>
           </div>
-          <p className="text-sm text-muted-foreground italic">"Tu vas voir clair dans ton jeton."</p>
+          <p className="text-sm text-[#79847E] italic">"Tu vas voir clair dans ton jeton."</p>
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-foreground mb-3">Liens</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><a href="#features" className="hover:text-primary transition-colors">Fonctionnalités</a></li>
-            <li><a href="#pricing" className="hover:text-primary transition-colors">Tarifs</a></li>
-            <li><a href="#faq" className="hover:text-primary transition-colors">FAQ</a></li>
+          <h4 className="text-sm font-semibold text-[#D5D7D6] mb-3">Liens</h4>
+          <ul className="space-y-2 text-sm text-[#79847E]">
+            <li><a href="#features" className="hover:text-[#8DD621] transition-colors">Fonctionnalités</a></li>
+            <li><a href="#pricing" className="hover:text-[#8DD621] transition-colors">Tarifs</a></li>
+            <li><a href="#faq" className="hover:text-[#8DD621] transition-colors">FAQ</a></li>
           </ul>
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-foreground mb-3">Contact</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <h4 className="text-sm font-semibold text-[#D5D7D6] mb-3">Contact</h4>
+          <ul className="space-y-2 text-sm text-[#79847E]">
             <li>contact@track-emoney.com</li>
             <li>+225 00 00 00 00</li>
             <li>🌍 Côte d'Ivoire</li>
           </ul>
         </div>
       </div>
-      <Separator className="bg-border/30" />
+      <Separator className="bg-[rgba(255,255,255,0.06)]" />
       <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <p className="text-xs text-muted-foreground">© 2026 Djaitech. Tous droits réservés.</p>
-        <p className="text-xs text-muted-foreground">Fait avec 💚 en Côte d'Ivoire</p>
+        <p className="text-xs text-[#79847E]">© 2026 Djaitech. Tous droits réservés.</p>
+        <p className="text-xs text-[#79847E]">Fait avec 💚 en Côte d'Ivoire</p>
       </div>
     </div>
   </footer>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Sun, Moon } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/contexts/ThemeContext";
 
 const menuItems = [
   { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
@@ -26,7 +25,6 @@ const menuItems = [
 const Settings = () => {
   const { user, profile, signOut } = useAuth();
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
-  const { isDarkMode, toggleTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showPinSetup, setShowPinSetup] = useState(false);
@@ -68,17 +66,8 @@ const Settings = () => {
       {/* Privacy section */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-4">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Lock className="w-4 h-4" /> Confidentialité & Apparence
+          <Lock className="w-4 h-4" /> Confidentialité
         </h3>
-
-        {/* Theme toggle */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {isDarkMode ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-muted-foreground" />}
-            <span className="text-sm text-foreground">Mode {isDarkMode ? "sombre" : "clair"}</span>
-          </div>
-          <Switch checked={isDarkMode} onCheckedChange={toggleTheme} />
-        </div>
 
         {/* Discreet mode */}
         <div className="flex items-center justify-between">
