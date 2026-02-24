@@ -19,7 +19,7 @@ const Pricing = () => {
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
-        <Link to="/" className="text-xl font-bold text-gradient">Track E-Money</Link>
+        <Link to="/" className="text-xl font-bold text-gradient">Mon Jeton</Link>
         <Link to="/login">
           <Button variant="ghost" size="sm">Connexion</Button>
         </Link>

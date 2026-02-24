@@ -86,7 +86,7 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="px-5 py-4">
-        <Link to="/" className="text-xl font-bold text-gradient">Track E-Money</Link>
+        <Link to="/" className="text-xl font-bold text-gradient">Mon Jeton</Link>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-5 py-8">

@@ -17,7 +17,7 @@ export const generateMonthlyPdf = (data: PdfData) => {
   doc.rect(0, 0, w, 40, "F");
   doc.setTextColor(180, 230, 80);
   doc.setFontSize(20);
-  doc.text("Track E-Money", 14, 20);
+  doc.text("Mon Jeton", 14, 20);
   doc.setFontSize(10);
   doc.setTextColor(180, 180, 180);
   doc.text(`Rapport — ${data.month}`, 14, 30);
@@ -79,7 +79,7 @@ export const generateMonthlyPdf = (data: PdfData) => {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Track E-Money — Page ${i}/${pages}`, w / 2, 290, { align: "center" });
+    doc.text(`Mon Jeton — Page ${i}/${pages}`, w / 2, 290, { align: "center" });
   }
 
   doc.save(`track-emoney-rapport-${data.month.replace(/\s/g, "-")}.pdf`);

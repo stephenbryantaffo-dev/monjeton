@@ -28,7 +28,7 @@ const PinLockScreen = () => {
       <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center mb-6 neon-glow">
         <Lock className="w-8 h-8 text-primary-foreground" />
       </div>
-      <h1 className="text-xl font-bold text-foreground mb-2">Track E-Money</h1>
+      <h1 className="text-xl font-bold text-foreground mb-2">Mon Jeton</h1>
       <p className="text-sm text-muted-foreground mb-8">Entrez votre code PIN</p>
 
       <div className="flex gap-3 mb-8">
