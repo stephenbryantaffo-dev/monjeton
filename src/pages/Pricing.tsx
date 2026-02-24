@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import logoImg from "@/assets/logo-monjeton.png";
 
 const features = [
   "Transactions illimitées",
@@ -19,7 +20,10 @@ const Pricing = () => {
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
-        <Link to="/" className="text-xl font-bold text-gradient">Mon Jeton</Link>
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
+          <span className="text-xl font-bold text-gradient">Mon Jeton</span>
+        </Link>
         <Link to="/login">
           <Button variant="ghost" size="sm">Connexion</Button>
         </Link>
