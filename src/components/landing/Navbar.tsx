@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Layers, ScanLine, Shield, CreditCard, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/ui/tubelight-navbar";
+import logoImg from "@/assets/logo-monjeton.png";
 
 const tubelightItems = [
   { name: "Fonctionnalités", url: "#features", icon: Layers, onClick: () => scrollToEl("#features") },
@@ -43,9 +44,7 @@ const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-4">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#7CFF3A] flex items-center justify-center shadow-[0_0_20px_rgba(124,255,58,0.4)]">
-              <span className="text-[#05070A] font-black text-sm">MJ</span>
-            </div>
+            <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
             <span className="text-lg font-bold text-[#EAFBEA]">Mon Jeton</span>
           </Link>
 

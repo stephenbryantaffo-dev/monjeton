@@ -1,4 +1,5 @@
 import { Separator } from "@/components/ui/separator";
+import logoImg from "@/assets/logo-monjeton.png";
 
 const Footer = () => (
   <footer className="py-12 px-5 border-t border-[rgba(255,255,255,0.08)]">
@@ -6,9 +7,7 @@ const Footer = () => (
       <div className="grid sm:grid-cols-3 gap-8 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-md bg-[#8DD621] flex items-center justify-center">
-              <span className="text-[#151C18] font-black text-xs">MJ</span>
-            </div>
+            <img src={logoImg} alt="Mon Jeton" className="h-8 w-auto rounded-md" />
             <span className="font-bold text-[#D5D7D6]">Mon Jeton</span>
           </div>
           <p className="text-sm text-[#79847E] italic">"Tu vas voir clair dans ton jeton."</p>
