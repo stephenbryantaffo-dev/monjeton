@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import heroPlanet from "@/assets/hero-planet.png";
 
 /* ── Particle canvas ── */
@@ -101,7 +101,6 @@ const badges = [
 ];
 
 const Hero = () => {
-  const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -160,14 +159,14 @@ const Hero = () => {
             Mon Jeton vous aide à suivre vos dépenses en Franc CFA, analyser vos transactions, et convertir automatiquement les devises.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button
-              className="w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]"
-              onClick={() => navigate("/signup")}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 relative z-20">
+            <a
+              href="/signup"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 rounded-lg hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)] pointer-events-auto relative z-50 no-underline"
             >
               Créer un compte
               <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+            </a>
             <Button
               variant="outline"
               className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
