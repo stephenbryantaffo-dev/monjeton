@@ -40,6 +40,21 @@ serve(async (req) => {
     }
     const base64Audio = btoa(binary);
 
+    // Detect actual MIME type from the uploaded file
+    const mimeType = audioFile.type || "audio/webm";
+    // Map MIME to format string for the API
+    const formatMap: Record<string, string> = {
+      "audio/webm": "webm",
+      "audio/mp4": "mp4",
+      "audio/ogg": "ogg",
+      "audio/wav": "wav",
+      "audio/mpeg": "mp3",
+      "audio/mp3": "mp3",
+    };
+    const audioFormat = formatMap[mimeType] || "webm";
+
+    console.log("STT: received audio", { mimeType, audioFormat, size: audioFile.size });
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -56,12 +71,12 @@ serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: "Transcris cet audio :" },
+              { type: "text", text: "Transcris cet audio mot à mot :" },
               {
                 type: "input_audio",
                 input_audio: {
                   data: base64Audio,
-                  format: "wav"
+                  format: audioFormat
                 }
               }
             ]
