@@ -43,10 +43,12 @@ const Assistant = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [speakingId, setSpeakingId] = useState<number | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
   // Load saved messages on mount
@@ -176,6 +178,10 @@ const Assistant = () => {
       mediaRecorder.start();
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds(s => s + 1);
+      }, 1000);
     } catch {
       toast({ title: "Micro inaccessible", description: "Autorise l'accès au micro.", variant: "destructive" });
     }
@@ -186,6 +192,11 @@ const Assistant = () => {
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    setRecordingSeconds(0);
   };
 
   const transcribeAndSend = async (audioBlob: Blob) => {
@@ -490,7 +501,7 @@ const Assistant = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) handleSend(); }}
-            placeholder={isRecording ? "🔴 Enregistrement..." : "Pose ta question..."}
+            placeholder={isRecording ? `🔴 Enregistrement... ${Math.floor(recordingSeconds / 60).toString().padStart(2, "0")}:${(recordingSeconds % 60).toString().padStart(2, "0")}` : "Pose ta question..."}
             className="bg-secondary border-border"
             disabled={isLoading || isRecording}
           />
