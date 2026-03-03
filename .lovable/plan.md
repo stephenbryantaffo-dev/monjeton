@@ -1,36 +1,58 @@
 
-# Correction du flux "Mot de passe oublié"
 
-## Probleme identifie
+## Two bugs identified
 
-Quand un utilisateur clique sur "Mot de passe oublié" sur la page de connexion, un email de réinitialisation est envoyé avec un lien qui redirige vers `/login`. Cependant, quand l'utilisateur clique sur ce lien, il arrive sur la page de connexion normale sans aucun moyen de saisir un nouveau mot de passe. Le token de récupération dans l'URL n'est pas détecté ni traité.
+### Bug 1 — Voice-detected date is ignored on save
 
-## Solution
+In `handleVoiceConfirm` (NewTransaction.tsx, line 209-248), the date used when inserting into the database is always `today`:
 
-Créer une page dédiée `/reset-password` qui permet à l'utilisateur de saisir son nouveau mot de passe, et détecter automatiquement le token de récupération.
+```typescript
+const today = new Date().toISOString().split("T")[0];
+// ...
+date: today,  // line 248 — ignores tx.date entirely
+```
 
-## Etapes techniques
+The `ParsedTransaction` interface already has a `date` field, and the VoiceConfirmationDialog lets the user edit it. But `handleVoiceConfirm` never reads `tx.date`.
 
-### 1. Creer la page `src/pages/ResetPassword.tsx`
-- Un formulaire avec deux champs : nouveau mot de passe + confirmation
-- Detecter l'evenement `PASSWORD_RECOVERY` via `onAuthStateChange` de Supabase
-- Appeler `supabase.auth.updateUser({ password })` pour mettre a jour le mot de passe
-- Afficher un message de succes et rediriger vers `/login`
+**Fix**: Replace `date: today` with `date: tx.date || today` on line 248.
 
-### 2. Ajouter la route dans `src/App.tsx`
-- Ajouter `<Route path="/reset-password" element={<ResetPassword />} />`
+### Bug 2 — Voice-detected date is not mapped from AI response
 
-### 3. Modifier la redirection dans `src/pages/Login.tsx`
-- Changer le `redirectTo` de `resetPasswordForEmail` de `/login` vers `/reset-password`
-- Cela garantit que le lien dans l'email amene directement sur le formulaire de nouveau mot de passe
+In `processVoice` (NewTransaction.tsx, lines 177-186), the mapped transactions object does **not** include the `date` field from the AI response:
 
-### 4. Gerer le token dans `AuthContext.tsx`
-- Detecter l'evenement `PASSWORD_RECOVERY` dans le listener `onAuthStateChange`
-- Rediriger automatiquement vers `/reset-password` quand cet evenement est detecte
+```typescript
+const mappedTxs: ParsedTransaction[] = parsed.transactions.map((tx: any) => ({
+  amount: tx.amount || 0,
+  type: tx.type || "expense",
+  // ... no "date" field here
+}));
+```
 
-## Resultat attendu
-1. L'utilisateur entre son email et clique "Mot de passe oublié"
-2. Il recoit un email avec un lien
-3. Le lien ouvre la page `/reset-password`
-4. Il saisit son nouveau mot de passe
-5. Le mot de passe est mis a jour et il est redirige vers la connexion
+**Fix**: Add `date: tx.date || null` to the mapping.
+
+### Bug 3 — Dashboard does not refresh when navigating back
+
+The Dashboard fetches data in a `useEffect` that depends on `[user, activePeriod, customRange]`. When you navigate away and come back, React re-mounts the component and the effect runs again, so it *should* refresh. However, if the component is cached by React Router or if state persists, the data may be stale.
+
+The more likely cause is **Bug 1**: the voice transaction is saved with today's date hardcoded, but if the user said "hier" (yesterday), the transaction gets date = today. Then on the Dashboard, if "Aujourd'hui" is selected, the transaction appears. But if "Hier" is selected, it does not — creating the illusion that the dashboard is not updating.
+
+Once Bug 1 and Bug 2 are fixed, the dashboard will show voice transactions on the correct date.
+
+---
+
+## Implementation plan
+
+### File: `src/pages/NewTransaction.tsx`
+
+**Change 1** — Add `date` to the mapped voice transactions (around line 186):
+```typescript
+date: tx.date || null,
+```
+
+**Change 2** — Use the parsed date when inserting (line 248):
+```typescript
+date: tx.date || today,
+```
+
+Both changes are single-line edits. No database or edge function changes needed.
+
