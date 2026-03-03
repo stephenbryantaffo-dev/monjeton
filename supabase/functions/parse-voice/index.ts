@@ -15,6 +15,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
 
+    // Get current date info for relative date resolution
+    const now = new Date();
+    const todayISO = now.toISOString().split("T")[0];
+    const dayNames = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+    const todayName = dayNames[now.getUTCDay()];
+
     const body = await req.json();
     const transcript = typeof body.transcript === "string" ? body.transcript.slice(0, MAX_TRANSCRIPT_LENGTH) : "";
     if (!transcript) {
@@ -53,10 +59,13 @@ Retourne un JSON avec un tableau "transactions":
       "category": "nom de catégorie",
       "wallet": "nom du portefeuille" ou null,
       "note": "description courte",
-      "currency": "XOF" ou autre devise
+      "currency": "XOF" ou autre devise,
+      "date": "YYYY-MM-DD" ou null
     }
   ]
 }
+
+Aujourd'hui c'est ${todayName} ${todayISO}.
 
 Catégories disponibles: ${catList}
 Portefeuilles disponibles: ${walletList}
@@ -106,9 +115,21 @@ RÈGLES D'EXTRACTION AVANCÉES :
    - Income si : salaire, paye, "j'ai reçu", "on m'a envoyé", "mon patron m'a donné", virement reçu
    - Contexte Mobile Money : "j'ai envoyé" = expense, "j'ai reçu" = income
 
-6. NOTES : Génère une description courte et naturelle résumant la transaction.
+6. DATES IMPLICITES :
+   - "aujourd'hui" → ${todayISO}
+   - "hier" → date d'hier
+   - "avant-hier" → date d'avant-hier
+   - "ce matin", "ce soir", "cet après-midi" → aujourd'hui
+   - "lundi", "mardi", etc. (sans "prochain") → le dernier jour correspondant (passé ou aujourd'hui)
+   - "lundi dernier", "vendredi passé" → semaine précédente
+   - "la semaine dernière" → lundi de la semaine dernière
+   - "le mois dernier" → 1er du mois précédent
+   - "le 15", "le 3" → ce mois si la date est passée, sinon mois précédent
+   - Si aucune indication de date → null (sera traité comme aujourd'hui par l'app)
 
-7. Retourne UNIQUEMENT le JSON, rien d'autre.`
+7. NOTES : Génère une description courte et naturelle résumant la transaction.
+
+8. Retourne UNIQUEMENT le JSON, rien d'autre.`
           },
           { role: "user", content: transcript }
         ],
@@ -142,17 +163,22 @@ RÈGLES D'EXTRACTION AVANCÉES :
         const result = JSON.parse(jsonMatch[0]);
         if (result.transactions && Array.isArray(result.transactions)) {
           // Validate & sanitize each transaction
-          parsed.transactions = result.transactions.map((tx: any) => ({
-            amount: Math.max(0, Math.min(Number(tx.amount) || 0, 999_999_999_999)),
-            type: tx.type === "income" ? "income" : "expense",
-            category: String(tx.category || "").slice(0, 100),
-            wallet: tx.wallet ? String(tx.wallet).slice(0, 100) : null,
-            note: String(tx.note || "").replace(/[<>]/g, "").slice(0, 500),
-            currency: ALLOWED_CURRENCIES.includes(String(tx.currency || "").toUpperCase()) 
-              ? String(tx.currency).toUpperCase() 
-              : "XOF",
-          }));
+          parsed.transactions = result.transactions.map((tx: any) => {
+            const dateStr = tx.date && /^\d{4}-\d{2}-\d{2}$/.test(String(tx.date)) ? String(tx.date) : null;
+            return {
+              amount: Math.max(0, Math.min(Number(tx.amount) || 0, 999_999_999_999)),
+              type: tx.type === "income" ? "income" : "expense",
+              category: String(tx.category || "").slice(0, 100),
+              wallet: tx.wallet ? String(tx.wallet).slice(0, 100) : null,
+              note: String(tx.note || "").replace(/[<>]/g, "").slice(0, 500),
+              currency: ALLOWED_CURRENCIES.includes(String(tx.currency || "").toUpperCase()) 
+                ? String(tx.currency).toUpperCase() 
+                : "XOF",
+              date: dateStr,
+            };
+          });
         } else if (result.amount !== undefined) {
+          const dateStr = result.date && /^\d{4}-\d{2}-\d{2}$/.test(String(result.date)) ? String(result.date) : null;
           parsed = { transactions: [{
             amount: Math.max(0, Math.min(Number(result.amount) || 0, 999_999_999_999)),
             type: result.type === "income" ? "income" : "expense",
@@ -162,6 +188,7 @@ RÈGLES D'EXTRACTION AVANCÉES :
             currency: ALLOWED_CURRENCIES.includes(String(result.currency || "").toUpperCase())
               ? String(result.currency).toUpperCase()
               : "XOF",
+            date: dateStr,
           }] };
         }
       }
