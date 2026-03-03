@@ -181,6 +181,7 @@ const NewTransaction = () => {
         wallet: tx.wallet || null,
         note: tx.note || "",
         currency: tx.currency || "XOF",
+        date: tx.date || null,
         categoryId: matchCategoryId(tx.category || "", tx.type || "expense"),
         walletId: matchWalletId(tx.wallet),
       }));
@@ -245,7 +246,7 @@ const NewTransaction = () => {
           type: tx.type,
           amount: finalAmount,
           note: tx.note,
-          date: today,
+          date: tx.date || today,
           category_id: catId || null,
           wallet_id: walId || null,
           original_amount: originalAmount,
