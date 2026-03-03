@@ -12,6 +12,7 @@ export interface ParsedTransaction {
   wallet: string | null;
   note: string;
   currency: string;
+  date: string | null;
   // Resolved IDs after matching
   categoryId?: string;
   walletId?: string;
@@ -127,6 +128,14 @@ export default function VoiceConfirmationDialog({
                     placeholder="Description"
                   />
                 </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    value={tx.date || ""}
+                    onChange={e => updateTx(i, { date: e.target.value || null })}
+                    className="bg-background border-border text-sm flex-[0.8]"
+                  />
+                </div>
                 <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)} className="text-primary text-xs">
                   ✓ Terminé
                 </Button>
@@ -136,11 +145,12 @@ export default function VoiceConfirmationDialog({
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-bold ${tx.type === "income" ? "text-primary" : "text-foreground"}`}>
-                      {tx.type === "income" ? "+" : "-"}{formatMoneySmart(tx.amount)} {tx.currency === "XOF" ? "FCFA" : tx.currency}
-                    </span>
-                    <span className="text-xs text-muted-foreground">→ {tx.category}</span>
-                  </div>
+                     <span className={`text-sm font-bold ${tx.type === "income" ? "text-primary" : "text-foreground"}`}>
+                       {tx.type === "income" ? "+" : "-"}{formatMoneySmart(tx.amount)} {tx.currency === "XOF" ? "FCFA" : tx.currency}
+                     </span>
+                     <span className="text-xs text-muted-foreground">→ {tx.category}</span>
+                     {tx.date && <span className="text-xs text-muted-foreground">📅 {tx.date}</span>}
+                   </div>
                   {tx.note && <p className="text-xs text-muted-foreground truncate">{tx.note}</p>}
                 </div>
                 <div className="flex items-center gap-1">
