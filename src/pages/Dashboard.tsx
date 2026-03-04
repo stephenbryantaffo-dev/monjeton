@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -27,6 +27,15 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [newTxCount, setNewTxCount] = useState(0);
+
+  // Track last visit for "new transactions" indicator
+  useEffect(() => {
+    return () => {
+      // On unmount (leaving dashboard), save current timestamp
+      localStorage.setItem("dashboard_last_visit", new Date().toISOString());
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -61,7 +70,16 @@ const Dashboard = () => {
       if (error) {
         console.error("[Dashboard] fetch error:", error.message);
       }
-      setTransactions(data || []);
+      const txs = data || [];
+      setTransactions(txs);
+
+      // Count new transactions since last visit
+      const lastVisit = localStorage.getItem("dashboard_last_visit");
+      if (lastVisit) {
+        const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
+        setNewTxCount(count);
+      }
+
       setLoading(false);
     };
 
@@ -263,7 +281,19 @@ const Dashboard = () => {
 
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-foreground">Transactions récentes</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-foreground">Transactions récentes</h2>
+                {newTxCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    +{newTxCount} nouvelle{newTxCount > 1 ? "s" : ""}
+                  </motion.span>
+                )}
+              </div>
               <Link to="/transactions" className="text-xs text-primary">Voir tout</Link>
             </div>
             <div className="space-y-2">
