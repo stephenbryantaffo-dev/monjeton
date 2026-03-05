@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -8,6 +8,18 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const menuItems = [
   { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
@@ -29,6 +41,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [newPin, setNewPin] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -118,10 +131,68 @@ const Settings = () => {
         ))}
       </div>
 
-      <button onClick={handleLogout} className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 text-destructive hover:bg-destructive/10 transition-colors">
+      {/* Legal links */}
+      <div className="space-y-1 mb-4">
+        <Link to="/privacy" className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
+          <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+          <span className="flex-1 text-sm font-medium text-foreground">Politique de confidentialité</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+        <Link to="/terms" className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
+          <FileText className="w-5 h-5 text-muted-foreground" />
+          <span className="flex-1 text-sm font-medium text-foreground">Conditions d'utilisation</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+      </div>
+
+      <button onClick={handleLogout} className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 text-destructive hover:bg-destructive/10 transition-colors mb-3">
         <LogOut className="w-5 h-5" />
         <span className="text-sm font-medium">Se déconnecter</span>
       </button>
+
+      {/* Delete account */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 text-destructive/70 hover:bg-destructive/10 transition-colors">
+            <Trash2 className="w-5 h-5" />
+            <span className="text-sm font-medium">Supprimer mon compte</span>
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est <strong>irréversible</strong>. Toutes vos données (transactions, portefeuilles, budgets, épargnes, etc.) seront définitivement supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setDeleting(true);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const res = await supabase.functions.invoke("delete-account", {
+                    headers: { Authorization: `Bearer ${session?.access_token}` },
+                  });
+                  if (res.error) throw res.error;
+                  toast({ title: "Compte supprimé. Au revoir 👋" });
+                  await signOut();
+                  navigate("/");
+                } catch {
+                  toast({ title: "Erreur lors de la suppression", variant: "destructive" });
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+            >
+              {deleting ? "Suppression…" : "Oui, supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

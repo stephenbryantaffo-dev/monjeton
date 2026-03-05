@@ -1,0 +1,13 @@
+{
+  "appId": "app.lovable.55188b703d0147c3977922700bac360a",
+  "appName": "Mon Jeton",
+  "webDir": "dist",
+  "server": {
+    "url": "https://55188b70-3d01-47c3-9779-22700bac360a.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  },
+  "ios": {
+    "scheme": "Mon Jeton",
+    "contentInset": "automatic"
+  }
+}

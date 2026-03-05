@@ -1,33 +1,56 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <!-- X-Frame-Options must be set via HTTP header, not meta tag -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Mon Jeton" />
+    <meta name="theme-color" content="#0a1a0d" />
     <link rel="icon" href="/favicon.png" type="image/png" />
-    <title>Mon Jeton App</title>
-    <meta name="description" content="Tu vas voir clair dans ton jeton !">
-    <meta name="author" content="Lovable" />
-
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
+    <link rel="apple-touch-icon" href="/app-store-icon-1024.png" />
+    <title>Mon Jeton — Suivi financier en FCFA</title>
+    <meta name="description" content="Mon Jeton : l'app de gestion financière personnelle en Franc CFA. Suivez vos dépenses, revenus, budgets et épargne facilement.">
+    <meta name="author" content="Djaitech" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9b849a5f-0628-48c8-9e86-c698bf3498cd/id-preview-4bbfddb5--55188b70-3d01-47c3-9779-22700bac360a.lovable.app-1771181945363.png">
-
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:site" content="@monjeton" />
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9b849a5f-0628-48c8-9e86-c698bf3498cd/id-preview-4bbfddb5--55188b70-3d01-47c3-9779-22700bac360a.lovable.app-1771181945363.png">
-    <meta property="og:title" content="Mon Jeton App">
-  <meta name="twitter:title" content="Mon Jeton App">
-  <meta property="og:description" content="Tu vas voir clair dans ton jeton !">
-  <meta name="twitter:description" content="Tu vas voir clair dans ton jeton !">
-</head>
+    <meta property="og:title" content="Mon Jeton — Suivi financier en FCFA">
+    <meta name="twitter:title" content="Mon Jeton — Suivi financier en FCFA">
+    <meta property="og:description" content="Mon Jeton : l'app de gestion financière personnelle en Franc CFA.">
+    <meta name="twitter:description" content="Mon Jeton : l'app de gestion financière personnelle en Franc CFA.">
+    <style>
+      /* iOS splash screen */
+      #splash-screen {
+        position: fixed; inset: 0; z-index: 99999;
+        background: #0a1a0d;
+        display: flex; align-items: center; justify-content: center; flex-direction: column;
+        transition: opacity 0.4s ease;
+      }
+      #splash-screen.hide { opacity: 0; pointer-events: none; }
+      #splash-screen img { width: 96px; height: 96px; border-radius: 20px; }
+      #splash-screen p { color: #4a9a1e; font-family: sans-serif; font-weight: 700; font-size: 20px; margin-top: 16px; }
+    </style>
+  </head>
 
   <body>
+    <div id="splash-screen">
+      <img src="/pwa-icon-192.png" alt="Mon Jeton" />
+      <p>Mon Jeton</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var s = document.getElementById('splash-screen');
+          if (s) { s.classList.add('hide'); setTimeout(function() { s.remove(); }, 500); }
+        }, 800);
+      });
+    </script>
   </body>
 </html>
