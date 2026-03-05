@@ -32,6 +32,10 @@ const Footer = () => (
       <Separator className="bg-[rgba(255,255,255,0.06)]" />
       <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
         <p className="text-xs text-[#79847E]">© 2026 Djaitech. Tous droits réservés.</p>
+        <div className="flex gap-4">
+          <a href="/privacy" className="text-xs text-[#79847E] hover:text-[#8DD621] transition-colors">Confidentialité</a>
+          <a href="/terms" className="text-xs text-[#79847E] hover:text-[#8DD621] transition-colors">CGU</a>
+        </div>
         <p className="text-xs text-[#79847E]">Fait avec 💚 en Côte d'Ivoire</p>
       </div>
     </div>

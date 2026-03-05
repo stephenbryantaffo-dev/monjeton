@@ -35,6 +35,8 @@ const Tontine = lazy(() => import("./pages/Tontine"));
 const Scan = lazy(() => import("./pages/Scan"));
 const Install = lazy(() => import("./pages/Install"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -59,6 +61,8 @@ const AppContent = () => {
         <Route path="/subscribe" element={<Subscribe />} />
         <Route path="/install" element={<Install />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
         <Route path="/transactions/new" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
