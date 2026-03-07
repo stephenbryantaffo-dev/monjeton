@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { initSessionMonitor } from "@/lib/security";
 
@@ -21,15 +20,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
-      .single();
-    setProfile(data);
+      .maybeSingle();
+    if (!error && data) {
+      setProfile(data);
+    } else {
+      setProfile(null);
+    }
   };
 
 
@@ -37,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "PASSWORD_RECOVERY") {
-          navigate("/reset-password");
+          window.location.href = "/reset-password";
           return;
         }
         setSession(session);
