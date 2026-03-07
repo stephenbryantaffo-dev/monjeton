@@ -8,30 +8,40 @@ import { StatSkeleton } from "@/components/DashboardSkeleton";
 const Admin = () => {
   const [stats, setStats] = useState<{ label: string; value: string; icon: any }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [profilesRes, subsRes, txRes] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("transactions").select("id, amount, type"),
-      ]);
+      try {
+        const [profilesRes, subsRes, txCountRes, revenueRes] = await Promise.all([
+          supabase.from("profiles").select("*", { count: "exact", head: true }),
+          supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active"),
+          supabase.from("transactions").select("*", { count: "exact", head: true }),
+          supabase.from("transactions").select("amount").eq("type", "income"),
+        ]);
 
-      const totalUsers = profilesRes.count ?? 0;
-      const activeSubs = subsRes.count ?? 0;
-      const txData = txRes.data || [];
-      const totalTx = txData.length;
-      const monthlyRevenue = txData
-        .filter(t => t.type === "income")
-        .reduce((s, t) => s + Number(t.amount), 0);
+        if (profilesRes.error) throw profilesRes.error;
+        if (subsRes.error) throw subsRes.error;
+        if (txCountRes.error) throw txCountRes.error;
+        if (revenueRes.error) throw revenueRes.error;
 
-      setStats([
-        { label: "Utilisateurs", value: totalUsers.toLocaleString("fr-FR"), icon: Users },
-        { label: "Abonnements actifs", value: activeSubs.toLocaleString("fr-FR"), icon: CreditCard },
-        { label: "Transactions totales", value: totalTx.toLocaleString("fr-FR"), icon: Activity },
-        { label: "Revenus (total)", value: `${monthlyRevenue.toLocaleString("fr-FR")} F`, icon: TrendingUp },
-      ]);
-      setLoading(false);
+        const totalUsers = profilesRes.count ?? 0;
+        const activeSubs = subsRes.count ?? 0;
+        const totalTx = txCountRes.count ?? 0;
+        const totalRevenue = (revenueRes.data || []).reduce((s, t) => s + Number(t.amount), 0);
+
+        setStats([
+          { label: "Utilisateurs", value: totalUsers.toLocaleString("fr-FR"), icon: Users },
+          { label: "Abonnements actifs", value: activeSubs.toLocaleString("fr-FR"), icon: CreditCard },
+          { label: "Transactions totales", value: totalTx.toLocaleString("fr-FR"), icon: Activity },
+          { label: "Revenus (total)", value: `${totalRevenue.toLocaleString("fr-FR")} F`, icon: TrendingUp },
+        ]);
+      } catch (err: any) {
+        console.error("Admin fetchStats error:", err);
+        setError(err.message || "Erreur lors du chargement des statistiques");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchStats();
   }, []);
