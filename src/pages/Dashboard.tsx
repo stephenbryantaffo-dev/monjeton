@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -21,70 +21,71 @@ const trendModes = ["Jour", "Semaine"];
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
-  const [activePeriod, setActivePeriod] = useState(1); // 0=Hier, 1=Aujourd'hui, 2=Calendrier
+  const [activePeriod, setActivePeriod] = useState(1);
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [newTxCount, setNewTxCount] = useState(0);
 
-  // Track last visit for "new transactions" indicator
   useEffect(() => {
     return () => {
-      // On unmount (leaving dashboard), save current timestamp
       localStorage.setItem("dashboard_last_visit", new Date().toISOString());
     };
   }, []);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     if (activePeriod === 2 && !customRange?.from) return;
 
-    const fetchData = async () => {
-      setLoading(true);
-      const now = new Date();
-      let startDate: string;
-      let endDate: string;
+    setLoading(true);
+    setError(null);
+    const now = new Date();
+    let startDate: string;
+    let endDate: string;
 
-      if (activePeriod === 0) {
-        const yesterday = new Date(now);
-        yesterday.setDate(now.getDate() - 1);
-        startDate = endDate = yesterday.toISOString().split("T")[0];
-      } else if (activePeriod === 1) {
-        startDate = endDate = now.toISOString().split("T")[0];
-      } else {
-        startDate = customRange!.from!.toISOString().split("T")[0];
-        endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
-      }
+    if (activePeriod === 0) {
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      startDate = endDate = yesterday.toISOString().split("T")[0];
+    } else if (activePeriod === 1) {
+      startDate = endDate = now.toISOString().split("T")[0];
+    } else {
+      startDate = customRange!.from!.toISOString().split("T")[0];
+      endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
+    }
 
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*, categories(name, icon, color)")
-        .eq("user_id", user.id)
-        .gte("date", startDate)
-        .lte("date", endDate)
-        .order("date", { ascending: false })
-        .limit(500);
+    const { data, error: fetchError } = await supabase
+      .from("transactions")
+      .select("*, categories(name, icon, color)")
+      .eq("user_id", user.id)
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date", { ascending: false })
+      .limit(500);
 
-      if (error) {
-        console.error("[Dashboard] fetch error:", error.message);
-      }
-      const txs = data || [];
-      setTransactions(txs);
-
-      // Count new transactions since last visit
-      const lastVisit = localStorage.getItem("dashboard_last_visit");
-      if (lastVisit) {
-        const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
-        setNewTxCount(count);
-      }
-
+    if (fetchError) {
+      setError("Impossible de charger les transactions. Vérifiez votre connexion.");
       setLoading(false);
-    };
+      return;
+    }
+    const txs = data || [];
+    setTransactions(txs);
 
-    fetchData();
+    const lastVisit = localStorage.getItem("dashboard_last_visit");
+    if (lastVisit) {
+      const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
+      setNewTxCount(count);
+    }
+
+    setLoading(false);
   }, [user, activePeriod, customRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
@@ -103,23 +104,20 @@ const Dashboard = () => {
   const chartData: { name: string; amount: number; color: string }[] = Object.values(expenseByCategory);
   const recentTx = transactions.slice(0, 5);
 
-  // Trend line chart data
   const trendData = useMemo(() => {
     const expenses = transactions.filter(t => t.type === "expense");
     if (expenses.length === 0) return [];
 
     if (trendMode === 0) {
-      // Group by day of week
       const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
       const byDay: Record<number, number> = {};
       expenses.forEach(t => {
         let d = new Date(t.date).getDay();
-        d = d === 0 ? 6 : d - 1; // Mon=0
+        d = d === 0 ? 6 : d - 1;
         byDay[d] = (byDay[d] || 0) + Number(t.amount);
       });
       return days.map((name, i) => ({ name, amount: byDay[i] || 0 }));
     } else {
-      // Group by month
       const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
       const byMonth: Record<number, number> = {};
       expenses.forEach(t => {
@@ -128,7 +126,6 @@ const Dashboard = () => {
       });
       const now = new Date();
       const currentMonth = now.getMonth();
-      // Show last 6 months
       const result = [];
       for (let i = 5; i >= 0; i--) {
         const m = (currentMonth - i + 12) % 12;
@@ -145,7 +142,6 @@ const Dashboard = () => {
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
           <h1 className="text-2xl font-bold text-foreground">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
-        
       </div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
@@ -181,7 +177,29 @@ const Dashboard = () => {
         </Popover>
       </div>
 
-      {loading ? (
+      {/* Message when custom range not selected */}
+      {activePeriod === 2 && !customRange?.from && (
+        <div className="glass-card rounded-2xl p-6 mb-6 text-center">
+          <CalendarIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-muted-foreground text-sm">Sélectionnez une plage de dates dans le calendrier ci-dessus.</p>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="glass-card rounded-2xl p-6 text-center">
+          <p className="text-destructive text-sm mb-3">{error}</p>
+          <button
+            onClick={() => { setError(null); fetchData(); }}
+            className="inline-flex items-center gap-2 text-primary text-sm font-medium"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Réessayer
+          </button>
+        </div>
+      )}
+
+      {!error && loading ? (
         <>
           <div className="grid grid-cols-2 gap-3 mb-6">
             <CardSkeleton />
@@ -192,7 +210,7 @@ const Dashboard = () => {
             {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
           </div>
         </>
-      ) : (
+      ) : !error && (
         <>
           <div className="grid grid-cols-2 gap-3 mb-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 overflow-hidden">
