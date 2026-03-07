@@ -32,9 +32,24 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Configure environment variables.
+cp .env.example .env
+# Then edit .env with your actual values (see below).
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the values:
+
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Your project URL (found in Project Settings → API) |
+| `VITE_SUPABASE_ANON_KEY` | Your publishable anon key (found in Project Settings → API) |
+
+> ⚠️ **Never commit `.env` to version control.** It is already in `.gitignore`.
 
 **Edit a file directly in GitHub**
 
