@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/AdminRoute";
 import PinLockScreen from "@/components/PinLockScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { lazy, Suspense } from "react";
@@ -76,7 +77,7 @@ const AppContent = () => {
         <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
         <Route path="/tontine" element={<ProtectedRoute><Tontine /></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
