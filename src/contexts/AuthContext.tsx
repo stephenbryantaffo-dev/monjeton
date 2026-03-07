@@ -24,12 +24,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
-      .single();
-    setProfile(data);
+      .maybeSingle();
+    if (!error && data) {
+      setProfile(data);
+    } else {
+      setProfile(null);
+    }
   };
 
 
