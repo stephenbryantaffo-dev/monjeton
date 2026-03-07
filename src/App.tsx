@@ -49,8 +49,9 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { isLocked } = usePrivacy();
+  const { user } = useAuth();
 
-  if (isLocked) return <PinLockScreen />;
+  if (isLocked && user) return <PinLockScreen />;
 
   return (
     <Suspense fallback={<PageLoader />}>
