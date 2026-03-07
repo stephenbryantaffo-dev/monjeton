@@ -48,23 +48,32 @@ const Admin = () => {
 
   return (
     <DashboardLayout title="Admin">
-      <div className="grid grid-cols-2 gap-3">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
-          : stats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 * i }}
-                className="glass-card rounded-2xl p-4 text-center"
-              >
-                <s.icon className="w-6 h-6 text-primary mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-              </motion.div>
-            ))}
-      </div>
+      {error ? (
+        <div className="glass-card rounded-2xl p-6 text-center">
+          <p className="text-destructive font-medium">⚠️ {error}</p>
+          <button onClick={() => window.location.reload()} className="mt-3 text-sm text-primary underline">
+            Réessayer
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
+            : stats.map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 * i }}
+                  className="glass-card rounded-2xl p-4 text-center"
+                >
+                  <s.icon className="w-6 h-6 text-primary mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </motion.div>
+              ))}
+        </div>
+      )}
     </DashboardLayout>
   );
 };
