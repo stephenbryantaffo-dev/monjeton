@@ -1,6 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { formatMoneySmart } from "@/lib/formatMoney";
 
+const PIN_STORAGE_KEY = "track_emoney_pin";
+const SALT = "monjeton_2024_";
+
+const hashPin = (pin: string): string => btoa(SALT + pin);
+
 interface PrivacyContextType {
   isLocked: boolean;
   isDiscreetMode: boolean;
@@ -21,16 +26,16 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
   const [pinEnabled, setPinEnabled] = useState(false);
 
   useEffect(() => {
-    const storedPin = localStorage.getItem("track_emoney_pin");
+    const storedHash = localStorage.getItem(PIN_STORAGE_KEY);
     const discreet = localStorage.getItem("track_emoney_discreet") === "true";
-    setPinEnabled(!!storedPin);
-    setIsLocked(!!storedPin);
+    setPinEnabled(!!storedHash);
+    setIsLocked(!!storedHash);
     setIsDiscreetMode(discreet);
   }, []);
 
   const unlock = (pin: string): boolean => {
-    const storedPin = localStorage.getItem("track_emoney_pin");
-    if (pin === storedPin) {
+    const storedHash = localStorage.getItem(PIN_STORAGE_KEY);
+    if (hashPin(pin) === storedHash) {
       setIsLocked(false);
       return true;
     }
@@ -42,13 +47,13 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setPin = (newPin: string) => {
-    localStorage.setItem("track_emoney_pin", newPin);
+    localStorage.setItem(PIN_STORAGE_KEY, hashPin(newPin));
     setPinEnabled(true);
     setIsLocked(false);
   };
 
   const removePin = () => {
-    localStorage.removeItem("track_emoney_pin");
+    localStorage.removeItem(PIN_STORAGE_KEY);
     setPinEnabled(false);
     setIsLocked(false);
   };
