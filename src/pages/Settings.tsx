@@ -42,6 +42,7 @@ const Settings = () => {
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [newPin, setNewPin] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleLogout = async () => {
     await signOut();
@@ -151,7 +152,7 @@ const Settings = () => {
       </button>
 
       {/* Delete account */}
-      <AlertDialog>
+      <AlertDialog onOpenChange={(open) => { if (!open) setConfirmPassword(""); }}>
         <AlertDialogTrigger asChild>
           <button className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 text-destructive/70 hover:bg-destructive/10 transition-colors">
             <Trash2 className="w-5 h-5" />
@@ -161,18 +162,38 @@ const Settings = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
-            <AlertDialogDescription>
+          <AlertDialogDescription>
               Cette action est <strong>irréversible</strong>. Toutes vos données (transactions, portefeuilles, budgets, épargnes, etc.) seront définitivement supprimées.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-muted-foreground">Confirmez votre mot de passe :</p>
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Votre mot de passe actuel"
+              className="bg-secondary border-border"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              disabled={deleting}
+              disabled={deleting || !confirmPassword}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
                 setDeleting(true);
                 try {
+                  // Re-authenticate before deletion
+                  const { error: authError } = await supabase.auth.signInWithPassword({
+                    email: user!.email!,
+                    password: confirmPassword,
+                  });
+                  if (authError) {
+                    toast({ title: "Mot de passe incorrect", variant: "destructive" });
+                    setDeleting(false);
+                    return;
+                  }
                   const { data: { session } } = await supabase.auth.getSession();
                   const res = await supabase.functions.invoke("delete-account", {
                     headers: { Authorization: `Bearer ${session?.access_token}` },
@@ -193,6 +214,7 @@ const Settings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </DashboardLayout>
   );
 };
