@@ -152,7 +152,7 @@ const Settings = () => {
       </button>
 
       {/* Delete account */}
-      <AlertDialog>
+      <AlertDialog onOpenChange={(open) => { if (!open) setConfirmPassword(""); }}>
         <AlertDialogTrigger asChild>
           <button className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 text-destructive/70 hover:bg-destructive/10 transition-colors">
             <Trash2 className="w-5 h-5" />
