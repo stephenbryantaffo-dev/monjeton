@@ -200,7 +200,15 @@ const Wallets = () => {
   return (
     <DashboardLayout title="Portefeuilles">
       <div className="space-y-3 mb-4">
-        {loading
+        {error ? (
+          <div className="glass-card rounded-2xl p-6 text-center space-y-3">
+            <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="glass" size="sm" onClick={fetchData}>
+              <RefreshCw className="w-4 h-4 mr-1" /> Réessayer
+            </Button>
+          </div>
+        ) : loading
           ? Array.from({ length: 4 }).map((_, i) => <ListItemSkeleton key={i} />)
           : wallets.map((w, i) => {
             const color = WALLET_COLORS[w.wallet_name] || "hsl(200, 70%, 50%)";
