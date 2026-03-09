@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { checkRateLimit, validatePasswordStrength, sanitizeText } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.png";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
