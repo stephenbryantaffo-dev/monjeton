@@ -43,6 +43,7 @@ const Wallets = () => {
   const [newName, setNewName] = useState("");
   const [newInitialBalance, setNewInitialBalance] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBalance, setEditBalance] = useState("");
 
@@ -55,21 +56,32 @@ const Wallets = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [{ data: walletsData }, { data: txData }] = await Promise.all([
-      supabase.from("wallets").select("*").eq("user_id", user.id),
-      supabase.from("transactions").select("wallet_id, type, amount").eq("user_id", user.id),
-    ]);
-    setWallets(walletsData || []);
+    setLoading(true);
+    setError(null);
+    try {
+      const [walletsRes, txRes] = await Promise.all([
+        supabase.from("wallets").select("*").eq("user_id", user.id),
+        supabase.from("transactions").select("wallet_id, type, amount").eq("user_id", user.id),
+      ]);
+      if (walletsRes.error) throw walletsRes.error;
+      if (txRes.error) throw txRes.error;
 
-    const bal: Record<string, { income: number; expense: number }> = {};
-    (txData || []).forEach((t: any) => {
-      if (!t.wallet_id) return;
-      if (!bal[t.wallet_id]) bal[t.wallet_id] = { income: 0, expense: 0 };
-      if (t.type === "income") bal[t.wallet_id].income += Number(t.amount);
-      else bal[t.wallet_id].expense += Number(t.amount);
-    });
-    setBalances(bal);
-    setLoading(false);
+      setWallets(walletsRes.data || []);
+
+      const bal: Record<string, { income: number; expense: number }> = {};
+      (txRes.data || []).forEach((t: any) => {
+        if (!t.wallet_id) return;
+        if (!bal[t.wallet_id]) bal[t.wallet_id] = { income: 0, expense: 0 };
+        if (t.type === "income") bal[t.wallet_id].income += Number(t.amount);
+        else bal[t.wallet_id].expense += Number(t.amount);
+      });
+      setBalances(bal);
+    } catch (err: any) {
+      setError(err.message || "Erreur de chargement");
+      toast({ title: "Erreur de chargement", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, [user]);
