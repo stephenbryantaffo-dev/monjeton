@@ -139,6 +139,27 @@ const Wallets = () => {
     setTransferring(true);
     try {
       const today = new Date().toISOString().split("T")[0];
+
+      // Fetch or create 'Transfert' category
+      let transferCatId: string | null = null;
+      const { data: existingCat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("name", "Transfert")
+        .maybeSingle();
+
+      if (existingCat) {
+        transferCatId = existingCat.id;
+      } else {
+        const { data: newCat } = await supabase
+          .from("categories")
+          .insert({ user_id: user.id, name: "Transfert", icon: "ArrowRightLeft", color: "hsl(200,70%,50%)", type: "expense" } as any)
+          .select("id")
+          .single();
+        transferCatId = newCat?.id || null;
+      }
+
       // Create two transactions: expense from source, income to destination
       const { error } = await supabase.from("transactions").insert([
         {
@@ -148,6 +169,7 @@ const Wallets = () => {
           date: today,
           note: `Transfert vers ${toWallet.wallet_name}`,
           wallet_id: fromWalletId,
+          category_id: transferCatId,
         },
         {
           user_id: user.id,
@@ -156,6 +178,7 @@ const Wallets = () => {
           date: today,
           note: `Transfert depuis ${fromWallet.wallet_name}`,
           wallet_id: toWalletId,
+          category_id: transferCatId,
         },
       ]);
 
