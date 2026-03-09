@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Wallet, Plus, TrendingUp, TrendingDown, Pencil, Check, X, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const Wallets = () => {
   const [newName, setNewName] = useState("");
   const [newInitialBalance, setNewInitialBalance] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBalance, setEditBalance] = useState("");
 
@@ -54,21 +56,32 @@ const Wallets = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [{ data: walletsData }, { data: txData }] = await Promise.all([
-      supabase.from("wallets").select("*").eq("user_id", user.id),
-      supabase.from("transactions").select("wallet_id, type, amount").eq("user_id", user.id),
-    ]);
-    setWallets(walletsData || []);
+    setLoading(true);
+    setError(null);
+    try {
+      const [walletsRes, txRes] = await Promise.all([
+        supabase.from("wallets").select("*").eq("user_id", user.id),
+        supabase.from("transactions").select("wallet_id, type, amount").eq("user_id", user.id),
+      ]);
+      if (walletsRes.error) throw walletsRes.error;
+      if (txRes.error) throw txRes.error;
 
-    const bal: Record<string, { income: number; expense: number }> = {};
-    (txData || []).forEach((t: any) => {
-      if (!t.wallet_id) return;
-      if (!bal[t.wallet_id]) bal[t.wallet_id] = { income: 0, expense: 0 };
-      if (t.type === "income") bal[t.wallet_id].income += Number(t.amount);
-      else bal[t.wallet_id].expense += Number(t.amount);
-    });
-    setBalances(bal);
-    setLoading(false);
+      setWallets(walletsRes.data || []);
+
+      const bal: Record<string, { income: number; expense: number }> = {};
+      (txRes.data || []).forEach((t: any) => {
+        if (!t.wallet_id) return;
+        if (!bal[t.wallet_id]) bal[t.wallet_id] = { income: 0, expense: 0 };
+        if (t.type === "income") bal[t.wallet_id].income += Number(t.amount);
+        else bal[t.wallet_id].expense += Number(t.amount);
+      });
+      setBalances(bal);
+    } catch (err: any) {
+      setError(err.message || "Erreur de chargement");
+      toast({ title: "Erreur de chargement", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, [user]);
@@ -126,6 +139,27 @@ const Wallets = () => {
     setTransferring(true);
     try {
       const today = new Date().toISOString().split("T")[0];
+
+      // Fetch or create 'Transfert' category
+      let transferCatId: string | null = null;
+      const { data: existingCat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("name", "Transfert")
+        .maybeSingle();
+
+      if (existingCat) {
+        transferCatId = existingCat.id;
+      } else {
+        const { data: newCat } = await supabase
+          .from("categories")
+          .insert({ user_id: user.id, name: "Transfert", icon: "ArrowRightLeft", color: "hsl(200,70%,50%)", type: "expense" } as any)
+          .select("id")
+          .single();
+        transferCatId = newCat?.id || null;
+      }
+
       // Create two transactions: expense from source, income to destination
       const { error } = await supabase.from("transactions").insert([
         {
@@ -135,6 +169,7 @@ const Wallets = () => {
           date: today,
           note: `Transfert vers ${toWallet.wallet_name}`,
           wallet_id: fromWalletId,
+          category_id: transferCatId,
         },
         {
           user_id: user.id,
@@ -143,6 +178,7 @@ const Wallets = () => {
           date: today,
           note: `Transfert depuis ${fromWallet.wallet_name}`,
           wallet_id: toWalletId,
+          category_id: transferCatId,
         },
       ]);
 
@@ -164,7 +200,15 @@ const Wallets = () => {
   return (
     <DashboardLayout title="Portefeuilles">
       <div className="space-y-3 mb-4">
-        {loading
+        {error ? (
+          <div className="glass-card rounded-2xl p-6 text-center space-y-3">
+            <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="glass" size="sm" onClick={fetchData}>
+              <RefreshCw className="w-4 h-4 mr-1" /> Réessayer
+            </Button>
+          </div>
+        ) : loading
           ? Array.from({ length: 4 }).map((_, i) => <ListItemSkeleton key={i} />)
           : wallets.map((w, i) => {
             const color = WALLET_COLORS[w.wallet_name] || "hsl(200, 70%, 50%)";
