@@ -175,7 +175,7 @@ const Hero = () => {
               variant="outline"
               className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
               onClick={() => {
-                const el = document.getElementById("ai-scan");
+                const el = document.getElementById("features");
                 if (el) {
                   const top = el.getBoundingClientRect().top + window.scrollY - 80;
                   window.scrollTo({ top, behavior: "smooth" });
