@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import heroPlanet from "@/assets/hero-planet.png";
 
 /* ── Particle canvas ── */
