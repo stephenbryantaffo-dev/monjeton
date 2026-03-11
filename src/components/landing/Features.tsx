@@ -20,7 +20,7 @@ const features = [
 ];
 
 const Features = () => (
-  <section id="features" className="py-24 px-5">
+  <section id="features" data-demo="true" className="py-24 px-5" style={{ scrollMarginTop: 80 }}>
     <div className="max-w-6xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
