@@ -1,27 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { User, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { checkRateLimit, resetRateLimit } from "@/lib/security";
+import SmokeyBackground from "@/components/ui/smokey-background";
 import logoImg from "@/assets/logo-monjeton.png";
-import {
-  AnimatedInput,
-  AnimatedForm,
-  BoxReveal,
-  Ripple,
-  OrbitingCircles,
-} from "@/components/ui/animated-login";
-
-// Mobile money operator colors
-const operators = [
-  { name: "Wave", color: "#1BA8F0", emoji: "🌊" },
-  { name: "Orange Money", color: "#FF6600", emoji: "🟠" },
-  { name: "MTN", color: "#FFCC00", emoji: "🟡" },
-  { name: "Moov Money", color: "#0066CC", emoji: "🔵" },
-];
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,7 +36,8 @@ const Login = () => {
 
     if (error) {
       toast({
-        title: "Email ou mot de passe incorrect",
+        title: "Connexion impossible",
+        description: "Email ou mot de passe incorrect",
         variant: "destructive",
       });
     } else {
@@ -85,162 +70,122 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* ── Left: Orbital animation (hidden on mobile) ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden"
-           style={{ background: "linear-gradient(135deg, hsl(240 20% 8%), hsl(150 20% 6%))" }}>
-        <Ripple />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black">
+      <SmokeyBackground color="#16a34a" />
 
-        {/* Central logo */}
-        <motion.div
-          className="relative z-10 flex flex-col items-center"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <img
-            src={logoImg}
-            alt="Mon Jeton"
-            className="w-20 h-20 rounded-2xl shadow-lg"
-          />
-          <span className="mt-3 text-lg font-bold text-foreground">Mon Jeton</span>
-        </motion.div>
-
-        {/* Orbiting operator circles */}
-        {operators.map((op, i) => (
-          <OrbitingCircles
-            key={op.name}
-            radius={140 + (i % 2) * 60}
-            duration={18 + i * 4}
-            delay={i * 1.5}
-            reverse={i % 2 === 1}
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-lg border border-white/10"
-              style={{ background: op.color }}
-              title={op.name}
-            >
-              {op.emoji}
-            </div>
-          </OrbitingCircles>
-        ))}
-
-        {/* Decorative glow */}
-        <div className="absolute w-72 h-72 rounded-full bg-primary/5 blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      </div>
-
-      {/* ── Right: Login form ── */}
-      <div className="flex-1 flex items-center justify-center px-5 py-10">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <motion.div
-            className="flex items-center gap-2 mb-8 lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Link to="/" className="flex items-center gap-2">
-              <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
-              <span className="text-xl font-bold text-primary">Mon Jeton</span>
-            </Link>
-          </motion.div>
-
-          {/* Glass card */}
-          <motion.div
-            className="glass rounded-2xl p-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="mb-8">
-              <BoxReveal delay={0.1}>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Bienvenue sur Mon Jeton
-                </h1>
-              </BoxReveal>
-              <BoxReveal delay={0.25}>
-                <p className="text-muted-foreground mt-2">
-                  Gérez votre argent mobile money
-                </p>
-              </BoxReveal>
-            </div>
-
-            <AnimatedForm onSubmit={handleSubmit}>
-              <AnimatedInput
-                label="Email"
-                type="email"
-                placeholder="ton@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail className="w-4 h-4" />}
-                required
-              />
-
-              <AnimatedInput
-                label="Mot de passe"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                icon={<Lock className="w-4 h-4" />}
-                endIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="hover:text-foreground transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                }
-                required
-              />
-
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  type="submit"
-                  variant="hero"
-                  size="lg"
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {loading ? "Connexion..." : "Se connecter"}
-                </Button>
-              </motion.div>
-            </AnimatedForm>
-
-            <motion.div
-              className="mt-5 space-y-3 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                className="text-sm text-primary hover:underline"
-              >
-                Mot de passe oublié ?
-              </button>
-              <p className="text-sm text-muted-foreground">
-                Pas encore de compte ?{" "}
-                <Link
-                  to="/signup"
-                  className="text-primary hover:underline font-medium"
-                >
-                  S'inscrire
-                </Link>
-              </p>
-            </motion.div>
-          </motion.div>
+      {/* Form card */}
+      <div className="relative z-10 w-[90%] max-w-sm p-6 sm:p-8 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Link to="/">
+            <img
+              src={logoImg}
+              alt="Mon Jeton"
+              className="w-16 h-16 rounded-2xl shadow-lg"
+            />
+          </Link>
         </div>
+
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-white text-center">
+          Bienvenue sur Mon Jeton
+        </h1>
+        <p className="text-gray-300 text-sm text-center mt-2 mb-8">
+          Gérez votre argent mobile money
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email */}
+          <div className="relative group">
+            <input
+              type="email"
+              id="login-email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder=" "
+              className="peer w-full bg-transparent border-b-2 border-white/30 text-white py-3 pl-8 pr-3 outline-none transition-colors focus:border-[#7EC845]"
+            />
+            <label
+              htmlFor="login-email"
+              className="absolute left-8 top-3 text-gray-400 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:text-[#7EC845] peer-[:not(:placeholder-shown)]:-top-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-[#7EC845] flex items-center gap-1"
+            >
+              <User className="w-4 h-4 inline" /> Email
+            </label>
+          </div>
+
+          {/* Password */}
+          <div className="relative group">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="login-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder=" "
+              className="peer w-full bg-transparent border-b-2 border-white/30 text-white py-3 pl-8 pr-10 outline-none transition-colors focus:border-[#7EC845]"
+            />
+            <label
+              htmlFor="login-password"
+              className="absolute left-8 top-3 text-gray-400 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:text-[#7EC845] peer-[:not(:placeholder-shown)]:-top-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-[#7EC845] flex items-center gap-1"
+            >
+              <Lock className="w-4 h-4 inline" /> Mot de passe
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-3 text-gray-400 hover:text-white transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Forgot password */}
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-gray-300 hover:text-white transition-colors"
+            >
+              Mot de passe oublié ?
+            </button>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="group/btn w-full bg-[#7EC845] hover:bg-[#6ab335] text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Connexion...
+              </>
+            ) : (
+              <>
+                Se connecter
+                <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Separator */}
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-white/20" />
+          <span className="text-xs text-gray-400 uppercase tracking-wider">ou continuer avec</span>
+          <div className="flex-1 h-px bg-white/20" />
+        </div>
+
+        {/* Signup link */}
+        <p className="text-center text-sm text-gray-300">
+          Pas encore de compte ?{" "}
+          <Link to="/signup" className="text-[#7EC845] hover:underline font-medium">
+            S'inscrire
+          </Link>
+        </p>
       </div>
     </div>
   );
