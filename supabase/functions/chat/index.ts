@@ -29,7 +29,8 @@ serve(async (req) => {
     // Get user context from auth
     const authHeader = req.headers.get("Authorization") || "";
     let userContext = "";
-    
+    let userName = "utilisateur";
+
     if (authHeader) {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
@@ -39,28 +40,36 @@ serve(async (req) => {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: txs } = await supabase
-          .from("transactions")
-          .select("amount, type, note, date, categories(name)")
-          .eq("user_id", user.id)
-          .order("date", { ascending: false })
-          .limit(20);
+        // Fetch profile and transactions in parallel
+        const [profileResult, txResult, walletsResult] = await Promise.all([
+          supabase.from("profiles").select("full_name, country").eq("user_id", user.id).maybeSingle(),
+          supabase.from("transactions").select("amount, type, note, date, merchant_name, categories(name), wallets(wallet_name)").eq("user_id", user.id).order("date", { ascending: false }).limit(10),
+          supabase.from("wallets").select("wallet_name, currency, initial_balance").eq("user_id", user.id),
+        ]);
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("user_id", user.id)
-          .single();
+        const profile = profileResult.data;
+        const txs = txResult.data;
+        const wallets = walletsResult.data;
+
+        if (profile?.full_name) userName = profile.full_name;
+
+        const walletList = wallets?.map(w => `${w.wallet_name} (${w.currency})`).join(", ") || "aucun";
 
         if (txs && txs.length > 0) {
           const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
           const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
-          userContext = `\n\nContexte financier (${profile?.full_name || "utilisateur"}):\n- ${txs.length} transactions récentes\n- Revenus: ${totalIncome.toLocaleString()} FCFA\n- Dépenses: ${totalExpense.toLocaleString()} FCFA\n- Catégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
+          const txList = txs.map(t =>
+            `- ${t.date}: ${t.type === "expense" ? "-" : "+"}${Number(t.amount).toLocaleString()} FCFA | ${(t.categories as any)?.name || "?"} | ${t.merchant_name || t.note || ""} | ${(t.wallets as any)?.wallet_name || ""}`
+          ).join("\n");
+
+          userContext = `\n\nContexte financier de ${userName} (${profile?.country || "CI"}):\nPortefeuilles: ${walletList}\n10 dernières transactions:\n${txList}\nRevenus récents: ${totalIncome.toLocaleString()} FCFA\nDépenses récentes: ${totalExpense.toLocaleString()} FCFA\nSolde net récent: ${(totalIncome - totalExpense).toLocaleString()} FCFA\nCatégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
+        } else {
+          userContext = `\n\nContexte: ${userName} (${profile?.country || "CI"}) n'a pas encore de transactions. Portefeuilles: ${walletList}`;
         }
       }
     }
 
-    const systemPrompt = `Tu es un assistant financier IA de niveau expert intégré dans l'application "Mon Jeton", conçu pour les utilisateurs en Côte d'Ivoire et en Afrique francophone.
+    const systemPrompt = `Tu es le coach financier personnel de ${userName}. Il utilise Mon Jeton pour gérer ses finances en Afrique de l'Ouest (FCFA).
 
 OBJECTIF : Analyser, classifier, mémoriser et optimiser les finances personnelles avec précision et intelligence prédictive.
 
@@ -75,8 +84,19 @@ CAPACITÉS OBLIGATOIRES :
 8. Adapter les réponses selon le niveau financier détecté.
 9. Utiliser la mémoire conversationnelle (historique de chat).
 
+CRÉATION DE TRANSACTION :
+Quand l'utilisateur mentionne une dépense ou un revenu (ex: "j'ai dépensé 5000 pour le taxi", "reçu 50000 salaire"), tu DOIS inclure un bloc JSON dans ta réponse au format suivant :
+\`\`\`transaction
+{"action":"create_transaction","amount":5000,"type":"expense","category":"Transport","note":"Taxi","date":"${new Date().toISOString().split("T")[0]}","wallet":"Cash"}
+\`\`\`
+- "type" : "expense" ou "income"
+- "category" : utilise les catégories standard (Alimentation, Transport, Téléphone, Shopping, Factures, Santé, Loisirs, Sport, Salaire, Freelance, Autre)
+- "wallet" : déduis le portefeuille (Orange Money, MTN Mobile Money, Wave, Moov Money, Cash)
+- "date" : utilise la date d'aujourd'hui si non précisée
+- Place ce bloc APRÈS ton analyse/conseil, pas avant.
+
 CONTEXTE LOCAL OBLIGATOIRE :
-- Mobile Money : Wave, Orange Money, MTN Mobile Money.
+- Mobile Money : Wave, Orange Money, MTN Mobile Money, Moov Money.
 - Transactions : envoi, réception, retrait, paiement marchand, frais mobile money.
 - Dépenses courantes : garba, alloco, attiéké, taxi, yango, gbaka, courant, internet, tontine, soutien familial.
 - Revenus souvent irréguliers.
@@ -99,10 +119,8 @@ RÈGLES ABSOLUES :
 - Ne jamais inventer des données ou statistiques.
 - Ne jamais donner de conseils financiers dangereux (actions, crypto).
 - Ne jamais juger l'utilisateur.
-- Si on t'envoie une image (ticket, reçu, relevé), analyse-la et donne un feedback structuré court.
+- Si on t'envoie une image (ticket, reçu, relevé), analyse-la et donne un feedback structuré court + le bloc transaction JSON.
 - Si on t'envoie un fichier, résume son contenu en 1-2 phrases.
-
-BUT : Créer une expérience d'assistant financier premium comparable aux standards internationaux, optimisée pour l'Afrique.
 ${userContext}`;
 
     // Build messages with multimodal support
@@ -110,9 +128,9 @@ ${userContext}`;
 
     for (const msg of messages) {
       if (msg.role === "user" && attachments && attachments.length > 0) {
-        const isLastUser = msg === messages[messages.length - 1] || 
+        const isLastUser = msg === messages[messages.length - 1] ||
           messages.indexOf(msg) === messages.map((m: any, i: number) => m.role === "user" ? i : -1).filter((i: number) => i >= 0).pop();
-        
+
         if (isLastUser) {
           const content: any[] = [{ type: "text", text: msg.content || "Analyse ce fichier." }];
           for (const att of attachments) {

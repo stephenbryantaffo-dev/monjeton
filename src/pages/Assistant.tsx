@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, History, Trash2 } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -25,6 +25,47 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const STT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
+
+type TransactionData = {
+  action: "create_transaction";
+  amount: number;
+  type: string;
+  category: string;
+  note: string;
+  date: string;
+  wallet: string;
+};
+
+const extractTransaction = (content: string): { cleanContent: string; transaction: TransactionData | null } => {
+  const regex = /```transaction\s*\n(\{[\s\S]*?\})\s*\n```/;
+  const match = content.match(regex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.action === "create_transaction" && parsed.amount) {
+        return {
+          cleanContent: content.replace(regex, "").trim(),
+          transaction: parsed as TransactionData,
+        };
+      }
+    } catch { /* ignore parse errors */ }
+  }
+  // Also try inline JSON pattern
+  const inlineRegex = /\{"action"\s*:\s*"create_transaction"[^}]+\}/;
+  const inlineMatch = content.match(inlineRegex);
+  if (inlineMatch) {
+    try {
+      const parsed = JSON.parse(inlineMatch[0]);
+      if (parsed.amount) {
+        return {
+          cleanContent: content.replace(inlineRegex, "").trim(),
+          transaction: parsed as TransactionData,
+        };
+      }
+    } catch { /* ignore */ }
+  }
+  return { cleanContent: content, transaction: null };
+};
 
 const initialMessages: Message[] = [
   {
@@ -423,22 +464,49 @@ const Assistant = () => {
                 {m.type === "audio" && m.audioUrl && (
                   <audio src={m.audioUrl} controls className="h-8 w-48" />
                 )}
-                <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
-                  m.role === "user"
-                    ? "gradient-primary text-primary-foreground"
-                    : "glass-card text-foreground"
-                }`}>
-                  {m.content}
-                </div>
-                {m.role === "assistant" && m.content && i > 0 && (
-                  <button
-                    onClick={() => speak(m.content, i)}
-                    className="self-start flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {speakingId === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                    {speakingId === i ? "Stop" : "Écouter"}
-                  </button>
-                )}
+                {(() => {
+                  const { cleanContent, transaction } = m.role === "assistant"
+                    ? extractTransaction(m.content)
+                    : { cleanContent: m.content, transaction: null };
+                  return (
+                    <>
+                      <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
+                        m.role === "user"
+                          ? "gradient-primary text-primary-foreground"
+                          : "glass-card text-foreground"
+                      }`}>
+                        {cleanContent}
+                      </div>
+                      {transaction && (
+                        <button
+                          onClick={() => navigate("/transactions/new", {
+                            state: {
+                              amount: transaction.amount,
+                              type: transaction.type,
+                              category: transaction.category,
+                              note: transaction.note,
+                              date: transaction.date,
+                              wallet: transaction.wallet,
+                            }
+                          })}
+                          className="self-start flex items-center gap-1.5 mt-1 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          <PlusCircle className="w-3.5 h-3.5" />
+                          Créer cette transaction ({transaction.amount.toLocaleString()} FCFA)
+                        </button>
+                      )}
+                      {m.role === "assistant" && cleanContent && i > 0 && (
+                        <button
+                          onClick={() => speak(cleanContent, i)}
+                          className="self-start flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {speakingId === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                          {speakingId === i ? "Stop" : "Écouter"}
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           ))}
