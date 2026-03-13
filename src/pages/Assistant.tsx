@@ -26,6 +26,47 @@ type Message = {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const STT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
 
+type TransactionData = {
+  action: "create_transaction";
+  amount: number;
+  type: string;
+  category: string;
+  note: string;
+  date: string;
+  wallet: string;
+};
+
+const extractTransaction = (content: string): { cleanContent: string; transaction: TransactionData | null } => {
+  const regex = /```transaction\s*\n(\{[\s\S]*?\})\s*\n```/;
+  const match = content.match(regex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.action === "create_transaction" && parsed.amount) {
+        return {
+          cleanContent: content.replace(regex, "").trim(),
+          transaction: parsed as TransactionData,
+        };
+      }
+    } catch { /* ignore parse errors */ }
+  }
+  // Also try inline JSON pattern
+  const inlineRegex = /\{"action"\s*:\s*"create_transaction"[^}]+\}/;
+  const inlineMatch = content.match(inlineRegex);
+  if (inlineMatch) {
+    try {
+      const parsed = JSON.parse(inlineMatch[0]);
+      if (parsed.amount) {
+        return {
+          cleanContent: content.replace(inlineRegex, "").trim(),
+          transaction: parsed as TransactionData,
+        };
+      }
+    } catch { /* ignore */ }
+  }
+  return { cleanContent: content, transaction: null };
+};
+
 const initialMessages: Message[] = [
   {
     role: "assistant",
