@@ -464,22 +464,49 @@ const Assistant = () => {
                 {m.type === "audio" && m.audioUrl && (
                   <audio src={m.audioUrl} controls className="h-8 w-48" />
                 )}
-                <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
-                  m.role === "user"
-                    ? "gradient-primary text-primary-foreground"
-                    : "glass-card text-foreground"
-                }`}>
-                  {m.content}
-                </div>
-                {m.role === "assistant" && m.content && i > 0 && (
-                  <button
-                    onClick={() => speak(m.content, i)}
-                    className="self-start flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {speakingId === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                    {speakingId === i ? "Stop" : "Écouter"}
-                  </button>
-                )}
+                {(() => {
+                  const { cleanContent, transaction } = m.role === "assistant"
+                    ? extractTransaction(m.content)
+                    : { cleanContent: m.content, transaction: null };
+                  return (
+                    <>
+                      <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
+                        m.role === "user"
+                          ? "gradient-primary text-primary-foreground"
+                          : "glass-card text-foreground"
+                      }`}>
+                        {cleanContent}
+                      </div>
+                      {transaction && (
+                        <button
+                          onClick={() => navigate("/transactions/new", {
+                            state: {
+                              amount: transaction.amount,
+                              type: transaction.type,
+                              category: transaction.category,
+                              note: transaction.note,
+                              date: transaction.date,
+                              wallet: transaction.wallet,
+                            }
+                          })}
+                          className="self-start flex items-center gap-1.5 mt-1 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          <PlusCircle className="w-3.5 h-3.5" />
+                          Créer cette transaction ({transaction.amount.toLocaleString()} FCFA)
+                        </button>
+                      )}
+                      {m.role === "assistant" && cleanContent && i > 0 && (
+                        <button
+                          onClick={() => speak(cleanContent, i)}
+                          className="self-start flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {speakingId === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                          {speakingId === i ? "Stop" : "Écouter"}
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           ))}
