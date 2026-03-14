@@ -298,6 +298,7 @@ const NewTransaction = () => {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la transaction", variant: "destructive" });
     } else {
       toast({ title: "Transaction enregistrée ✅" });
+      checkAndCreateNotifications(user.id, type, categoryId, walletId || null);
       navigate("/transactions");
     }
   };
