@@ -128,12 +128,13 @@ const NewTransaction = () => {
     try {
       // Step 1: Transcribe via direct fetch (FormData works better with fetch than supabase.functions.invoke)
       const sttUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
+      const { data: { session } } = await supabase.auth.getSession();
       const formData = new FormData();
       formData.append("audio", audioBlob, "voice.webm");
 
       const sttResp = await fetch(sttUrl, {
         method: "POST",
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
         body: formData,
       });
 
@@ -150,11 +151,12 @@ const NewTransaction = () => {
 
       // Step 2: Parse with AI (multi-transaction) via direct fetch for reliability
       const parseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-voice`;
+      const { data: { session: parseSession } } = await supabase.auth.getSession();
       const parseResp = await fetch(parseUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${parseSession?.access_token}`,
         },
         body: JSON.stringify({
           transcript,

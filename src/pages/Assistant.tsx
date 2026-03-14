@@ -23,8 +23,6 @@ type Message = {
   attachments?: Attachment[];
 };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-const STT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
 
 type TransactionData = {
   action: "create_transaction";
@@ -249,9 +247,11 @@ const Assistant = () => {
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
-      const resp = await fetch(STT_URL, {
+      const sttUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
+      const { data: { session: sttSession } } = await supabase.auth.getSession();
+      const resp = await fetch(sttUrl, {
         method: "POST",
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { Authorization: `Bearer ${sttSession?.access_token}` },
         body: formData,
       });
       if (!resp.ok) throw new Error("Transcription failed");
@@ -314,11 +314,13 @@ const Assistant = () => {
         body.attachments = atts.map(a => ({ name: a.name, type: a.type, data: a.data }));
       }
 
-      const resp = await fetch(CHAT_URL, {
+      const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+      const { data: { session: chatSession } } = await supabase.auth.getSession();
+      const resp = await fetch(chatUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${chatSession?.access_token}`,
         },
         body: JSON.stringify(body),
       });
