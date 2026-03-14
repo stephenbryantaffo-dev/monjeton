@@ -154,6 +154,18 @@ const Dashboard = () => {
     }
   }, [transactions, trendMode]);
 
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        onComplete={() => {
+          localStorage.setItem("onboarding_done", "1");
+          setShowOnboarding(false);
+          fetchData();
+        }}
+      />
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="pt-6 pb-4 flex items-start justify-between">
