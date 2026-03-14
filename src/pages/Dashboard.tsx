@@ -30,6 +30,24 @@ const Dashboard = () => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [newTxCount, setNewTxCount] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Check if first visit (no transactions at all)
+  useEffect(() => {
+    if (!user || localStorage.getItem("onboarding_done")) {
+      setOnboardingChecked(true);
+      return;
+    }
+    supabase
+      .from("transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        if (count === 0) setShowOnboarding(true);
+        setOnboardingChecked(true);
+      });
+  }, [user]);
 
   useEffect(() => {
     return () => {
