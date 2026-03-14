@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES } from "@/lib/security";
+import { checkAndCreateNotifications } from "@/lib/notificationService";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
@@ -260,6 +261,12 @@ const NewTransaction = () => {
       }
 
       toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      // Check notifications for each transaction
+      for (const tx of transactions) {
+        const catId = tx.categoryId || matchCategoryId(tx.category, tx.type);
+        const walId = tx.walletId || matchWalletId(tx.wallet);
+        checkAndCreateNotifications(user.id, tx.type, catId || null, walId || null);
+      }
       setVoiceTransactions(null);
       navigate("/transactions");
     } catch (err: any) {
@@ -297,6 +304,7 @@ const NewTransaction = () => {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la transaction", variant: "destructive" });
     } else {
       toast({ title: "Transaction enregistrée ✅" });
+      checkAndCreateNotifications(user.id, type, categoryId, walletId || null);
       navigate("/transactions");
     }
   };
