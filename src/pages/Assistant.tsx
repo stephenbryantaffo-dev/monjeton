@@ -314,11 +314,13 @@ const Assistant = () => {
         body.attachments = atts.map(a => ({ name: a.name, type: a.type, data: a.data }));
       }
 
-      const resp = await fetch(CHAT_URL, {
+      const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+      const { data: { session: chatSession } } = await supabase.auth.getSession();
+      const resp = await fetch(chatUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${chatSession?.access_token}`,
         },
         body: JSON.stringify(body),
       });

@@ -151,11 +151,12 @@ const NewTransaction = () => {
 
       // Step 2: Parse with AI (multi-transaction) via direct fetch for reliability
       const parseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-voice`;
+      const { data: { session: parseSession } } = await supabase.auth.getSession();
       const parseResp = await fetch(parseUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${parseSession?.access_token}`,
         },
         body: JSON.stringify({
           transcript,
