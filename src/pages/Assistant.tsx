@@ -247,9 +247,11 @@ const Assistant = () => {
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
-      const resp = await fetch(STT_URL, {
+      const sttUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
+      const { data: { session: sttSession } } = await supabase.auth.getSession();
+      const resp = await fetch(sttUrl, {
         method: "POST",
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { Authorization: `Bearer ${sttSession?.access_token}` },
         body: formData,
       });
       if (!resp.ok) throw new Error("Transcription failed");
