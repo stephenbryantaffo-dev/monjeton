@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import Onboarding from "@/components/Onboarding";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -29,6 +30,24 @@ const Dashboard = () => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [newTxCount, setNewTxCount] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Check if first visit (no transactions at all)
+  useEffect(() => {
+    if (!user || localStorage.getItem("onboarding_done")) {
+      setOnboardingChecked(true);
+      return;
+    }
+    supabase
+      .from("transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        if (count === 0) setShowOnboarding(true);
+        setOnboardingChecked(true);
+      });
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -134,6 +153,18 @@ const Dashboard = () => {
       return result;
     }
   }, [transactions, trendMode]);
+
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        onComplete={() => {
+          localStorage.setItem("onboarding_done", "1");
+          setShowOnboarding(false);
+          fetchData();
+        }}
+      />
+    );
+  }
 
   return (
     <DashboardLayout>
