@@ -53,6 +53,16 @@ const NewTransaction = () => {
     });
   }, [user]);
 
+  // Auto-start voice if navigated with autoVoice flag
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.autoVoice && !isRecording && !isProcessing) {
+      // Small delay to ensure component is mounted
+      const timer = setTimeout(() => startRecording(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
   const filteredCategories = categories.filter(c => c.type === type);
 
   const getSupportedMimeType = () => {
