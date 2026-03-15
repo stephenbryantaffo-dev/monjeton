@@ -17,6 +17,7 @@ import { checkAndCreateNotifications } from "@/lib/notificationService";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [type, setType] = useState<"expense" | "income">("expense");
