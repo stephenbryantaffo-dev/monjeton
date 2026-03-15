@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Onboarding from "@/components/Onboarding";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 const trendModes = ["Jour", "Semaine"];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
   const [activePeriod, setActivePeriod] = useState(1);
@@ -32,6 +34,24 @@ const Dashboard = () => {
   const [newTxCount, setNewTxCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Long press for voice shortcut
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showVoiceHint, setShowVoiceHint] = useState(false);
+
+  const handleAssistantPressStart = () => {
+    longPressTimerRef.current = setTimeout(() => {
+      // Navigate to new transaction with voice auto-start flag
+      navigate("/transactions/new", { state: { autoVoice: true } });
+    }, 600);
+  };
+
+  const handleAssistantPressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   // Check if first visit (no transactions at all)
   useEffect(() => {
@@ -370,6 +390,13 @@ const Dashboard = () => {
       )}
 
       <div className="fixed bottom-24 right-5 z-50 flex flex-col gap-3">
+        {/* Quick voice button */}
+        <button
+          onClick={() => navigate("/transactions/new", { state: { autoVoice: true } })}
+          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30"
+        >
+          <Mic className="w-5 h-5 text-primary" />
+        </button>
         <Link
           to="/scan"
           className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30"
@@ -378,6 +405,11 @@ const Dashboard = () => {
         </Link>
         <Link
           to="/assistant"
+          onMouseDown={handleAssistantPressStart}
+          onMouseUp={handleAssistantPressEnd}
+          onMouseLeave={handleAssistantPressEnd}
+          onTouchStart={handleAssistantPressStart}
+          onTouchEnd={handleAssistantPressEnd}
           className="w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
         >
           <MessageCircle className="w-6 h-6 text-primary-foreground" />

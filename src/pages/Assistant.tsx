@@ -23,7 +23,6 @@ type Message = {
   attachments?: Attachment[];
 };
 
-
 type TransactionData = {
   action: "create_transaction";
   amount: number;
@@ -48,7 +47,6 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
       }
     } catch { /* ignore parse errors */ }
   }
-  // Also try inline JSON pattern
   const inlineRegex = /\{"action"\s*:\s*"create_transaction"[^}]+\}/;
   const inlineMatch = content.match(inlineRegex);
   if (inlineMatch) {
@@ -73,6 +71,18 @@ const initialMessages: Message[] = [
   },
 ];
 
+// Get best available French voice
+const getFrenchVoice = (): SpeechSynthesisVoice | null => {
+  const voices = speechSynthesis.getVoices();
+  // Prefer local French voice
+  const localFr = voices.find(v => v.lang.startsWith("fr") && v.localService);
+  if (localFr) return localFr;
+  // Any French voice
+  const anyFr = voices.find(v => v.lang.startsWith("fr"));
+  if (anyFr) return anyFr;
+  return null;
+};
+
 const Assistant = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -83,14 +93,24 @@ const Assistant = () => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [speakingId, setSpeakingId] = useState<number | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [continuousMode, setContinuousMode] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const continuousModeRef = useRef(false);
   const { toast } = useToast();
 
-  // Load saved messages on mount
+  // Keep ref in sync
+  useEffect(() => { continuousModeRef.current = continuousMode; }, [continuousMode]);
+
+  // Preload voices
+  useEffect(() => {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  }, []);
+
   useEffect(() => {
     if (user) loadHistory();
   }, [user]);
@@ -135,7 +155,7 @@ const Assistant = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // --- Speech Synthesis ---
+  // --- Speech Synthesis with quality voice ---
   const speak = useCallback((text: string, index: number) => {
     if (speakingId === index) {
       speechSynthesis.cancel();
@@ -146,7 +166,15 @@ const Assistant = () => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "fr-FR";
     utterance.rate = 1.1;
-    utterance.onend = () => setSpeakingId(null);
+    const voice = getFrenchVoice();
+    if (voice) utterance.voice = voice;
+    utterance.onend = () => {
+      setSpeakingId(null);
+      // In continuous mode, re-activate mic after TTS finishes
+      if (continuousModeRef.current) {
+        setTimeout(() => startRecording(), 400);
+      }
+    };
     utterance.onerror = () => setSpeakingId(null);
     setSpeakingId(index);
     speechSynthesis.speak(utterance);
@@ -258,7 +286,7 @@ const Assistant = () => {
       const { transcript } = await resp.json();
 
       if (!transcript?.trim()) {
-        toast({ title: "Audio vide", description: "Je n'ai pas compris, réessaie.", variant: "destructive" });
+        toast({ title: "🎙️ Je n'ai pas entendu", description: "Essaie de parler plus fort ou plus près du micro.", variant: "destructive" });
         setIsLoading(false);
         return;
       }
@@ -404,6 +432,19 @@ const Assistant = () => {
       // Save assistant response
       if (assistantSoFar) {
         await saveMessage("assistant", assistantSoFar);
+        // In continuous mode, auto-speak the response
+        if (continuousModeRef.current) {
+          setMessages(prev => {
+            const lastIdx = prev.length - 1;
+            if (lastIdx >= 0 && prev[lastIdx].role === "assistant") {
+              const { cleanContent } = extractTransaction(prev[lastIdx].content);
+              if (cleanContent) {
+                setTimeout(() => speak(cleanContent, lastIdx), 200);
+              }
+            }
+            return prev;
+          });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -413,11 +454,36 @@ const Assistant = () => {
     }
   };
 
+  const toggleContinuousMode = () => {
+    const next = !continuousMode;
+    setContinuousMode(next);
+    if (next) {
+      toast({ title: "🎙️ Mode conversation activé", description: "Parle, l'assistant répondra et écoutera en boucle." });
+      startRecording();
+    } else {
+      speechSynthesis.cancel();
+      setSpeakingId(null);
+      if (isRecording) stopRecording();
+    }
+  };
+
   return (
     <DashboardLayout title="Assistant IA">
       <div className="flex flex-col" style={{ height: "calc(100vh - 160px)" }}>
         {/* Top action bar */}
         <div className="flex items-center justify-end gap-2 pb-3">
+          {/* Continuous conversation mode toggle */}
+          <button
+            onClick={toggleContinuousMode}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              continuousMode
+                ? "bg-primary/20 text-primary border border-primary/30"
+                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+            }`}
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span>{continuousMode ? "Conversation ON" : "Conversation"}</span>
+          </button>
           <ConfirmDeleteDialog
             onConfirm={clearHistory}
             title="Supprimer l'historique"
