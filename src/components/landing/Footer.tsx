@@ -7,7 +7,7 @@ const Footer = () => (
       <div className="grid sm:grid-cols-3 gap-8 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <img src={logoImg} alt="Mon Jeton" className="h-8 w-auto rounded-md" />
+            <img src={logoImg} alt="Mon Jeton" className="h-8 w-auto rounded-md" loading="lazy" />
             <span className="font-bold text-[#D5D7D6]">Mon Jeton</span>
           </div>
           <p className="text-sm text-[#79847E] italic">"Tu vas voir clair dans ton jeton."</p>
