@@ -123,3 +123,13 @@
     box-shadow: 0 0 20px hsla(270, 70%, 60%, 0.3), 0 0 60px hsla(270, 70%, 60%, 0.1);
   }
 }
+
+/* Autofill fix for dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px hsl(150, 20%, 4%) inset !important;
+  -webkit-text-fill-color: hsl(150, 5%, 92%) !important;
+  caret-color: hsl(150, 5%, 92%);
+  transition: background-color 5000s ease-in-out 0s;
+}
