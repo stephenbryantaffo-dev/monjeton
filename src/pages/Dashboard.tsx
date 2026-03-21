@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import Onboarding from "@/components/Onboarding";
+const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic } from "lucide-react";
