@@ -284,6 +284,10 @@ const Dashboard = () => {
             </motion.div>
           </div>
 
+          <Suspense fallback={<FinancialScoreSkeleton />}>
+            <FinancialScore />
+          </Suspense>
+
           <Suspense fallback={<ChartSkeleton />}>
             <DashboardCharts
               trendData={trendData}
