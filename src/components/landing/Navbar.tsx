@@ -55,21 +55,19 @@ const Navbar = () => {
 
           <div className="hidden lg:flex items-center gap-3">
             <Button
+              asChild
               variant="ghost"
               size="sm"
               className="text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.06)]"
-              onClick={() => scrollToEl("#features")}
             >
-              Voir la démo
+              <Link to="/login">Se connecter</Link>
             </Button>
             <Button
               asChild
               size="sm"
               className="bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_25px_rgba(124,255,58,0.3)]"
             >
-              <Link to="/signup">
-                Créer un compte
-              </Link>
+              <Link to="/signup">Créer un compte</Link>
             </Button>
           </div>
 
