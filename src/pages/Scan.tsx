@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,8 +12,28 @@ import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import ScanHistory from "@/components/scan/ScanHistory";
 
+const FREE_SCAN_LIMIT = 5;
+
+const getScanCount = (): { count: number; month: string } => {
+  const now = new Date();
+  const key = "scan_counter";
+  const currentMonth = `${now.getFullYear()}-${now.getMonth()}`;
+  try {
+    const stored = JSON.parse(localStorage.getItem(key) || "{}");
+    if (stored.month === currentMonth) return stored;
+  } catch {}
+  return { count: 0, month: currentMonth };
+};
+
+const incrementScanCount = () => {
+  const data = getScanCount();
+  data.count += 1;
+  localStorage.setItem("scan_counter", JSON.stringify(data));
+};
+
 const Scan = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [preview, setPreview] = useState<string | null>(null);
   const [isPdf, setIsPdf] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -23,8 +44,9 @@ const Scan = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
-
-  const isPremium = true;
+  const [isPremium, setIsPremium] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
 
   useEffect(() => {
     if (!user) return;
@@ -32,16 +54,22 @@ const Scan = () => {
       supabase.from("categories").select("*").eq("user_id", user.id),
       supabase.from("wallets").select("*").eq("user_id", user.id),
       supabase.from("receipt_scans").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
-    ]).then(([catRes, walRes, histRes]) => {
+      supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+    ]).then(([catRes, walRes, histRes, subRes]) => {
       setCategories(catRes.data || []);
       setWallets(walRes.data || []);
       setHistory(histRes.data || []);
+      setIsPremium(!!subRes.data);
     });
+
+    const scanData = getScanCount();
+    setScansRemaining(FREE_SCAN_LIMIT - scanData.count);
   }, [user]);
 
   const handleFileSelected = (f: File) => {
     setFile(f);
     setResult(null);
+    setShowSuccess(false);
     const pdf = f.type === "application/pdf";
     setIsPdf(pdf);
     const reader = new FileReader();
@@ -49,12 +77,7 @@ const Scan = () => {
     reader.readAsDataURL(f);
   };
 
-  const convertCurrency = async (amount: number, currency: string): Promise<{
-    converted_amount: number;
-    exchange_rate: number;
-    source: string;
-    date: string;
-  } | null> => {
+  const convertCurrency = async (amount: number, currency: string) => {
     try {
       const resp = await supabase.functions.invoke("convert-currency", {
         body: { amount, from_currency: currency, to_currency: "XOF" },
@@ -69,8 +92,16 @@ const Scan = () => {
 
   const analyze = async () => {
     if (!user || !file || !preview) return;
-    setLoading(true);
 
+    if (!isPremium) {
+      const scanData = getScanCount();
+      if (scanData.count >= FREE_SCAN_LIMIT) {
+        toast({ title: "Limite atteinte", description: `Vous avez utilisé vos ${FREE_SCAN_LIMIT} scans gratuits ce mois. Passez à PRO pour un accès illimité.`, variant: "destructive" });
+        return;
+      }
+    }
+
+    setLoading(true);
     try {
       const path = `${user.id}/${Date.now()}_${file.name}`;
       const { error: uploadErr } = await supabase.storage.from("receipts").upload(path, file);
@@ -82,11 +113,9 @@ const Scan = () => {
       const resp = await supabase.functions.invoke("scan-receipt", {
         body: { image: base64, scanType, mimeType: file.type },
       });
-
       if (resp.error) throw resp.error;
       const parsed: ParsedResult = resp.data?.parsed || {};
 
-      // Currency detection & conversion
       const detectedCurrency = (parsed.currency || "XOF").toUpperCase();
       parsed.currency = detectedCurrency;
       parsed.original_amount = parsed.amount;
@@ -98,11 +127,22 @@ const Scan = () => {
           parsed.exchange_rate_used = conversion.exchange_rate;
           parsed.exchange_rate_source = conversion.source;
         } else {
-          parsed.conversion_error = "Impossible de récupérer le taux de change. Veuillez saisir manuellement.";
+          parsed.conversion_error = "Impossible de récupérer le taux de change.";
         }
       }
 
-      setResult(parsed);
+      // Increment scan counter for free users
+      if (!isPremium) {
+        incrementScanCount();
+        setScansRemaining((prev) => prev - 1);
+      }
+
+      // Show success animation briefly
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setResult(parsed);
+      }, 1200);
 
       const { data: scanData } = await supabase.from("receipt_scans").insert({
         user_id: user.id,
@@ -133,23 +173,18 @@ const Scan = () => {
 
   const handleConfirm = async (data: ParsedResult) => {
     if (!user || !scanId) return;
-
     let categoryId: string | null = null;
     if (data.category) {
       const match = categories.find((c) => c.name.toLowerCase() === data.category!.toLowerCase());
       if (match) categoryId = match.id;
     }
-
     let walletIdVal: string | null = null;
     if (data.wallet) {
       const match = wallets.find((w) => w.wallet_name.toLowerCase() === data.wallet!.toLowerCase());
       if (match) walletIdVal = match.id;
     }
-
     const needsConversion = data.currency && data.currency !== "XOF";
-    const finalAmountXof = needsConversion && data.converted_amount_xof
-      ? data.converted_amount_xof
-      : data.amount || 0;
+    const finalAmountXof = needsConversion && data.converted_amount_xof ? data.converted_amount_xof : data.amount || 0;
 
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
@@ -171,7 +206,6 @@ const Scan = () => {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
       return;
     }
-
     await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
     toast({ title: "Transaction créée ✅" });
     reset();
@@ -185,27 +219,45 @@ const Scan = () => {
     refreshHistory();
   };
 
+  const handleManualEntry = () => {
+    navigate("/transactions/new", { state: { date: result?.date || undefined } });
+  };
+
   const reset = () => {
     setPreview(null);
     setFile(null);
     setResult(null);
     setScanId(null);
     setIsPdf(false);
+    setShowSuccess(false);
   };
 
   const refreshHistory = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("receipt_scans")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    const { data } = await supabase.from("receipt_scans").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
     setHistory(data || []);
   };
 
+  const resultIsEmpty = result && (!result.amount || result.amount === 0);
+
   return (
     <DashboardLayout title="Scan Intelligent">
+      {/* Free tier scan counter */}
+      {!isPremium && (
+        <div className="glass-card rounded-xl p-3 mb-4 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {scansRemaining > 0
+              ? `📷 ${scansRemaining} scan${scansRemaining > 1 ? "s" : ""} restant${scansRemaining > 1 ? "s" : ""} ce mois`
+              : "📷 Limite de scans atteinte ce mois"}
+          </span>
+          {scansRemaining <= 0 && (
+            <Button asChild size="sm" className="gradient-primary text-primary-foreground">
+              <a href="/subscribe">Passer à PRO</a>
+            </Button>
+          )}
+        </div>
+      )}
+
       <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
 
       {!preview ? (
@@ -226,8 +278,8 @@ const Scan = () => {
             )}
           </motion.div>
 
-          {!result && !loading && (
-            <Button onClick={analyze} className="w-full gradient-primary text-primary-foreground">
+          {!result && !loading && !showSuccess && (
+            <Button onClick={analyze} className="w-full gradient-primary text-primary-foreground" disabled={!isPremium && scansRemaining <= 0}>
               {isPdf ? "Analyser le PDF" : "Analyser l'image"}
             </Button>
           )}
@@ -237,28 +289,66 @@ const Scan = () => {
               <Loader2 className="w-6 h-6 text-primary animate-spin" />
               <span className="text-sm text-muted-foreground">Analyse IA en cours...</span>
               <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary rounded-full"
-                  initial={{ width: "0%" }}
-                  animate={{ width: "90%" }}
-                  transition={{ duration: 8, ease: "easeOut" }}
-                />
+                <motion.div className="h-full bg-primary rounded-full" initial={{ width: "0%" }} animate={{ width: "90%" }} transition={{ duration: 8, ease: "easeOut" }} />
               </div>
             </motion.div>
           )}
 
-          {result && (
-            <ScanResultCard
-              result={result}
-              categories={categories}
-              wallets={wallets}
-              onConfirm={handleConfirm}
-              onReject={handleReject}
-              isPremium={isPremium}
-            />
+          {/* Success animation */}
+          <AnimatePresence>
+            {showSuccess && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="glass-card rounded-2xl p-6 flex flex-col items-center gap-3"
+              >
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}>
+                  <CheckCircle2 className="w-12 h-12 text-primary" />
+                </motion.div>
+                <span className="text-sm font-medium text-foreground">Analyse terminée !</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Result: quick summary + card OR empty result fallback */}
+          {result && !showSuccess && (
+            <>
+              {resultIsEmpty ? (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                    <span className="font-semibold text-foreground">Détection incomplète</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    L'IA n'a pas pu détecter le montant. Veux-tu l'entrer manuellement ?
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={handleManualEntry} className="flex-1 gradient-primary text-primary-foreground">
+                      Entrer manuellement
+                    </Button>
+                    <Button variant="outline" onClick={reset} className="flex-1 glass">
+                      Recommencer
+                    </Button>
+                  </div>
+                </motion.div>
+              ) : (
+                <>
+                  {/* Quick summary banner */}
+                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-sm text-foreground">
+                      Détecté : <span className="font-bold">{result.amount?.toLocaleString("fr-FR")} {result.currency || "FCFA"}</span>
+                      {result.merchant && <> chez <span className="font-bold">{result.merchant}</span></>}
+                    </span>
+                  </motion.div>
+                  <ScanResultCard result={result} categories={categories} wallets={wallets} onConfirm={handleConfirm} onReject={handleReject} isPremium={isPremium} />
+                </>
+              )}
+            </>
           )}
 
-          {!loading && (
+          {!loading && !showSuccess && (
             <Button variant="ghost" onClick={reset} className="w-full text-muted-foreground">
               Recommencer
             </Button>
