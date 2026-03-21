@@ -13,6 +13,26 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // JWT authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Non autorisé" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Token invalide" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
@@ -26,46 +46,36 @@ serve(async (req) => {
 
     const attachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : [];
 
-    // Get user context from auth
-    const authHeader = req.headers.get("Authorization") || "";
+    // Get user context from already-authenticated client
     let userContext = "";
     let userName = "utilisateur";
 
-    if (authHeader) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (user) {
+      const [profileResult, txResult, walletsResult] = await Promise.all([
+        supabaseAuth.from("profiles").select("full_name, country").eq("user_id", user.id).maybeSingle(),
+        supabaseAuth.from("transactions").select("amount, type, note, date, merchant_name, categories(name), wallets(wallet_name)").eq("user_id", user.id).order("date", { ascending: false }).limit(10),
+        supabaseAuth.from("wallets").select("wallet_name, currency, initial_balance").eq("user_id", user.id),
+      ]);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Fetch profile and transactions in parallel
-        const [profileResult, txResult, walletsResult] = await Promise.all([
-          supabase.from("profiles").select("full_name, country").eq("user_id", user.id).maybeSingle(),
-          supabase.from("transactions").select("amount, type, note, date, merchant_name, categories(name), wallets(wallet_name)").eq("user_id", user.id).order("date", { ascending: false }).limit(10),
-          supabase.from("wallets").select("wallet_name, currency, initial_balance").eq("user_id", user.id),
-        ]);
+      const profile = profileResult.data;
+      const txs = txResult.data;
+      const wallets = walletsResult.data;
 
-        const profile = profileResult.data;
-        const txs = txResult.data;
-        const wallets = walletsResult.data;
+      if (profile?.full_name) userName = profile.full_name;
 
-        if (profile?.full_name) userName = profile.full_name;
+      const walletList = wallets?.map(w => `${w.wallet_name} (${w.currency})`).join(", ") || "aucun";
 
-        const walletList = wallets?.map(w => `${w.wallet_name} (${w.currency})`).join(", ") || "aucun";
+      if (txs && txs.length > 0) {
+        const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+        const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+        const txList = txs.map(t =>
+          `- ${t.date}: ${t.type === "expense" ? "-" : "+"}${Number(t.amount).toLocaleString()} FCFA | ${(t.categories as any)?.name || "?"} | ${t.merchant_name || t.note || ""} | ${(t.wallets as any)?.wallet_name || ""}`
+        ).join("\n");
 
-        if (txs && txs.length > 0) {
-          const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
-          const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
-          const txList = txs.map(t =>
-            `- ${t.date}: ${t.type === "expense" ? "-" : "+"}${Number(t.amount).toLocaleString()} FCFA | ${(t.categories as any)?.name || "?"} | ${t.merchant_name || t.note || ""} | ${(t.wallets as any)?.wallet_name || ""}`
-          ).join("\n");
-
-          userContext = `\n\nContexte financier de ${userName} (${profile?.country || "CI"}):\nPortefeuilles: ${walletList}\n10 dernières transactions:\n${txList}\nRevenus récents: ${totalIncome.toLocaleString()} FCFA\nDépenses récentes: ${totalExpense.toLocaleString()} FCFA\nSolde net récent: ${(totalIncome - totalExpense).toLocaleString()} FCFA\nCatégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
-        } else {
-          userContext = `\n\nContexte: ${userName} (${profile?.country || "CI"}) n'a pas encore de transactions. Portefeuilles: ${walletList}`;
-        }
+        userContext = `\n\nContexte financier de ${userName} (${profile?.country || "CI"}):\nPortefeuilles: ${walletList}\n10 dernières transactions:\n${txList}\nRevenus récents: ${totalIncome.toLocaleString()} FCFA\nDépenses récentes: ${totalExpense.toLocaleString()} FCFA\nSolde net récent: ${(totalIncome - totalExpense).toLocaleString()} FCFA\nCatégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
+      } else {
+        userContext = `\n\nContexte: ${userName} (${profile?.country || "CI"}) n'a pas encore de transactions. Portefeuilles: ${walletList}`;
       }
     }
 
