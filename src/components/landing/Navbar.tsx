@@ -55,21 +55,19 @@ const Navbar = () => {
 
           <div className="hidden lg:flex items-center gap-3">
             <Button
+              asChild
               variant="ghost"
               size="sm"
               className="text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.06)]"
-              onClick={() => scrollToEl("#features")}
             >
-              Voir la démo
+              <Link to="/login">Se connecter</Link>
             </Button>
             <Button
               asChild
               size="sm"
               className="bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_25px_rgba(124,255,58,0.3)]"
             >
-              <Link to="/signup">
-                Créer un compte
-              </Link>
+              <Link to="/signup">Créer un compte</Link>
             </Button>
           </div>
 
@@ -94,13 +92,18 @@ const Navbar = () => {
             className="fixed top-[72px] left-0 right-0 z-50 lg:hidden bg-[#05070A]/95 backdrop-blur-[22px] border-b border-[rgba(124,255,58,0.12)]"
           >
             <div className="flex flex-col px-5 py-4 gap-4">
-              <div className="flex gap-3 pt-2">
-                <Link to="/signup" className="flex-1">
-                  <Button className="w-full bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90">
-                    Créer un compte
-                  </Button>
-                </Link>
-              </div>
+            <div className="flex gap-3 pt-2">
+              <Link to="/login" className="flex-1">
+                <Button variant="outline" className="w-full border-[rgba(124,255,58,0.18)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.06)]">
+                  Se connecter
+                </Button>
+              </Link>
+              <Link to="/signup" className="flex-1">
+                <Button className="w-full bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90">
+                  Créer un compte
+                </Button>
+              </Link>
+            </div>
             </div>
           </motion.div>
         )}

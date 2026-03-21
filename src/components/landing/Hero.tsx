@@ -187,7 +187,7 @@ const Hero = () => {
             </Button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
             {badges.map((b, i) => (
               <motion.div
                 key={i}
@@ -201,6 +201,16 @@ const Hero = () => {
               </motion.div>
             ))}
           </div>
+
+          {/* Social proof */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.3 }}
+            className="text-sm text-[rgba(234,251,234,0.5)] text-center"
+          >
+            ⭐ Rejoins <span className="font-semibold text-[rgba(234,251,234,0.72)]">2 500+</span> utilisateurs qui gèrent leurs finances avec Mon Jeton
+          </motion.p>
         </motion.div>
       </motion.div>
     </section>

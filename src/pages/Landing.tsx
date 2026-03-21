@@ -27,8 +27,8 @@ const Landing = () => {
       <FloatingFCFA />
       <Navbar />
       <Hero />
-      {/* Seamless fade bridge: eliminates the visual seam between Hero bottom and first section */}
-      <div className="h-16 -mt-16 relative z-20 bg-gradient-to-b from-transparent to-[#05070A] pointer-events-none" />
+      {/* Seamless transition handled by gradient overlay on Hero bottom */}
+
 
       <AnimatedSectionBackground variant={0} glow glowBottom>
         <SectionReveal><Suspense fallback={<SectionFallback />}><Stats /></Suspense></SectionReveal>
