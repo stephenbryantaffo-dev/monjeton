@@ -183,8 +183,10 @@ Si aucune transaction, donne un score de 50 avec des conseils pour commencer.`;
     if (!Array.isArray(result.insights)) result.insights = [];
     result.insights = result.insights.slice(0, 3);
 
-    // Save to DB (delete old ones first)
-    await supabase.from("financial_scores").delete().eq("user_id", user.id);
+    // Save to DB (keep history, delete scores older than 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    await supabase.from("financial_scores").delete().eq("user_id", user.id).lt("created_at", thirtyDaysAgo.toISOString());
     const { data: saved, error: saveError } = await supabase
       .from("financial_scores")
       .insert({
