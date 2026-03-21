@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } fro
 import { useNavigate } from "react-router-dom";
 import Onboarding from "@/components/Onboarding";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
+const FinancialScore = lazy(() => import("@/components/FinancialScore"));
+import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic } from "lucide-react";
@@ -281,6 +283,10 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">FCFA</p>
             </motion.div>
           </div>
+
+          <Suspense fallback={<FinancialScoreSkeleton />}>
+            <FinancialScore />
+          </Suspense>
 
           <Suspense fallback={<ChartSkeleton />}>
             <DashboardCharts

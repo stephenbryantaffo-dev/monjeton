@@ -180,6 +180,33 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_scores: {
+        Row: {
+          created_at: string
+          id: string
+          insights: Json
+          score: number
+          tip_of_week: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insights?: Json
+          score?: number
+          tip_of_week?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insights?: Json
+          score?: number
+          tip_of_week?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_summaries: {
         Row: {
           assistant_summary: string | null
