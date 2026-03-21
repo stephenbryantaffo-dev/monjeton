@@ -1,16 +1,24 @@
+import { lazy, Suspense } from "react";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
-import Stats from "@/components/landing/Stats";
-import Features from "@/components/landing/Features";
-import AIScan from "@/components/landing/AIScan";
-import Enterprise from "@/components/landing/Enterprise";
-import Pricing from "@/components/landing/Pricing";
-import FAQ from "@/components/landing/FAQ";
-import FinalCTA from "@/components/landing/FinalCTA";
 import SectionReveal from "@/components/landing/SectionReveal";
 import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
 import FloatingFCFA from "@/components/landing/FloatingFCFA";
 import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
+
+const Stats = lazy(() => import("@/components/landing/Stats"));
+const Features = lazy(() => import("@/components/landing/Features"));
+const AIScan = lazy(() => import("@/components/landing/AIScan"));
+const Enterprise = lazy(() => import("@/components/landing/Enterprise"));
+const Pricing = lazy(() => import("@/components/landing/Pricing"));
+const FAQ = lazy(() => import("@/components/landing/FAQ"));
+const FinalCTA = lazy(() => import("@/components/landing/FinalCTA"));
+
+const SectionFallback = () => (
+  <div className="min-h-[200px] flex items-center justify-center">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const Landing = () => {
   return (
@@ -23,31 +31,31 @@ const Landing = () => {
       <div className="h-16 -mt-16 relative z-20 bg-gradient-to-b from-transparent to-[#05070A] pointer-events-none" />
 
       <AnimatedSectionBackground variant={0} glow glowBottom>
-        <SectionReveal><Stats /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><Stats /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={1} glow>
-        <SectionReveal><Features /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><Features /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={2} glow glowBottom>
-        <SectionReveal><AIScan /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><AIScan /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={0} glow>
-        <SectionReveal><Enterprise /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><Enterprise /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={1} glow glowBottom>
-        <SectionReveal><Pricing /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><Pricing /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={2} glow>
-        <SectionReveal><FAQ /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><FAQ /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={0} glow glowBottom>
-        <SectionReveal><FinalCTA /></SectionReveal>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><FinalCTA /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
     </div>
   );

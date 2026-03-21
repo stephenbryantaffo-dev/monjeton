@@ -1,7 +1,14 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import Onboarding from "@/components/Onboarding";
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from "recharts";
+
+const LazyCharts = lazy(() =>
+  import("recharts").then((mod) => ({
+    default: () => null, // placeholder, we use named exports below
+  }))
+);
+
+import { ChartSkeleton } from "@/components/DashboardSkeleton";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic } from "lucide-react";
