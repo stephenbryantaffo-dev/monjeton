@@ -173,7 +173,7 @@ const NewTransaction = () => {
     return fuzzy?.id || "";
   };
 
-  const processVoice = async (audioBlob: Blob, retryCount = 0) => {
+  const processVoice = async (audioBlob: Blob) => {
     setIsProcessing(true);
     try {
       const sttUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
