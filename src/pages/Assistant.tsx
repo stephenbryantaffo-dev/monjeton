@@ -294,6 +294,16 @@ const Assistant = () => {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunksRef.current, { type: mimeType || "audio/webm" });
+
+        if (blob.size < 5000) {
+          toast({
+            title: "Enregistrement trop court",
+            description: "Maintiens le bouton et parle clairement",
+            variant: "destructive",
+          });
+          return;
+        }
+
         await transcribeAndSend(blob);
       };
       mediaRecorder.start();
