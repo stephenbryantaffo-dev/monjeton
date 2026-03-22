@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Wallet, TrendingDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import {
   Dialog,
   DialogContent,
@@ -63,44 +65,49 @@ const Budgets = () => {
     if (!user) return;
     setLoading(true);
 
-    const [budgetRes, catRes, txRes, catBudgetRes] = await Promise.all([
-      supabase.from("budgets").select("*").eq("user_id", user.id).eq("month", month).eq("year", year).maybeSingle(),
-      supabase.from("categories").select("*").eq("user_id", user.id).eq("type", "expense"),
-      supabase.from("transactions").select("amount, category_id").eq("user_id", user.id).eq("type", "expense")
-        .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
-        .lt("date", month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`),
-      supabase.from("category_budgets").select("*").eq("user_id", user.id).eq("month", month).eq("year", year),
-    ]);
+    try {
+      const [budgetRes, catRes, txRes, catBudgetRes] = await Promise.all([
+        supabase.from("budgets").select("*").eq("user_id", user.id).eq("month", month).eq("year", year).maybeSingle(),
+        supabase.from("categories").select("*").eq("user_id", user.id).eq("type", "expense"),
+        supabase.from("transactions").select("amount, category_id").eq("user_id", user.id).eq("type", "expense")
+          .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
+          .lt("date", month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`),
+        supabase.from("category_budgets").select("*").eq("user_id", user.id).eq("month", month).eq("year", year),
+      ]);
 
-    if (budgetRes.data) {
-      setTotalBudget(budgetRes.data.total_budget);
-      setBudgetId(budgetRes.data.id);
-    } else {
-      setTotalBudget(0);
-      setBudgetId(null);
-    }
-
-    const cats = catRes.data || [];
-    setCategories(cats);
-
-    const transactions = txRes.data || [];
-    const spent = transactions.reduce((s, t) => s + Number(t.amount), 0);
-    setTotalSpent(spent);
-
-    const spentByCategory: Record<string, number> = {};
-    transactions.forEach((t) => {
-      if (t.category_id) {
-        spentByCategory[t.category_id] = (spentByCategory[t.category_id] || 0) + Number(t.amount);
+      if (budgetRes.data) {
+        setTotalBudget(budgetRes.data.total_budget);
+        setBudgetId(budgetRes.data.id);
+      } else {
+        setTotalBudget(0);
+        setBudgetId(null);
       }
-    });
 
-    const cBudgets = (catBudgetRes.data || []).map((cb: any) => ({
-      ...cb,
-      category: cats.find((c) => c.id === cb.category_id),
-      spent: spentByCategory[cb.category_id] || 0,
-    }));
-    setCategoryBudgets(cBudgets);
-    setLoading(false);
+      const cats = catRes.data || [];
+      setCategories(cats);
+
+      const transactions = txRes.data || [];
+      const spent = transactions.reduce((s, t) => s + Number(t.amount), 0);
+      setTotalSpent(spent);
+
+      const spentByCategory: Record<string, number> = {};
+      transactions.forEach((t) => {
+        if (t.category_id) {
+          spentByCategory[t.category_id] = (spentByCategory[t.category_id] || 0) + Number(t.amount);
+        }
+      });
+
+      const cBudgets = (catBudgetRes.data || []).map((cb: any) => ({
+        ...cb,
+        category: cats.find((c) => c.id === cb.category_id),
+        spent: spentByCategory[cb.category_id] || 0,
+      }));
+      setCategoryBudgets(cBudgets);
+    } catch {
+      toast({ title: "Erreur de chargement", description: "Impossible de charger les budgets", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveTotalBudget = async () => {
@@ -139,6 +146,17 @@ const Budgets = () => {
     loadData();
   };
 
+  const deleteCategoryBudget = async (id: string) => {
+    try {
+      const { error } = await supabase.from("category_budgets").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Budget supprimé" });
+      loadData();
+    } catch {
+      toast({ title: "Erreur de suppression", variant: "destructive" });
+    }
+  };
+
   const budgetUsedPercent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
   const isOverBudget = totalSpent > totalBudget && totalBudget > 0;
   const fmt = (n: number) => formatAmount(n);
@@ -146,6 +164,22 @@ const Budgets = () => {
   return (
     <DashboardLayout title="Budgets">
       {/* Month selector */}
+      <div className="flex items-center justify-center gap-3 mb-3">
+        <button
+          onClick={() => setYear(y => y - 1)}
+          className="w-8 h-8 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-foreground"
+        >
+          ←
+        </button>
+        <span className="text-sm font-semibold text-foreground">{year}</span>
+        <button
+          onClick={() => setYear(y => y + 1)}
+          disabled={year >= new Date().getFullYear()}
+          className="w-8 h-8 rounded-full glass flex items-center justify-center text-muted-foreground disabled:opacity-30"
+        >
+          →
+        </button>
+      </div>
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
         {monthNames.map((name, i) => (
           <button
@@ -211,16 +245,16 @@ const Budgets = () => {
               <DialogTitle>Budget par catégorie</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <select
-                value={selectedCategoryId}
-                onChange={(e) => setSelectedCategoryId(e.target.value)}
-                className="w-full rounded-lg bg-background/50 border border-border p-2.5 text-foreground text-sm"
-              >
-                <option value="">Choisir une catégorie</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input
                 type="number"
                 placeholder="Montant budget"
@@ -240,11 +274,14 @@ const Budgets = () => {
           const over = (cb.spent || 0) > cb.budget_amount;
           return (
             <div key={cb.id} className={`glass-card rounded-xl p-4 ${over ? "border border-destructive/40" : ""}`}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 gap-2">
                 <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
-                <span className={`text-xs font-semibold ${over ? "text-destructive" : "text-muted-foreground"}`}>
-                  {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold ${over ? "text-destructive" : "text-muted-foreground"}`}>
+                    {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
+                  </span>
+                  <ConfirmDeleteDialog onConfirm={() => deleteCategoryBudget(cb.id)} title="Supprimer ce budget catégorie ?" />
+                </div>
               </div>
               <Progress value={pct} className="h-1.5" />
               {over && <p className="text-[10px] text-destructive mt-1">Dépassement !</p>}
