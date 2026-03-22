@@ -195,13 +195,14 @@ const NewTransaction = () => {
       const sttData = await sttResp.json();
       const transcript = sttData?.transcript;
       
-      if (!transcript?.trim()) {
+      if (!transcript?.trim() || isHallucination(transcript)) {
         setTranscriptText(null);
         toast({
-          title: "🎙️ Je n'ai pas entendu",
-          description: "Essaie de parler plus fort ou plus près du micro.",
+          title: "🎤 Je n'ai pas bien saisi",
+          description: "Je n'ai rien entendu ou mal compris. Veux-tu réessayer ?",
           variant: "destructive",
         });
+        setShowRetryVoice(true);
         setIsProcessing(false);
         return;
       }
