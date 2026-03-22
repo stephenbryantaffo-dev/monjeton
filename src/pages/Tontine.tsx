@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Users, Phone, CheckCircle, Clock, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -62,75 +63,108 @@ const TontinePage = () => {
   const loadTontines = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("tontines")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    setTontines(data || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("tontines")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setTontines(data || []);
+    } catch {
+      toast({ title: "Erreur de chargement", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const selectTontine = async (t: Tontine) => {
-    setSelectedTontine(t);
-    const [membersRes, paymentsRes] = await Promise.all([
-      supabase.from("tontine_members").select("*").eq("tontine_id", t.id),
-      supabase.from("tontine_payments").select("*").eq("tontine_id", t.id).order("date", { ascending: false }),
-    ]);
-    setMembers(membersRes.data || []);
-    setPayments(paymentsRes.data || []);
+    try {
+      const [membersRes, paymentsRes, countRes] = await Promise.all([
+        supabase.from("tontine_members").select("*").eq("tontine_id", t.id),
+        supabase.from("tontine_payments").select("*").eq("tontine_id", t.id).order("date", { ascending: false }),
+        supabase.from("tontine_members").select("*", { count: "exact", head: true }).eq("tontine_id", t.id),
+      ]);
+      if (membersRes.error) throw membersRes.error;
+      const realCount = countRes.count || 0;
+      if (realCount !== t.members_count) {
+        await supabase.from("tontines").update({ members_count: realCount }).eq("id", t.id);
+      }
+      setSelectedTontine({ ...t, members_count: realCount });
+      setMembers(membersRes.data || []);
+      setPayments(paymentsRes.data || []);
+    } catch {
+      toast({ title: "Erreur de chargement", variant: "destructive" });
+    }
   };
 
   const createTontine = async () => {
     if (!user || !newName || !newAmount) return;
-    const { error } = await supabase.from("tontines").insert({
-      user_id: user.id,
-      name: newName,
-      contribution_amount: Number(newAmount),
-      frequency: newFreq,
-    });
-    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
-    setCreateOpen(false);
-    setNewName("");
-    setNewAmount("");
-    toast({ title: "Tontine créée ✅" });
-    loadTontines();
+    try {
+      const { error } = await supabase.from("tontines").insert({
+        user_id: user.id,
+        name: newName,
+        contribution_amount: Number(newAmount),
+        frequency: newFreq,
+      });
+      if (error) throw error;
+      setCreateOpen(false);
+      setNewName("");
+      setNewAmount("");
+      toast({ title: "Tontine créée ✅" });
+      loadTontines();
+    } catch {
+      toast({ title: "Erreur de création", variant: "destructive" });
+    }
   };
 
   const addMember = async () => {
     if (!selectedTontine || !memberName) return;
-    await supabase.from("tontine_members").insert({
-      tontine_id: selectedTontine.id,
-      member_name: memberName,
-      member_phone: memberPhone || null,
-    });
-    await supabase.from("tontines").update({
-      members_count: (selectedTontine.members_count || 0) + 1,
-    }).eq("id", selectedTontine.id);
-    setMemberOpen(false);
-    setMemberName("");
-    setMemberPhone("");
-    toast({ title: "Membre ajouté ✅" });
-    selectTontine({ ...selectedTontine, members_count: selectedTontine.members_count + 1 });
+    try {
+      const { error } = await supabase.from("tontine_members").insert({
+        tontine_id: selectedTontine.id,
+        member_name: memberName,
+        member_phone: memberPhone || null,
+      });
+      if (error) throw error;
+      setMemberOpen(false);
+      setMemberName("");
+      setMemberPhone("");
+      toast({ title: "Membre ajouté ✅" });
+      selectTontine(selectedTontine);
+    } catch {
+      toast({ title: "Erreur ajout membre", variant: "destructive" });
+    }
   };
 
   const addPayment = async (mName: string) => {
     if (!selectedTontine) return;
-    await supabase.from("tontine_payments").insert({
-      tontine_id: selectedTontine.id,
-      member_name: mName,
-      amount: selectedTontine.contribution_amount,
-      status: "paid",
-    });
-    toast({ title: `Paiement de ${mName} enregistré ✅` });
-    selectTontine(selectedTontine);
+    try {
+      const { error } = await supabase.from("tontine_payments").insert({
+        tontine_id: selectedTontine.id,
+        member_name: mName,
+        amount: selectedTontine.contribution_amount,
+        status: "paid",
+        date: new Date().toISOString().split("T")[0],
+      });
+      if (error) throw error;
+      toast({ title: `Paiement de ${mName} enregistré ✅` });
+      selectTontine(selectedTontine);
+    } catch {
+      toast({ title: "Erreur paiement", variant: "destructive" });
+    }
   };
 
   const deleteTontine = async (id: string) => {
-    await supabase.from("tontines").delete().eq("id", id);
-    if (selectedTontine?.id === id) setSelectedTontine(null);
-    toast({ title: "Tontine supprimée" });
-    loadTontines();
+    try {
+      const { error } = await supabase.from("tontines").delete().eq("id", id);
+      if (error) throw error;
+      if (selectedTontine?.id === id) setSelectedTontine(null);
+      toast({ title: "Tontine supprimée" });
+      loadTontines();
+    } catch {
+      toast({ title: "Erreur de suppression", variant: "destructive" });
+    }
   };
 
   const sendWhatsAppReminder = (member: Member) => {
@@ -249,14 +283,16 @@ const TontinePage = () => {
           <div className="space-y-3">
             <Input placeholder="Nom de la tontine" value={newName} onChange={(e) => setNewName(e.target.value)} className="glass" />
             <Input type="number" placeholder="Montant cotisation (F)" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} className="glass" />
-            <select
-              value={newFreq}
-              onChange={(e) => setNewFreq(e.target.value)}
-              className="w-full rounded-lg bg-background/50 border border-border p-2.5 text-foreground text-sm"
-            >
-              <option value="weekly">Hebdomadaire</option>
-              <option value="monthly">Mensuel</option>
-            </select>
+            <Select value={newFreq} onValueChange={setNewFreq}>
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue placeholder="Fréquence" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">Hebdomadaire</SelectItem>
+                <SelectItem value="monthly">Mensuel</SelectItem>
+                <SelectItem value="daily">Quotidien</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={createTontine} className="w-full">Créer</Button>
           </div>
         </DialogContent>
