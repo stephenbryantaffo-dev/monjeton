@@ -101,6 +101,7 @@ const Dashboard = () => {
       endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
     }
 
+    try {
     const { data, error: fetchError } = await supabase
       .from("transactions")
       .select("*, categories(name, icon, color)")
@@ -110,11 +111,7 @@ const Dashboard = () => {
       .order("date", { ascending: false })
       .limit(500);
 
-    if (fetchError) {
-      setError("Impossible de charger les transactions. Vérifiez votre connexion.");
-      setLoading(false);
-      return;
-    }
+    if (fetchError) throw fetchError;
     const txs = data || [];
     setTransactions(txs);
 
