@@ -35,6 +35,7 @@ const NewTransaction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcriptText, setTranscriptText] = useState<string | null>(null);
   const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
+  const [showRetryVoice, setShowRetryVoice] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
