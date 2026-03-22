@@ -71,18 +71,6 @@ const initialMessages: Message[] = [
   },
 ];
 
-// Get best available French voice
-const getFrenchVoice = (): SpeechSynthesisVoice | null => {
-  const voices = speechSynthesis.getVoices();
-  // Prefer local French voice
-  const localFr = voices.find(v => v.lang.startsWith("fr") && v.localService);
-  if (localFr) return localFr;
-  // Any French voice
-  const anyFr = voices.find(v => v.lang.startsWith("fr"));
-  if (anyFr) return anyFr;
-  return null;
-};
-
 const Assistant = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -155,6 +143,30 @@ const Assistant = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // --- Anti-hallucination filter ---
+  const WHISPER_HALLUCINATIONS = [
+    "merci", "merci.", "merci d'avoir regardé",
+    "sous-titres", "sous-titrage", "transcription",
+    "music", "musique", "♪", "applaudissements",
+    "thank you", "thanks for watching",
+    "you", ".", " ", "...", "bye", "au revoir",
+    "sous-titres réalisés", "sous-titres par",
+  ];
+
+  const isHallucination = (text: string): boolean => {
+    const cleaned = text.toLowerCase().trim();
+    if (cleaned.length < 3) return true;
+    if (WHISPER_HALLUCINATIONS.some(h =>
+      cleaned === h.toLowerCase() || cleaned === h.toLowerCase() + "."
+    )) return true;
+    const words = cleaned.split(' ');
+    if (words.length > 3) {
+      const uniqueWords = new Set(words);
+      if (uniqueWords.size / words.length < 0.4) return true;
+    }
+    return false;
+  };
+
   // --- Speech Synthesis with quality voice ---
   const speak = useCallback((text: string, index: number) => {
     if (speakingId === index) {
@@ -162,20 +174,50 @@ const Assistant = () => {
       setSpeakingId(null);
       return;
     }
+
+    if (!window.speechSynthesis) {
+      toast({
+        title: "Lecture non supportée",
+        description: "Ton navigateur ne supporte pas la synthèse vocale",
+        variant: "destructive",
+      });
+      return;
+    }
+
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "fr-FR";
     utterance.rate = 1.1;
-    const voice = getFrenchVoice();
-    if (voice) utterance.voice = voice;
+
+    const setVoice = () => {
+      const voices = speechSynthesis.getVoices();
+      const frVoice = voices.find(v => v.lang === "fr-FR" || v.lang === "fr");
+      if (frVoice) utterance.voice = frVoice;
+    };
+
+    if (speechSynthesis.getVoices().length > 0) {
+      setVoice();
+    } else {
+      speechSynthesis.onvoiceschanged = setVoice;
+    }
+
     utterance.onend = () => {
       setSpeakingId(null);
-      // In continuous mode, re-activate mic after TTS finishes
       if (continuousModeRef.current) {
         setTimeout(() => startRecording(), 400);
       }
     };
-    utterance.onerror = () => setSpeakingId(null);
+    utterance.onerror = (e) => {
+      setSpeakingId(null);
+      if (e.error !== "interrupted") {
+        toast({
+          title: "Erreur de lecture",
+          description: "Impossible de lire ce message",
+          variant: "destructive",
+        });
+      }
+    };
+
     setSpeakingId(index);
     speechSynthesis.speak(utterance);
   }, [speakingId]);
@@ -240,6 +282,16 @@ const Assistant = () => {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunksRef.current, { type: mimeType || "audio/webm" });
+
+        if (blob.size < 5000) {
+          toast({
+            title: "Enregistrement trop court",
+            description: "Maintiens le bouton et parle clairement",
+            variant: "destructive",
+          });
+          return;
+        }
+
         await transcribeAndSend(blob);
       };
       mediaRecorder.start();
@@ -255,8 +307,16 @@ const Assistant = () => {
   };
 
   const stopRecording = () => {
+    const tooShort = recordingSeconds < 2;
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
+      if (tooShort) {
+        toast({
+          title: "Trop court",
+          description: "Maintiens le bouton et parle pendant au moins 2 secondes",
+          variant: "destructive",
+        });
+      }
     }
     setIsRecording(false);
     if (recordingTimerRef.current) {
@@ -285,8 +345,12 @@ const Assistant = () => {
       if (!resp.ok) throw new Error("Transcription failed");
       const { transcript } = await resp.json();
 
-      if (!transcript?.trim()) {
-        toast({ title: "🎙️ Je n'ai pas entendu", description: "Essaie de parler plus fort ou plus près du micro.", variant: "destructive" });
+      if (!transcript?.trim() || isHallucination(transcript)) {
+        setMessages(prev => prev.map((m, i) =>
+          i === prev.length - 1
+            ? { ...m, content: "❌ Je n'ai rien entendu. Réessaie en parlant plus clairement près du micro." }
+            : m
+        ));
         setIsLoading(false);
         return;
       }
