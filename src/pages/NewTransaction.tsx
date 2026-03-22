@@ -251,11 +251,8 @@ const NewTransaction = () => {
 
     } catch (err: any) {
       console.error("processVoice error:", err);
-      if (retryCount < 1 && err?.message !== "Transcription vide") {
-        toast({ title: "Réessai en cours..." });
-        return processVoice(audioBlob, retryCount + 1);
-      }
-      toast({ title: "Erreur vocale", description: err?.message || "Veuillez réessayer", variant: "destructive" });
+      toast({ title: "Erreur vocale", description: err?.message || "Réessaie en parlant plus clairement", variant: "destructive" });
+      setShowRetryVoice(true);
     } finally {
       setIsProcessing(false);
     }
