@@ -319,8 +319,16 @@ const Assistant = () => {
   };
 
   const stopRecording = () => {
+    const tooShort = recordingSeconds < 2;
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
+      if (tooShort) {
+        toast({
+          title: "Trop court",
+          description: "Maintiens le bouton et parle pendant au moins 2 secondes",
+          variant: "destructive",
+        });
+      }
     }
     setIsRecording(false);
     if (recordingTimerRef.current) {
