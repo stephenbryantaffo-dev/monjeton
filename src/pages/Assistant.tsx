@@ -71,18 +71,6 @@ const initialMessages: Message[] = [
   },
 ];
 
-// Get best available French voice
-const getFrenchVoice = (): SpeechSynthesisVoice | null => {
-  const voices = speechSynthesis.getVoices();
-  // Prefer local French voice
-  const localFr = voices.find(v => v.lang.startsWith("fr") && v.localService);
-  if (localFr) return localFr;
-  // Any French voice
-  const anyFr = voices.find(v => v.lang.startsWith("fr"));
-  if (anyFr) return anyFr;
-  return null;
-};
-
 const Assistant = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
