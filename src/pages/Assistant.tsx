@@ -144,23 +144,19 @@ const Assistant = () => {
   }, [messages]);
 
   // --- Anti-hallucination filter ---
-  const WHISPER_HALLUCINATIONS = [
-    "merci", "merci.", "merci d'avoir regardé",
-    "sous-titres", "sous-titrage", "transcription",
-    "music", "musique", "♪", "applaudissements",
-    "thank you", "thanks for watching",
-    "you", ".", " ", "...", "bye", "au revoir",
-    "sous-titres réalisés", "sous-titres par",
+  const HALLUCINATIONS = [
+    "merci", "merci.", "sous-titres", "sous-titrage",
+    "transcription", "music", "musique", "♪",
+    "thank you", "thanks for watching", "you",
+    ".", " ", "...", "bonjour.", "bonsoir.",
   ];
 
   const isHallucination = (text: string): boolean => {
-    const cleaned = text.toLowerCase().trim();
-    if (cleaned.length < 3) return true;
-    if (WHISPER_HALLUCINATIONS.some(h =>
-      cleaned === h.toLowerCase() || cleaned === h.toLowerCase() + "."
-    )) return true;
-    const words = cleaned.split(' ');
-    if (words.length > 3) {
+    const c = text.toLowerCase().trim();
+    if (c.length < 4) return true;
+    if (HALLUCINATIONS.some(h => c === h || c === h + ".")) return true;
+    const words = c.split(" ");
+    if (words.length > 4) {
       const uniqueWords = new Set(words);
       if (uniqueWords.size / words.length < 0.4) return true;
     }
@@ -327,6 +323,12 @@ const Assistant = () => {
   };
 
   const transcribeAndSend = async (audioBlob: Blob) => {
+    if (audioBlob.size < 8000) {
+      toast({ title: "Enregistrement trop court", variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     const audioUrl = URL.createObjectURL(audioBlob);
     const userMsg: Message = { role: "user", content: "🎤 Message vocal...", type: "audio", audioUrl };
@@ -348,7 +350,7 @@ const Assistant = () => {
       if (!transcript?.trim() || isHallucination(transcript)) {
         setMessages(prev => prev.map((m, i) =>
           i === prev.length - 1
-            ? { ...m, content: "❌ Je n'ai rien entendu. Réessaie en parlant plus clairement près du micro." }
+            ? { ...m, content: "❌ Je n'ai rien entendu. Parle plus clairement près du micro." }
             : m
         ));
         setIsLoading(false);
