@@ -360,7 +360,7 @@ const NewTransaction = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout showBack={false}>
       <div className="pt-6 pb-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="text-muted-foreground">
           <ArrowLeft className="w-5 h-5" />
