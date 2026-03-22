@@ -72,8 +72,11 @@ const Dashboard = () => {
   }, [user]);
 
   useEffect(() => {
+    const save = () => localStorage.setItem("dashboard_last_visit", new Date().toISOString());
+    window.addEventListener("beforeunload", save);
     return () => {
-      localStorage.setItem("dashboard_last_visit", new Date().toISOString());
+      window.removeEventListener("beforeunload", save);
+      save();
     };
   }, []);
 
