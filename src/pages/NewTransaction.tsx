@@ -101,6 +101,7 @@ const NewTransaction = () => {
   const startRecording = async () => {
     try {
       setTranscriptText(null);
+      setShowRetryVoice(false);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setActiveStream(stream);
       const mimeType = getSupportedMimeType();
