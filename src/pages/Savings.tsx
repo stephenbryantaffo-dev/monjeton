@@ -21,37 +21,81 @@ const Savings = () => {
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [loading, setLoading] = useState(true);
+  const [addingAmountId, setAddingAmountId] = useState<string | null>(null);
+  const [addAmountValue, setAddAmountValue] = useState("");
 
   const fetchGoals = async () => {
     if (!user) return;
-    const { data } = await supabase.from("savings_goals").select("*").eq("user_id", user.id).order("created_at");
-    setGoals(data || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("savings_goals")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at");
+      if (error) throw error;
+      setGoals(data || []);
+    } catch {
+      toast({ title: "Erreur de chargement", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchGoals(); }, [user]);
 
   const handleAdd = async () => {
     if (!name || !target || !user) return;
-    await supabase.from("savings_goals").insert({
-      user_id: user.id, name, target_amount: Number(target), deadline: deadline || null,
-    });
-    toast({ title: "Objectif créé ✅" });
-    setName(""); setTarget(""); setDeadline(""); setShowAdd(false);
-    fetchGoals();
+    try {
+      const { error } = await supabase.from("savings_goals").insert({
+        user_id: user.id, name, target_amount: Number(target), deadline: deadline || null,
+      });
+      if (error) throw error;
+      toast({ title: "Objectif créé ✅" });
+      setName(""); setTarget(""); setDeadline(""); setShowAdd(false);
+      fetchGoals();
+    } catch {
+      toast({ title: "Erreur de création", variant: "destructive" });
+    }
   };
 
-  const handleAddAmount = async (id: string, currentAmount: number) => {
-    const amountStr = prompt("Montant à ajouter (FCFA) :");
-    if (!amountStr) return;
-    await supabase.from("savings_goals").update({ current_amount: currentAmount + Number(amountStr) }).eq("id", id);
-    toast({ title: "Montant ajouté ✅" });
-    fetchGoals();
+  const confirmAddAmount = async (id: string, current: number) => {
+    const val = parseFloat(addAmountValue);
+    if (isNaN(val) || val <= 0) {
+      toast({ title: "Montant invalide", variant: "destructive" });
+      return;
+    }
+    const goal = goals.find(g => g.id === id);
+    if (goal && current + val > Number(goal.target_amount)) {
+      toast({
+        title: "Dépassement",
+        description: `Max ${Number(goal.target_amount) - current} F restants`,
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from("savings_goals")
+        .update({ current_amount: current + val })
+        .eq("id", id);
+      if (error) throw error;
+      toast({ title: "Montant ajouté ✅" });
+      setAddingAmountId(null);
+      setAddAmountValue("");
+      fetchGoals();
+    } catch {
+      toast({ title: "Erreur", variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("savings_goals").delete().eq("id", id);
-    fetchGoals();
+    try {
+      const { error } = await supabase.from("savings_goals").delete().eq("id", id);
+      if (error) throw error;
+      fetchGoals();
+    } catch {
+      toast({ title: "Erreur de suppression", variant: "destructive" });
+    }
   };
 
   return (
@@ -61,6 +105,9 @@ const Savings = () => {
           ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
           : goals.map((g, i) => {
             const pct = g.target_amount > 0 ? Math.round((Number(g.current_amount) / Number(g.target_amount)) * 100) : 0;
+            const daysLeft = g.deadline
+              ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+              : null;
             return (
               <motion.div
                 key={g.id}
@@ -76,6 +123,15 @@ const Savings = () => {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">{g.name}</p>
                     {g.deadline && <p className="text-xs text-muted-foreground">Échéance : {new Date(g.deadline).toLocaleDateString("fr-FR")}</p>}
+                    {daysLeft !== null && (
+                      <p className={`text-xs mt-1 font-medium ${
+                        daysLeft < 0 ? "text-destructive" :
+                        daysLeft < 7 ? "text-yellow-500" :
+                        "text-muted-foreground"
+                      }`}>
+                        {daysLeft > 0 ? `${daysLeft} jours restants` : "Échéance dépassée ⚠️"}
+                      </p>
+                    )}
                   </div>
                   <span className="text-sm font-bold text-primary">{pct}%</span>
                   <ConfirmDeleteDialog onConfirm={() => handleDelete(g.id)} title="Supprimer cet objectif ?" />
@@ -85,7 +141,29 @@ const Savings = () => {
                   <span className="text-xs text-muted-foreground">{Number(g.current_amount).toLocaleString("fr-FR")} F</span>
                   <span className="text-xs text-muted-foreground">{Number(g.target_amount).toLocaleString("fr-FR")} F</span>
                 </div>
-                <button onClick={() => handleAddAmount(g.id, Number(g.current_amount))} className="text-xs text-primary mt-2">+ Ajouter un montant</button>
+
+                {addingAmountId === g.id ? (
+                  <div className="flex gap-2 mt-3">
+                    <Input
+                      type="number"
+                      placeholder="Montant"
+                      value={addAmountValue}
+                      onChange={e => setAddAmountValue(e.target.value)}
+                      className="bg-secondary border-border flex-1"
+                      autoFocus
+                    />
+                    <Button size="sm" variant="hero" onClick={() => confirmAddAmount(g.id, Number(g.current_amount))}>
+                      OK
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setAddingAmountId(null); setAddAmountValue(""); }}>
+                      ✕
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="glass" size="sm" className="w-full mt-3" onClick={() => setAddingAmountId(g.id)}>
+                    + Ajouter un montant
+                  </Button>
+                )}
               </motion.div>
             );
           })}
