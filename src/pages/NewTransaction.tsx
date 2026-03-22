@@ -66,6 +66,29 @@ const NewTransaction = () => {
 
   const filteredCategories = categories.filter(c => c.type === type);
 
+  const WHISPER_HALLUCINATIONS = [
+    "merci", "merci.", "merci d'avoir regardé",
+    "sous-titres", "sous-titrage", "transcription",
+    "music", "musique", "♪", "applaudissements",
+    "thank you", "thanks for watching",
+    "you", ".", " ", "...", "bye", "au revoir",
+    "sous-titres réalisés", "sous-titres par",
+  ];
+
+  const isHallucination = (text: string): boolean => {
+    const cleaned = text.toLowerCase().trim();
+    if (cleaned.length < 3) return true;
+    if (WHISPER_HALLUCINATIONS.some(h =>
+      cleaned === h.toLowerCase() || cleaned === h.toLowerCase() + "."
+    )) return true;
+    const words = cleaned.split(' ');
+    if (words.length > 3) {
+      const uniqueWords = new Set(words);
+      if (uniqueWords.size / words.length < 0.4) return true;
+    }
+    return false;
+  };
+
   const getSupportedMimeType = () => {
     if (typeof MediaRecorder !== "undefined") {
       if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
