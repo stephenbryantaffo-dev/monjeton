@@ -425,6 +425,44 @@ const NewTransaction = () => {
         )}
       </AnimatePresence>
 
+      {/* Retry voice prompt */}
+      <AnimatePresence>
+        {showRetryVoice && !voiceTransactions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="glass-card rounded-2xl p-4 mb-4 flex flex-col gap-3"
+          >
+            <p className="text-sm text-muted-foreground text-center">
+              Je n'ai pas pu saisir ta dépense. Essaie de parler clairement, exemple :
+            </p>
+            <p className="text-sm text-primary text-center font-medium">
+              « J'ai payé taxi 3000 francs »
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowRetryVoice(false)}
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => {
+                  setShowRetryVoice(false);
+                  startRecording();
+                }}
+              >
+                🎤 Réessayer
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Conversational AI Confirmation */}
       <AnimatePresence>
         {voiceTransactions && (
