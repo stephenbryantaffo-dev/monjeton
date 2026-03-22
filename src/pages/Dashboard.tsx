@@ -20,7 +20,7 @@ import { CalendarWithPresets } from "@/components/ui/calendar-with-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const trendModes = ["Jour", "Semaine"];
+const trendModes = ["Par jour", "Par mois"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -72,8 +72,11 @@ const Dashboard = () => {
   }, [user]);
 
   useEffect(() => {
+    const save = () => localStorage.setItem("dashboard_last_visit", new Date().toISOString());
+    window.addEventListener("beforeunload", save);
     return () => {
-      localStorage.setItem("dashboard_last_visit", new Date().toISOString());
+      window.removeEventListener("beforeunload", save);
+      save();
     };
   }, []);
 
@@ -98,6 +101,7 @@ const Dashboard = () => {
       endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
     }
 
+    try {
     const { data, error: fetchError } = await supabase
       .from("transactions")
       .select("*, categories(name, icon, color)")
@@ -107,11 +111,7 @@ const Dashboard = () => {
       .order("date", { ascending: false })
       .limit(500);
 
-    if (fetchError) {
-      setError("Impossible de charger les transactions. Vérifiez votre connexion.");
-      setLoading(false);
-      return;
-    }
+    if (fetchError) throw fetchError;
     const txs = data || [];
     setTransactions(txs);
 
@@ -120,8 +120,11 @@ const Dashboard = () => {
       const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
       setNewTxCount(count);
     }
-
-    setLoading(false);
+    } catch {
+      setError("Impossible de charger. Vérifie ta connexion.");
+    } finally {
+      setLoading(false);
+    }
   }, [user, activePeriod, customRange]);
 
   useEffect(() => {

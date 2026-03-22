@@ -50,7 +50,9 @@ const NewTransaction = () => {
       supabase.from("wallets").select("*").eq("user_id", user.id),
     ]).then(([catRes, walRes]) => {
       setCategories(catRes.data || []);
-      setWallets(walRes.data || []);
+      const wals = walRes.data || [];
+      setWallets(wals);
+      if (wals.length === 1) setWalletId(wals[0].id);
     });
   }, [user]);
 
@@ -327,6 +329,15 @@ const NewTransaction = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !categoryId || !user) return;
+
+    if (wallets.length > 0 && !walletId) {
+      toast({
+        title: "Portefeuille requis",
+        description: "Sélectionne le portefeuille utilisé",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const amountCheck = validateAmount(amount);
     if (!amountCheck.valid) {
