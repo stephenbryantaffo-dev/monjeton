@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
-import { Download, AlertTriangle } from "lucide-react";
+import { Download, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -21,30 +21,58 @@ const Reports = () => {
   const { user } = useAuth();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
+
+  const now = new Date();
+  const [reportMonth, setReportMonth] = useState(now.getMonth());
+  const [reportYear, setReportYear] = useState(now.getFullYear());
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [leaks, setLeaks] = useState<Leak[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const goToPrevMonth = () => {
+    if (reportMonth === 0) {
+      setReportMonth(11);
+      setReportYear(y => y - 1);
+    } else {
+      setReportMonth(m => m - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (reportMonth === 11) {
+      setReportMonth(0);
+      setReportYear(y => y + 1);
+    } else {
+      setReportMonth(m => m + 1);
+    }
+  };
+
+  const isCurrentMonth = reportMonth === now.getMonth() && reportYear === now.getFullYear();
+
+  const fetchData = useCallback(async () => {
     if (!user) return;
+    setLoading(true);
+    try {
+      const sixMonthsAgo = new Date(reportYear, reportMonth - 5, 1).toISOString().split("T")[0];
 
-    const fetchData = async () => {
-      setLoading(true);
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-
-      const { data: transactions } = await supabase
+      const { data: transactions, error } = await supabase
         .from("transactions")
         .select("*, categories(name, color)")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .gte("date", sixMonthsAgo)
+        .order("date", { ascending: false })
+        .limit(1000);
 
+      if (error) throw error;
       if (!transactions) return;
       setAllTransactions(transactions);
 
-      // Category breakdown for current month
-      const monthTx = transactions.filter(t => t.date >= startOfMonth && t.type === "expense");
+      // Category breakdown for selected month
+      const startOfMonth = new Date(reportYear, reportMonth, 1).toISOString().split("T")[0];
+      const endOfMonth = new Date(reportYear, reportMonth + 1, 0).toISOString().split("T")[0];
+      const monthTx = transactions.filter(t => t.date >= startOfMonth && t.date <= endOfMonth && t.type === "expense");
       const catMap: Record<string, { name: string; value: number; color: string }> = {};
       monthTx.forEach(t => {
         const name = t.categories?.name || "Autre";
@@ -54,10 +82,10 @@ const Reports = () => {
       });
       setCategoryData(Object.values(catMap));
 
-      // Monthly aggregation (last 6 months)
+      // Monthly aggregation (last 6 months from selected month)
       const monthly: Record<string, { month: string; depenses: number; revenus: number }> = {};
       for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const d = new Date(reportYear, reportMonth - i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         monthly[key] = { month: d.toLocaleDateString("fr-FR", { month: "short" }), depenses: 0, revenus: 0 };
       }
@@ -70,7 +98,7 @@ const Reports = () => {
       });
       setMonthlyData(Object.values(monthly));
 
-      // Money leak detection: small expenses (<2000) appearing 3+ times in same category this month
+      // Money leak detection
       const smallExpenses = monthTx.filter(t => Number(t.amount) < 2000);
       const leakMap: Record<string, { category: string; count: number; total: number }> = {};
       smallExpenses.forEach(t => {
@@ -80,18 +108,32 @@ const Reports = () => {
         leakMap[cat].total += Number(t.amount);
       });
       setLeaks(Object.values(leakMap).filter(l => l.count >= 3));
+    } catch {
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les rapports",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [user, reportMonth, reportYear, toast]);
 
+  useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
 
   const total = categoryData.reduce((s, c) => s + c.value, 0);
-  const totalIncome = allTransactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+  const totalIncome = allTransactions
+    .filter(t => {
+      const startOfMonth = new Date(reportYear, reportMonth, 1).toISOString().split("T")[0];
+      const endOfMonth = new Date(reportYear, reportMonth + 1, 0).toISOString().split("T")[0];
+      return t.type === "income" && t.date >= startOfMonth && t.date <= endOfMonth;
+    })
+    .reduce((s, t) => s + Number(t.amount), 0);
 
   const handleExportPdf = () => {
-    const now = new Date();
-    const monthLabel = now.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    const monthLabel = new Date(reportYear, reportMonth).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
     generateMonthlyPdf({
       month: monthLabel,
       totalIncome,
@@ -104,6 +146,23 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Rapports">
+      {/* Month selector */}
+      <div className="flex items-center justify-between mb-4 glass-card rounded-2xl px-4 py-3">
+        <button onClick={goToPrevMonth} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <span className="text-sm font-semibold text-foreground capitalize">
+          {new Date(reportYear, reportMonth).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+        </span>
+        <button
+          onClick={goToNextMonth}
+          disabled={isCurrentMonth}
+          className="text-muted-foreground hover:text-foreground transition-colors p-1 disabled:opacity-30"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+
       {loading ? (
         <div className="space-y-4">
           <CardSkeleton />
@@ -112,92 +171,92 @@ const Reports = () => {
         </div>
       ) : (
         <>
-      {/* Export PDF */}
-      <div className="mb-4">
-        <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
-          <Download className="w-4 h-4" /> Exporter le rapport PDF
-        </Button>
-      </div>
-
-      {/* Money Leaks */}
-      {leaks.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4 border border-neon-yellow/30" style={{ borderColor: "hsl(45, 96%, 58%, 0.3)" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-5 h-5" style={{ color: "hsl(45, 96%, 58%)" }} />
-            <h2 className="text-sm font-semibold text-foreground">Fuites d'argent détectées</h2>
+          {/* Export PDF */}
+          <div className="mb-4">
+            <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
+              <Download className="w-4 h-4" /> Exporter le rapport PDF
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mb-3">Petites dépenses fréquentes (&lt;2000 F) ce mois-ci :</p>
-          <div className="space-y-2">
-            {leaks.map((l) => (
-              <div key={l.category} className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm text-foreground">{l.category}</span>
-                  <span className="text-xs text-muted-foreground ml-2">{l.count} fois</span>
-                </div>
-                <span className="text-sm font-semibold" style={{ color: "hsl(45, 96%, 58%)" }}>{formatAmount(l.total)} F</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">💡 Ces petites dépenses s'accumulent. Essayez de les regrouper ou les réduire.</p>
-        </motion.div>
-      )}
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Dépenses par catégorie</h2>
-        {categoryData.length > 0 ? (
-          <>
-            <div className="relative w-44 h-44 mx-auto">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={3} dataKey="value" stroke="none">
-                    {categoryData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-2">
-                <p className="text-base sm:text-lg font-bold text-foreground truncate max-w-full">{formatAmount(total)}</p>
-                <p className="text-xs text-muted-foreground">FCFA</p>
+          {/* Money Leaks */}
+          {leaks.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4 border border-neon-yellow/30" style={{ borderColor: "hsl(45, 96%, 58%, 0.3)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5" style={{ color: "hsl(45, 96%, 58%)" }} />
+                <h2 className="text-sm font-semibold text-foreground">Fuites d'argent détectées</h2>
               </div>
-            </div>
-            <div className="space-y-2 mt-4">
-              {categoryData.map((c) => (
-                <div key={c.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
-                    <span className="text-sm text-foreground">{c.name}</span>
+              <p className="text-xs text-muted-foreground mb-3">Petites dépenses fréquentes (&lt;2000 F) ce mois :</p>
+              <div className="space-y-2">
+                {leaks.map((l) => (
+                  <div key={l.category} className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-foreground">{l.category}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{l.count} fois</span>
+                    </div>
+                    <span className="text-sm font-semibold" style={{ color: "hsl(45, 96%, 58%)" }}>{formatAmount(l.total)} F</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{formatAmount(c.value)} F</span>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée ce mois</p>
-        )}
-      </motion.div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">💡 Ces petites dépenses s'accumulent. Essayez de les regrouper ou les réduire.</p>
+            </motion.div>
+          )}
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Évolution mensuelle</h2>
-        {monthlyData.length > 0 ? (
-          <>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(150, 10%, 16%)" />
-                <XAxis dataKey="month" tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 12 }} axisLine={false} />
-                <YAxis tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 10 }} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-                <Bar dataKey="revenus" fill="hsl(84, 81%, 44%)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="depenses" fill="hsl(270, 70%, 60%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 justify-center mt-3">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-primary" /><span className="text-xs text-muted-foreground">Revenus</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-accent" /><span className="text-xs text-muted-foreground">Dépenses</span></div>
-            </div>
-          </>
-        ) : (
-          <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée</p>
-        )}
-      </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
+            <h2 className="text-sm font-semibold text-foreground mb-4">Dépenses par catégorie</h2>
+            {categoryData.length > 0 ? (
+              <>
+                <div className="relative w-44 h-44 mx-auto">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={3} dataKey="value" stroke="none">
+                        {categoryData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-2">
+                    <p className="text-base sm:text-lg font-bold text-foreground truncate max-w-full">{formatAmount(total)}</p>
+                    <p className="text-xs text-muted-foreground">FCFA</p>
+                  </div>
+                </div>
+                <div className="space-y-2 mt-4">
+                  {categoryData.map((c) => (
+                    <div key={c.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
+                        <span className="text-sm text-foreground">{c.name}</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{formatAmount(c.value)} F</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée ce mois</p>
+            )}
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5">
+            <h2 className="text-sm font-semibold text-foreground mb-4">Évolution mensuelle</h2>
+            {monthlyData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(150, 10%, 16%)" />
+                    <XAxis dataKey="month" tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 12 }} axisLine={false} />
+                    <YAxis tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 10 }} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
+                    <Bar dataKey="revenus" fill="hsl(84, 81%, 44%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="depenses" fill="hsl(270, 70%, 60%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="flex gap-4 justify-center mt-3">
+                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-primary" /><span className="text-xs text-muted-foreground">Revenus</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-accent" /><span className="text-xs text-muted-foreground">Dépenses</span></div>
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée</p>
+            )}
+          </motion.div>
         </>
       )}
     </DashboardLayout>
