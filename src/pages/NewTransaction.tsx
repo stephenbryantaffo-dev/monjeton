@@ -50,7 +50,9 @@ const NewTransaction = () => {
       supabase.from("wallets").select("*").eq("user_id", user.id),
     ]).then(([catRes, walRes]) => {
       setCategories(catRes.data || []);
-      setWallets(walRes.data || []);
+      const wals = walRes.data || [];
+      setWallets(wals);
+      if (wals.length === 1) setWalletId(wals[0].id);
     });
   }, [user]);
 
