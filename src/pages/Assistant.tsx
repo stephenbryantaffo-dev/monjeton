@@ -357,8 +357,12 @@ const Assistant = () => {
       if (!resp.ok) throw new Error("Transcription failed");
       const { transcript } = await resp.json();
 
-      if (!transcript?.trim()) {
-        toast({ title: "🎙️ Je n'ai pas entendu", description: "Essaie de parler plus fort ou plus près du micro.", variant: "destructive" });
+      if (!transcript?.trim() || isHallucination(transcript)) {
+        setMessages(prev => prev.map((m, i) =>
+          i === prev.length - 1
+            ? { ...m, content: "❌ Je n'ai rien entendu. Réessaie en parlant plus clairement près du micro." }
+            : m
+        ));
         setIsLoading(false);
         return;
       }
