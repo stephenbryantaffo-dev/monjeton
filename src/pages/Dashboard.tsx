@@ -20,7 +20,7 @@ import { CalendarWithPresets } from "@/components/ui/calendar-with-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const trendModes = ["Jour", "Semaine"];
+const trendModes = ["Par jour", "Par mois"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
