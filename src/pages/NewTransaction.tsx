@@ -119,6 +119,15 @@ const NewTransaction = () => {
         stream.getTracks().forEach(t => t.stop());
         setActiveStream(null);
         const blob = new Blob(chunksRef.current, { type: getSupportedMimeType() || "audio/webm" });
+
+        if (blob.size < 5000) {
+          toast({
+            title: "Enregistrement trop court",
+            description: "Parle pendant au moins 2 secondes",
+            variant: "destructive",
+          });
+          return;
+        }
         
         if (!validatePayloadSize(blob, MAX_AUDIO_SIZE_BYTES)) {
           toast({ title: "Audio trop volumineux", description: "Maximum 10 Mo", variant: "destructive" });
