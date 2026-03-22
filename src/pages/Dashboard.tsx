@@ -120,8 +120,11 @@ const Dashboard = () => {
       const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
       setNewTxCount(count);
     }
-
-    setLoading(false);
+    } catch {
+      setError("Impossible de charger. Vérifie ta connexion.");
+    } finally {
+      setLoading(false);
+    }
   }, [user, activePeriod, customRange]);
 
   useEffect(() => {

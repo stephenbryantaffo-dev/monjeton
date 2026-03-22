@@ -330,6 +330,15 @@ const NewTransaction = () => {
     e.preventDefault();
     if (!amount || !categoryId || !user) return;
 
+    if (wallets.length > 0 && !walletId) {
+      toast({
+        title: "Portefeuille requis",
+        description: "Sélectionne le portefeuille utilisé",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const amountCheck = validateAmount(amount);
     if (!amountCheck.valid) {
       toast({ title: amountCheck.error || "Montant invalide", variant: "destructive" });
