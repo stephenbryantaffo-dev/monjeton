@@ -35,6 +35,7 @@ const NewTransaction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcriptText, setTranscriptText] = useState<string | null>(null);
   const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
+  const [showRetryVoice, setShowRetryVoice] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -65,6 +66,29 @@ const NewTransaction = () => {
 
   const filteredCategories = categories.filter(c => c.type === type);
 
+  const WHISPER_HALLUCINATIONS = [
+    "merci", "merci.", "merci d'avoir regardé",
+    "sous-titres", "sous-titrage", "transcription",
+    "music", "musique", "♪", "applaudissements",
+    "thank you", "thanks for watching",
+    "you", ".", " ", "...", "bye", "au revoir",
+    "sous-titres réalisés", "sous-titres par",
+  ];
+
+  const isHallucination = (text: string): boolean => {
+    const cleaned = text.toLowerCase().trim();
+    if (cleaned.length < 3) return true;
+    if (WHISPER_HALLUCINATIONS.some(h =>
+      cleaned === h.toLowerCase() || cleaned === h.toLowerCase() + "."
+    )) return true;
+    const words = cleaned.split(' ');
+    if (words.length > 3) {
+      const uniqueWords = new Set(words);
+      if (uniqueWords.size / words.length < 0.4) return true;
+    }
+    return false;
+  };
+
   const getSupportedMimeType = () => {
     if (typeof MediaRecorder !== "undefined") {
       if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
@@ -77,6 +101,7 @@ const NewTransaction = () => {
   const startRecording = async () => {
     try {
       setTranscriptText(null);
+      setShowRetryVoice(false);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setActiveStream(stream);
       const mimeType = getSupportedMimeType();
@@ -94,6 +119,15 @@ const NewTransaction = () => {
         stream.getTracks().forEach(t => t.stop());
         setActiveStream(null);
         const blob = new Blob(chunksRef.current, { type: getSupportedMimeType() || "audio/webm" });
+
+        if (blob.size < 5000) {
+          toast({
+            title: "Enregistrement trop court",
+            description: "Parle pendant au moins 2 secondes",
+            variant: "destructive",
+          });
+          return;
+        }
         
         if (!validatePayloadSize(blob, MAX_AUDIO_SIZE_BYTES)) {
           toast({ title: "Audio trop volumineux", description: "Maximum 10 Mo", variant: "destructive" });
@@ -139,7 +173,7 @@ const NewTransaction = () => {
     return fuzzy?.id || "";
   };
 
-  const processVoice = async (audioBlob: Blob, retryCount = 0) => {
+  const processVoice = async (audioBlob: Blob) => {
     setIsProcessing(true);
     try {
       const sttUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`;
@@ -161,13 +195,14 @@ const NewTransaction = () => {
       const sttData = await sttResp.json();
       const transcript = sttData?.transcript;
       
-      if (!transcript?.trim()) {
+      if (!transcript?.trim() || isHallucination(transcript)) {
         setTranscriptText(null);
         toast({
-          title: "🎙️ Je n'ai pas entendu",
-          description: "Essaie de parler plus fort ou plus près du micro.",
+          title: "🎤 Je n'ai pas bien saisi",
+          description: "Je n'ai rien entendu ou mal compris. Veux-tu réessayer ?",
           variant: "destructive",
         });
+        setShowRetryVoice(true);
         setIsProcessing(false);
         return;
       }
@@ -216,11 +251,8 @@ const NewTransaction = () => {
 
     } catch (err: any) {
       console.error("processVoice error:", err);
-      if (retryCount < 1 && err?.message !== "Transcription vide") {
-        toast({ title: "Réessai en cours..." });
-        return processVoice(audioBlob, retryCount + 1);
-      }
-      toast({ title: "Erreur vocale", description: err?.message || "Veuillez réessayer", variant: "destructive" });
+      toast({ title: "Erreur vocale", description: err?.message || "Réessaie en parlant plus clairement", variant: "destructive" });
+      setShowRetryVoice(true);
     } finally {
       setIsProcessing(false);
     }
@@ -389,6 +421,44 @@ const NewTransaction = () => {
                 <span className="text-xs text-muted-foreground">Analyse par l'IA...</span>
               </div>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Retry voice prompt */}
+      <AnimatePresence>
+        {showRetryVoice && !voiceTransactions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="glass-card rounded-2xl p-4 mb-4 flex flex-col gap-3"
+          >
+            <p className="text-sm text-muted-foreground text-center">
+              Je n'ai pas pu saisir ta dépense. Essaie de parler clairement, exemple :
+            </p>
+            <p className="text-sm text-primary text-center font-medium">
+              « J'ai payé taxi 3000 francs »
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowRetryVoice(false)}
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => {
+                  setShowRetryVoice(false);
+                  startRecording();
+                }}
+              >
+                🎤 Réessayer
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
