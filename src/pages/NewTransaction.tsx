@@ -66,23 +66,19 @@ const NewTransaction = () => {
 
   const filteredCategories = categories.filter(c => c.type === type);
 
-  const WHISPER_HALLUCINATIONS = [
-    "merci", "merci.", "merci d'avoir regardé",
-    "sous-titres", "sous-titrage", "transcription",
-    "music", "musique", "♪", "applaudissements",
-    "thank you", "thanks for watching",
-    "you", ".", " ", "...", "bye", "au revoir",
-    "sous-titres réalisés", "sous-titres par",
+  const HALLUCINATIONS = [
+    "merci", "merci.", "sous-titres", "sous-titrage",
+    "transcription", "music", "musique", "♪",
+    "thank you", "thanks for watching", "you",
+    ".", " ", "...", "bonjour.", "bonsoir.",
   ];
 
   const isHallucination = (text: string): boolean => {
-    const cleaned = text.toLowerCase().trim();
-    if (cleaned.length < 3) return true;
-    if (WHISPER_HALLUCINATIONS.some(h =>
-      cleaned === h.toLowerCase() || cleaned === h.toLowerCase() + "."
-    )) return true;
-    const words = cleaned.split(' ');
-    if (words.length > 3) {
+    const c = text.toLowerCase().trim();
+    if (c.length < 4) return true;
+    if (HALLUCINATIONS.some(h => c === h || c === h + ".")) return true;
+    const words = c.split(" ");
+    if (words.length > 4) {
       const uniqueWords = new Set(words);
       if (uniqueWords.size / words.length < 0.4) return true;
     }
@@ -120,12 +116,13 @@ const NewTransaction = () => {
         setActiveStream(null);
         const blob = new Blob(chunksRef.current, { type: getSupportedMimeType() || "audio/webm" });
 
-        if (blob.size < 5000) {
+        if (blob.size < 8000) {
           toast({
-            title: "Enregistrement trop court",
+            title: "🎤 Trop court",
             description: "Parle pendant au moins 2 secondes",
             variant: "destructive",
           });
+          setIsRecording(false);
           return;
         }
         
@@ -195,11 +192,11 @@ const NewTransaction = () => {
       const sttData = await sttResp.json();
       const transcript = sttData?.transcript;
       
-      if (!transcript?.trim() || isHallucination(transcript)) {
+        if (!transcript?.trim() || isHallucination(transcript)) {
         setTranscriptText(null);
         toast({
-          title: "🎤 Je n'ai pas bien saisi",
-          description: "Je n'ai rien entendu ou mal compris. Veux-tu réessayer ?",
+            title: "Je n'ai pas compris",
+            description: "Parle clairement ex: J'ai payé taxi 3000 francs",
           variant: "destructive",
         });
         setShowRetryVoice(true);
@@ -434,22 +431,22 @@ const NewTransaction = () => {
             exit={{ opacity: 0, y: -10 }}
             className="glass-card rounded-2xl p-4 mb-4 flex flex-col gap-3"
           >
-            <p className="text-sm text-muted-foreground text-center">
-              Je n'ai pas pu saisir ta dépense. Essaie de parler clairement, exemple :
+              <p className="text-sm text-center text-muted-foreground">
+                Je n'ai pas saisi ta dépense.
             </p>
-            <p className="text-sm text-primary text-center font-medium">
-              « J'ai payé taxi 3000 francs »
+              <p className="text-xs text-primary text-center font-medium">
+                Exemple : "Taxi 3000 francs Wave"
             </p>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                  variant="glass"
                 className="flex-1"
                 onClick={() => setShowRetryVoice(false)}
               >
                 Annuler
               </Button>
               <Button
-                variant="default"
+                  variant="hero"
                 className="flex-1"
                 onClick={() => {
                   setShowRetryVoice(false);
