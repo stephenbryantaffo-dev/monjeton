@@ -155,6 +155,30 @@ const Assistant = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // --- Anti-hallucination filter ---
+  const WHISPER_HALLUCINATIONS = [
+    "merci", "merci.", "merci d'avoir regardé",
+    "sous-titres", "sous-titrage", "transcription",
+    "music", "musique", "♪", "applaudissements",
+    "thank you", "thanks for watching",
+    "you", ".", " ", "...", "bye", "au revoir",
+    "sous-titres réalisés", "sous-titres par",
+  ];
+
+  const isHallucination = (text: string): boolean => {
+    const cleaned = text.toLowerCase().trim();
+    if (cleaned.length < 3) return true;
+    if (WHISPER_HALLUCINATIONS.some(h =>
+      cleaned === h.toLowerCase() || cleaned === h.toLowerCase() + "."
+    )) return true;
+    const words = cleaned.split(' ');
+    if (words.length > 3) {
+      const uniqueWords = new Set(words);
+      if (uniqueWords.size / words.length < 0.4) return true;
+    }
+    return false;
+  };
+
   // --- Speech Synthesis with quality voice ---
   const speak = useCallback((text: string, index: number) => {
     if (speakingId === index) {
@@ -162,20 +186,50 @@ const Assistant = () => {
       setSpeakingId(null);
       return;
     }
+
+    if (!window.speechSynthesis) {
+      toast({
+        title: "Lecture non supportée",
+        description: "Ton navigateur ne supporte pas la synthèse vocale",
+        variant: "destructive",
+      });
+      return;
+    }
+
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "fr-FR";
     utterance.rate = 1.1;
-    const voice = getFrenchVoice();
-    if (voice) utterance.voice = voice;
+
+    const setVoice = () => {
+      const voices = speechSynthesis.getVoices();
+      const frVoice = voices.find(v => v.lang === "fr-FR" || v.lang === "fr");
+      if (frVoice) utterance.voice = frVoice;
+    };
+
+    if (speechSynthesis.getVoices().length > 0) {
+      setVoice();
+    } else {
+      speechSynthesis.onvoiceschanged = setVoice;
+    }
+
     utterance.onend = () => {
       setSpeakingId(null);
-      // In continuous mode, re-activate mic after TTS finishes
       if (continuousModeRef.current) {
         setTimeout(() => startRecording(), 400);
       }
     };
-    utterance.onerror = () => setSpeakingId(null);
+    utterance.onerror = (e) => {
+      setSpeakingId(null);
+      if (e.error !== "interrupted") {
+        toast({
+          title: "Erreur de lecture",
+          description: "Impossible de lire ce message",
+          variant: "destructive",
+        });
+      }
+    };
+
     setSpeakingId(index);
     speechSynthesis.speak(utterance);
   }, [speakingId]);
