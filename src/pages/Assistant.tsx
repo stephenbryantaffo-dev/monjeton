@@ -170,53 +170,35 @@ const Assistant = () => {
       setSpeakingId(null);
       return;
     }
-
     if (!window.speechSynthesis) {
       toast({
-        title: "Lecture non supportée",
-        description: "Ton navigateur ne supporte pas la synthèse vocale",
+        title: "Non supporté",
+        description: "Lecture vocale non disponible sur ce navigateur",
         variant: "destructive",
       });
       return;
     }
-
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "fr-FR";
-    utterance.rate = 1.1;
-
-    const setVoice = () => {
+    utterance.rate = 1.05;
+    const loadVoice = () => {
       const voices = speechSynthesis.getVoices();
-      const frVoice = voices.find(v => v.lang === "fr-FR" || v.lang === "fr");
-      if (frVoice) utterance.voice = frVoice;
+      const fr = voices.find(v => v.lang === "fr-FR" || v.lang.startsWith("fr"));
+      if (fr) utterance.voice = fr;
     };
-
-    if (speechSynthesis.getVoices().length > 0) {
-      setVoice();
-    } else {
-      speechSynthesis.onvoiceschanged = setVoice;
-    }
-
-    utterance.onend = () => {
-      setSpeakingId(null);
-      if (continuousModeRef.current) {
-        setTimeout(() => startRecording(), 400);
-      }
-    };
+    if (speechSynthesis.getVoices().length > 0) loadVoice();
+    else speechSynthesis.onvoiceschanged = loadVoice;
+    utterance.onend = () => setSpeakingId(null);
     utterance.onerror = (e) => {
       setSpeakingId(null);
-      if (e.error !== "interrupted") {
-        toast({
-          title: "Erreur de lecture",
-          description: "Impossible de lire ce message",
-          variant: "destructive",
-        });
+      if (e.error !== "interrupted" && e.error !== "canceled") {
+        toast({ title: "Lecture impossible", variant: "destructive" });
       }
     };
-
     setSpeakingId(index);
     speechSynthesis.speak(utterance);
-  }, [speakingId]);
+  }, [speakingId, toast]);
 
   // --- File Attachment ---
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
