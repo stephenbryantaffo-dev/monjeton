@@ -22,6 +22,10 @@ const Transactions = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const PAGE_SIZE = 50;
 
   // Filters
   const [filterCategory, setFilterCategory] = useState("all");
@@ -30,25 +34,50 @@ const Transactions = () => {
   const [filterMinAmount, setFilterMinAmount] = useState("");
   const [filterMaxAmount, setFilterMaxAmount] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = async (pageNum = 0) => {
     if (!user) return;
-    const [{ data: txData }, { data: catData }, { data: walData }] = await Promise.all([
-      supabase.from("transactions").select("*, categories(name, icon, color)").eq("user_id", user.id).order("date", { ascending: false }),
-      supabase.from("categories").select("id, name").eq("user_id", user.id),
-      supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
-    ]);
-    setTransactions(txData || []);
-    setCategories(catData || []);
-    setWallets(walData || []);
-    setLoading(false);
+    setLoading(true);
+    setError(null);
+    try {
+      const from = pageNum * PAGE_SIZE;
+      const [{ data: txData, error: txErr }, { data: catData }, { data: walData }] =
+        await Promise.all([
+          supabase.from("transactions")
+            .select("*, categories(name, icon, color)")
+            .eq("user_id", user.id)
+            .order("date", { ascending: false })
+            .range(from, from + PAGE_SIZE - 1),
+          supabase.from("categories").select("id, name").eq("user_id", user.id),
+          supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
+        ]);
+      if (txErr) throw txErr;
+      if (pageNum === 0) setTransactions(txData || []);
+      else setTransactions(prev => [...prev, ...(txData || [])]);
+      setHasMore((txData || []).length === PAGE_SIZE);
+      setCategories(catData || []);
+      setWallets(walData || []);
+    } catch {
+      setError("Impossible de charger les transactions.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { setPage(0); fetchData(0); }, [user]);
 
   const handleDelete = async (id: string) => {
-    await supabase.from("transactions").delete().eq("id", id);
-    toast({ title: "Transaction supprimée" });
-    fetchData();
+    try {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      toast({ title: "Transaction supprimée" });
+    } catch {
+      toast({
+        title: "Erreur de suppression",
+        description: "Réessaie dans quelques secondes",
+        variant: "destructive",
+      });
+    }
   };
 
   const clearFilters = () => {
@@ -177,7 +206,15 @@ const Transactions = () => {
       )}
 
       <div className="space-y-2">
-        {loading
+        {error && (
+          <div className="glass-card rounded-2xl p-5 text-center mb-4">
+            <p className="text-destructive text-sm mb-3">{error}</p>
+            <button onClick={() => { setPage(0); fetchData(0); }} className="text-primary text-sm">
+              Réessayer
+            </button>
+          </div>
+        )}
+        {loading && page === 0
           ? Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)
           : filtered.map((t, i) => (
             <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }} className="glass-card rounded-xl p-3 flex items-center gap-3">
@@ -197,6 +234,19 @@ const Transactions = () => {
           ))}
         {!loading && filtered.length === 0 && (
           <p className="text-center text-muted-foreground text-sm py-8">Aucune transaction</p>
+        )}
+        {!loading && hasMore && filtered.length >= PAGE_SIZE && (
+          <Button
+            variant="glass"
+            className="w-full mt-3"
+            onClick={() => {
+              const next = page + 1;
+              setPage(next);
+              fetchData(next);
+            }}
+          >
+            {loading ? "Chargement..." : "Charger plus de transactions"}
+          </Button>
         )}
       </div>
     </DashboardLayout>
