@@ -34,8 +34,8 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
+    const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_KEY) throw new Error("ANTHROPIC_API_KEY manquant");
 
     // Validate messages
     let messages = Array.isArray(body.messages) ? body.messages.slice(-MAX_MESSAGES) : [];
@@ -133,8 +133,8 @@ RÈGLES ABSOLUES :
 - Si on t'envoie un fichier, résume son contenu en 1-2 phrases.
 ${userContext}`;
 
-    // Build messages with multimodal support
-    const aiMessages: any[] = [{ role: "system", content: systemPrompt }];
+    // Build Anthropic-compatible messages (system is separate)
+    const conversationMessages: any[] = [];
 
     for (const msg of messages) {
       if (msg.role === "user" && attachments && attachments.length > 0) {
@@ -146,8 +146,12 @@ ${userContext}`;
           for (const att of attachments) {
             if (att.type?.startsWith("image/")) {
               content.push({
-                type: "image_url",
-                image_url: { url: `data:${att.type};base64,${att.data}` }
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: att.type,
+                  data: att.data,
+                },
               });
             } else {
               try {
@@ -158,44 +162,106 @@ ${userContext}`;
               }
             }
           }
-          aiMessages.push({ role: "user", content });
+          conversationMessages.push({ role: "user", content });
           continue;
         }
       }
-      aiMessages.push({ role: msg.role, content: msg.content });
+      conversationMessages.push({ role: msg.role, content: msg.content });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: aiMessages,
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: conversationMessages,
         stream: true,
       }),
     });
 
     if (!response.ok) {
+      const errText = await response.text();
+      console.error("Anthropic API error:", response.status, errText);
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Trop de requêtes, réessaie dans quelques instants." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Crédits IA épuisés." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      console.error("AI gateway error:", response.status);
       return new Response(JSON.stringify({ error: "Erreur du service IA" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(response.body, {
+    // Transform Anthropic SSE stream → OpenAI-compatible SSE format
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    (async () => {
+      try {
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (!data) continue;
+
+            try {
+              const parsed = JSON.parse(data);
+
+              if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
+                const openAIFormat = {
+                  choices: [{ delta: { content: parsed.delta.text } }],
+                };
+                await writer.write(encoder.encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
+              } else if (parsed.type === "message_stop") {
+                await writer.write(encoder.encode("data: [DONE]\n\n"));
+              }
+            } catch { /* ignore parse errors */ }
+          }
+        }
+
+        // Flush remaining buffer
+        if (buffer.trim()) {
+          for (const line of buffer.split("\n")) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (!data) continue;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
+                const openAIFormat = { choices: [{ delta: { content: parsed.delta.text } }] };
+                await writer.write(encoder.encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
+              }
+            } catch { /* ignore */ }
+          }
+        }
+
+        await writer.write(encoder.encode("data: [DONE]\n\n"));
+      } catch (err) {
+        console.error("Stream transform error:", err);
+      } finally {
+        await writer.close();
+      }
+    })();
+
+    return new Response(readable, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
