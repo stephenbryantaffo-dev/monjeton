@@ -193,12 +193,12 @@ const NewTransaction = () => {
 
       const sttData = await sttResp.json();
       const transcript = sttData?.transcript;
-      
-        if (!transcript?.trim() || isHallucination(transcript)) {
+
+      if (sttData?.empty === true || !transcript?.trim() || isHallucination(transcript)) {
         setTranscriptText(null);
         toast({
-            title: "Je n'ai pas compris",
-            description: "Parle clairement ex: J'ai payé taxi 3000 francs",
+          title: "🎤 Rien détecté",
+          description: "Parle clairement et plus près du micro",
           variant: "destructive",
         });
         setShowRetryVoice(true);
