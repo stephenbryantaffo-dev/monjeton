@@ -327,12 +327,13 @@ const Assistant = () => {
         body: formData,
       });
       if (!resp.ok) throw new Error("Transcription failed");
-      const { transcript } = await resp.json();
+      const sttData = await resp.json();
+      const transcript = sttData?.transcript;
 
-      if (!transcript?.trim() || isHallucination(transcript)) {
+      if (sttData?.empty === true || !transcript?.trim() || isHallucination(transcript)) {
         setMessages(prev => prev.map((m, i) =>
           i === prev.length - 1
-            ? { ...m, content: "❌ Je n'ai rien entendu. Parle plus clairement près du micro." }
+            ? { ...m, content: "🎤 Je n'ai rien entendu. Parle directement dans le micro et réessaie." }
             : m
         ));
         setIsLoading(false);
