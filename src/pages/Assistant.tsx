@@ -305,8 +305,8 @@ const Assistant = () => {
   };
 
   const transcribeAndSend = async (audioBlob: Blob) => {
-    if (audioBlob.size < 8000) {
-      toast({ title: "Enregistrement trop court", variant: "destructive" });
+    if (audioBlob.size < 3000) {
+      toast({ title: "Enregistrement trop court", description: "Maintiens le bouton plus longtemps", variant: "destructive" });
       setIsLoading(false);
       return;
     }
