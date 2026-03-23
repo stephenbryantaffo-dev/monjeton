@@ -5,13 +5,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
+const MIN_AUDIO_SIZE = 3000;
+
+const HALLUCINATIONS = [
+  "sous-titres", "transcription", "merci d'avoir",
+  "sous-titrage", "musique", "♪", "inaudible",
+  "[inaudible]", "[silence]", "aucun son",
+  "pas de voix", "audio vide", "rien à transcrire"
+];
+
+function isHallucination(text: string): boolean {
+  const cleaned = text.trim();
+  if (cleaned.length < 3) return true;
+  if (cleaned === '""' || cleaned === "''") return true;
+  const lower = cleaned.toLowerCase();
+  if (HALLUCINATIONS.some(h => lower.includes(h))) return true;
+  const words = lower.split(' ');
+  if (words.length > 5 && new Set(words).size / words.length < 0.4) return true;
+  return false;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // JWT authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
@@ -43,14 +61,19 @@ serve(async (req) => {
       });
     }
 
-    // Validate file size
+    // Validation taille minimum — audio trop court = silence
+    if (audioFile.size < MIN_AUDIO_SIZE) {
+      return new Response(JSON.stringify({ transcript: "", empty: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (audioFile.size > MAX_AUDIO_SIZE) {
       return new Response(JSON.stringify({ error: "Fichier audio trop volumineux (max 10 Mo)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Convert audio to base64 in chunks to avoid stack overflow
     const arrayBuffer = await audioFile.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
     let binary = "";
@@ -61,9 +84,7 @@ serve(async (req) => {
     }
     const base64Audio = btoa(binary);
 
-    // Detect actual MIME type from the uploaded file
     const mimeType = audioFile.type || "audio/webm";
-    // Map MIME to format string for the API
     const formatMap: Record<string, string> = {
       "audio/webm": "webm",
       "audio/mp4": "mp4",
@@ -87,12 +108,28 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "Tu es un transcripteur. Transcris EXACTEMENT ce que dit l'audio en français. Retourne UNIQUEMENT le texte transcrit, rien d'autre. Pas de commentaire, pas d'explication."
+            content: `Tu es un transcripteur audio spécialisé dans le français ivoirien et ouest-africain.
+
+RÈGLE ABSOLUE NUMÉRO 1 : Si tu n'entends PAS de voix humaine claire dans cet audio, retourne EXACTEMENT et UNIQUEMENT cette string vide : ""
+
+RÈGLE ABSOLUE NUMÉRO 2 : N'invente JAMAIS de texte. N'ajoute jamais de mots que tu n'as pas entendus. N'ajoute jamais de ponctuation inventée. N'ajoute jamais de commentaires.
+
+RÈGLE ABSOLUE NUMÉRO 3 : Si l'audio contient uniquement du bruit, du silence, de la musique, ou est incompréhensible, retourne EXACTEMENT : ""
+
+Si et SEULEMENT si tu entends clairement une voix humaine qui parle : transcris mot pour mot ce qu'elle dit, en français, sans aucun ajout.
+
+Contexte : L'utilisateur gère ses finances. Il peut dire des choses comme :
+"j'ai payé taxi 3000 francs"
+"reçu 50 mille Wave"
+"garba 500 alloco 1000"
+
+RETOURNE UNIQUEMENT le texte transcrit ou "".
+JAMAIS de commentaire. JAMAIS d'explication.`
           },
           {
             role: "user",
             content: [
-              { type: "text", text: "Transcris cet audio mot à mot :" },
+              { type: "text", text: 'Transcris cet audio. Si aucune voix humaine claire, retourne uniquement deux guillemets vides : ""' },
               {
                 type: "input_audio",
                 input_audio: {
@@ -114,7 +151,19 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    const transcript = String(result.choices?.[0]?.message?.content || "").slice(0, 2000);
+    let transcript = String(result.choices?.[0]?.message?.content || "").slice(0, 2000);
+
+    // Nettoyer les guillemets vides retournés par le modèle
+    if (transcript.trim() === '""' || transcript.trim() === "''") {
+      transcript = "";
+    }
+
+    // Filtre anti-hallucination post-transcription
+    if (!transcript.trim() || isHallucination(transcript)) {
+      return new Response(JSON.stringify({ transcript: "", empty: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ transcript }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
