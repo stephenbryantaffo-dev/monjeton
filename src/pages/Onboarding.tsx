@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Avec parents", emoji: "👨‍👧", value: "parents" },
     ],
   },
-  // Income — salarié / entrepreneur / autre
   {
     id: "income_range",
     title: "Ton revenu mensuel se situe dans quelle tranche ?",
@@ -77,7 +76,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Plus de 1 500 000 FCFA", emoji: "💜", value: "1.5M+" },
     ],
   },
-  // Income — étudiant
   {
     id: "income_range",
     title: "L'argent que tu reçois par mois ?",
@@ -89,7 +87,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Plus de 150 000 FCFA", emoji: "🔵", value: "150k+" },
     ],
   },
-  // Income — parent
   {
     id: "income_range",
     title: "Les revenus de ton foyer par mois ?",
@@ -102,7 +99,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Plus de 1 500 000 FCFA", emoji: "💜", value: "1.5M+" },
     ],
   },
-  // Dependents — parent
   {
     id: "dependents_count",
     title: "Combien de personnes dépendent de toi ?",
@@ -114,7 +110,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Plus de 6", emoji: "👨‍👩‍👧‍👦", value: "6+" },
     ],
   },
-  // Main expense
   {
     id: "main_expense",
     title: "Ta plus grosse dépense mensuelle ?",
@@ -129,7 +124,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Loisirs / Sorties", emoji: "🎮", value: "loisirs" },
     ],
   },
-  // Subscriptions
   {
     id: "subscriptions",
     title: "Tu as des abonnements en cours ?",
@@ -143,7 +137,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Aucun", emoji: "❌", value: "aucun" },
     ],
   },
-  // Entrepreneur specific
   {
     id: "has_employees",
     title: "Tu as des employés ?",
@@ -166,7 +159,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Plus de 3 ans", emoji: "🏆", value: "3ans+" },
     ],
   },
-  // Children schooled — parent with 3+ dependents
   {
     id: "children_schooled",
     title: "Les enfants sont scolarisés ?",
@@ -177,7 +169,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Non", emoji: "❌", value: "non" },
     ],
   },
-  // Beauty budget — women
   {
     id: "beauty_budget_range",
     title: "Tu alloues combien à ta beauté/vêtements par mois ?",
@@ -189,7 +180,6 @@ const ALL_QUESTIONS: StepQuestion[] = [
       { label: "Plus de 75 000 F", emoji: "💜", value: "75k+" },
     ],
   },
-  // Financial goal — always
   {
     id: "financial_goal",
     title: "Ton objectif principal avec Mon Jeton ?",
@@ -218,19 +208,25 @@ const Onboarding = () => {
   const [direction, setDirection] = useState(1);
   const [saving, setSaving] = useState(false);
   const [multiSelection, setMultiSelection] = useState<string[]>([]);
+  const [shouldSave, setShouldSave] = useState(false);
 
   // Compute visible questions based on current answers
   const visibleQuestions = useMemo(() => {
-    // We need to filter but also deduplicate by id (only first matching condition)
     const seen = new Set<string>();
     return ALL_QUESTIONS.filter((q) => {
       if (q.condition && !q.condition(answers)) return false;
-      // For income_range, only show first matching
       if (seen.has(q.id) && ["income_range"].includes(q.id)) return false;
       seen.add(q.id);
       return true;
     });
   }, [answers]);
+
+  // Stabilize currentIndex when visibleQuestions shrinks
+  useEffect(() => {
+    if (currentIndex >= visibleQuestions.length && visibleQuestions.length > 0) {
+      setCurrentIndex(visibleQuestions.length - 1);
+    }
+  }, [visibleQuestions.length, currentIndex]);
 
   const totalSteps = visibleQuestions.length;
   const currentQuestion = visibleQuestions[currentIndex];
@@ -261,13 +257,12 @@ const Onboarding = () => {
 
   const goNext = useCallback(() => {
     if (!currentQuestion) return;
-    // Save multi selection into answers
     if (currentQuestion.multi) {
       setAnswers((prev) => ({ ...prev, [currentQuestion.id]: multiSelection }));
       setMultiSelection([]);
     }
     if (isLast) {
-      handleSave();
+      setShouldSave(true);
     } else {
       setDirection(1);
       setCurrentIndex((i) => i + 1);
@@ -276,25 +271,32 @@ const Onboarding = () => {
 
   const handleSkip = useCallback(() => {
     if (isLast) {
-      handleSave();
+      setShouldSave(true);
     } else {
       setDirection(1);
       setCurrentIndex((i) => i + 1);
     }
   }, [isLast]);
 
+  // Trigger save via effect to avoid stale closure
+  useEffect(() => {
+    if (shouldSave) {
+      setShouldSave(false);
+      handleSave();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldSave]);
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
 
-    // Merge multi answers
     const finalAnswers = { ...answers };
     if (currentQuestion?.multi) {
       (finalAnswers as any)[currentQuestion.id] = multiSelection;
     }
 
     try {
-      // Save profile data
       const profileUpdate: Record<string, any> = {
         profile_type: finalAnswers.profile_type || null,
         gender: finalAnswers.gender || null,
@@ -331,7 +333,6 @@ const Onboarding = () => {
       }
 
       if (extraCategories.length > 0) {
-        // Check existing to avoid duplicates
         const { data: existing } = await supabase
           .from("categories")
           .select("name")
