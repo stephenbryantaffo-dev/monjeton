@@ -57,7 +57,7 @@ const Login = () => {
       });
     } else {
       resetRateLimit(`login:${email}`);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   };
 
