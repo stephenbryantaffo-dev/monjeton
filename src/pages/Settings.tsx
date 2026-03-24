@@ -147,6 +147,33 @@ const Settings = () => {
         ))}
       </div>
 
+      {/* Mes badges */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Award className="w-4 h-4" /> Mes badges
+        </h3>
+        {earnedBadges.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun badge obtenu pour le moment. Continue à noter tes dépenses !</p>
+        ) : (
+          <div className="space-y-2">
+            {earnedBadges.map((b, i) => {
+              const badge = BADGES_CI[b.badge_id];
+              if (!badge) return null;
+              const monthName = new Date(b.year, b.month - 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+              return (
+                <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-secondary/50">
+                  <span className="text-2xl">{badge.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{badge.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{monthName}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Legal links */}
       <div className="space-y-1 mb-4">
         <Link to="/privacy" className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
