@@ -144,6 +144,33 @@ export type Database = {
           },
         ]
       }
+      daily_reminders: {
+        Row: {
+          date: string
+          id: string
+          reminded_at: string
+          transactions_count: number
+          user_id: string
+          user_responded: boolean
+        }
+        Insert: {
+          date?: string
+          id?: string
+          reminded_at?: string
+          transactions_count?: number
+          user_id: string
+          user_responded?: boolean
+        }
+        Update: {
+          date?: string
+          id?: string
+          reminded_at?: string
+          transactions_count?: number
+          user_id?: string
+          user_responded?: boolean
+        }
+        Relationships: []
+      }
       debts: {
         Row: {
           amount: number
