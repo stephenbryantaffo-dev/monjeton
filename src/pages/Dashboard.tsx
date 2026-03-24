@@ -454,6 +454,14 @@ const Dashboard = () => {
           <MessageCircle className="w-6 h-6 text-primary-foreground" />
         </Link>
       </div>
+
+      <DailyReminderModal
+        open={dailyReminder.show}
+        onClose={() => setDailyReminder({ show: false, txCount: 0 })}
+        txCount={dailyReminder.txCount}
+        firstName={profile?.full_name?.split(" ")[0] || ""}
+        profileType={profile?.profile_type}
+      />
     </DashboardLayout>
   );
 };
