@@ -44,6 +44,20 @@ const Settings = () => {
   const [newPin, setNewPin] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("monthly_badges")
+      .select("badge_id, month, year")
+      .eq("user_id", user.id)
+      .order("year", { ascending: false })
+      .order("month", { ascending: false })
+      .then(({ data }) => {
+        if (data) setEarnedBadges(data);
+      });
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
