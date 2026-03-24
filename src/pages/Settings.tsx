@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { BADGES_CI } from "@/lib/badgeCalculator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +44,20 @@ const Settings = () => {
   const [newPin, setNewPin] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("monthly_badges")
+      .select("badge_id, month, year")
+      .eq("user_id", user.id)
+      .order("year", { ascending: false })
+      .order("month", { ascending: false })
+      .then(({ data }) => {
+        if (data) setEarnedBadges(data);
+      });
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -130,6 +145,33 @@ const Settings = () => {
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </Link>
         ))}
+      </div>
+
+      {/* Mes badges */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Award className="w-4 h-4" /> Mes badges
+        </h3>
+        {earnedBadges.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun badge obtenu pour le moment. Continue à noter tes dépenses !</p>
+        ) : (
+          <div className="space-y-2">
+            {earnedBadges.map((b, i) => {
+              const badge = BADGES_CI[b.badge_id];
+              if (!badge) return null;
+              const monthName = new Date(b.year, b.month - 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+              return (
+                <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-secondary/50">
+                  <span className="text-2xl">{badge.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{badge.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{monthName}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Legal links */}

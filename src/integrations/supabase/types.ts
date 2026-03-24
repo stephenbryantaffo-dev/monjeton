@@ -234,6 +234,33 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_badges: {
+        Row: {
+          badge_id: string
+          created_at: string
+          id: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          id?: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          id?: string
+          month?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       monthly_summaries: {
         Row: {
           assistant_summary: string | null

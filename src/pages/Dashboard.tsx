@@ -20,6 +20,8 @@ import { CalendarWithPresets } from "@/components/ui/calendar-with-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import DailyReminderModal from "@/components/DailyReminderModal";
+import MonthlyBadge from "@/components/MonthlyBadge";
+import { calculateMonthlyBadge, type Badge } from "@/lib/badgeCalculator";
 const trendModes = ["Par jour", "Par mois"];
 
 const Dashboard = () => {
@@ -38,6 +40,7 @@ const Dashboard = () => {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [dailyReminder, setDailyReminder] = useState<{ show: boolean; txCount: number }>({ show: false, txCount: 0 });
   const [streak, setStreak] = useState(0);
+  const [monthlyBadge, setMonthlyBadge] = useState<{ show: boolean; badge: Badge | null; month: string; savingsRate: number }>({ show: false, badge: null, month: "", savingsRate: 0 });
 
   // Long press for voice shortcut
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -146,6 +149,50 @@ const Dashboard = () => {
 
     calcStreak();
   }, [user, dailyReminder]);
+
+  // Monthly badge check (on 1st of month)
+  useEffect(() => {
+    const checkMonthlyBadge = async () => {
+      if (!user || !profile) return;
+      const today = new Date();
+      if (today.getDate() !== 1) return;
+
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthKey = `badge_${lastMonth.getFullYear()}_${lastMonth.getMonth()}`;
+      if (localStorage.getItem(lastMonthKey)) return;
+
+      const startDate = lastMonth.toISOString().split("T")[0];
+      const endDate = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split("T")[0];
+
+      const { data: monthTx } = await supabase
+        .from("transactions")
+        .select("*, categories(name, icon, color)")
+        .eq("user_id", user.id)
+        .gte("date", startDate)
+        .lte("date", endDate);
+
+      if (!monthTx || monthTx.length === 0) return;
+
+      const badge = calculateMonthlyBadge(monthTx, profile);
+      const totalIncome = monthTx.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+      const totalExpense = monthTx.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+      const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+
+      const monthName = lastMonth.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+
+      await supabase.from("monthly_badges").insert({
+        user_id: user.id,
+        month: lastMonth.getMonth() + 1,
+        year: lastMonth.getFullYear(),
+        badge_id: badge.id,
+      });
+
+      localStorage.setItem(lastMonthKey, "shown");
+      setMonthlyBadge({ show: true, badge, month: monthName, savingsRate });
+    };
+
+    checkMonthlyBadge();
+  }, [user, profile]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -461,6 +508,13 @@ const Dashboard = () => {
         txCount={dailyReminder.txCount}
         firstName={profile?.full_name?.split(" ")[0] || ""}
         profileType={profile?.profile_type}
+      />
+      <MonthlyBadge
+        open={monthlyBadge.show}
+        onClose={() => setMonthlyBadge(prev => ({ ...prev, show: false }))}
+        badge={monthlyBadge.badge}
+        month={monthlyBadge.month}
+        savingsRate={monthlyBadge.savingsRate}
       />
     </DashboardLayout>
   );
