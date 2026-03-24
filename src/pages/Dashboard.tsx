@@ -509,6 +509,13 @@ const Dashboard = () => {
         firstName={profile?.full_name?.split(" ")[0] || ""}
         profileType={profile?.profile_type}
       />
+      <MonthlyBadge
+        open={monthlyBadge.show}
+        onClose={() => setMonthlyBadge(prev => ({ ...prev, show: false }))}
+        badge={monthlyBadge.badge}
+        month={monthlyBadge.month}
+        savingsRate={monthlyBadge.savingsRate}
+      />
     </DashboardLayout>
   );
 };
