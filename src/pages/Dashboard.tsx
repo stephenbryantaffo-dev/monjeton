@@ -20,6 +20,8 @@ import { CalendarWithPresets } from "@/components/ui/calendar-with-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import DailyReminderModal from "@/components/DailyReminderModal";
+import MonthlyBadge from "@/components/MonthlyBadge";
+import { calculateMonthlyBadge, type Badge } from "@/lib/badgeCalculator";
 const trendModes = ["Par jour", "Par mois"];
 
 const Dashboard = () => {
