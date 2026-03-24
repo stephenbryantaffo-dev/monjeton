@@ -19,7 +19,7 @@ import { CardSkeleton, ListItemSkeleton, ChartSkeleton } from "@/components/Dash
 import { CalendarWithPresets } from "@/components/ui/calendar-with-presets";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
+import DailyReminderModal from "@/components/DailyReminderModal";
 const trendModes = ["Par jour", "Par mois"];
 
 const Dashboard = () => {
@@ -36,6 +36,8 @@ const Dashboard = () => {
   const [newTxCount, setNewTxCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [dailyReminder, setDailyReminder] = useState<{ show: boolean; txCount: number }>({ show: false, txCount: 0 });
+  const [streak, setStreak] = useState(0);
 
   // Long press for voice shortcut
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,6 +81,71 @@ const Dashboard = () => {
       save();
     };
   }, []);
+
+  // Daily reminder check
+  useEffect(() => {
+    const checkDailyReminder = async () => {
+      if (!user) return;
+      const today = new Date().toISOString().split("T")[0];
+      const hour = new Date().getHours();
+      if (hour < 18 || hour > 22) return;
+
+      const { data: reminder } = await supabase
+        .from("daily_reminders")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("date", today)
+        .maybeSingle();
+
+      if (reminder) return;
+
+      const { data: todayTx } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("date", today);
+
+      const txCount = todayTx?.length || 0;
+      setDailyReminder({ show: true, txCount });
+
+      await supabase.from("daily_reminders").insert({
+        user_id: user.id,
+        date: today,
+        transactions_count: txCount,
+      });
+    };
+
+    checkDailyReminder();
+  }, [user]);
+
+  // Streak calculation
+  useEffect(() => {
+    const calcStreak = async () => {
+      if (!user) return;
+      const { data: reminders } = await supabase
+        .from("daily_reminders")
+        .select("date, transactions_count")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false })
+        .limit(30);
+
+      if (!reminders || reminders.length === 0) return;
+
+      let s = 0;
+      const today = new Date();
+      for (let i = 0; i < reminders.length; i++) {
+        const expected = new Date(today);
+        expected.setDate(today.getDate() - i);
+        const expectedStr = expected.toISOString().split("T")[0];
+        if (reminders[i]?.date === expectedStr && reminders[i]?.transactions_count > 0) {
+          s++;
+        } else break;
+      }
+      setStreak(s);
+    };
+
+    calcStreak();
+  }, [user, dailyReminder]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -198,6 +265,15 @@ const Dashboard = () => {
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
           <h1 className="text-2xl font-bold text-foreground">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
+        {streak > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-full font-semibold mt-1"
+          >
+            🔥 {streak} jour{streak > 1 ? "s" : ""} de suite
+          </motion.div>
+        )}
       </div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
@@ -378,6 +454,14 @@ const Dashboard = () => {
           <MessageCircle className="w-6 h-6 text-primary-foreground" />
         </Link>
       </div>
+
+      <DailyReminderModal
+        open={dailyReminder.show}
+        onClose={() => setDailyReminder({ show: false, txCount: 0 })}
+        txCount={dailyReminder.txCount}
+        firstName={profile?.full_name?.split(" ")[0] || ""}
+        profileType={profile?.profile_type}
+      />
     </DashboardLayout>
   );
 };
