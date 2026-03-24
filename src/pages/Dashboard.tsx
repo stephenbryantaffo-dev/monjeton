@@ -150,6 +150,50 @@ const Dashboard = () => {
     calcStreak();
   }, [user, dailyReminder]);
 
+  // Monthly badge check (on 1st of month)
+  useEffect(() => {
+    const checkMonthlyBadge = async () => {
+      if (!user || !profile) return;
+      const today = new Date();
+      if (today.getDate() !== 1) return;
+
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthKey = `badge_${lastMonth.getFullYear()}_${lastMonth.getMonth()}`;
+      if (localStorage.getItem(lastMonthKey)) return;
+
+      const startDate = lastMonth.toISOString().split("T")[0];
+      const endDate = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split("T")[0];
+
+      const { data: monthTx } = await supabase
+        .from("transactions")
+        .select("*, categories(name, icon, color)")
+        .eq("user_id", user.id)
+        .gte("date", startDate)
+        .lte("date", endDate);
+
+      if (!monthTx || monthTx.length === 0) return;
+
+      const badge = calculateMonthlyBadge(monthTx, profile);
+      const totalIncome = monthTx.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+      const totalExpense = monthTx.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+      const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+
+      const monthName = lastMonth.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+
+      await supabase.from("monthly_badges").insert({
+        user_id: user.id,
+        month: lastMonth.getMonth() + 1,
+        year: lastMonth.getFullYear(),
+        badge_id: badge.id,
+      });
+
+      localStorage.setItem(lastMonthKey, "shown");
+      setMonthlyBadge({ show: true, badge, month: monthName, savingsRate });
+    };
+
+    checkMonthlyBadge();
+  }, [user, profile]);
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     if (activePeriod === 2 && !customRange?.from) return;
