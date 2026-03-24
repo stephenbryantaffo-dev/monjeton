@@ -265,6 +265,15 @@ const Dashboard = () => {
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
           <h1 className="text-2xl font-bold text-foreground">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
+        {streak > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-full font-semibold mt-1"
+          >
+            🔥 {streak} jour{streak > 1 ? "s" : ""} de suite
+          </motion.div>
+        )}
       </div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
