@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 // Lazy load non-critical pages
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const Transactions = lazy(() => import("./pages/Transactions"));
