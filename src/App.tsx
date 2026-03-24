@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 // Lazy load non-critical pages
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const Transactions = lazy(() => import("./pages/Transactions"));
@@ -47,6 +48,18 @@ const PageLoader = () => (
 
 const queryClient = new QueryClient();
 
+const OnboardingRedirect = ({ children }: { children: React.ReactNode }) => {
+  const { profile } = useAuth();
+  const location = window.location.pathname;
+
+  // If onboarding not completed, redirect to /onboarding (unless already there)
+  if (profile && profile.onboarding_completed === false && location !== "/onboarding") {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AppContent = () => {
   const { isLocked } = usePrivacy();
   const { user } = useAuth();
@@ -65,19 +78,20 @@ const AppContent = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
-        <Route path="/transactions/new" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
-        <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
-        <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-        <Route path="/savings" element={<ProtectedRoute><Savings /></ProtectedRoute>} />
-        <Route path="/debts" element={<ProtectedRoute><Debts /></ProtectedRoute>} />
-        <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
-        <Route path="/tontine" element={<ProtectedRoute><Tontine /></ProtectedRoute>} />
-        <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><OnboardingRedirect><Dashboard /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/transactions" element={<ProtectedRoute><OnboardingRedirect><Transactions /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/transactions/new" element={<ProtectedRoute><OnboardingRedirect><NewTransaction /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/categories" element={<ProtectedRoute><OnboardingRedirect><Categories /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/wallets" element={<ProtectedRoute><OnboardingRedirect><Wallets /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><OnboardingRedirect><Reports /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/savings" element={<ProtectedRoute><OnboardingRedirect><Savings /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/debts" element={<ProtectedRoute><OnboardingRedirect><Debts /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/assistant" element={<ProtectedRoute><OnboardingRedirect><Assistant /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><OnboardingRedirect><Settings /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/budgets" element={<ProtectedRoute><OnboardingRedirect><Budgets /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/tontine" element={<ProtectedRoute><OnboardingRedirect><Tontine /></OnboardingRedirect></ProtectedRoute>} />
+        <Route path="/scan" element={<ProtectedRoute><OnboardingRedirect><Scan /></OnboardingRedirect></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

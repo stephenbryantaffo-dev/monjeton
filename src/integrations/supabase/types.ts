@@ -275,32 +275,65 @@ export type Database = {
       }
       profiles: {
         Row: {
+          beauty_budget_range: string | null
           country: string | null
           created_at: string
+          dependents_count: number | null
           email: string | null
+          financial_goal: string | null
           full_name: string | null
+          gender: string | null
+          has_employees: boolean | null
           id: string
+          income_range: string | null
+          living_situation: string | null
+          main_expense: string | null
+          onboarding_completed: boolean
           phone: string | null
+          profile_type: string | null
+          subscriptions: string[] | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          beauty_budget_range?: string | null
           country?: string | null
           created_at?: string
+          dependents_count?: number | null
           email?: string | null
+          financial_goal?: string | null
           full_name?: string | null
+          gender?: string | null
+          has_employees?: boolean | null
           id?: string
+          income_range?: string | null
+          living_situation?: string | null
+          main_expense?: string | null
+          onboarding_completed?: boolean
           phone?: string | null
+          profile_type?: string | null
+          subscriptions?: string[] | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          beauty_budget_range?: string | null
           country?: string | null
           created_at?: string
+          dependents_count?: number | null
           email?: string | null
+          financial_goal?: string | null
           full_name?: string | null
+          gender?: string | null
+          has_employees?: boolean | null
           id?: string
+          income_range?: string | null
+          living_situation?: string | null
+          main_expense?: string | null
+          onboarding_completed?: boolean
           phone?: string | null
+          profile_type?: string | null
+          subscriptions?: string[] | null
           updated_at?: string
           user_id?: string
         }
