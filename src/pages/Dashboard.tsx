@@ -36,6 +36,8 @@ const Dashboard = () => {
   const [newTxCount, setNewTxCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [dailyReminder, setDailyReminder] = useState<{ show: boolean; txCount: number }>({ show: false, txCount: 0 });
+  const [streak, setStreak] = useState(0);
 
   // Long press for voice shortcut
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
