@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import Onboarding from "@/components/Onboarding";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
 import { FinancialScoreSkeleton } from "@/components/FinancialScore";
@@ -36,8 +35,6 @@ const Dashboard = () => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [newTxCount, setNewTxCount] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [dailyReminder, setDailyReminder] = useState<{ show: boolean; txCount: number }>({ show: false, txCount: 0 });
   const [streak, setStreak] = useState(0);
   const [monthlyBadge, setMonthlyBadge] = useState<{ show: boolean; badge: Badge | null; month: string; savingsRate: number }>({ show: false, badge: null, month: "", savingsRate: 0 });
@@ -59,22 +56,6 @@ const Dashboard = () => {
       longPressTimerRef.current = null;
     }
   };
-
-  // Check if first visit (no transactions at all)
-  useEffect(() => {
-    if (!user || localStorage.getItem("onboarding_done")) {
-      setOnboardingChecked(true);
-      return;
-    }
-    supabase
-      .from("transactions")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .then(({ count }) => {
-        if (count === 0) setShowOnboarding(true);
-        setOnboardingChecked(true);
-      });
-  }, [user]);
 
   useEffect(() => {
     const save = () => localStorage.setItem("dashboard_last_visit", new Date().toISOString());
@@ -292,18 +273,6 @@ const Dashboard = () => {
       return result;
     }
   }, [transactions, trendMode]);
-
-  if (showOnboarding) {
-    return (
-      <Onboarding
-        onComplete={() => {
-          localStorage.setItem("onboarding_done", "1");
-          setShowOnboarding(false);
-          fetchData();
-        }}
-      />
-    );
-  }
 
   return (
     <DashboardLayout>
