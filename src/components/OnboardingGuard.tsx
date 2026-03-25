@@ -12,7 +12,7 @@ const OnboardingGuard = ({ children }: { children: ReactNode }) => {
   if (
     user &&
     profile &&
-    profile.onboarding_completed === false &&
+    (profile.onboarding_completed === false || profile.onboarding_completed === null || profile.onboarding_completed === undefined) &&
     location.pathname !== "/onboarding"
   ) {
     return <Navigate to="/onboarding" replace />;
