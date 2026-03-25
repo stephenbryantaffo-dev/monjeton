@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   profile: any | null;
   loading: boolean;
+  refreshProfile: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -92,6 +93,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    await fetchProfile(user.id);
+  }, [user]);
+
   // Auto-logout on inactivity (30 min)
   useEffect(() => {
     if (!user) return;
@@ -102,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, signOut]);
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, refreshProfile, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

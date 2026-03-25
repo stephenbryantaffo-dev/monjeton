@@ -200,7 +200,7 @@ const slideVariants = {
 };
 
 const Onboarding = () => {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [answers, setAnswers] = useState<Answers>({});
@@ -319,6 +319,8 @@ const Onboarding = () => {
         .eq("user_id", user.id);
 
       if (error) throw error;
+
+      await refreshProfile();
 
       // Create adapted categories based on profile
       const extraCategories: { name: string; icon: string; color: string; type: string }[] = [];

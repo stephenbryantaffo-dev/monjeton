@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
+import OnboardingGuard from "@/components/OnboardingGuard";
 import PinLockScreen from "@/components/PinLockScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { lazy, Suspense } from "react";
@@ -47,24 +48,6 @@ const PageLoader = () => (
 );
 
 const queryClient = new QueryClient();
-
-const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
-  const { user, profile, loading } = useAuth();
-  const location = useLocation();
-
-  if (loading) return null;
-
-  if (
-    user &&
-    profile &&
-    profile.onboarding_completed === false &&
-    location.pathname !== "/onboarding"
-  ) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  return <>{children}</>;
-};
 
 const AppContent = () => {
   const { isLocked } = usePrivacy();
