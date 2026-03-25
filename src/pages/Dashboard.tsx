@@ -70,33 +70,37 @@ const Dashboard = () => {
   useEffect(() => {
     const checkDailyReminder = async () => {
       if (!user) return;
-      const today = new Date().toISOString().split("T")[0];
-      const hour = new Date().getHours();
-      if (hour < 18 || hour > 22) return;
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const hour = new Date().getHours();
+        if (hour < 18 || hour > 22) return;
 
-      const { data: reminder } = await supabase
-        .from("daily_reminders")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("date", today)
-        .maybeSingle();
+        const { data: reminder } = await supabase
+          .from("daily_reminders")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("date", today)
+          .maybeSingle();
 
-      if (reminder) return;
+        if (reminder) return;
 
-      const { data: todayTx } = await supabase
-        .from("transactions")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("date", today);
+        const { data: todayTx } = await supabase
+          .from("transactions")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("date", today);
 
-      const txCount = todayTx?.length || 0;
-      setDailyReminder({ show: true, txCount });
+        const txCount = todayTx?.length || 0;
+        setDailyReminder({ show: true, txCount });
 
-      await supabase.from("daily_reminders").insert({
-        user_id: user.id,
-        date: today,
-        transactions_count: txCount,
-      });
+        await supabase.from("daily_reminders").insert({
+          user_id: user.id,
+          date: today,
+          transactions_count: txCount,
+        });
+      } catch {
+        console.warn("daily_reminders table not ready");
+      }
     };
 
     checkDailyReminder();
@@ -106,26 +110,30 @@ const Dashboard = () => {
   useEffect(() => {
     const calcStreak = async () => {
       if (!user) return;
-      const { data: reminders } = await supabase
-        .from("daily_reminders")
-        .select("date, transactions_count")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false })
-        .limit(30);
+      try {
+        const { data: reminders } = await supabase
+          .from("daily_reminders")
+          .select("date, transactions_count")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+          .limit(30);
 
-      if (!reminders || reminders.length === 0) return;
+        if (!reminders || reminders.length === 0) return;
 
-      let s = 0;
-      const today = new Date();
-      for (let i = 0; i < reminders.length; i++) {
-        const expected = new Date(today);
-        expected.setDate(today.getDate() - i);
-        const expectedStr = expected.toISOString().split("T")[0];
-        if (reminders[i]?.date === expectedStr && reminders[i]?.transactions_count > 0) {
-          s++;
-        } else break;
+        let s = 0;
+        const today = new Date();
+        for (let i = 0; i < reminders.length; i++) {
+          const expected = new Date(today);
+          expected.setDate(today.getDate() - i);
+          const expectedStr = expected.toISOString().split("T")[0];
+          if (reminders[i]?.date === expectedStr && reminders[i]?.transactions_count > 0) {
+            s++;
+          } else break;
+        }
+        setStreak(s);
+      } catch {
+        console.warn("daily_reminders streak calc not ready");
       }
-      setStreak(s);
     };
 
     calcStreak();
@@ -135,41 +143,45 @@ const Dashboard = () => {
   useEffect(() => {
     const checkMonthlyBadge = async () => {
       if (!user || !profile) return;
-      const today = new Date();
-      if (today.getDate() !== 1) return;
+      try {
+        const today = new Date();
+        if (today.getDate() !== 1) return;
 
-      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const lastMonthKey = `badge_${lastMonth.getFullYear()}_${lastMonth.getMonth()}`;
-      if (localStorage.getItem(lastMonthKey)) return;
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastMonthKey = `badge_${lastMonth.getFullYear()}_${lastMonth.getMonth()}`;
+        if (localStorage.getItem(lastMonthKey)) return;
 
-      const startDate = lastMonth.toISOString().split("T")[0];
-      const endDate = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split("T")[0];
+        const startDate = lastMonth.toISOString().split("T")[0];
+        const endDate = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split("T")[0];
 
-      const { data: monthTx } = await supabase
-        .from("transactions")
-        .select("*, categories(name, icon, color)")
-        .eq("user_id", user.id)
-        .gte("date", startDate)
-        .lte("date", endDate);
+        const { data: monthTx } = await supabase
+          .from("transactions")
+          .select("*, categories(name, icon, color)")
+          .eq("user_id", user.id)
+          .gte("date", startDate)
+          .lte("date", endDate);
 
-      if (!monthTx || monthTx.length === 0) return;
+        if (!monthTx || monthTx.length === 0) return;
 
-      const badge = calculateMonthlyBadge(monthTx, profile);
-      const totalIncome = monthTx.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
-      const totalExpense = monthTx.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
-      const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+        const badge = calculateMonthlyBadge(monthTx, profile);
+        const totalIncome = monthTx.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+        const totalExpense = monthTx.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+        const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
 
-      const monthName = lastMonth.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+        const monthName = lastMonth.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
-      await supabase.from("monthly_badges").insert({
-        user_id: user.id,
-        month: lastMonth.getMonth() + 1,
-        year: lastMonth.getFullYear(),
-        badge_id: badge.id,
-      });
+        await supabase.from("monthly_badges").insert({
+          user_id: user.id,
+          month: lastMonth.getMonth() + 1,
+          year: lastMonth.getFullYear(),
+          badge_id: badge.id,
+        });
 
-      localStorage.setItem(lastMonthKey, "shown");
-      setMonthlyBadge({ show: true, badge, month: monthName, savingsRate });
+        localStorage.setItem(lastMonthKey, "shown");
+        setMonthlyBadge({ show: true, badge, month: monthName, savingsRate });
+      } catch {
+        console.warn("monthly_badges table not ready");
+      }
     };
 
     checkMonthlyBadge();
