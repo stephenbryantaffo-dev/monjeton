@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
-const MIN_AUDIO_SIZE = 3000;
+const MIN_AUDIO_SIZE = 8000;
 
 const HALLUCINATIONS = [
   "sous-titres", "transcription", "merci d'avoir",
