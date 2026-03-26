@@ -43,19 +43,6 @@ const Dashboard = () => {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showVoiceHint, setShowVoiceHint] = useState(false);
 
-  const handleAssistantPressStart = () => {
-    longPressTimerRef.current = setTimeout(() => {
-      // Navigate to new transaction with voice auto-start flag
-      navigate("/transactions/new", { state: { autoVoice: true } });
-    }, 600);
-  };
-
-  const handleAssistantPressEnd = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
 
   useEffect(() => {
     const save = () => localStorage.setItem("dashboard_last_visit", new Date().toISOString());
