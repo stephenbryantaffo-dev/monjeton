@@ -457,17 +457,45 @@ const Dashboard = () => {
         >
           <Camera className="w-5 h-5 text-primary" />
         </Link>
-        <Link
-          to="/assistant"
-          onMouseDown={handleAssistantPressStart}
-          onMouseUp={handleAssistantPressEnd}
-          onMouseLeave={handleAssistantPressEnd}
-          onTouchStart={handleAssistantPressStart}
-          onTouchEnd={handleAssistantPressEnd}
+        <button
+          onMouseDown={() => {
+            longPressTimerRef.current = setTimeout(() => {
+              longPressTimerRef.current = null;
+              navigate("/transactions/new", { state: { autoVoice: true } });
+            }, 600);
+          }}
+          onMouseUp={() => {
+            if (longPressTimerRef.current) {
+              clearTimeout(longPressTimerRef.current);
+              longPressTimerRef.current = null;
+              navigate("/assistant");
+            }
+          }}
+          onMouseLeave={() => {
+            if (longPressTimerRef.current) {
+              clearTimeout(longPressTimerRef.current);
+              longPressTimerRef.current = null;
+            }
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            longPressTimerRef.current = setTimeout(() => {
+              longPressTimerRef.current = null;
+              navigate("/transactions/new", { state: { autoVoice: true } });
+            }, 600);
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            if (longPressTimerRef.current) {
+              clearTimeout(longPressTimerRef.current);
+              longPressTimerRef.current = null;
+              navigate("/assistant");
+            }
+          }}
           className="w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
         >
           <MessageCircle className="w-6 h-6 text-primary-foreground" />
-        </Link>
+        </button>
       </div>
 
       <DailyReminderModal
