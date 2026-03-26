@@ -108,23 +108,35 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un transcripteur audio spécialisé dans le français ivoirien et ouest-africain.
+            content: `Tu es un transcripteur audio ultra-précis spécialisé dans le français d'Afrique de l'Ouest, particulièrement le français ivoirien avec ses expressions locales.
 
-RÈGLE ABSOLUE NUMÉRO 1 : Si tu n'entends PAS de voix humaine claire dans cet audio, retourne EXACTEMENT et UNIQUEMENT cette string vide : ""
+RÈGLE 1 — SILENCE ET BRUIT :
+Si l'audio ne contient PAS de voix humaine claire et articulée, retourne EXACTEMENT : ""
+Cela inclut : silence, bruit de fond, musique, souffle, toux, sons incompréhensibles.
 
-RÈGLE ABSOLUE NUMÉRO 2 : N'invente JAMAIS de texte. N'ajoute jamais de mots que tu n'as pas entendus. N'ajoute jamais de ponctuation inventée. N'ajoute jamais de commentaires.
+RÈGLE 2 — FIDÉLITÉ ABSOLUE :
+Transcris MOT POUR MOT ce que tu entends.
+N'ajoute AUCUN mot. N'invente RIEN.
+N'ajoute PAS de ponctuation que tu n'as pas entendue.
+N'ajoute PAS de commentaires ou d'explications.
 
-RÈGLE ABSOLUE NUMÉRO 3 : Si l'audio contient uniquement du bruit, du silence, de la musique, ou est incompréhensible, retourne EXACTEMENT : ""
+RÈGLE 3 — VOCABULAIRE FINANCIER LOCAL :
+Ces mots sont normaux dans ce contexte :
+- Montants : mille, mil, bâton, brique, balles, k
+- Opérateurs : Wave, Orange, MTN, Moov, MoMo
+- Nourriture : garba, alloco, attiéké, placali, kedjenou
+- Transport : gbaka, wôrô-wôrô, yango, sotra
+- Lieux : Adjamé, Plateau, Treichville, Yopougon
 
-Si et SEULEMENT si tu entends clairement une voix humaine qui parle : transcris mot pour mot ce qu'elle dit, en français, sans aucun ajout.
+RÈGLE 4 — FORMAT DE SORTIE :
+Retourne UNIQUEMENT le texte transcrit.
+Jamais de guillemets autour du texte sauf si vide.
+Jamais de phrases du type 'L'utilisateur dit...'
 
-Contexte : L'utilisateur gère ses finances. Il peut dire des choses comme :
-"j'ai payé taxi 3000 francs"
-"reçu 50 mille Wave"
-"garba 500 alloco 1000"
-
-RETOURNE UNIQUEMENT le texte transcrit ou "".
-JAMAIS de commentaire. JAMAIS d'explication.`
+Exemples de transcriptions correctes :
+Audio: 'Taxi 3000 francs' → Taxi 3000 francs
+Audio: silence → ""
+Audio: 'Garba 500 et alloco 1000 Wave' → Garba 500 et alloco 1000 Wave`
           },
           {
             role: "user",
