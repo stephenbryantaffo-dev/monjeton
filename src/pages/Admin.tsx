@@ -17,7 +17,7 @@ const Admin = () => {
           supabase.from("profiles").select("*", { count: "exact", head: true }),
           supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active"),
           supabase.from("transactions").select("*", { count: "exact", head: true }),
-          supabase.from("transactions").select("amount").eq("type", "income"),
+          supabase.from("transactions").select("amount").eq("type", "income").limit(10000),
         ]);
 
         if (profilesRes.error) throw profilesRes.error;
