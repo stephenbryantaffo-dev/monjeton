@@ -7,6 +7,8 @@ interface PdfData {
   totalExpense: number;
   categories: { name: string; value: number }[];
   monthlyData: { month: string; revenus: number; depenses: number }[];
+  userName?: string;
+  userEmail?: string;
 }
 
 const fmt = (n: number) =>
@@ -42,9 +44,17 @@ export const generateMonthlyPdf = (data: PdfData) => {
 
   doc.setTextColor(170, 170, 170);
   doc.setFontSize(10);
-  doc.text("Rapport - " + data.month, w - 14, 20, { align: "right" });
+  doc.text("Rapport - " + data.month, w - 14, 14, { align: "right" });
   doc.setFontSize(8);
-  doc.text("Genere le " + new Date().toLocaleDateString("fr-FR"), w - 14, 28, { align: "right" });
+  if (data.userName) {
+    doc.text(data.userName, w - 14, 21, { align: "right" });
+  }
+  if (data.userEmail) {
+    doc.setTextColor(140, 140, 140);
+    doc.text(data.userEmail, w - 14, 27, { align: "right" });
+  }
+  doc.setTextColor(170, 170, 170);
+  doc.text("Genere le " + new Date().toLocaleDateString("fr-FR"), w - 14, 33, { align: "right" });
 
   let y = 50;
 
