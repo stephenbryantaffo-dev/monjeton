@@ -1,7 +1,4 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-
-interface PdfData {
+export interface PdfData {
   month: string;
   totalIncome: number;
   totalExpense: number;
@@ -12,192 +9,157 @@ interface PdfData {
 }
 
 const fmt = (n: number) =>
-  Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 
 export const generateMonthlyPdf = (data: PdfData) => {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const w = doc.internal.pageSize.getWidth();
-
-  const GREEN: [number, number, number] = [126, 200, 69];
-  const DARK: [number, number, number] = [26, 26, 46];
-  const WHITE: [number, number, number] = [255, 255, 255];
-  const GRAY: [number, number, number] = [136, 136, 136];
-  const LIGHT_GREEN: [number, number, number] = [240, 255, 244];
-  const RED: [number, number, number] = [231, 76, 60];
-  const LIGHT_GRAY: [number, number, number] = [245, 245, 245];
-
-  // HEADER
-  doc.setFillColor(...DARK);
-  doc.rect(0, 0, w, 38, "F");
-  doc.setFillColor(...GREEN);
-  doc.rect(0, 38, w, 2, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.setTextColor(...GREEN);
-  doc.text("MON JETON", 14, 18);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(200, 200, 200);
-  doc.text("Votre coach financier intelligent", 14, 27);
-
-  doc.setTextColor(170, 170, 170);
-  doc.setFontSize(10);
-  doc.text("Rapport - " + data.month, w - 14, 14, { align: "right" });
-  doc.setFontSize(8);
-  if (data.userName) {
-    doc.text(data.userName, w - 14, 21, { align: "right" });
-  }
-  if (data.userEmail) {
-    doc.setTextColor(140, 140, 140);
-    doc.text(data.userEmail, w - 14, 27, { align: "right" });
-  }
-  doc.setTextColor(170, 170, 170);
-  doc.text("Genere le " + new Date().toLocaleDateString("fr-FR"), w - 14, 33, { align: "right" });
-
-  let y = 50;
-
-  // SUMMARY CARDS
   const balance = data.totalIncome - data.totalExpense;
   const savingsRate = data.totalIncome > 0
     ? Math.round(((data.totalIncome - data.totalExpense) / data.totalIncome) * 100)
     : 0;
+  const total = data.categories.reduce((s, c) => s + c.value, 0);
 
-  const cards = [
-    { label: "REVENUS", value: fmt(data.totalIncome) + " F", color: GREEN, bg: LIGHT_GREEN },
-    { label: "DEPENSES", value: fmt(data.totalExpense) + " F", color: RED, bg: [255, 245, 245] as [number, number, number] },
-    { label: "SOLDE NET", value: (balance >= 0 ? "+" : "") + fmt(balance) + " F", color: balance >= 0 ? GREEN : RED, bg: LIGHT_GRAY },
-    { label: "EPARGNE", value: savingsRate + "%", color: GREEN, bg: LIGHT_GREEN },
-  ];
+  const catRows = data.categories.map(cat => {
+    const pct = total > 0 ? Math.round((cat.value / total) * 100) : 0;
+    const bars = Math.round(pct / 5);
+    const bar = "\u2588".repeat(bars) + "\u2591".repeat(20 - bars);
+    return `<tr>
+      <td>${cat.name}</td>
+      <td class="right-align"><b>${fmt(cat.value)} F</b></td>
+      <td class="center">${pct}%</td>
+      <td class="bar">${bar}</td>
+    </tr>`;
+  }).join("");
 
-  const cardW = (w - 28 - 9) / 4;
-  cards.forEach((card, i) => {
-    const x = 14 + i * (cardW + 3);
-    doc.setFillColor(...card.bg);
-    doc.roundedRect(x, y, cardW, 22, 2, 2, "F");
-    doc.setDrawColor(...card.color);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(x, y, cardW, 22, 2, 2, "S");
+  const totalRow = `<tr class="total">
+    <td>TOTAL</td>
+    <td class="right-align">${fmt(total)} F</td>
+    <td class="center">100%</td>
+    <td></td>
+  </tr>`;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(...GRAY);
-    doc.text(card.label, x + cardW / 2, y + 7, { align: "center" });
+  const evoRows = data.monthlyData.map((m, i) => {
+    const bal = m.revenus - m.depenses;
+    const prev = i > 0 ? data.monthlyData[i - 1].revenus - data.monthlyData[i - 1].depenses : bal;
+    const trend = bal >= prev ? "\u2191" : "\u2193";
+    const trendColor = bal >= prev ? "#27ae60" : "#e74c3c";
+    return `<tr>
+      <td><b>${m.month}</b></td>
+      <td class="right-align green-text">${fmt(m.revenus)}</td>
+      <td class="right-align red-text">${fmt(m.depenses)}</td>
+      <td class="right-align"><b>${bal >= 0 ? "+" : ""}${fmt(bal)}</b></td>
+      <td class="center" style="color:${trendColor};font-size:16px">${trend}</td>
+    </tr>`;
+  }).join("");
 
-    doc.setFontSize(10);
-    doc.setTextColor(...card.color);
-    doc.text(card.value, x + cardW / 2, y + 16, { align: "center" });
-  });
+  const userInfo = [data.userName, data.userEmail].filter(Boolean).map(v => `<div>${v}</div>`).join("");
 
-  y += 30;
-
-  // CATEGORIES TABLE
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(...DARK);
-  doc.text("Depenses par categorie", 14, y);
-  doc.setFillColor(...GREEN);
-  doc.rect(14, y + 2, w - 28, 0.8, "F");
-  y += 8;
-
-  if (data.categories.length > 0) {
-    const total = data.categories.reduce((s, c) => s + c.value, 0);
-    const catRows = data.categories.map((cat) => {
-      const pct = total > 0 ? Math.round((cat.value / total) * 100) : 0;
-      const bars = Math.round(pct / 5);
-      const bar = "X".repeat(bars) + ".".repeat(20 - bars);
-      return [cat.name, fmt(cat.value) + " F", pct + "%", bar];
-    });
-
-    catRows.push(["TOTAL", fmt(total) + " F", "100%", ""]);
-
-    autoTable(doc, {
-      startY: y,
-      head: [["Categorie", "Montant (FCFA)", "% Budget", "Repartition"]],
-      body: catRows,
-      theme: "grid",
-      headStyles: {
-        fillColor: DARK, textColor: WHITE,
-        fontStyle: "bold", fontSize: 9, cellPadding: 5,
-      },
-      bodyStyles: { fontSize: 8.5, cellPadding: 4 },
-      columnStyles: {
-        0: { cellWidth: 55 },
-        1: { cellWidth: 40, halign: "right", fontStyle: "bold" },
-        2: { cellWidth: 22, halign: "center" },
-        3: { cellWidth: "auto", fontSize: 7, textColor: GREEN },
-      },
-      alternateRowStyles: { fillColor: LIGHT_GRAY },
-      willDrawCell: (hookData) => {
-        if (hookData.row.index === catRows.length - 1) {
-          hookData.cell.styles.fillColor = LIGHT_GREEN;
-          hookData.cell.styles.fontStyle = "bold";
-        }
-      },
-    });
-
-    y = (doc as any).lastAutoTable.finalY + 10;
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>Mon Jeton - Rapport ${data.month}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
+  .header{background:#1a1a2e;color:#fff;padding:20px 24px 18px;border-bottom:3px solid #7ec845}
+  .header h1{color:#7ec845;font-size:26px;font-weight:bold;margin-bottom:4px}
+  .header .sub{color:#aaa;font-size:11px}
+  .header .right{float:right;text-align:right;color:#ccc;font-size:11px;margin-top:-40px}
+  .body{padding:20px 24px}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+  .card{border-radius:6px;padding:12px 10px;text-align:center;border:1px solid #ddd}
+  .card .label{font-size:9px;font-weight:bold;color:#888;text-transform:uppercase;margin-bottom:6px}
+  .card .value{font-size:14px;font-weight:bold}
+  .card.green{background:#f0fff4;border-color:#7ec845}
+  .card.green .value{color:#7ec845}
+  .card.red{background:#fff5f5;border-color:#e74c3c}
+  .card.red .value{color:#e74c3c}
+  .card.gray{background:#f5f5f5;border-color:#ccc}
+  .section-title{font-size:14px;font-weight:bold;color:#1a1a2e;margin-bottom:4px;padding-bottom:4px;border-bottom:2px solid #7ec845}
+  .section{margin-bottom:24px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1a1a2e;color:#fff;padding:8px 10px;text-align:left;font-size:11px}
+  td{padding:7px 10px;border-bottom:1px solid #eee}
+  tr:nth-child(even) td{background:#f9f9f9}
+  tr.total td{background:#f0fff4;font-weight:bold;border-top:2px solid #7ec845}
+  .bar{font-family:monospace;font-size:10px;color:#7ec845}
+  .green-text{color:#27ae60;font-weight:bold}
+  .red-text{color:#e74c3c;font-weight:bold}
+  .right-align{text-align:right}
+  .center{text-align:center}
+  .footer{margin-top:30px;padding:10px 24px;border-top:2px solid #7ec845;display:flex;justify-content:space-between;font-size:10px;color:#888}
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .header,.footer,th,tr.total td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MON JETON</h1>
+  <div class="sub">Votre coach financier intelligent</div>
+  <div class="right">
+    <div><b>Rapport \u2014 ${data.month}</b></div>
+    ${userInfo}
+    <div>G\u00e9n\u00e9r\u00e9 le ${new Date().toLocaleDateString("fr-FR")}</div>
+  </div>
+</div>
+<div class="body">
+  <div class="cards">
+    <div class="card green">
+      <div class="label">Revenus</div>
+      <div class="value">${fmt(data.totalIncome)} F</div>
+    </div>
+    <div class="card red">
+      <div class="label">D\u00e9penses</div>
+      <div class="value">${fmt(data.totalExpense)} F</div>
+    </div>
+    <div class="card gray">
+      <div class="label">Solde net</div>
+      <div class="value" style="color:${balance >= 0 ? "#7ec845" : "#e74c3c"}">${balance >= 0 ? "+" : ""}${fmt(balance)} F</div>
+    </div>
+    <div class="card green">
+      <div class="label">Taux \u00e9pargne</div>
+      <div class="value">${savingsRate}%</div>
+    </div>
+  </div>
 
-  // MONTHLY EVOLUTION TABLE
-  if (y > 220) { doc.addPage(); y = 20; }
+  <div class="section">
+    <div class="section-title">\ud83d\udcca D\u00e9penses par cat\u00e9gorie</div>
+    <table>
+      <thead><tr>
+        <th>Cat\u00e9gorie</th><th>Montant (FCFA)</th><th>% Budget</th><th>R\u00e9partition</th>
+      </tr></thead>
+      <tbody>${catRows}${totalRow}</tbody>
+    </table>
+  </div>
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(...DARK);
-  doc.text("Evolution mensuelle", 14, y);
-  doc.setFillColor(...GREEN);
-  doc.rect(14, y + 2, w - 28, 0.8, "F");
-  y += 8;
+  <div class="section">
+    <div class="section-title">\ud83d\udcc8 \u00c9volution mensuelle</div>
+    <table>
+      <thead><tr>
+        <th>Mois</th><th>Revenus (F)</th><th>D\u00e9penses (F)</th><th>Solde (F)</th><th>Tend.</th>
+      </tr></thead>
+      <tbody>${evoRows}</tbody>
+    </table>
+  </div>
+</div>
+<div class="footer">
+  <span>\ud83e\ude99 Mon Jeton \u2014 Rapport financier confidentiel</span>
+  <span>G\u00e9n\u00e9r\u00e9 automatiquement</span>
+</div>
+</body>
+</html>`;
 
-  if (data.monthlyData.length > 0) {
-    const evRows = data.monthlyData.map((m, i) => {
-      const bal = m.revenus - m.depenses;
-      const prev = i > 0 ? data.monthlyData[i - 1].revenus - data.monthlyData[i - 1].depenses : bal;
-      return [
-        m.month,
-        fmt(m.revenus),
-        fmt(m.depenses),
-        (bal >= 0 ? "+" : "") + fmt(bal),
-        bal >= prev ? "+" : "-",
-      ];
-    });
-
-    autoTable(doc, {
-      startY: y,
-      head: [["Mois", "Revenus (F)", "Depenses (F)", "Solde (F)", "Tend."]],
-      body: evRows,
-      theme: "grid",
-      headStyles: {
-        fillColor: DARK, textColor: WHITE,
-        fontStyle: "bold", fontSize: 9, cellPadding: 5,
-      },
-      bodyStyles: { fontSize: 8.5, cellPadding: 4 },
-      columnStyles: {
-        0: { cellWidth: 25, fontStyle: "bold" },
-        1: { cellWidth: 38, halign: "right", textColor: [39, 174, 96] as [number, number, number] },
-        2: { cellWidth: 38, halign: "right", textColor: RED },
-        3: { cellWidth: 38, halign: "right", fontStyle: "bold" },
-        4: { cellWidth: 15, halign: "center", fontSize: 12 },
-      },
-      alternateRowStyles: { fillColor: LIGHT_GRAY },
-    });
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
+  if (win) {
+    win.onload = () => {
+      setTimeout(() => {
+        win.print();
+        URL.revokeObjectURL(url);
+      }, 500);
+    };
   }
-
-  // FOOTER
-  const pages = (doc as any).internal.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
-    const ph = doc.internal.pageSize.getHeight();
-    doc.setFillColor(...GREEN);
-    doc.rect(0, ph - 12, w, 12, "F");
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...WHITE);
-    doc.text("Mon Jeton - Rapport financier confidentiel", 14, ph - 4.5);
-    doc.text("Page " + i + "/" + pages, w - 14, ph - 4.5, { align: "right" });
-  }
-
-  doc.save("monjeton-rapport-" + data.month.replace(/\s/g, "-") + ".pdf");
 };
