@@ -140,8 +140,6 @@ const Reports = () => {
       totalExpense: total,
       categories: categoryData.map(c => ({ name: c.name, value: c.value })),
       monthlyData,
-      userName: user?.user_metadata?.full_name || undefined,
-      userEmail: user?.email || undefined,
     });
     toast({ title: "PDF exporté ✅" });
   };
