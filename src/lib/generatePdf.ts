@@ -4,6 +4,8 @@ export interface PdfData {
   totalExpense: number;
   categories: { name: string; value: number }[];
   monthlyData: { month: string; revenus: number; depenses: number }[];
+  userName?: string;
+  userEmail?: string;
 }
 
 const fmt = (n: number) =>
@@ -272,6 +274,7 @@ tr:nth-child(even) td{background:#f9f9f9}
   </div>
   <h1>MON JETON</h1>
   <div class="meta">Votre coach financier intelligent \ud83e\ude99</div>
+  ${data.userName || data.userEmail ? `<div style="color:#ccc;font-size:11px;margin-top:6px">${data.userName ? `\ud83d\udc64 ${data.userName}` : ""}${data.userName && data.userEmail ? " \u2022 " : ""}${data.userEmail ? `\u2709\ufe0f ${data.userEmail}` : ""}</div>` : ""}
 </div>
 <div class="body">
 
