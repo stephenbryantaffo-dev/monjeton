@@ -701,9 +701,12 @@ const Assistant = () => {
                   <audio src={m.audioUrl} controls className="h-8 w-48" />
                 )}
                 {(() => {
+                  const { cleanContent: afterDebt, debt } = m.role === "assistant"
+                    ? extractDebt(m.content)
+                    : { cleanContent: m.content, debt: null };
                   const { cleanContent, transaction } = m.role === "assistant"
-                    ? extractTransaction(m.content)
-                    : { cleanContent: m.content, transaction: null };
+                    ? extractTransaction(afterDebt)
+                    : { cleanContent: afterDebt, transaction: null };
                   return (
                     <>
                       <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
@@ -735,6 +738,42 @@ const Assistant = () => {
                               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
                             >
                               ❌ Non
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {debt && m.role === "assistant" && (
+                        <div className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                            {debt.action === "update_debt" ? "📊 Mise à jour dette" :
+                             debt.debt_type === "owed_to_me" ? "💚 Créance détectée" : "📝 Dette détectée"}
+                          </p>
+                          <div className="text-sm text-foreground space-y-1">
+                            <p>👤 <strong>{debt.person_name}</strong></p>
+                            {debt.amount != null && (
+                              <p>💰 Montant : <strong>{debt.amount.toLocaleString()} FCFA</strong></p>
+                            )}
+                            {debt.amount_paid != null && (
+                              <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()} FCFA</strong></p>
+                            )}
+                            {debt.remaining != null && (
+                              <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()} FCFA</strong></p>
+                            )}
+                            {debt.due_date && (
+                              <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleQuickDebt(debt)}
+                              className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                            >
+                              ✅ Confirmer
+                            </button>
+                            <button
+                              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+                            >
+                              ❌ Annuler
                             </button>
                           </div>
                         </div>
