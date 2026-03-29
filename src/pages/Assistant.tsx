@@ -33,6 +33,17 @@ type TransactionData = {
   wallet: string;
 };
 
+type DebtData = {
+  action: "create_debt" | "update_debt";
+  debt_type?: "owe" | "owed_to_me";
+  person_name: string;
+  amount?: number;
+  amount_paid?: number;
+  remaining?: number;
+  due_date?: string | null;
+  note?: string;
+};
+
 const extractTransaction = (content: string): { cleanContent: string; transaction: TransactionData | null } => {
   const regex = /```transaction\s*\n(\{[\s\S]*?\})\s*\n```/;
   const match = content.match(regex);
@@ -61,6 +72,23 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
     } catch { /* ignore */ }
   }
   return { cleanContent: content, transaction: null };
+};
+
+const extractDebt = (content: string): { cleanContent: string; debt: DebtData | null } => {
+  const regex = /```debt\s*\n(\{[\s\S]*?\})\s*\n```/;
+  const match = content.match(regex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.action && parsed.person_name) {
+        return {
+          cleanContent: content.replace(regex, "").trim(),
+          debt: parsed as DebtData,
+        };
+      }
+    } catch { /* ignore */ }
+  }
+  return { cleanContent: content, debt: null };
 };
 
 const getGreeting = () => {
@@ -384,7 +412,83 @@ const Assistant = () => {
     }
   };
 
-  // --- Send Message ---
+  // --- Quick Save Debt ---
+  const handleQuickDebt = async (debt: DebtData) => {
+    if (!user) return;
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      if (debt.action === "create_debt") {
+        await supabase.from("debts").insert({
+          user_id: user.id,
+          person_name: debt.person_name,
+          type: debt.debt_type === "owed_to_me" ? "owed_to_me" : "owe",
+          amount: debt.amount || 0,
+          due_date: debt.due_date || null,
+          note: debt.note || "",
+          status: "pending",
+        });
+
+        if (debt.debt_type === "owed_to_me" && debt.amount_paid && debt.amount_paid > 0) {
+          await supabase.from("transactions").insert({
+            user_id: user.id,
+            type: "income",
+            amount: debt.amount_paid,
+            note: `Remboursement partiel de ${debt.person_name}`,
+            date: today,
+          });
+        }
+      }
+
+      if (debt.action === "update_debt") {
+        const { data: existing } = await supabase
+          .from("debts")
+          .select("*")
+          .eq("user_id", user.id)
+          .ilike("person_name", `%${debt.person_name}%`)
+          .eq("status", "pending")
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          const newRemaining = (debt.remaining != null) ? debt.remaining : Math.max(0, Number(existing.amount) - (debt.amount_paid || 0));
+          await supabase.from("debts")
+            .update({
+              amount: newRemaining,
+              status: newRemaining <= 0 ? "paid" : "pending",
+            })
+            .eq("id", existing.id);
+        }
+
+        if (debt.amount_paid && debt.amount_paid > 0) {
+          await supabase.from("transactions").insert({
+            user_id: user.id,
+            type: "income",
+            amount: debt.amount_paid,
+            note: `Remboursement de ${debt.person_name}`,
+            date: today,
+          });
+        }
+      }
+
+      const confirmMsg: Message = {
+        role: "assistant",
+        content: debt.action === "create_debt"
+          ? `✅ C'est noté !\n\n${debt.debt_type === "owed_to_me"
+              ? `💚 ${debt.person_name} te doit ${(debt.amount || 0).toLocaleString()}F`
+              : `📝 Tu dois ${(debt.amount || 0).toLocaleString()}F à ${debt.person_name}`
+            }${debt.due_date ? `\n📅 Échéance : ${new Date(debt.due_date).toLocaleDateString("fr-FR")}` : ""}\n\nJe te rappellerai avant la date ! 🔔`
+          : `✅ Mis à jour !\n\n💰 ${debt.amount_paid?.toLocaleString()}F reçu de ${debt.person_name}\n📝 Il reste encore ${debt.remaining?.toLocaleString()}F à récupérer`,
+        type: "text",
+      };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage("assistant", confirmMsg.content);
+      toast({ title: "✅ Dette enregistrée !" });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la dette", variant: "destructive" });
+    }
+  };
+
   const handleSend = async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
@@ -597,9 +701,12 @@ const Assistant = () => {
                   <audio src={m.audioUrl} controls className="h-8 w-48" />
                 )}
                 {(() => {
+                  const { cleanContent: afterDebt, debt } = m.role === "assistant"
+                    ? extractDebt(m.content)
+                    : { cleanContent: m.content, debt: null };
                   const { cleanContent, transaction } = m.role === "assistant"
-                    ? extractTransaction(m.content)
-                    : { cleanContent: m.content, transaction: null };
+                    ? extractTransaction(afterDebt)
+                    : { cleanContent: afterDebt, transaction: null };
                   return (
                     <>
                       <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
@@ -631,6 +738,42 @@ const Assistant = () => {
                               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
                             >
                               ❌ Non
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {debt && m.role === "assistant" && (
+                        <div className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                            {debt.action === "update_debt" ? "📊 Mise à jour dette" :
+                             debt.debt_type === "owed_to_me" ? "💚 Créance détectée" : "📝 Dette détectée"}
+                          </p>
+                          <div className="text-sm text-foreground space-y-1">
+                            <p>👤 <strong>{debt.person_name}</strong></p>
+                            {debt.amount != null && (
+                              <p>💰 Montant : <strong>{debt.amount.toLocaleString()} FCFA</strong></p>
+                            )}
+                            {debt.amount_paid != null && (
+                              <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()} FCFA</strong></p>
+                            )}
+                            {debt.remaining != null && (
+                              <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()} FCFA</strong></p>
+                            )}
+                            {debt.due_date && (
+                              <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleQuickDebt(debt)}
+                              className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                            >
+                              ✅ Confirmer
+                            </button>
+                            <button
+                              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+                            >
+                              ❌ Annuler
                             </button>
                           </div>
                         </div>
