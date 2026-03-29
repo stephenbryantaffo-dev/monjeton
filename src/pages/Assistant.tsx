@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, PlusCircle } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -63,12 +63,28 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
   return { cleanContent: content, transaction: null };
 };
 
-const initialMessages: Message[] = [
-  {
-    role: "assistant",
-    content: "Salut ! 👋 Je suis ton coach financier. Pose-moi ta question, envoie un vocal ou une photo de ticket !",
-    type: "text",
-  },
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Bonjour";
+  if (h < 18) return "Bonne après-midi";
+  return "Bonsoir";
+};
+
+const initialMessages: Message[] = [{
+  role: "assistant",
+  content: `${getGreeting()} ! 👋\n\nDis-moi juste ce que tu as dépensé ou reçu aujourd'hui. Même en nouchi, je comprends tout ! 😄\n\nExemples :\n🗣️ "Garba 500"\n🗣️ "Taxi 2000 Wave"\n🗣️ "Reçu 50 mille de mon mari"\n🗣️ "Marché 15000"`,
+  type: "text",
+}];
+
+const QUICK_ACTIONS = [
+  { emoji: "🛒", label: "Marché", text: "J'ai dépensé au marché " },
+  { emoji: "🚕", label: "Transport", text: "Transport " },
+  { emoji: "🍛", label: "Repas", text: "Repas " },
+  { emoji: "📱", label: "Recharge", text: "Recharge téléphone " },
+  { emoji: "💸", label: "Envoi argent", text: "J'ai envoyé " },
+  { emoji: "💰", label: "Reçu argent", text: "J'ai reçu " },
+  { emoji: "📊", label: "Mon bilan", text: "Quel est mon bilan ce mois ?" },
+  { emoji: "💡", label: "Conseil", text: "Donne-moi un conseil pour économiser" },
 ];
 
 const Assistant = () => {
@@ -86,6 +102,7 @@ const Assistant = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const continuousModeRef = useRef(false);
   const { toast } = useToast();
@@ -171,11 +188,7 @@ const Assistant = () => {
       return;
     }
     if (!window.speechSynthesis) {
-      toast({
-        title: "Non supporté",
-        description: "Lecture vocale non disponible sur ce navigateur",
-        variant: "destructive",
-      });
+      toast({ title: "Non supporté", description: "Lecture vocale non disponible sur ce navigateur", variant: "destructive" });
       return;
     }
     speechSynthesis.cancel();
@@ -260,16 +273,10 @@ const Assistant = () => {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunksRef.current, { type: mimeType || "audio/webm" });
-
         if (blob.size < 5000) {
-          toast({
-            title: "Enregistrement trop court",
-            description: "Maintiens le bouton et parle clairement",
-            variant: "destructive",
-          });
+          toast({ title: "Enregistrement trop court", description: "Maintiens le bouton et parle clairement", variant: "destructive" });
           return;
         }
-
         await transcribeAndSend(blob);
       };
       mediaRecorder.start();
@@ -289,11 +296,7 @@ const Assistant = () => {
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
       if (tooShort) {
-        toast({
-          title: "Trop court",
-          description: "Maintiens le bouton et parle pendant au moins 2 secondes",
-          variant: "destructive",
-        });
+        toast({ title: "Trop court", description: "Maintiens le bouton et parle pendant au moins 2 secondes", variant: "destructive" });
       }
     }
     setIsRecording(false);
@@ -310,12 +313,10 @@ const Assistant = () => {
       setIsLoading(false);
       return;
     }
-
     setIsLoading(true);
     const audioUrl = URL.createObjectURL(audioBlob);
     const userMsg: Message = { role: "user", content: "🎤 Message vocal...", type: "audio", audioUrl };
     setMessages(prev => [...prev, userMsg]);
-
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
@@ -329,7 +330,6 @@ const Assistant = () => {
       if (!resp.ok) throw new Error("Transcription failed");
       const sttData = await resp.json();
       const transcript = sttData?.transcript;
-
       if (sttData?.empty === true || !transcript?.trim() || isHallucination(transcript)) {
         setMessages(prev => prev.map((m, i) =>
           i === prev.length - 1
@@ -339,7 +339,6 @@ const Assistant = () => {
         setIsLoading(false);
         return;
       }
-
       setMessages(prev =>
         prev.map((m, i) => i === prev.length - 1 ? { ...m, content: transcript } : m)
       );
@@ -352,11 +351,43 @@ const Assistant = () => {
     }
   };
 
+  // --- Quick Save Transaction ---
+  const handleQuickSave = async (transaction: TransactionData) => {
+    if (!user) return;
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { data: cats } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("user_id", user.id);
+      const cat = cats?.find(c =>
+        c.name.toLowerCase().includes(transaction.category.toLowerCase())
+      );
+      await supabase.from("transactions").insert({
+        user_id: user.id,
+        type: transaction.type === "income" ? "income" : "expense",
+        amount: transaction.amount,
+        note: transaction.note || transaction.category,
+        date: transaction.date || today,
+        category_id: cat?.id || null,
+      });
+      const confirmMsg: Message = {
+        role: "assistant",
+        content: `✅ C'est noté ! ${transaction.amount.toLocaleString()} FCFA enregistré.\n\nTu as autre chose à noter ?`,
+        type: "text",
+      };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage("assistant", confirmMsg.content);
+      toast({ title: "✅ Transaction enregistrée !" });
+    } catch {
+      toast({ title: "Erreur d'enregistrement", variant: "destructive" });
+    }
+  };
+
   // --- Send Message ---
   const handleSend = async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
-
     const userMsg: Message = {
       role: "user",
       content: text || (attachments.length > 0 ? "📎 Fichier envoyé" : ""),
@@ -368,7 +399,6 @@ const Assistant = () => {
     const currentAttachments = [...attachments];
     setAttachments([]);
     setIsLoading(true);
-
     await saveMessage("user", userMsg.content);
     await sendToChat(userMsg.content, () => messages, currentAttachments);
   };
@@ -381,16 +411,13 @@ const Assistant = () => {
     try {
       const allMessages = [...messages];
       allMessages.push({ role: "user", content: latestContent, type: "text" });
-
       const body: any = {
         messages: allMessages.map(m => ({ role: m.role, content: m.content })),
       };
-
       const atts = fileAttachments || attachments;
       if (atts.length > 0) {
         body.attachments = atts.map(a => ({ name: a.name, type: a.type, data: a.data }));
       }
-
       const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
       const { data: { session: chatSession } } = await supabase.auth.getSession();
       const resp = await fetch(chatUrl, {
@@ -401,39 +428,31 @@ const Assistant = () => {
         },
         body: JSON.stringify(body),
       });
-
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
         toast({ title: "Erreur", description: err.error || "Impossible de contacter l'assistant.", variant: "destructive" });
         setIsLoading(false);
         return;
       }
-
       if (!resp.body) throw new Error("No stream body");
-
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = "";
       let assistantSoFar = "";
       let streamDone = false;
-
       while (!streamDone) {
         const { done, value } = await reader.read();
         if (done) break;
         textBuffer += decoder.decode(value, { stream: true });
-
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (line.startsWith(":") || line.trim() === "") continue;
           if (!line.startsWith("data: ")) continue;
-
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") { streamDone = true; break; }
-
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
@@ -454,7 +473,6 @@ const Assistant = () => {
           }
         }
       }
-
       // Final flush
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split("\n")) {
@@ -477,11 +495,9 @@ const Assistant = () => {
           } catch { /* ignore */ }
         }
       }
-
       // Save assistant response
       if (assistantSoFar) {
         await saveMessage("assistant", assistantSoFar);
-        // In continuous mode, auto-speak the response
         if (continuousModeRef.current) {
           setMessages(prev => {
             const lastIdx = prev.length - 1;
@@ -521,7 +537,6 @@ const Assistant = () => {
       <div className="flex flex-col" style={{ height: "calc(100vh - 160px)" }}>
         {/* Top action bar */}
         <div className="flex items-center justify-end gap-2 pb-3">
-          {/* Continuous conversation mode toggle */}
           <button
             onClick={toggleContinuousMode}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
@@ -595,22 +610,30 @@ const Assistant = () => {
                         {cleanContent}
                       </div>
                       {transaction && (
-                        <button
-                          onClick={() => navigate("/transactions/new", {
-                            state: {
-                              amount: transaction.amount,
-                              type: transaction.type,
-                              category: transaction.category,
-                              note: transaction.note,
-                              date: transaction.date,
-                              wallet: transaction.wallet,
-                            }
-                          })}
-                          className="self-start flex items-center gap-1.5 mt-1 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
-                        >
-                          <PlusCircle className="w-3.5 h-3.5" />
-                          Créer cette transaction ({transaction.amount.toLocaleString()} FCFA)
-                        </button>
+                        <div className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                            ✅ Transaction détectée
+                          </p>
+                          <div className="text-sm text-foreground space-y-0.5">
+                            <p>💰 <strong>{transaction.amount.toLocaleString()} FCFA</strong></p>
+                            <p>📁 {transaction.category}</p>
+                            {transaction.note && <p>📝 {transaction.note}</p>}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleQuickSave(transaction)}
+                              className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                            >
+                              ✅ Oui, enregistrer
+                            </button>
+                            <button
+                              onClick={() => {}}
+                              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+                            >
+                              ❌ Non
+                            </button>
+                          </div>
+                        </div>
                       )}
                       {m.role === "assistant" && cleanContent && i > 0 && (
                         <button
@@ -664,60 +687,100 @@ const Assistant = () => {
           </div>
         )}
 
+        {/* Quick action buttons */}
+        {messages.length <= 2 && (
+          <div className="pb-3">
+            <p className="text-xs text-muted-foreground mb-2 text-center">
+              Appuie sur un bouton ou tape directement 👇
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {QUICK_ACTIONS.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setInput(a.text);
+                    inputRef.current?.focus();
+                  }}
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl bg-secondary hover:bg-primary/10 hover:border-primary/30 border border-border transition-all"
+                >
+                  <span className="text-xl">{a.emoji}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium leading-tight text-center">
+                    {a.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Input bar */}
-        <div className="flex gap-2 pb-2 items-center">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,.pdf,.txt,.csv,.doc,.docx"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading || isRecording}
-            className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 hover:bg-secondary/80 transition-colors disabled:opacity-50"
-          >
-            <Paperclip className="w-4 h-4 text-muted-foreground" />
-          </button>
-
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) handleSend(); }}
-            placeholder={isRecording ? `🔴 Enregistrement... ${Math.floor(recordingSeconds / 60).toString().padStart(2, "0")}:${(recordingSeconds % 60).toString().padStart(2, "0")}` : "Pose ta question..."}
-            className="bg-secondary border-border"
-            disabled={isLoading || isRecording}
-          />
-
-          <button
-            onMouseDown={startRecording}
-            onMouseUp={stopRecording}
-            onMouseLeave={() => isRecording && stopRecording()}
-            onTouchStart={(e) => { e.preventDefault(); startRecording(); }}
-            onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }}
-            disabled={isLoading}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-50 ${
-              isRecording
-                ? "bg-destructive animate-pulse"
-                : "bg-secondary hover:bg-secondary/80"
-            }`}
-          >
-            {isRecording ? (
-              <MicOff className="w-4 h-4 text-destructive-foreground" />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.pdf,.txt,.csv,.doc,.docx"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <div className="space-y-2 pb-2">
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || isRecording}
+              className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+            >
+              <Paperclip className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) handleSend();
+              }}
+              placeholder={
+                isRecording
+                  ? `🔴 Écoute... ${(recordingSeconds % 60).toString().padStart(2, "0")}s`
+                  : "Tape ou parle..."
+              }
+              className="bg-secondary border-border flex-1"
+              disabled={isLoading || isRecording}
+            />
+            {input.trim() ? (
+              <button
+                onClick={handleSend}
+                disabled={isLoading}
+                className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+              >
+                <Send className="w-4 h-4 text-primary-foreground" />
+              </button>
             ) : (
-              <Mic className="w-4 h-4 text-muted-foreground" />
+              <button
+                onClick={() => isRecording ? stopRecording() : startRecording()}
+                disabled={isLoading}
+                className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-50 shadow-lg ${
+                  isRecording
+                    ? "bg-destructive animate-pulse shadow-destructive/40"
+                    : "gradient-primary neon-glow"
+                }`}
+              >
+                {isRecording
+                  ? <MicOff className="w-5 h-5 text-white" />
+                  : <Mic className="w-5 h-5 text-primary-foreground" />
+                }
+              </button>
             )}
-          </button>
-
-          <button
-            onClick={handleSend}
-            disabled={isLoading || isRecording}
-            className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
-          >
-            <Send className="w-4 h-4 text-primary-foreground" />
-          </button>
+          </div>
+          {!isRecording && !input && (
+            <p className="text-center text-xs text-muted-foreground">
+              🎤 Appuie sur le micro et parle directement
+            </p>
+          )}
+          {isRecording && (
+            <p className="text-center text-xs text-destructive font-medium animate-pulse">
+              🔴 Je t'écoute... Appuie à nouveau pour envoyer
+            </p>
+          )}
         </div>
       </div>
     </DashboardLayout>
