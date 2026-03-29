@@ -28,6 +28,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
+  const { toast } = useToast();
   const [activePeriod, setActivePeriod] = useState(1);
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
