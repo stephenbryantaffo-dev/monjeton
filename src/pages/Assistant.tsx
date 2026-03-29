@@ -33,6 +33,17 @@ type TransactionData = {
   wallet: string;
 };
 
+type DebtData = {
+  action: "create_debt" | "update_debt";
+  debt_type?: "owe" | "owed_to_me";
+  person_name: string;
+  amount?: number;
+  amount_paid?: number;
+  remaining?: number;
+  due_date?: string | null;
+  note?: string;
+};
+
 const extractTransaction = (content: string): { cleanContent: string; transaction: TransactionData | null } => {
   const regex = /```transaction\s*\n(\{[\s\S]*?\})\s*\n```/;
   const match = content.match(regex);
