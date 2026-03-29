@@ -412,7 +412,83 @@ const Assistant = () => {
     }
   };
 
-  // --- Send Message ---
+  // --- Quick Save Debt ---
+  const handleQuickDebt = async (debt: DebtData) => {
+    if (!user) return;
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      if (debt.action === "create_debt") {
+        await supabase.from("debts").insert({
+          user_id: user.id,
+          person_name: debt.person_name,
+          type: debt.debt_type === "owed_to_me" ? "owed_to_me" : "owe",
+          amount: debt.amount || 0,
+          due_date: debt.due_date || null,
+          note: debt.note || "",
+          status: "pending",
+        });
+
+        if (debt.debt_type === "owed_to_me" && debt.amount_paid && debt.amount_paid > 0) {
+          await supabase.from("transactions").insert({
+            user_id: user.id,
+            type: "income",
+            amount: debt.amount_paid,
+            note: `Remboursement partiel de ${debt.person_name}`,
+            date: today,
+          });
+        }
+      }
+
+      if (debt.action === "update_debt") {
+        const { data: existing } = await supabase
+          .from("debts")
+          .select("*")
+          .eq("user_id", user.id)
+          .ilike("person_name", `%${debt.person_name}%`)
+          .eq("status", "pending")
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          const newRemaining = (debt.remaining != null) ? debt.remaining : Math.max(0, Number(existing.amount) - (debt.amount_paid || 0));
+          await supabase.from("debts")
+            .update({
+              amount: newRemaining,
+              status: newRemaining <= 0 ? "paid" : "pending",
+            })
+            .eq("id", existing.id);
+        }
+
+        if (debt.amount_paid && debt.amount_paid > 0) {
+          await supabase.from("transactions").insert({
+            user_id: user.id,
+            type: "income",
+            amount: debt.amount_paid,
+            note: `Remboursement de ${debt.person_name}`,
+            date: today,
+          });
+        }
+      }
+
+      const confirmMsg: Message = {
+        role: "assistant",
+        content: debt.action === "create_debt"
+          ? `✅ C'est noté !\n\n${debt.debt_type === "owed_to_me"
+              ? `💚 ${debt.person_name} te doit ${(debt.amount || 0).toLocaleString()}F`
+              : `📝 Tu dois ${(debt.amount || 0).toLocaleString()}F à ${debt.person_name}`
+            }${debt.due_date ? `\n📅 Échéance : ${new Date(debt.due_date).toLocaleDateString("fr-FR")}` : ""}\n\nJe te rappellerai avant la date ! 🔔`
+          : `✅ Mis à jour !\n\n💰 ${debt.amount_paid?.toLocaleString()}F reçu de ${debt.person_name}\n📝 Il reste encore ${debt.remaining?.toLocaleString()}F à récupérer`,
+        type: "text",
+      };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage("assistant", confirmMsg.content);
+      toast({ title: "✅ Dette enregistrée !" });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la dette", variant: "destructive" });
+    }
+  };
+
   const handleSend = async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
