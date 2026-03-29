@@ -74,6 +74,23 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
   return { cleanContent: content, transaction: null };
 };
 
+const extractDebt = (content: string): { cleanContent: string; debt: DebtData | null } => {
+  const regex = /```debt\s*\n(\{[\s\S]*?\})\s*\n```/;
+  const match = content.match(regex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.action && parsed.person_name) {
+        return {
+          cleanContent: content.replace(regex, "").trim(),
+          debt: parsed as DebtData,
+        };
+      }
+    } catch { /* ignore */ }
+  }
+  return { cleanContent: content, debt: null };
+};
+
 const getGreeting = () => {
   const h = new Date().getHours();
   if (h < 12) return "Bonjour";
