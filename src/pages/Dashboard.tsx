@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
@@ -90,7 +91,44 @@ const Dashboard = () => {
       }
     };
 
+    const checkDebtReminders = async () => {
+      if (!user) return;
+      try {
+        const today = new Date();
+        const in3days = new Date(today);
+        in3days.setDate(today.getDate() + 3);
+        const in3daysStr = in3days.toISOString().split("T")[0];
+        const todayStr = today.toISOString().split("T")[0];
+
+        const { data: debts } = await supabase
+          .from("debts")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("status", "pending")
+          .not("due_date", "is", null)
+          .lte("due_date", in3daysStr)
+          .gte("due_date", todayStr);
+
+        if (debts && debts.length > 0) {
+          debts.forEach(debt => {
+            const daysLeft = Math.ceil(
+              (new Date(debt.due_date!).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            toast({
+              title: daysLeft <= 0
+                ? `⚠️ Échéance aujourd'hui !`
+                : `🔔 Rappel dans ${daysLeft} jour(s)`,
+              description: debt.type === "owed_to_me"
+                ? `${debt.person_name} te doit encore ${Number(debt.amount).toLocaleString()} FCFA`
+                : `Tu dois ${Number(debt.amount).toLocaleString()} FCFA à ${debt.person_name}`,
+            });
+          });
+        }
+      } catch { /* silencieux */ }
+    };
+
     checkDailyReminder();
+    checkDebtReminders();
   }, [user]);
 
   // Streak calculation
