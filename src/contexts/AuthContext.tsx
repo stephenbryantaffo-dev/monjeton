@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   profile: any | null;
   loading: boolean;
+  isAdmin: boolean;
   refreshProfile: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -21,19 +22,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  
+  const [isAdmin, setIsAdmin] = useState(false);
+
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!error && data) {
-      setProfile(data);
+    const [profileRes, roleRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    ]);
+    if (!profileRes.error && profileRes.data) {
+      setProfile(profileRes.data);
     } else {
       setProfile(null);
     }
+    setIsAdmin(roleRes.data === true);
   };
 
 
@@ -108,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, signOut]);
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, refreshProfile, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, isAdmin, refreshProfile, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
