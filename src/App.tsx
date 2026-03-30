@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
+import { CountryProvider } from "@/contexts/CountryContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import OnboardingGuard from "@/components/OnboardingGuard";
@@ -95,11 +96,13 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthProvider>
-            <PrivacyProvider>
-              <AppContent />
-            </PrivacyProvider>
-          </AuthProvider>
+          <CountryProvider>
+            <AuthProvider>
+              <PrivacyProvider>
+                <AppContent />
+              </PrivacyProvider>
+            </AuthProvider>
+          </CountryProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
