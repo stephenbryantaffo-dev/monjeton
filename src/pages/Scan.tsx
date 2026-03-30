@@ -59,7 +59,7 @@ const Scan = () => {
       setCategories(catRes.data || []);
       setWallets(walRes.data || []);
       setHistory(histRes.data || []);
-      setIsPremium(!!subRes.data);
+      setIsPremium(!!subRes.data || isAdmin);
     });
 
     const scanData = getScanCount();
