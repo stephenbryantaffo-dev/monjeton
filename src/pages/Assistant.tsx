@@ -241,23 +241,56 @@ const Assistant = () => {
     speechSynthesis.speak(utterance);
   }, [speakingId, toast]);
 
+  // --- Image Compression ---
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let { width, height } = img;
+          const MAX_DIM = 1920;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.82).split(",")[1]);
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
   // --- File Attachment ---
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     for (const file of Array.from(files)) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({ title: "Fichier trop lourd", description: "Max 5 Mo par fichier.", variant: "destructive" });
+      if (file.size > 20 * 1024 * 1024) {
+        toast({ title: "Fichier trop lourd", description: "Maximum 20 Mo par fichier.", variant: "destructive" });
         continue;
       }
-      const base64 = await fileToBase64(file);
-      const att: Attachment = {
+      let base64: string;
+      let finalType = file.type;
+      if (file.type.startsWith("image/") && file.size > 2 * 1024 * 1024) {
+        toast({ title: "📸 Optimisation en cours...", description: "L'image est compressée pour l'envoi" });
+        base64 = await compressImage(file);
+        finalType = "image/jpeg";
+      } else {
+        base64 = await fileToBase64(file);
+      }
+      setAttachments(prev => [...prev, {
         name: file.name,
-        type: file.type,
+        type: finalType,
         data: base64,
         preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
-      };
-      setAttachments(prev => [...prev, att]);
+      }]);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
