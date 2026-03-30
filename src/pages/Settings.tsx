@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCountry } from "@/contexts/CountryContext";
+import { COUNTRIES } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -38,6 +41,7 @@ const menuItems = [
 const Settings = () => {
   const { user, profile, signOut } = useAuth();
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
+  const { country, setCountry } = useCountry();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showPinSetup, setShowPinSetup] = useState(false);
@@ -89,6 +93,37 @@ const Settings = () => {
         <div>
           <p className="text-lg font-bold text-foreground">{profile?.full_name || "Utilisateur"}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
+        </div>
+      </div>
+
+      {/* Country & Language */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Globe className="w-4 h-4" /> Pays & Langue
+        </h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">{country.flag} {country.name}</p>
+            <p className="text-xs text-muted-foreground">{country.currency} · {country.lang === "fr" ? "Français" : "English"}</p>
+          </div>
+          <Select
+            value={country.code}
+            onValueChange={(code) => {
+              const found = COUNTRIES.find(c => c.code === code);
+              if (found) setCountry(found);
+            }}
+          >
+            <SelectTrigger className="w-auto gap-2 bg-secondary border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map(c => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.flag} {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
