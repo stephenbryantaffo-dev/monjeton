@@ -32,7 +32,7 @@ const incrementScanCount = () => {
 };
 
 const Scan = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [preview, setPreview] = useState<string | null>(null);
   const [isPdf, setIsPdf] = useState(false);
