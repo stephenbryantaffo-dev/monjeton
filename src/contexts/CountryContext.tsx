@@ -4,7 +4,7 @@ import { CountryConfig, detectCountry, DEFAULT_COUNTRY, TRANSLATIONS, COUNTRIES 
 interface CountryContextType {
   country: CountryConfig;
   setCountry: (c: CountryConfig) => void;
-  t: typeof TRANSLATIONS["fr"];
+  t: (typeof TRANSLATIONS)["fr"] | (typeof TRANSLATIONS)["en"];
   formatLocalAmount: (amount: number) => string;
 }
 
