@@ -503,7 +503,26 @@ const NewTransaction = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label>Montant (FCFA)</Label>
-              <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-secondary border-border text-2xl font-bold h-14" required />
+              <Input 
+                type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                min="1"
+                step="1"
+                placeholder="0"
+                value={amount}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setAmount(val);
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", ".", ","].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                className="bg-secondary border-border text-2xl font-bold h-14"
+                required
+              />
             </div>
 
             <div className="space-y-2">
