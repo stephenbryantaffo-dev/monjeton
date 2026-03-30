@@ -877,7 +877,7 @@ const Assistant = () => {
         )}
 
         {/* Quick action buttons */}
-        {messages.length <= 2 && (
+        {messages.length <= 3 && !isLoading && (
           <div className="pb-3">
             <p className="text-xs text-muted-foreground mb-2 text-center">
               Appuie sur un bouton ou tape directement 👇
