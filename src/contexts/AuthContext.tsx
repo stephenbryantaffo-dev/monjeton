@@ -26,16 +26,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!error && data) {
-      setProfile(data);
+    const [profileRes, roleRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    ]);
+    if (!profileRes.error && profileRes.data) {
+      setProfile(profileRes.data);
     } else {
       setProfile(null);
     }
+    setIsAdmin(roleRes.data === true);
   };
 
 
