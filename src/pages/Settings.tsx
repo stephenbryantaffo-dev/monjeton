@@ -41,6 +41,7 @@ const menuItems = [
 const Settings = () => {
   const { user, profile, signOut } = useAuth();
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
+  const { country, setCountry } = useCountry();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showPinSetup, setShowPinSetup] = useState(false);
