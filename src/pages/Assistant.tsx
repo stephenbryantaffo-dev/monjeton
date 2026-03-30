@@ -767,7 +767,13 @@ const Assistant = () => {
                               ✅ Oui, enregistrer
                             </button>
                             <button
-                              onClick={() => {}}
+                              onClick={() => {
+                                setMessages(prev => prev.map((msg, idx) =>
+                                  idx === i
+                                    ? { ...msg, content: extractTransaction(msg.content).cleanContent }
+                                    : msg
+                                ));
+                              }}
                               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
                             >
                               ❌ Non
@@ -804,6 +810,13 @@ const Assistant = () => {
                               ✅ Confirmer
                             </button>
                             <button
+                              onClick={() => {
+                                setMessages(prev => prev.map((msg, idx) =>
+                                  idx === i
+                                    ? { ...msg, content: extractDebt(extractTransaction(msg.content).cleanContent).cleanContent }
+                                    : msg
+                                ));
+                              }}
                               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
                             >
                               ❌ Annuler
