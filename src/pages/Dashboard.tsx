@@ -43,7 +43,7 @@ const Dashboard = () => {
 
   // Long press for voice shortcut
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showVoiceHint, setShowVoiceHint] = useState(false);
+  
 
 
   useEffect(() => {
