@@ -53,38 +53,74 @@ serve(async (req) => {
     const safeMimeType = ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : "image/jpeg";
     const safeScanType = scanType === "screenshot" ? "screenshot" : "receipt";
 
-    const prompt = safeScanType === "screenshot"
-      ? `Analyse cette capture d'écran de transaction Mobile Money ou paiement. Extrais les informations suivantes au format JSON:
+    const promptScreenshot = `You are an expert at analyzing Mobile Money and payment screenshots.
+The image may be in French or English.
+Extract the following information as JSON:
 {
-  "amount": nombre (montant exact tel qu'affiché, sans espaces ni symboles de devise),
-  "currency": "code ISO de la devise détectée (USD, EUR, GBP, XOF, NGN, GHS, etc.)",
+  "amount": number (exact amount shown, no currency symbols),
+  "currency": "ISO currency code (XOF, XAF, USD, EUR, GBP, NGN, GHS, MAD)",
   "date": "YYYY-MM-DD",
-  "merchant": "nom du destinataire ou expéditeur",
-  "type": "expense" ou "income" (envoi = expense, réception = income),
-  "wallet": "Wave" ou "Orange Money" ou "MTN" ou "Moov" ou "PayPal" ou autre,
-  "category": "catégorie probable"
+  "merchant": "recipient or sender name",
+  "type": "expense" or "income" (sending = expense, receiving = income),
+  "wallet": "Wave / Orange Money / MTN / Moov / PayPal / other",
+  "category": "most likely category"
 }
 
-IMPORTANT pour la devise:
-- $ → USD, € → EUR, £ → GBP, CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
-- Si aucune devise n'est détectée, utilise "XOF" par défaut.
+CURRENCY DETECTION RULES:
+- $ or USD → USD
+- € or EUR → EUR
+- £ or GBP → GBP
+- CFA, FCFA, F CFA, XOF → XOF
+- FCFA (Central Africa) → XAF
+- ₦ or NGN → NGN
+- GH₵ or GHS → GHS
+- DH or MAD → MAD
+- No currency detected → XOF (default)
 
-Retourne UNIQUEMENT le JSON, sans texte autour.`
-      : `Analyse ce ticket de caisse. Extrais les informations suivantes au format JSON:
+FRENCH KEYWORDS: "envoyé"=expense, "reçu"=income, "solde"=balance, "frais"=fees, "montant"=amount, "bénéficiaire"=recipient, "expéditeur"=sender
+ENGLISH KEYWORDS: "sent"=expense, "received"=income, "balance"=balance, "fee"=fees, "amount"=amount, "recipient"=recipient, "sender"=sender, "total"=amount, "paid"=expense
+
+Return ONLY the JSON, no other text.`;
+
+    const promptReceipt = `You are an expert OCR system for receipts and invoices in any language (French, English, Arabic, etc.).
+Extract the following information as JSON:
 {
-  "amount": nombre (montant total exact tel qu'affiché, sans symboles de devise),
-  "currency": "code ISO de la devise détectée (USD, EUR, GBP, XOF, NGN, GHS, etc.)",
+  "amount": number (TOTAL amount only, not subtotal),
+  "currency": "ISO currency code",
   "date": "YYYY-MM-DD",
-  "merchant": "nom du magasin/commerçant",
+  "merchant": "store or merchant name",
   "type": "expense",
-  "category": "catégorie probable (Alimentation, Shopping, Santé, etc.)"
+  "category": "most likely category"
 }
 
-IMPORTANT pour la devise:
-- $ → USD, € → EUR, £ → GBP, CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
-- Si aucune devise n'est détectée, utilise "XOF" par défaut.
+CATEGORY DETECTION (French/English):
+- "alimentation/food/grocery/supermarché/market" → "Alimentation"
+- "restaurant/café/fast food/maquis/garba" → "Alimentation"
+- "pharmacie/pharmacy/médicament/medicine" → "Santé"
+- "transport/taxi/uber/carburant/fuel/essence" → "Transport"
+- "vêtements/clothes/boutique/fashion" → "Shopping"
+- "électricité/electricity/eau/water/loyer/rent" → "Factures"
+- "téléphone/phone/recharge/airtime/data" → "Téléphone"
+- "sport/gym/fitness/loisirs/entertainment" → "Loisirs"
+- Default → "Shopping"
 
-Retourne UNIQUEMENT le JSON, sans texte autour.`;
+AMOUNT RULES:
+- Look for: Total, Total TTC, Amount Due, Grand Total, Montant Total, Total à Payer, TOTAL, NET AMOUNT
+- Always take the FINAL total (after taxes)
+- Ignore subtotals and individual item prices
+
+CURRENCY DETECTION:
+- $ → USD, € → EUR, £ → GBP
+- CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
+- DH → MAD, No currency → XOF
+
+DATE FORMATS ACCEPTED:
+- DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD
+- "12 Mars 2026", "March 12 2026", "12-03-26"
+
+Return ONLY the JSON, no other text.`;
+
+    const prompt = safeScanType === "screenshot" ? promptScreenshot : promptReceipt;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
