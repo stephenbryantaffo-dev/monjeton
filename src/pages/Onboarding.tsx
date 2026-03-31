@@ -405,7 +405,7 @@ const Onboarding = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="space-y-6"
             >
-              <h2 className="text-xl font-bold text-foreground text-center">
+              <h2 className="text-2xl font-bold text-foreground text-center leading-snug mb-2">
                 {currentQuestion.title}
               </h2>
 
