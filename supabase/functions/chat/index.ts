@@ -220,6 +220,18 @@ ${userContext}`;
       conversationMessages.push({ role: msg.role, content: msg.content });
     }
 
+    // Ensure first message is "user" (Anthropic requirement)
+    while (conversationMessages.length > 0 && conversationMessages[0].role === "assistant") {
+      conversationMessages.shift();
+    }
+
+    if (conversationMessages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Aucun message à envoyer" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
