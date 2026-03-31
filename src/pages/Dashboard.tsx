@@ -406,21 +406,25 @@ const Dashboard = () => {
       ) : !error && (
         <>
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 overflow-hidden">
-              <div className="flex items-center gap-2 mb-2">
-                <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs text-muted-foreground">Revenus</span>
-              </div>
-              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalIncome)}</p>
-              <p className="text-xs text-muted-foreground">FCFA</p>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <BorderRotate className="p-4 overflow-hidden" animationSpeed={4}>
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs text-muted-foreground">Revenus</span>
+                </div>
+                <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalIncome)}</p>
+                <p className="text-xs text-muted-foreground">FCFA</p>
+              </BorderRotate>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-4 overflow-hidden">
-              <div className="flex items-center gap-2 mb-2">
-                <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
-                <span className="text-xs text-muted-foreground">Dépenses</span>
-              </div>
-              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalExpense)}</p>
-              <p className="text-xs text-muted-foreground">FCFA</p>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <BorderRotate className="p-4 overflow-hidden" animationSpeed={4}>
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
+                  <span className="text-xs text-muted-foreground">Dépenses</span>
+                </div>
+                <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalExpense)}</p>
+                <p className="text-xs text-muted-foreground">FCFA</p>
+              </BorderRotate>
             </motion.div>
           </div>
 
