@@ -240,7 +240,8 @@ const Reports = () => {
             </BorderRotate>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <BorderRotate className="p-5" animationSpeed={14}>
             <h2 className="text-sm font-semibold text-foreground mb-4">Évolution mensuelle</h2>
             {monthlyData.length > 0 ? (
               <>
