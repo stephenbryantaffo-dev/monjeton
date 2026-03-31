@@ -224,10 +224,13 @@ const Transactions = () => {
             <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}>
               <div className="glass-card rounded-xl p-3 flex items-center gap-3">
               <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                style={{ backgroundColor: `${t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ 
+                  backgroundColor: `${t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20`,
+                  color: t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(150,5%,60%)")
+                }}
               >
-                {getCategoryEmoji(t.categories?.name, t.type)}
+                {getCatIcon(t.categories?.name || "", t.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
