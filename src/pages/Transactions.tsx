@@ -6,7 +6,7 @@ import {
   ShoppingBag, Home, Gamepad2, Users, CreditCard, Briefcase, 
   GraduationCap, Building2, ArrowRightLeft, DollarSign, Wallet
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { getCatIcon } from "@/lib/getCatIcon";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
