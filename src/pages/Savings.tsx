@@ -115,8 +115,8 @@ const Savings = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.06 * i }}
-                className="glass-card rounded-2xl p-4"
               >
+                <BorderRotate className="p-4" animationSpeed={8}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                     <Target className="w-5 h-5 text-primary" />
