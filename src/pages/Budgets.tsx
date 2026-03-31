@@ -203,7 +203,7 @@ const Budgets = () => {
       ) : (
         <>
       {/* Global budget card */}
-      <div className={`glass-card rounded-2xl p-5 mb-4 ${isOverBudget ? "border border-destructive/50" : ""}`}>
+      <BorderRotate className={`p-5 mb-4 ${isOverBudget ? "border border-destructive/50" : ""}`} animationSpeed={10}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-primary" />
