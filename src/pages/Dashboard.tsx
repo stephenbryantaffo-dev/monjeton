@@ -467,10 +467,29 @@ const Dashboard = () => {
             <div className="space-y-2">
               {recentTx.map((t, i) => (
                 <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }} className="glass-card rounded-xl p-3 flex items-center gap-3">
-                  {(() => { const CatIcon = getCategoryIcon((t.categories as any)?.name); return (
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}>
-                    <CatIcon className="w-5 h-5" style={{ color: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,60%)") }} />
-                  </div>); })()}
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                    style={{ backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}
+                  >
+                    {(() => {
+                      const name = ((t.categories as any)?.name || "").toLowerCase();
+                      if (name.includes("aliment") || name.includes("nourrit") || name.includes("repas")) return "🍛";
+                      if (name.includes("transport") || name.includes("taxi") || name.includes("yango")) return "🚕";
+                      if (name.includes("téléphone") || name.includes("phone") || name.includes("recharge")) return "📱";
+                      if (name.includes("santé") || name.includes("pharma") || name.includes("médic")) return "💊";
+                      if (name.includes("shopping") || name.includes("vêtement") || name.includes("beauté")) return "👗";
+                      if (name.includes("facture") || name.includes("loyer") || name.includes("électr")) return "🏠";
+                      if (name.includes("loisir") || name.includes("sport") || name.includes("sortie")) return "🎮";
+                      if (name.includes("tontine") || name.includes("cotis")) return "🤝";
+                      if (name.includes("dette") || name.includes("rembours")) return "💳";
+                      if (name.includes("salaire") || name.includes("revenu") || name.includes("vente")) return "💰";
+                      if (name.includes("transfert")) return "↔️";
+                      if (name.includes("scolarit") || name.includes("formation")) return "🎓";
+                      if (name.includes("entreprise") || name.includes("charges")) return "🏢";
+                      if (t.type === "income") return "💰";
+                      return "💸";
+                    })()}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
                     <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
