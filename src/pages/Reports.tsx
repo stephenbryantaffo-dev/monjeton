@@ -237,6 +237,7 @@ const Reports = () => {
             ) : (
               <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée ce mois</p>
             )}
+            </BorderRotate>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5">
