@@ -239,14 +239,29 @@ ${userContext}`;
     if (!response.ok) {
       const errText = await response.text();
       console.error("Anthropic API error:", response.status, errText);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Trop de requêtes, réessaie dans quelques instants." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+
+      if (response.status === 401) {
+        return new Response(
+          JSON.stringify({ error: "Clé API Anthropic invalide ou expirée." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      return new Response(JSON.stringify({ error: "Erreur du service IA" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Trop de requêtes. Réessaie dans quelques secondes." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 529 || response.status === 500) {
+        return new Response(
+          JSON.stringify({ error: "Service Anthropic temporairement indisponible. Réessaie." }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: "Erreur du service IA (" + response.status + ")" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Transform Anthropic SSE stream → OpenAI-compatible SSE format
