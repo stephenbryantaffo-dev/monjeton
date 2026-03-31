@@ -10,7 +10,7 @@ import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Spark
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { getCategoryIcon } from "@/lib/categoryIcons";
+import { getCategoryEmoji } from "@/lib/categoryEmoji";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -471,30 +471,7 @@ const Dashboard = () => {
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
                     style={{ backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}
                   >
-                    {(() => {
-                      const name = ((t.categories as any)?.name || "").toLowerCase();
-                      if (name.includes("aliment") || name.includes("nourrit") || name.includes("repas")) return "🍛";
-                      if (name.includes("transport") || name.includes("taxi") || name.includes("yango")) return "🚕";
-                      if (name.includes("téléphone") || name.includes("phone") || name.includes("recharge")) return "📱";
-                      if (name.includes("santé") || name.includes("pharma") || name.includes("médic")) return "💊";
-                      if (name.includes("shopping") || name.includes("vêtement") || name.includes("beauté")) return "👗";
-                      if (name.includes("facture") || name.includes("loyer") || name.includes("électr")) return "🏠";
-                      if (name.includes("loisir") || name.includes("sport") || name.includes("sortie")) return "🎮";
-                      if (name.includes("tontine") || name.includes("cotis")) return "🤝";
-                      if (name.includes("dette") || name.includes("rembours")) return "💳";
-                      if (name.includes("salaire") || name.includes("revenu") || name.includes("vente")) return "💰";
-                      if (name.includes("transfert")) return "↔️";
-                      if (name.includes("scolarit") || name.includes("formation")) return "🎓";
-                      if (name.includes("entreprise") || name.includes("charges")) return "🏢";
-                      if (name.includes("eau") || name.includes("water")) return "💧";
-                      if (name.includes("internet") || name.includes("wifi") || name.includes("abonnement")) return "🌐";
-                      if (name.includes("café") || name.includes("coffee") || name.includes("restaurant")) return "☕";
-                      if (name.includes("assurance") || name.includes("mutuelle")) return "🛡️";
-                      if (name.includes("cadeau") || name.includes("don")) return "🎁";
-                      if (name.includes("voyage") || name.includes("vacance") || name.includes("avion")) return "✈️";
-                      if (t.type === "income") return "💰";
-                      return "💸";
-                    })()}
+                    {getCategoryEmoji((t.categories as any)?.name, t.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
