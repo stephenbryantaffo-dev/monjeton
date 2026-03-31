@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2 } from "lucide-react";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -742,13 +743,19 @@ const Assistant = () => {
                     : { cleanContent: afterDebt, transaction: null };
                   return (
                     <>
-                      <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
-                        m.role === "user"
-                          ? "gradient-primary text-primary-foreground"
-                          : "glass-card text-foreground"
-                      }`}>
-                        {cleanContent}
-                      </div>
+                      {i === 0 && m.role === "assistant" ? (
+                        <BorderRotate className="rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap text-foreground" animationSpeed={6}>
+                          {cleanContent}
+                        </BorderRotate>
+                      ) : (
+                        <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
+                          m.role === "user"
+                            ? "gradient-primary text-primary-foreground"
+                            : "glass-card text-foreground"
+                        }`}>
+                          {cleanContent}
+                        </div>
+                      )}
                       {transaction && (
                         <div className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
                           <p className="text-xs font-semibold text-primary uppercase tracking-wide">

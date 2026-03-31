@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Wallet, Plus, TrendingUp, TrendingDown, Pencil, Check, X, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -222,8 +223,8 @@ const Wallets = () => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 * i }}
-                className="glass-card rounded-2xl p-4 space-y-2"
               >
+                <BorderRotate className="p-4 space-y-2" animationSpeed={8}>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
                     <Wallet className="w-6 h-6" style={{ color }} />
@@ -270,6 +271,7 @@ const Wallets = () => {
                 <p className="text-xs text-muted-foreground pl-16">
                   +{formatAmount(b.income)} / -{formatAmount(b.expense)}
                 </p>
+                </BorderRotate>
               </motion.div>
             );
           })}
