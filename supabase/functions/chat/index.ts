@@ -49,7 +49,7 @@ serve(async (req) => {
     messages = messages.map((m: any) => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: typeof m.content === "string" ? m.content.slice(0, MAX_MESSAGE_LENGTH) : "",
-    }));
+    })).filter((m: any) => m.content.trim().length > 0);
 
     const attachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : [];
 
@@ -218,6 +218,18 @@ ${userContext}`;
         }
       }
       conversationMessages.push({ role: msg.role, content: msg.content });
+    }
+
+    // Ensure first message is "user" (Anthropic requirement)
+    while (conversationMessages.length > 0 && conversationMessages[0].role === "assistant") {
+      conversationMessages.shift();
+    }
+
+    if (conversationMessages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Aucun message à envoyer" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
