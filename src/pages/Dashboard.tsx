@@ -407,7 +407,7 @@ const Dashboard = () => {
         <>
           <div className="grid grid-cols-2 gap-3 mb-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <BorderRotate className="p-4 overflow-hidden" animationSpeed={4}>
+              <BorderRotate className="p-4 overflow-hidden" animationSpeed={10}>
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-muted-foreground">Revenus</span>
