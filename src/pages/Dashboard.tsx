@@ -10,7 +10,7 @@ import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Spark
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { getCategoryIcon } from "@/lib/categoryIcons";
+import { getCategoryEmoji } from "@/lib/categoryEmoji";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";

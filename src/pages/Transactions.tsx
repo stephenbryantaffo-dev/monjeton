@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { formatMoneySmart } from "@/lib/formatMoney";
 import { motion } from "framer-motion";
 import { Search, Filter, X } from "lucide-react";
-import { getCategoryIcon } from "@/lib/categoryIcons";
+import { getCategoryEmoji } from "@/lib/categoryEmoji";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
