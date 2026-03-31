@@ -271,6 +271,7 @@ const Wallets = () => {
                 <p className="text-xs text-muted-foreground pl-16">
                   +{formatAmount(b.income)} / -{formatAmount(b.expense)}
                 </p>
+                </BorderRotate>
               </motion.div>
             );
           })}
