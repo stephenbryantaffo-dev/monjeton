@@ -11,7 +11,7 @@ import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { getCategoryEmoji } from "@/lib/categoryEmoji";
+import { getCatIcon } from "@/lib/getCatIcon";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -474,10 +474,13 @@ const Dashboard = () => {
                 <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                   <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={14}>
                     <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                      style={{ backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ 
+                        backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20`,
+                        color: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(150,5%,60%)")
+                      }}
                     >
-                      {getCategoryEmoji((t.categories as any)?.name, t.type)}
+                      {getCatIcon((t.categories as any)?.name || "", t.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
