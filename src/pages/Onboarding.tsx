@@ -392,8 +392,8 @@ const Onboarding = () => {
       </div>
 
       {/* Question area */}
-      <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center px-5 overflow-hidden py-4">
+        <div className="w-full max-w-md bg-background/60 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-border/30">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={`${currentQuestion.id}-${currentIndex}`}
@@ -405,7 +405,7 @@ const Onboarding = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="space-y-6"
             >
-              <h2 className="text-xl font-bold text-foreground text-center">
+              <h2 className="text-2xl font-bold text-foreground text-center leading-snug mb-2">
                 {currentQuestion.title}
               </h2>
 
@@ -422,7 +422,7 @@ const Onboarding = () => {
                       className={`p-3.5 rounded-xl text-sm font-medium transition-all border text-left flex items-center gap-3 ${
                         isSelected
                           ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+                          : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
                       }`}
                     >
                       <span className="text-lg flex-shrink-0">{opt.emoji}</span>
