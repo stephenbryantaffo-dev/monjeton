@@ -35,7 +35,14 @@ serve(async (req) => {
 
     const body = await req.json();
     const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_KEY) throw new Error("ANTHROPIC_API_KEY manquant");
+    if (!ANTHROPIC_KEY) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Clé API manquante. Va dans Supabase → Settings → Edge Functions → Secrets et ajoute ANTHROPIC_API_KEY" 
+        }), 
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Validate messages
     let messages = Array.isArray(body.messages) ? body.messages.slice(-MAX_MESSAGES) : [];
