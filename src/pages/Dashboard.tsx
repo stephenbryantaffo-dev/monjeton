@@ -339,10 +339,16 @@ const Dashboard = () => {
         </button>
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activePeriod === 2 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+              activePeriod === 2 && customRange?.from
+                ? "gradient-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-1 ring-offset-background font-semibold"
+                : activePeriod === 2
+                  ? "gradient-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+            }`}>
               {activePeriod === 2 && customRange?.from
                 ? customRange.to
-                  ? `${format(customRange.from, "d MMM", { locale: fr })} - ${format(customRange.to, "d MMM", { locale: fr })}`
+                  ? `${format(customRange.from, "d MMM", { locale: fr })} → ${format(customRange.to, "d MMM", { locale: fr })}`
                   : format(customRange.from, "d MMM", { locale: fr })
                 : <CalendarIcon className="w-4 h-4" />}
             </button>

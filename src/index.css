@@ -133,3 +133,26 @@ input:-webkit-autofill:focus {
   caret-color: hsl(150, 5%, 92%);
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* Plage de dates sélectionnée */
+.rdp-day_range_middle {
+  background-color: hsl(84 81% 44% / 0.15) !important;
+  border-radius: 0 !important;
+  color: hsl(150 5% 92%) !important;
+}
+
+.rdp-day_range_start {
+  background-color: hsl(84 81% 44%) !important;
+  color: hsl(150 20% 4%) !important;
+  border-radius: 50% 0 0 50% !important;
+}
+
+.rdp-day_range_end {
+  background-color: hsl(84 81% 44%) !important;
+  color: hsl(150 20% 4%) !important;
+  border-radius: 0 50% 50% 0 !important;
+}
+
+.rdp-day_range_start.rdp-day_range_end {
+  border-radius: 50% !important;
+}
