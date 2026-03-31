@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatMoneySmart } from "@/lib/formatMoney";
 import { motion } from "framer-motion";
-import { Search, Filter, X } from "lucide-react";
-import { getCategoryEmoji } from "@/lib/categoryEmoji";
+import { 
+  Search, Filter, X, Utensils, Car, Smartphone, Heart, 
+  ShoppingBag, Home, Gamepad2, Users, CreditCard, Briefcase, 
+  GraduationCap, Building2, ArrowRightLeft, DollarSign, Wallet
+} from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 
 import { Input } from "@/components/ui/input";
