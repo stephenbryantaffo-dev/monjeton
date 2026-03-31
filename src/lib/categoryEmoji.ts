@@ -18,6 +18,11 @@ const EMOJI_RULES: Array<{ keywords: string[]; emoji: string }> = [
   { keywords: ["assurance", "mutuelle"], emoji: "🛡️" },
   { keywords: ["cadeau", "don"], emoji: "🎁" },
   { keywords: ["voyage", "vacance", "avion"], emoji: "✈️" },
+  { keywords: ["carburant", "essence", "gasoil", "station"], emoji: "⛽" },
+  { keywords: ["bébé", "couche", "enfant", "maternit"], emoji: "👶" },
+  { keywords: ["musique", "music", "instrument"], emoji: "🎵" },
+  { keywords: ["cinéma", "cinema", "film"], emoji: "🎬" },
+  { keywords: ["épargne", "savings", "investis"], emoji: "🏦" },
 ];
 
 export function getCategoryEmoji(
