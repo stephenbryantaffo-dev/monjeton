@@ -230,7 +230,7 @@ const Budgets = () => {
           />
           <Button onClick={saveTotalBudget} size="sm">OK</Button>
         </div>
-      </div>
+      </BorderRotate>
 
       {/* Category budgets */}
       <div className="flex items-center justify-between mb-3">
