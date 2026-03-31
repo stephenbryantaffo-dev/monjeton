@@ -7,6 +7,7 @@ import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic } from "lucide-react";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
