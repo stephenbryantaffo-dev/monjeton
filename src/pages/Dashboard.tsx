@@ -489,7 +489,7 @@ const Dashboard = () => {
                       if (t.type === "income") return "💰";
                       return "💸";
                     })()}
-                  </div>); })()}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
                     <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
