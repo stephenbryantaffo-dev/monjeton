@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Search, Filter, X } from "lucide-react";
 import { getCategoryEmoji } from "@/lib/categoryEmoji";
 import DashboardLayout from "@/components/DashboardLayout";
-import { BorderRotate } from "@/components/ui/animated-gradient-border";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -219,7 +219,7 @@ const Transactions = () => {
           ? Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)
           : filtered.map((t, i) => (
             <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}>
-              <BorderRotate className="p-3 flex items-center gap-3" animationSpeed={18}>
+              <div className="glass-card rounded-xl p-3 flex items-center gap-3">
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
                 style={{ backgroundColor: `${t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}
@@ -234,7 +234,7 @@ const Transactions = () => {
                 {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))} F
               </span>
               <ConfirmDeleteDialog onConfirm={() => handleDelete(t.id)} title="Supprimer cette transaction ?" />
-              </BorderRotate>
+              </div>
             </motion.div>
           ))}
         {!loading && filtered.length === 0 && (
