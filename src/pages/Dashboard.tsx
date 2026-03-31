@@ -482,7 +482,7 @@ const Dashboard = () => {
         </>
       )}
 
-      <div className="fixed bottom-24 right-5 z-50 flex flex-col gap-3">
+      <div className="fixed bottom-36 right-5 z-50 flex flex-col gap-3">
         {/* Quick voice button */}
         <button
           onClick={() => navigate("/transactions/new", { state: { autoVoice: true } })}
