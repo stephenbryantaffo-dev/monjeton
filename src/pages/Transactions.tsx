@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Search, Filter, X } from "lucide-react";
 import { getCategoryEmoji } from "@/lib/categoryEmoji";
 import DashboardLayout from "@/components/DashboardLayout";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
