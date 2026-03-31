@@ -156,3 +156,14 @@ input:-webkit-autofill:focus {
 .rdp-day_range_start.rdp-day_range_end {
   border-radius: 50% !important;
 }
+
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes gradient-rotate {
+  from { --gradient-angle: 0deg; }
+  to   { --gradient-angle: 360deg; }
+}
