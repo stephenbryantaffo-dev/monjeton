@@ -106,6 +106,7 @@ const Debts = () => {
                 </button>
                 <ConfirmDeleteDialog onConfirm={() => handleDelete(d.id)} title="Supprimer cette dette ?" />
               </div>
+              </BorderRotate>
             </motion.div>
           ))}
         {!loading && filtered.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">Aucune dette</p>}

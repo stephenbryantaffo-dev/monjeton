@@ -286,7 +286,7 @@ const Budgets = () => {
               </div>
               <Progress value={pct} className="h-1.5" />
               {over && <p className="text-[10px] text-destructive mt-1">Dépassement !</p>}
-            </div>
+            </BorderRotate>
           );
         })}
         {categoryBudgets.length === 0 && !loading && (

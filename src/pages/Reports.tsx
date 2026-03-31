@@ -262,6 +262,7 @@ const Reports = () => {
             ) : (
               <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée</p>
             )}
+            </BorderRotate>
           </motion.div>
         </>
       )}

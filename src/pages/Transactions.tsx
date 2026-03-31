@@ -234,6 +234,7 @@ const Transactions = () => {
                 {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))} F
               </span>
               <ConfirmDeleteDialog onConfirm={() => handleDelete(t.id)} title="Supprimer cette transaction ?" />
+              </BorderRotate>
             </motion.div>
           ))}
         {!loading && filtered.length === 0 && (
