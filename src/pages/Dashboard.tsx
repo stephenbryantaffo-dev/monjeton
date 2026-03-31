@@ -486,6 +486,12 @@ const Dashboard = () => {
                       if (name.includes("transfert")) return "↔️";
                       if (name.includes("scolarit") || name.includes("formation")) return "🎓";
                       if (name.includes("entreprise") || name.includes("charges")) return "🏢";
+                      if (name.includes("eau") || name.includes("water")) return "💧";
+                      if (name.includes("internet") || name.includes("wifi") || name.includes("abonnement")) return "🌐";
+                      if (name.includes("café") || name.includes("coffee") || name.includes("restaurant")) return "☕";
+                      if (name.includes("assurance") || name.includes("mutuelle")) return "🛡️";
+                      if (name.includes("cadeau") || name.includes("don")) return "🎁";
+                      if (name.includes("voyage") || name.includes("vacance") || name.includes("avion")) return "✈️";
                       if (t.type === "income") return "💰";
                       return "💸";
                     })()}
