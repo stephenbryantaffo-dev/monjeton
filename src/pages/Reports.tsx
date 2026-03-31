@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
 import DashboardLayout from "@/components/DashboardLayout";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
