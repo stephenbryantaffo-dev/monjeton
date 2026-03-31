@@ -224,7 +224,7 @@ const Wallets = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 * i }}
               >
-                <BorderRotate className="p-4 space-y-2" animationSpeed={8}>
+                <BorderRotate className="p-4 space-y-2" animationSpeed={18}>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
                     <Wallet className="w-6 h-6" style={{ color }} />
