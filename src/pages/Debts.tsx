@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { ArrowUpRight, ArrowDownLeft, Plus, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,8 +83,8 @@ const Debts = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 * i }}
-              className={`glass-card rounded-xl p-4 flex items-center gap-3 ${d.status === "paid" ? "opacity-50" : ""}`}
             >
+              <BorderRotate className={`p-4 flex items-center gap-3 ${d.status === "paid" ? "opacity-50" : ""}`} animationSpeed={18}>
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${d.type === "i_owe" ? "bg-destructive/20" : "bg-primary/20"}`}>
                 {d.type === "i_owe" ? <ArrowUpRight className="w-5 h-5 text-destructive" /> : <ArrowDownLeft className="w-5 h-5 text-primary" />}
               </div>
@@ -105,6 +106,7 @@ const Debts = () => {
                 </button>
                 <ConfirmDeleteDialog onConfirm={() => handleDelete(d.id)} title="Supprimer cette dette ?" />
               </div>
+              </BorderRotate>
             </motion.div>
           ))}
         {!loading && filtered.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">Aucune dette</p>}

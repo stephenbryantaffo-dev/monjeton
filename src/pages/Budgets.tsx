@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -202,7 +203,7 @@ const Budgets = () => {
       ) : (
         <>
       {/* Global budget card */}
-      <div className={`glass-card rounded-2xl p-5 mb-4 ${isOverBudget ? "border border-destructive/50" : ""}`}>
+      <BorderRotate className={`p-5 mb-4 ${isOverBudget ? "border border-destructive/50" : ""}`} animationSpeed={10}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-primary" />
@@ -229,7 +230,7 @@ const Budgets = () => {
           />
           <Button onClick={saveTotalBudget} size="sm">OK</Button>
         </div>
-      </div>
+      </BorderRotate>
 
       {/* Category budgets */}
       <div className="flex items-center justify-between mb-3">
@@ -273,7 +274,7 @@ const Budgets = () => {
           const pct = cb.budget_amount > 0 ? Math.min(((cb.spent || 0) / cb.budget_amount) * 100, 100) : 0;
           const over = (cb.spent || 0) > cb.budget_amount;
           return (
-            <div key={cb.id} className={`glass-card rounded-xl p-4 ${over ? "border border-destructive/40" : ""}`}>
+            <BorderRotate key={cb.id} className={`p-4 ${over ? "border border-destructive/40" : ""}`} animationSpeed={18}>
               <div className="flex items-center justify-between mb-2 gap-2">
                 <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
                 <div className="flex items-center gap-2">
@@ -285,7 +286,7 @@ const Budgets = () => {
               </div>
               <Progress value={pct} className="h-1.5" />
               {over && <p className="text-[10px] text-destructive mt-1">Dépassement !</p>}
-            </div>
+            </BorderRotate>
           );
         })}
         {categoryBudgets.length === 0 && !loading && (

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
 import DashboardLayout from "@/components/DashboardLayout";
+import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
@@ -203,7 +204,8 @@ const Reports = () => {
             </motion.div>
           )}
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <BorderRotate className="p-5 mb-4" animationSpeed={14}>
             <h2 className="text-sm font-semibold text-foreground mb-4">Dépenses par catégorie</h2>
             {categoryData.length > 0 ? (
               <>
@@ -235,9 +237,11 @@ const Reports = () => {
             ) : (
               <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée ce mois</p>
             )}
+            </BorderRotate>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <BorderRotate className="p-5" animationSpeed={14}>
             <h2 className="text-sm font-semibold text-foreground mb-4">Évolution mensuelle</h2>
             {monthlyData.length > 0 ? (
               <>
@@ -258,6 +262,7 @@ const Reports = () => {
             ) : (
               <p className="text-center text-muted-foreground text-sm py-8">Aucune donnée</p>
             )}
+            </BorderRotate>
           </motion.div>
         </>
       )}
