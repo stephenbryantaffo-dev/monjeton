@@ -422,7 +422,7 @@ const Onboarding = () => {
                       className={`p-3.5 rounded-xl text-sm font-medium transition-all border text-left flex items-center gap-3 ${
                         isSelected
                           ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+                          : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
                       }`}
                     >
                       <span className="text-lg flex-shrink-0">{opt.emoji}</span>
