@@ -7,6 +7,7 @@ import {
   GraduationCap, Building2, ArrowRightLeft, DollarSign, Wallet
 } from "lucide-react";
 import { getCatIcon } from "@/lib/getCatIcon";
+import DashboardLayout from "@/components/DashboardLayout";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
