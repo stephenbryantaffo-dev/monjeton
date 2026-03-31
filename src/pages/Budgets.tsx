@@ -274,7 +274,7 @@ const Budgets = () => {
           const pct = cb.budget_amount > 0 ? Math.min(((cb.spent || 0) / cb.budget_amount) * 100, 100) : 0;
           const over = (cb.spent || 0) > cb.budget_amount;
           return (
-            <BorderRotate className={`p-4 ${over ? "border border-destructive/40" : ""}`} animationSpeed={18}>
+            <BorderRotate key={cb.id} className={`p-4 ${over ? "border border-destructive/40" : ""}`} animationSpeed={18}>
               <div className="flex items-center justify-between mb-2 gap-2">
                 <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
                 <div className="flex items-center gap-2">
