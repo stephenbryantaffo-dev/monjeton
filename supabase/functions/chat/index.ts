@@ -49,7 +49,7 @@ serve(async (req) => {
     messages = messages.map((m: any) => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: typeof m.content === "string" ? m.content.slice(0, MAX_MESSAGE_LENGTH) : "",
-    }));
+    })).filter((m: any) => m.content.trim().length > 0);
 
     const attachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : [];
 
