@@ -204,7 +204,8 @@ const Reports = () => {
             </motion.div>
           )}
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <BorderRotate className="p-5 mb-4" animationSpeed={14}>
             <h2 className="text-sm font-semibold text-foreground mb-4">Dépenses par catégorie</h2>
             {categoryData.length > 0 ? (
               <>
