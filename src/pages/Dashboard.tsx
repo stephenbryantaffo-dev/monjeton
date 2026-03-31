@@ -11,7 +11,7 @@ import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { getCategoryEmoji } from "@/lib/categoryEmoji";
+import { getCatIcon } from "@/lib/getCatIcon";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
