@@ -392,8 +392,8 @@ const Onboarding = () => {
       </div>
 
       {/* Question area */}
-      <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center px-5 overflow-hidden py-4">
+        <div className="w-full max-w-md bg-background/60 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-border/30">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={`${currentQuestion.id}-${currentIndex}`}
