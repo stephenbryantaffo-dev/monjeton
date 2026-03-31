@@ -744,7 +744,7 @@ const Assistant = () => {
                   return (
                     <>
                       {i === 0 && m.role === "assistant" ? (
-                        <BorderRotate className="rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap text-foreground" animationSpeed={6}>
+                        <BorderRotate className="rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap text-foreground" animationSpeed={14}>
                           {cleanContent}
                         </BorderRotate>
                       ) : (

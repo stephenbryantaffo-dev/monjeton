@@ -472,7 +472,7 @@ const Dashboard = () => {
             <div className="space-y-2">
               {recentTx.map((t, i) => (
                 <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
-                  <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={6}>
+                  <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={14}>
                     <div 
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
                       style={{ backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20` }}
