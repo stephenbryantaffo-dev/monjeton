@@ -841,10 +841,19 @@ const Assistant = () => {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleQuickDebt(debt)}
-                              className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                              onClick={() => {
+                                if (confirmedCards.has(i)) return;
+                                setConfirmedCards(prev => new Set(prev).add(i));
+                                handleQuickDebt(debt);
+                              }}
+                              disabled={confirmedCards.has(i)}
+                              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                                confirmedCards.has(i)
+                                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+                              }`}
                             >
-                              ✅ Confirmer
+                              {confirmedCards.has(i) ? "✅ Confirmé" : "✅ Confirmer"}
                             </button>
                             <button
                               onClick={() => {
