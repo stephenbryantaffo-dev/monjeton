@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const CACHE_DURATION_MS = 15 * 60 * 1000;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") 
@@ -18,7 +18,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Vérifier le cache Supabase
+    // Vérifier le cache
     const { data: cache } = await supabase
       .from("brvm_cache")
       .select("*")
@@ -31,7 +31,6 @@ serve(async (req) => {
       ? now - new Date(cache.fetched_at).getTime() 
       : Infinity;
 
-    // Si cache valide (< 15 min), retourner directement
     if (cache && cacheAge < CACHE_DURATION_MS) {
       return new Response(
         JSON.stringify({ 
@@ -43,24 +42,23 @@ serve(async (req) => {
       );
     }
 
-    // Sinon, scraper brvm.org
-    const resp = await fetch(
-      "https://www.brvm.org/fr/cours-actions/0",
-      {
-        headers: { 
-          "User-Agent": "Mozilla/5.0",
-          "Accept": "text/html"
-        },
-        signal: AbortSignal.timeout(10000),
-      }
-    );
+    // Utiliser un proxy CORS pour contourner le certificat SSL non reconnu de brvm.org
+    const targetUrl = "https://www.brvm.org/fr/cours-actions/0";
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    
+    const resp = await fetch(proxyUrl, {
+      headers: { 
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "text/html"
+      },
+      signal: AbortSignal.timeout(15000),
+    });
 
-    if (!resp.ok) throw new Error("brvm.org unreachable");
+    if (!resp.ok) throw new Error(`Proxy error: ${resp.status}`);
     const html = await resp.text();
 
     // Parser les lignes du tableau
     const rows: any[] = [];
-
     const rowRegex = /<tr[^>]*>[\s\S]*?<\/tr>/gi;
     const tableMatches = html.match(rowRegex) || [];
 
@@ -109,7 +107,6 @@ serve(async (req) => {
       throw new Error("Parsing failed: not enough rows");
     }
 
-    // Enrichir avec noms complets
     const NAMES: Record<string, { name: string; sector: string }> = {
       SNTS:  { name: "SONATEL",      sector: "Télécom · Sénégal" },
       ORAC:  { name: "ORANGE CI",    sector: "Télécom · CI" },
@@ -133,7 +130,6 @@ serve(async (req) => {
       STAC:  { name: "SETAO CI",     sector: "BTP · CI" },
     };
 
-    // Top 10 par variation journalière décroissante
     const top10 = rows
       .sort((a, b) => b.variation - a.variation)
       .slice(0, 10)
