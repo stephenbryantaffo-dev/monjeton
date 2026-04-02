@@ -453,15 +453,23 @@ const Assistant = () => {
       const today = new Date().toISOString().split("T")[0];
 
       if (debt.action === "create_debt") {
-        await supabase.from("debts").insert({
-          user_id: user.id,
-          person_name: debt.person_name,
-          type: debt.debt_type === "owed_to_me" ? "owed_to_me" : "owe",
-          amount: debt.amount || 0,
-          due_date: debt.due_date || null,
-          note: debt.note || "",
-          status: "pending",
-        });
+        const { error } = await supabase
+          .from("debts")
+          .insert({
+            user_id: user.id,
+            person_name: debt.person_name,
+            type: debt.debt_type === "owed_to_me" ? "owed_to_me" : "i_owe",
+            amount: debt.amount || 0,
+            due_date: debt.due_date || null,
+            note: debt.note || "",
+            status: "pending",
+          });
+
+        if (error) {
+          console.error("Debt insert error:", error);
+          toast({ title: "Erreur Supabase", description: error.message, variant: "destructive" });
+          return;
+        }
 
         if (debt.debt_type === "owed_to_me" && debt.amount_paid && debt.amount_paid > 0) {
           await supabase.from("transactions").insert({
@@ -475,7 +483,7 @@ const Assistant = () => {
       }
 
       if (debt.action === "update_debt") {
-        const { data: existing } = await supabase
+        const { data: existing, error: findError } = await supabase
           .from("debts")
           .select("*")
           .eq("user_id", user.id)
@@ -484,14 +492,23 @@ const Assistant = () => {
           .limit(1)
           .maybeSingle();
 
+        if (findError) {
+          console.error("Find debt error:", findError);
+        }
+
         if (existing) {
-          const newRemaining = (debt.remaining != null) ? debt.remaining : Math.max(0, Number(existing.amount) - (debt.amount_paid || 0));
-          await supabase.from("debts")
+          const newAmount = Math.max(0, Number(existing.amount) - (debt.amount_paid || 0));
+          const { error: updateError } = await supabase
+            .from("debts")
             .update({
-              amount: newRemaining,
-              status: newRemaining <= 0 ? "paid" : "pending",
+              amount: newAmount,
+              status: newAmount <= 0 ? "paid" : "pending",
             })
             .eq("id", existing.id);
+
+          if (updateError) {
+            console.error("Update debt error:", updateError);
+          }
         }
 
         if (debt.amount_paid && debt.amount_paid > 0) {
@@ -508,17 +525,19 @@ const Assistant = () => {
       const confirmMsg: Message = {
         role: "assistant",
         content: debt.action === "create_debt"
-          ? `✅ C'est noté !\n\n${debt.debt_type === "owed_to_me"
-              ? `💚 ${debt.person_name} te doit ${(debt.amount || 0).toLocaleString()}F`
-              : `📝 Tu dois ${(debt.amount || 0).toLocaleString()}F à ${debt.person_name}`
-            }${debt.due_date ? `\n📅 Échéance : ${new Date(debt.due_date).toLocaleDateString("fr-FR")}` : ""}\n\nJe te rappellerai avant la date ! 🔔`
-          : `✅ Mis à jour !\n\n💰 ${debt.amount_paid?.toLocaleString()}F reçu de ${debt.person_name}\n📝 Il reste encore ${debt.remaining?.toLocaleString()}F à récupérer`,
+          ? `✅ Enregistré dans la section Dettes !\n\n${
+              debt.debt_type === "owed_to_me"
+                ? `💚 ${debt.person_name} te doit ${(debt.amount || 0).toLocaleString()}F`
+                : `📝 Tu dois ${(debt.amount || 0).toLocaleString()}F à ${debt.person_name}`
+            }${debt.due_date ? `\n📅 Échéance : ${new Date(debt.due_date).toLocaleDateString("fr-FR")}` : ""}\n\nVa dans Dettes pour vérifier 👀`
+          : `✅ Mis à jour dans Dettes !\n💰 ${debt.amount_paid?.toLocaleString()}F reçu de ${debt.person_name}\n📝 Reste : ${debt.remaining?.toLocaleString()}F`,
         type: "text",
       };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
-      toast({ title: "✅ Dette enregistrée !" });
-    } catch {
+      toast({ title: "✅ Dette enregistrée dans Dettes !" });
+    } catch (e) {
+      console.error("handleQuickDebt catch:", e);
       toast({ title: "Erreur", description: "Impossible d'enregistrer la dette", variant: "destructive" });
     }
   };
