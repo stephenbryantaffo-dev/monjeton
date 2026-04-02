@@ -41,6 +41,7 @@ const Install = lazy(() => import("./pages/Install"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const BRVMSimulator = lazy(() => import("./pages/BRVMSimulator"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -82,6 +83,7 @@ const AppContent = () => {
         <Route path="/budgets" element={<ProtectedRoute><OnboardingGuard><Budgets /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/tontine" element={<ProtectedRoute><OnboardingGuard><Tontine /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><OnboardingGuard><Scan /></OnboardingGuard></ProtectedRoute>} />
+        <Route path="/brvm" element={<ProtectedRoute><OnboardingGuard><BRVMSimulator /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
