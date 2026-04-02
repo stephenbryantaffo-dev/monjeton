@@ -36,7 +36,7 @@ type TransactionData = {
 
 type DebtData = {
   action: "create_debt" | "update_debt";
-  debt_type?: "owe" | "owed_to_me";
+  debt_type?: "i_owe" | "owed_to_me";
   person_name: string;
   amount?: number;
   amount_paid?: number;
