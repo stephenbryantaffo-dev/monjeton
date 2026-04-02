@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
-import { formatMoney } from "@/lib/formatMoney";
+
 
 interface Stock {
   ticker: string;
