@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCountry } from "@/contexts/CountryContext";
 import { COUNTRIES } from "@/lib/i18n";
@@ -34,6 +34,7 @@ const menuItems = [
   { icon: PieChart, label: "Budgets", path: "/budgets" },
   { icon: Users, label: "Tontine", path: "/tontine" },
   { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
+  { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
   { icon: CreditCard, label: "Abonnement", path: "/subscribe" },
   { icon: Download, label: "Installer l'app", path: "/install" },
 ];
