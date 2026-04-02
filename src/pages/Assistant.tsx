@@ -183,6 +183,7 @@ const Assistant = () => {
     if (!user) return;
     await supabase.from("assistant_messages").delete().eq("user_id", user.id);
     setMessages(initialMessages);
+    setConfirmedCards(new Set());
     toast({ title: "Historique supprimé", description: "Toutes les conversations ont été effacées." });
   };
 
