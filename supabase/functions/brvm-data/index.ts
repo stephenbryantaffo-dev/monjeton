@@ -42,17 +42,33 @@ serve(async (req) => {
       );
     }
 
-    // Utiliser un proxy CORS pour contourner le certificat SSL non reconnu de brvm.org
+    // Essayer plusieurs proxies pour contourner le certificat SSL de brvm.org
     const targetUrl = "https://www.brvm.org/fr/cours-actions/0";
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+    ];
     
-    const resp = await fetch(proxyUrl, {
-      headers: { 
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html"
-      },
-      signal: AbortSignal.timeout(15000),
-    });
+    let html = "";
+    let fetchSuccess = false;
+    
+    for (const proxyUrl of proxies) {
+      try {
+        const resp = await fetch(proxyUrl, {
+          headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html" },
+          signal: AbortSignal.timeout(20000),
+        });
+        if (resp.ok) {
+          html = await resp.text();
+          fetchSuccess = true;
+          break;
+        }
+      } catch (proxyErr) {
+        console.log(`Proxy failed: ${proxyUrl}`, proxyErr);
+      }
+    }
+    
+    if (!fetchSuccess) throw new Error("All proxies failed");
 
     if (!resp.ok) throw new Error(`Proxy error: ${resp.status}`);
     const html = await resp.text();
