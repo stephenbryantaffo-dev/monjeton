@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.financial-score]
 verify_jwt = false
+
+[functions.brvm-data]
+verify_jwt = false
