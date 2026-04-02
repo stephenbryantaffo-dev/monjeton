@@ -38,6 +38,24 @@ export type Database = {
         }
         Relationships: []
       }
+      brvm_cache: {
+        Row: {
+          data: Json
+          fetched_at: string
+          id: string
+        }
+        Insert: {
+          data?: Json
+          fetched_at?: string
+          id?: string
+        }
+        Update: {
+          data?: Json
+          fetched_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           created_at: string
