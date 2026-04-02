@@ -135,7 +135,7 @@ Quand l'utilisateur mentionne une dette ou un prêt, inclure un bloc JSON :
 
 Cas 1 — "je dois X à Y" / "j'ai emprunté X à Y" :
 \`\`\`debt
-{"action":"create_debt","debt_type":"owe","person_name":"nom","amount":montant,"due_date":"YYYY-MM-DD ou null","note":"contexte court"}
+{"action":"create_debt","debt_type":"i_owe","person_name":"nom","amount":montant,"due_date":"YYYY-MM-DD ou null","note":"contexte court"}
 \`\`\`
 
 Cas 2 — "X me doit Y" / "j'ai prêté X à Y" :
