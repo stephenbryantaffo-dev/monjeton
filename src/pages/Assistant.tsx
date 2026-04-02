@@ -127,6 +127,7 @@ const Assistant = () => {
   const [speakingId, setSpeakingId] = useState<number | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [continuousMode, setContinuousMode] = useState(false);
+  const [confirmedCards, setConfirmedCards] = useState<Set<number>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
