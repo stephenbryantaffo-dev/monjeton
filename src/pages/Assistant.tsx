@@ -127,6 +127,7 @@ const Assistant = () => {
   const [speakingId, setSpeakingId] = useState<number | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [continuousMode, setContinuousMode] = useState(false);
+  const [confirmedCards, setConfirmedCards] = useState<Set<number>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -182,6 +183,7 @@ const Assistant = () => {
     if (!user) return;
     await supabase.from("assistant_messages").delete().eq("user_id", user.id);
     setMessages(initialMessages);
+    setConfirmedCards(new Set());
     toast({ title: "Historique supprimé", description: "Toutes les conversations ont été effacées." });
   };
 
@@ -787,10 +789,19 @@ const Assistant = () => {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleQuickSave(transaction)}
-                              className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                              onClick={() => {
+                                if (confirmedCards.has(i)) return;
+                                setConfirmedCards(prev => new Set(prev).add(i));
+                                handleQuickSave(transaction);
+                              }}
+                              disabled={confirmedCards.has(i)}
+                              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                                confirmedCards.has(i)
+                                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+                              }`}
                             >
-                              ✅ Oui, enregistrer
+                              {confirmedCards.has(i) ? "✅ Enregistré" : "✅ Oui, enregistrer"}
                             </button>
                             <button
                               onClick={() => {
@@ -830,10 +841,19 @@ const Assistant = () => {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleQuickDebt(debt)}
-                              className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                              onClick={() => {
+                                if (confirmedCards.has(i)) return;
+                                setConfirmedCards(prev => new Set(prev).add(i));
+                                handleQuickDebt(debt);
+                              }}
+                              disabled={confirmedCards.has(i)}
+                              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                                confirmedCards.has(i)
+                                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+                              }`}
                             >
-                              ✅ Confirmer
+                              {confirmedCards.has(i) ? "✅ Confirmé" : "✅ Confirmer"}
                             </button>
                             <button
                               onClick={() => {
