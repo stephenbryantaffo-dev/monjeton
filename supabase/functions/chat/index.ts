@@ -57,31 +57,51 @@ serve(async (req) => {
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (user) {
-      const [profileResult, txResult, walletsResult] = await Promise.all([
-        supabaseAuth.from("profiles").select("full_name, country").eq("user_id", user.id).maybeSingle(),
-        supabaseAuth.from("transactions").select("amount, type, note, date, merchant_name, categories(name), wallets(wallet_name)").eq("user_id", user.id).order("date", { ascending: false }).limit(10),
+      const [profileResult, txResult, walletsResult, debtsResult, savingsResult, budgetResult] = await Promise.all([
+        supabaseAuth.from("profiles").select("full_name, country, profile_type, financial_goal, income_range").eq("user_id", user.id).maybeSingle(),
+        supabaseAuth.from("transactions").select("amount, type, note, date, categories(name), wallets(wallet_name)").eq("user_id", user.id).order("date", { ascending: false }).limit(15),
         supabaseAuth.from("wallets").select("wallet_name, currency, initial_balance").eq("user_id", user.id),
+        supabaseAuth.from("debts").select("person_name, type, amount, due_date, status, note").eq("user_id", user.id).eq("status", "pending").order("due_date", { ascending: true }).limit(10),
+        supabaseAuth.from("savings_goals").select("name, target_amount, current_amount, deadline").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
+        supabaseAuth.from("budgets").select("month, year, total_budget").eq("user_id", user.id).order("year", { ascending: false }).order("month", { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       const profile = profileResult.data;
-      const txs = txResult.data;
-      const wallets = walletsResult.data;
+      const txs = txResult.data || [];
+      const wallets = walletsResult.data || [];
+      const debts = debtsResult.data || [];
+      const savings = savingsResult.data || [];
+      const budget = budgetResult.data;
 
       if (profile?.full_name) userName = profile.full_name;
 
-      const walletList = wallets?.map(w => `${w.wallet_name} (${w.currency})`).join(", ") || "aucun";
+      const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+      const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+      const walletList = wallets.map(w => `${w.wallet_name} (${w.currency})`).join(", ") || "aucun";
 
-      if (txs && txs.length > 0) {
-        const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
-        const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
-        const txList = txs.map(t =>
-          `- ${t.date}: ${t.type === "expense" ? "-" : "+"}${Number(t.amount).toLocaleString()} FCFA | ${(t.categories as any)?.name || "?"} | ${t.merchant_name || t.note || ""} | ${(t.wallets as any)?.wallet_name || ""}`
-        ).join("\n");
+      const debtOwed = debts.filter(d => d.type === "i_owe").map(d => `- Doit ${Number(d.amount).toLocaleString()}F à ${d.person_name}${d.due_date ? ` (avant ${d.due_date})` : ""}`).join("\n");
+      const debtOwedToMe = debts.filter(d => d.type === "owed_to_me").map(d => `- ${d.person_name} doit ${Number(d.amount).toLocaleString()}F${d.due_date ? ` (avant ${d.due_date})` : ""}`).join("\n");
+      const savingsList = savings.map(s => `- ${s.name}: ${Number(s.current_amount).toLocaleString()}F / ${Number(s.target_amount).toLocaleString()}F${s.deadline ? ` (avant ${s.deadline})` : ""}`).join("\n");
+      const txList = txs.map(t => `- ${t.date}: ${t.type === "expense" ? "-" : "+"}${Number(t.amount).toLocaleString()}F | ${(t.categories as any)?.name || "?"} | ${t.note || ""} | ${(t.wallets as any)?.wallet_name || ""}`).join("\n");
 
-        userContext = `\n\nContexte financier de ${userName} (${profile?.country || "CI"}):\nPortefeuilles: ${walletList}\n10 dernières transactions:\n${txList}\nRevenus récents: ${totalIncome.toLocaleString()} FCFA\nDépenses récentes: ${totalExpense.toLocaleString()} FCFA\nSolde net récent: ${(totalIncome - totalExpense).toLocaleString()} FCFA\nCatégories: ${[...new Set(txs.map(t => (t.categories as any)?.name).filter(Boolean))].join(", ")}`;
-      } else {
-        userContext = `\n\nContexte: ${userName} (${profile?.country || "CI"}) n'a pas encore de transactions. Portefeuilles: ${walletList}`;
-      }
+      userContext = `
+=== CONTEXTE FINANCIER DE ${userName} ===
+PROFIL : ${profile?.profile_type || "?"} | Objectif: ${profile?.financial_goal || "?"} | Revenus: ${profile?.income_range || "?"}
+PAYS : ${profile?.country || "CI"}
+PORTEFEUILLES : ${walletList}
+REVENUS RÉCENTS : ${totalIncome.toLocaleString()} FCFA
+DÉPENSES RÉCENTES : ${totalExpense.toLocaleString()} FCFA
+SOLDE NET : ${(totalIncome - totalExpense).toLocaleString()} FCFA
+${budget ? `BUDGET MENSUEL : ${Number(budget.total_budget).toLocaleString()} FCFA (${budget.month}/${budget.year})` : ""}
+=== DETTES QUE L'UTILISATEUR DOIT PAYER ===
+${debtOwed || "Aucune dette à payer"}
+=== CRÉANCES (ce qu'on lui doit) ===
+${debtOwedToMe || "Personne ne lui doit d'argent"}
+=== OBJECTIFS D'ÉPARGNE EN COURS ===
+${savingsList || "Aucun objectif d'épargne"}
+=== 15 DERNIÈRES TRANSACTIONS ===
+${txList || "Aucune transaction"}
+`;
     }
 
     const systemPrompt = `Tu es le coach financier personnel de ${userName}. Il utilise Mon Jeton pour gérer ses finances en Afrique de l'Ouest (FCFA).
