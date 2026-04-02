@@ -34,6 +34,7 @@ const menuItems = [
   { icon: PieChart, label: "Budgets", path: "/budgets" },
   { icon: Users, label: "Tontine", path: "/tontine" },
   { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
+  { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
   { icon: CreditCard, label: "Abonnement", path: "/subscribe" },
   { icon: Download, label: "Installer l'app", path: "/install" },
 ];
