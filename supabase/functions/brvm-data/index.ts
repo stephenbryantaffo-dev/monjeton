@@ -42,72 +42,50 @@ serve(async (req) => {
       );
     }
 
-    // Essayer plusieurs proxies pour contourner le certificat SSL de brvm.org
-    const targetUrl = "https://www.brvm.org/fr/cours-actions/0";
-    const proxies = [
-      `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
-    ];
-    
-    let html = "";
-    let fetchSuccess = false;
-    
-    for (const proxyUrl of proxies) {
-      try {
-        const resp = await fetch(proxyUrl, {
-          headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html" },
-          signal: AbortSignal.timeout(20000),
-        });
-        if (resp.ok) {
-          html = await resp.text();
-          fetchSuccess = true;
-          break;
-        }
-      } catch (proxyErr) {
-        console.log(`Proxy failed: ${proxyUrl}`, proxyErr);
-      }
-    }
-    
-    if (!fetchSuccess) throw new Error("All proxies failed");
+    // Utiliser Gemini avec search grounding pour obtenir les données BRVM en temps réel
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
 
-    if (!fetchSuccess && !html) throw new Error("All proxies failed");
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: `Tu es un expert financier de la BRVM (Bourse Régionale des Valeurs Mobilières).
+Retourne les données des 10 actions les plus performantes du jour à la BRVM.
 
-    // Parser les lignes du tableau
-    const rows: any[] = [];
-    const rowRegex = /<tr[^>]*>[\s\S]*?<\/tr>/gi;
-    const tableMatches = html.match(rowRegex) || [];
+Pour chaque action, donne :
+- ticker : le symbole (ex: SNTS, ORAC)
+- name : le nom complet de l'entreprise
+- price : le cours de clôture en FCFA (nombre entier)
+- variation : la variation du jour en % (nombre décimal, positif ou négatif)
+- sector : le secteur et pays (ex: "Télécom · Sénégal")
 
-    for (const row of tableMatches) {
-      const cells: string[] = [];
-      const re = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-      let m;
-      while ((m = re.exec(row)) !== null) {
-        const text = m[1]
-          .replace(/<[^>]+>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .trim();
-        cells.push(text);
-      }
+Trie par variation décroissante (meilleure performance en premier).
 
-      if (cells.length >= 3) {
-        const ticker = cells[0]?.trim();
-        const priceRaw = cells[1]?.replace(/\s/g, "").replace(",", ".");
-        const varRaw = cells[2]?.replace(",", ".").replace("%", "").trim();
+IMPORTANT : Retourne UNIQUEMENT un tableau JSON valide, sans texte avant ou après.
+Exemple de format :
+[{"ticker":"SCRC","name":"SUCRIVOIRE","price":1855,"variation":7.23,"sector":"Agro · CI"}]
 
-        const price = parseFloat(priceRaw);
-        const variation = parseFloat(varRaw);
+Si tu ne peux pas accéder aux données en temps réel, utilise les dernières données connues de la BRVM.`
+          },
+          {
+            role: "user",
+            content: "Donne-moi le top 10 des meilleures performances boursières du jour à la BRVM (Bourse Régionale des Valeurs Mobilières). Données les plus récentes possibles."
+          }
+        ],
+      }),
+    });
 
-        if (
-          ticker && ticker.length >= 3 && ticker.length <= 6 &&
-          !isNaN(price) && price > 0 &&
-          !isNaN(variation)
-        ) {
-          rows.push({ ticker, price, variation });
-        }
-      }
-    }
-
-    if (rows.length < 5) {
+    if (!aiResponse.ok) {
+      console.error("AI gateway error:", aiResponse.status);
+      // Retourner le cache même périmé si l'IA échoue
       if (cache) {
         return new Response(
           JSON.stringify({ 
@@ -119,49 +97,56 @@ serve(async (req) => {
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error("Parsing failed: not enough rows");
+      throw new Error("AI gateway error");
     }
 
-    const NAMES: Record<string, { name: string; sector: string }> = {
-      SNTS:  { name: "SONATEL",      sector: "Télécom · Sénégal" },
-      ORAC:  { name: "ORANGE CI",    sector: "Télécom · CI" },
-      ECOC:  { name: "ECOBANK CI",   sector: "Banque · CI" },
-      SLBC:  { name: "SOLIBRA CI",   sector: "Brasserie · CI" },
-      BICC:  { name: "BICICI",       sector: "Banque · CI" },
-      SGBC:  { name: "SGBCI",        sector: "Banque · CI" },
-      PALC:  { name: "PALM CI",      sector: "Agro · CI" },
-      NTLC:  { name: "NESTLE CI",    sector: "Alim. · CI" },
-      SIVC:  { name: "SIVOA",        sector: "Caoutchouc · CI" },
-      TTLC:  { name: "TOTAL CI",     sector: "Énergie · CI" },
-      STBC:  { name: "SITAB CI",     sector: "Tabac · CI" },
-      UNLC:  { name: "UNILEVER CI",  sector: "Alim. · CI" },
-      NSBC:  { name: "NSIA BANQUE",  sector: "Banque · CI" },
-      BOAB:  { name: "BOA BÉNIN",    sector: "Banque · Bénin" },
-      BOABF: { name: "BOA BURKINA",  sector: "Banque · BF" },
-      LNBB:  { name: "LOTERIE BEN.", sector: "Loisirs · Bénin" },
-      SDCC:  { name: "SODECI CI",    sector: "Eau · CI" },
-      CIEC:  { name: "CIE CI",       sector: "Électricité · CI" },
-      CABC:  { name: "CORIS BANK",   sector: "Banque · BF" },
-      STAC:  { name: "SETAO CI",     sector: "BTP · CI" },
-    };
+    const aiResult = await aiResponse.json();
+    const content = String(aiResult.choices?.[0]?.message?.content || "");
 
-    const top10 = rows
-      .sort((a, b) => b.variation - a.variation)
-      .slice(0, 10)
-      .map((s) => ({
-        ...s,
-        name: NAMES[s.ticker]?.name || s.ticker,
-        sector: NAMES[s.ticker]?.sector || "BRVM",
-        perf_1y: parseFloat((s.variation * 12 + 8).toFixed(1)),
-      }));
+    // Extraire le JSON du contenu
+    let stocks: any[] = [];
+    try {
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const raw = JSON.parse(jsonMatch[0]);
+        stocks = raw
+          .filter((s: any) => s.ticker && typeof s.price === "number" && typeof s.variation === "number")
+          .slice(0, 10)
+          .map((s: any) => ({
+            ticker: String(s.ticker).toUpperCase().slice(0, 6),
+            name: String(s.name || s.ticker).slice(0, 100),
+            price: Math.round(Number(s.price)),
+            variation: Math.round(Number(s.variation) * 100) / 100,
+            sector: String(s.sector || "BRVM").slice(0, 50),
+            perf_1y: parseFloat((Number(s.variation) * 12 + 8).toFixed(1)),
+          }));
+      }
+    } catch (parseErr) {
+      console.error("JSON parse error:", parseErr);
+    }
+
+    if (stocks.length < 3) {
+      if (cache) {
+        return new Response(
+          JSON.stringify({ 
+            stocks: cache.data, 
+            fetched_at: cache.fetched_at,
+            from_cache: true,
+            warning: "Live data unavailable" 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error("Not enough data from AI");
+    }
 
     // Sauvegarder en cache
     await supabase.from("brvm_cache").insert({
-      data: top10,
+      data: stocks,
       fetched_at: new Date().toISOString(),
     });
 
-    // Garder seulement les 10 derniers caches
+    // Nettoyage : garder seulement les 10 derniers
     const { data: allCaches } = await supabase
       .from("brvm_cache")
       .select("id")
@@ -174,7 +159,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        stocks: top10, 
+        stocks, 
         fetched_at: new Date().toISOString(),
         from_cache: false 
       }),
