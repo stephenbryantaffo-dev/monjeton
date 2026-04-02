@@ -70,8 +70,7 @@ serve(async (req) => {
     
     if (!fetchSuccess) throw new Error("All proxies failed");
 
-    if (!resp.ok) throw new Error(`Proxy error: ${resp.status}`);
-    const html = await resp.text();
+    if (!fetchSuccess && !html) throw new Error("All proxies failed");
 
     // Parser les lignes du tableau
     const rows: any[] = [];
