@@ -62,7 +62,7 @@ const CyclesTab = ({ tontines }: Props) => {
 
     if (open) {
       const pRes = await supabase.from("tontine_payments" as any).select("*").eq("cycle_id", open.id);
-      setPayments((pRes.data || []) as TontinePayment[]);
+      setPayments((pRes.data || []) as unknown as TontinePayment[]);
     } else {
       setPayments([]);
     }

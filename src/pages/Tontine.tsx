@@ -25,7 +25,7 @@ const TontinePage = () => {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setTontines((data || []) as TontineData[]);
+    setTontines((data || []) as unknown as TontineData[]);
     setLoading(false);
   };
 

@@ -41,11 +41,11 @@ const ReportsTab = ({ tontines }: Props) => {
       const allPayments: TontinePayment[] = [];
       for (const c of (cRes.data || []) as unknown as TontineCycle[]) {
         const { data } = await supabase.from("tontine_payments" as any).select("*").eq("cycle_id", c.id);
-        if (data) allPayments.push(...(data as TontinePayment[]));
+        if (data) allPayments.push(...(data as unknown as TontinePayment[]));
       }
       setPayments(allPayments);
     } else {
-      setPayments((pRes.data || []) as TontinePayment[]);
+      setPayments((pRes.data || []) as unknown as TontinePayment[]);
     }
   };
 
