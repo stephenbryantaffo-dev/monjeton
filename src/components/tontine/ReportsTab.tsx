@@ -39,7 +39,7 @@ const ReportsTab = ({ tontines }: Props) => {
 
     if (pRes.error) {
       const allPayments: TontinePayment[] = [];
-      for (const c of (cRes.data || []) as TontineCycle[]) {
+      for (const c of (cRes.data || []) as unknown as TontineCycle[]) {
         const { data } = await supabase.from("tontine_payments" as any).select("*").eq("cycle_id", c.id);
         if (data) allPayments.push(...(data as TontinePayment[]));
       }
