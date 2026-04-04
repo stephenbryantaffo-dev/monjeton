@@ -474,6 +474,65 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          amount: number | null
+          category: string | null
+          created_at: string
+          currency: string | null
+          date: string | null
+          id: string
+          image_base64: string | null
+          merchant: string | null
+          note: string | null
+          raw_data: Json | null
+          transaction_id: string | null
+          type: string | null
+          user_id: string
+          wallet: string | null
+        }
+        Insert: {
+          amount?: number | null
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          date?: string | null
+          id?: string
+          image_base64?: string | null
+          merchant?: string | null
+          note?: string | null
+          raw_data?: Json | null
+          transaction_id?: string | null
+          type?: string | null
+          user_id: string
+          wallet?: string | null
+        }
+        Update: {
+          amount?: number | null
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          date?: string | null
+          id?: string
+          image_base64?: string | null
+          merchant?: string | null
+          note?: string | null
+          raw_data?: Json | null
+          transaction_id?: string | null
+          type?: string | null
+          user_id?: string
+          wallet?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       savings_goals: {
         Row: {
           created_at: string
