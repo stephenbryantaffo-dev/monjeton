@@ -137,6 +137,26 @@ const Scan = () => {
         setScansRemaining((prev) => prev - 1);
       }
 
+      // Save receipt to receipts table
+      try {
+        const base64Data = preview.split(",")[1] || "";
+        await supabase.from("receipts" as any).insert({
+          user_id: user.id,
+          image_base64: base64Data.length > 500000 ? base64Data.slice(0, 500000) : base64Data,
+          amount: parsed.amount || null,
+          currency: parsed.currency || "XOF",
+          merchant: parsed.merchant || null,
+          date: parsed.date || new Date().toISOString().split("T")[0],
+          category: parsed.category || null,
+          type: parsed.type || "expense",
+          wallet: parsed.wallet || null,
+          raw_data: parsed,
+        });
+        toast({ title: "🧾 Reçu sauvegardé", description: "Disponible dans Mes Reçus pour audit" });
+      } catch (e) {
+        console.error("saveReceiptToDatabase error:", e);
+      }
+
       // Show success animation briefly
       setShowSuccess(true);
       setTimeout(() => {
