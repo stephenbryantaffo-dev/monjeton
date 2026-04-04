@@ -52,8 +52,8 @@ const CyclesTab = ({ tontines }: Props) => {
       supabase.from("tontine_members" as any).select("*").eq("tontine_id", selectedId),
       supabase.from("tontine_cycles" as any).select("*").eq("tontine_id", selectedId).order("cycle_number", { ascending: true }),
     ]);
-    const allMembers = (mRes.data || []) as TontineMember[];
-    const allCycles = (cRes.data || []) as TontineCycle[];
+    const allMembers = (mRes.data || []) as unknown as TontineMember[];
+    const allCycles = (cRes.data || []) as unknown as TontineCycle[];
     setMembers(allMembers);
 
     const open = allCycles.find((c) => c.status === "open") || null;
