@@ -34,8 +34,8 @@ const ReportsTab = ({ tontines }: Props) => {
       supabase.from("tontine_cycles" as any).select("*").eq("tontine_id", selectedId).order("cycle_number"),
       supabase.from("tontine_payments" as any).select("*, tontine_cycles!inner(tontine_id)").eq("tontine_cycles.tontine_id", selectedId),
     ]);
-    setMembers((mRes.data || []) as TontineMember[]);
-    setCycles((cRes.data || []) as TontineCycle[]);
+    setMembers((mRes.data || []) as unknown as TontineMember[]);
+    setCycles((cRes.data || []) as unknown as TontineCycle[]);
 
     if (pRes.error) {
       const allPayments: TontinePayment[] = [];
