@@ -27,6 +27,7 @@ import {
 
 const menuItems = [
   { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
+  { icon: FileText, label: "Mes Reçus", sublabel: "Historique et audit", path: "/receipts" },
   { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
   { icon: Tag, label: "Catégories", path: "/categories" },
   { icon: Target, label: "Épargne", path: "/savings" },
