@@ -599,26 +599,76 @@ export type Database = {
         }
         Relationships: []
       }
+      tontine_cycles: {
+        Row: {
+          created_at: string
+          cycle_number: number
+          end_date: string
+          id: string
+          period_label: string
+          start_date: string
+          status: string
+          tontine_id: string
+          total_collected: number
+          total_expected: number
+        }
+        Insert: {
+          created_at?: string
+          cycle_number: number
+          end_date: string
+          id?: string
+          period_label: string
+          start_date: string
+          status?: string
+          tontine_id: string
+          total_collected?: number
+          total_expected?: number
+        }
+        Update: {
+          created_at?: string
+          cycle_number?: number
+          end_date?: string
+          id?: string
+          period_label?: string
+          start_date?: string
+          status?: string
+          tontine_id?: string
+          total_collected?: number
+          total_expected?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_cycles_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tontine_members: {
         Row: {
           created_at: string
           id: string
-          member_name: string
-          member_phone: string | null
+          is_owner: boolean
+          name: string
+          phone: string | null
           tontine_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          member_name: string
-          member_phone?: string | null
+          is_owner?: boolean
+          name: string
+          phone?: string | null
           tontine_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          member_name?: string
-          member_phone?: string | null
+          is_owner?: boolean
+          name?: string
+          phone?: string | null
           tontine_id?: string
         }
         Relationships: [
@@ -633,38 +683,45 @@ export type Database = {
       }
       tontine_payments: {
         Row: {
-          amount: number
+          amount_paid: number
           created_at: string
-          date: string
+          cycle_id: string
           id: string
-          member_name: string
-          status: string
-          tontine_id: string
+          member_id: string
+          note: string | null
+          payment_date: string
         }
         Insert: {
-          amount?: number
+          amount_paid?: number
           created_at?: string
-          date?: string
+          cycle_id: string
           id?: string
-          member_name: string
-          status?: string
-          tontine_id: string
+          member_id: string
+          note?: string | null
+          payment_date?: string
         }
         Update: {
-          amount?: number
+          amount_paid?: number
           created_at?: string
-          date?: string
+          cycle_id?: string
           id?: string
-          member_name?: string
-          status?: string
-          tontine_id?: string
+          member_id?: string
+          note?: string | null
+          payment_date?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tontine_payments_tontine_id_fkey"
-            columns: ["tontine_id"]
+            foreignKeyName: "tontine_payments_cycle_id_fkey"
+            columns: ["cycle_id"]
             isOneToOne: false
-            referencedRelation: "tontines"
+            referencedRelation: "tontine_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tontine_payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "tontine_members"
             referencedColumns: ["id"]
           },
         ]
@@ -673,31 +730,37 @@ export type Database = {
         Row: {
           contribution_amount: number
           created_at: string
+          custom_frequency_days: number | null
+          end_date: string | null
           frequency: string
           id: string
-          members_count: number
           name: string
           start_date: string
+          status: string
           user_id: string
         }
         Insert: {
           contribution_amount?: number
           created_at?: string
+          custom_frequency_days?: number | null
+          end_date?: string | null
           frequency?: string
           id?: string
-          members_count?: number
           name: string
           start_date?: string
+          status?: string
           user_id: string
         }
         Update: {
           contribution_amount?: number
           created_at?: string
+          custom_frequency_days?: number | null
+          end_date?: string | null
           frequency?: string
           id?: string
-          members_count?: number
           name?: string
           start_date?: string
+          status?: string
           user_id?: string
         }
         Relationships: []
