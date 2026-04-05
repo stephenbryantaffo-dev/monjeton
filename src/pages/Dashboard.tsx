@@ -487,6 +487,8 @@ const Dashboard = () => {
 
           <DashboardTontineWidget />
 
+          <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
+
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
               <p className="text-muted-foreground text-sm">Aucune transaction pour cette période.</p>
