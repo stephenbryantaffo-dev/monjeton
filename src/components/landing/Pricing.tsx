@@ -14,7 +14,7 @@ const plans = [
     description: "Pour découvrir Mon Jeton et commencer à suivre vos finances.",
     price: 0,
     yearlyPrice: 0,
-    buttonText: "Créer un compte",
+    buttonText: "S'inscrire",
     popular: false,
     includes: [
       "1 portefeuille",

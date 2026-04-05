@@ -23,7 +23,7 @@ const FinalCTA = () => (
         </p>
         <Button asChild className="bg-[#7CFF3A] text-[#05070A] font-bold px-10 h-12 text-base hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]">
           <Link to="/signup">
-            Créer un compte
+            S'inscrire
           </Link>
         </Button>
       </div>

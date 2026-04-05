@@ -163,22 +163,22 @@ const Hero = () => {
           {/* Buttons — pointer-events restored on each button individually */}
           <div className="relative z-20 flex flex-col sm:flex-row gap-4 justify-center mb-12 pointer-events-auto">
             <Button
-              asChild
+              onClick={() => navigate("/signup")}
               className="w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]"
             >
-              <Link to="/signup">
-                Créer un compte
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
+              S'inscrire
+              <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
             <Button
               variant="outline"
               className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
               onClick={() => {
-                const el = document.getElementById("features");
+                const el = document.getElementById("demo") || document.getElementById("features");
                 if (el) {
                   const top = el.getBoundingClientRect().top + window.scrollY - 80;
                   window.scrollTo({ top, behavior: "smooth" });
+                } else {
+                  navigate("/signup");
                 }
               }}
             >

@@ -67,7 +67,7 @@ const Navbar = () => {
               size="sm"
               className="bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_25px_rgba(124,255,58,0.3)]"
             >
-              <Link to="/signup">Créer un compte</Link>
+              <Link to="/signup">S'inscrire</Link>
             </Button>
           </div>
 
@@ -100,7 +100,7 @@ const Navbar = () => {
               </Link>
               <Link to="/signup" className="flex-1">
                 <Button className="w-full bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90">
-                  Créer un compte
+                  S'inscrire
                 </Button>
               </Link>
             </div>
