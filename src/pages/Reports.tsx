@@ -335,7 +335,7 @@ const Reports = () => {
             </BorderRotate>
           </motion.div>
         </>
-      ) : (
+      ) : activeTab === 1 ? (
         /* PREDICTIONS TAB */
         <>
           {predictions.length === 0 ? (
