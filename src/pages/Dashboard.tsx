@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
+import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -443,7 +444,9 @@ const Dashboard = () => {
               setTrendMode={setTrendMode}
               trendModes={trendModes}
             />
-          </Suspense>
+           </Suspense>
+
+          <DashboardTontineWidget />
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
@@ -561,6 +564,7 @@ const Dashboard = () => {
         txCount={dailyReminder.txCount}
         firstName={profile?.full_name?.split(" ")[0] || ""}
         profileType={profile?.profile_type}
+        userId={user?.id}
       />
       <MonthlyBadge
         open={monthlyBadge.show}

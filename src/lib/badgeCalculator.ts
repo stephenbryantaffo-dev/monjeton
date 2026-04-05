@@ -99,12 +99,39 @@ export const BADGES_CI: Record<string, Badge> = {
     color: "hsl(0, 70%, 60%)",
     category: "balanced",
   },
+  tontine_champion: {
+    id: "tontine_champion",
+    emoji: "🤝",
+    title: "Le Solidaire",
+    subtitle: "Tu cotises toujours à l'heure ! La tontine t'adore boss.",
+    description: "100% de tes cotisations payées à temps",
+    color: "hsl(150, 70%, 45%)",
+    category: "champion",
+  },
+  tontine_retard: {
+    id: "tontine_retard",
+    emoji: "😅",
+    title: "Le Toujours Tard",
+    subtitle: "Eh fréro, la tontine c'est pas 'on verra demain' hein !",
+    description: "Tu as des cotisations en retard ce mois",
+    color: "hsl(30, 90%, 55%)",
+    category: "social",
+  },
 };
 
 export const calculateMonthlyBadge = (
   transactions: any[],
-  profile: any
+  profile: any,
+  tontineStats?: { totalCycles: number; paidOnTime: number; hasLatePayments: boolean }
 ): Badge => {
+  // Tontine badges take priority if user has tontines
+  if (tontineStats && tontineStats.totalCycles > 0) {
+    if (tontineStats.hasLatePayments) return BADGES_CI.tontine_retard;
+    if (tontineStats.paidOnTime === tontineStats.totalCycles && tontineStats.totalCycles >= 1) {
+      return BADGES_CI.tontine_champion;
+    }
+  }
+
   const expenses = transactions.filter((t) => t.type === "expense");
   const income = transactions.filter((t) => t.type === "income");
   const totalExpense = expenses.reduce((s, t) => s + Number(t.amount), 0);
