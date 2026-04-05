@@ -55,6 +55,8 @@ const Budgets = () => {
   const [newCatBudget, setNewCatBudget] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
+  const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
