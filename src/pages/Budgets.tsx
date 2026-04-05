@@ -304,10 +304,19 @@ const Budgets = () => {
         {categoryBudgets.map((cb) => {
           const pct = cb.budget_amount > 0 ? Math.min(((cb.spent || 0) / cb.budget_amount) * 100, 100) : 0;
           const over = (cb.spent || 0) > cb.budget_amount;
+          const pred = predictions.find(p => p.category === (cb.category?.name || ""));
+          const trendIcon = pred?.trend === "up"
+            ? <TrendingUp className="w-3.5 h-3.5 text-destructive" />
+            : pred?.trend === "down"
+              ? <TrendingDown className="w-3.5 h-3.5 text-primary" />
+              : pred ? <MinusIcon className="w-3.5 h-3.5 text-muted-foreground" /> : null;
           return (
             <BorderRotate key={cb.id} className={`p-4 ${over ? "border border-destructive/40" : ""}`} animationSpeed={18}>
               <div className="flex items-center justify-between mb-2 gap-2">
-                <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
+                  {trendIcon}
+                </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-semibold ${over ? "text-destructive" : "text-muted-foreground"}`}>
                     {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
@@ -317,6 +326,11 @@ const Budgets = () => {
               </div>
               <Progress value={pct} className="h-1.5" />
               {over && <p className="text-[10px] text-destructive mt-1">Dépassement !</p>}
+              {pred && !over && pred.predictedEndOfMonth > cb.budget_amount && (
+                <p className="text-[10px] text-[hsl(30,90%,55%)] mt-1">
+                  ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} F en fin de mois
+                </p>
+              )}
             </BorderRotate>
           );
         })}
