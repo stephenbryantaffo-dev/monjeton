@@ -553,7 +553,73 @@ const Assistant = () => {
     }
   };
 
-  const handleSend = async () => {
+  // --- Handle update_transaction action from assistant ---
+  const handleAssistantAction = async (rawContent: string) => {
+    // Check for update_transaction
+    const updateMatch = rawContent.match(/```transaction\s*\n?([\s\S]*?)\n?```/);
+    if (!updateMatch) return;
+
+    let action: any;
+    try {
+      action = JSON.parse(updateMatch[1].trim());
+    } catch {
+      return;
+    }
+
+    if (!user || !action?.action) return;
+
+    if (action.action === "update_transaction") {
+      const amount = Number(action.amount) || 0;
+      const date = String(action.date || "");
+      const catName = String(action.category || "").trim();
+
+      const { data: cat } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .ilike("name", catName)
+        .maybeSingle();
+
+      if (!cat) {
+        toast({ title: `Catégorie "${catName}" introuvable`, description: "Vérifie l'orthographe dans ton message", variant: "destructive" });
+        return;
+      }
+
+      let query = supabase
+        .from("transactions")
+        .select("id, amount, note, merchant_name")
+        .eq("user_id", user.id);
+
+      if (date) query = query.eq("date", date);
+      if (amount > 0) {
+        query = query.gte("amount", amount * 0.85).lte("amount", amount * 1.15);
+      }
+
+      const { data: txList } = await query.limit(1);
+      const tx = txList?.[0];
+
+      if (!tx) {
+        toast({ title: "Transaction introuvable", description: `Aucune transaction de ${amount.toLocaleString()} FCFA trouvée`, variant: "destructive" });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("transactions")
+        .update({ category_id: cat.id })
+        .eq("id", tx.id);
+
+      if (error) {
+        toast({ title: "Erreur Supabase", variant: "destructive" });
+        return;
+      }
+
+      const label = tx.merchant_name || tx.note || "Transaction";
+      const confirmText = `✅ Catégorie mise à jour !\n📦 ${label} — ${Number(tx.amount).toLocaleString()} FCFA\n📂 Déplacé vers : ${cat.name}`;
+      setMessages(prev => [...prev, { role: "assistant", content: confirmText, type: "text" }]);
+      await saveMessage("assistant", confirmText);
+    }
+  };
+
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
     const userMsg: Message = {
