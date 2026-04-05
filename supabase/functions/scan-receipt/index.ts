@@ -90,8 +90,18 @@ Extract the following information as JSON:
   "date": "YYYY-MM-DD",
   "merchant": "store or merchant name",
   "type": "expense",
-  "category": "most likely category"
+  "category": "most likely category",
+  "items": [
+    { "name": "item name", "quantity": number, "price": number (unit price × quantity) }
+  ]
 }
+
+ITEMS EXTRACTION RULES:
+- Extract EVERY individual line item visible on the receipt
+- For each item: name, quantity (default 1 if not shown), price (total for that line)
+- Include discounts as negative amounts
+- If no individual items are readable, return an empty array []
+- Items should be in the order they appear on the receipt
 
 CATEGORY DETECTION (French/English):
 - "alimentation/food/grocery/supermarché/market" → "Alimentation"
@@ -107,7 +117,7 @@ CATEGORY DETECTION (French/English):
 AMOUNT RULES:
 - Look for: Total, Total TTC, Amount Due, Grand Total, Montant Total, Total à Payer, TOTAL, NET AMOUNT
 - Always take the FINAL total (after taxes)
-- Ignore subtotals and individual item prices
+- Ignore subtotals and individual item prices for the main amount
 
 CURRENCY DETECTION:
 - $ → USD, € → EUR, £ → GBP
@@ -158,7 +168,17 @@ Return ONLY the JSON, no other text.`;
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const raw = JSON.parse(jsonMatch[0]);
-        // Sanitize output
+        // Sanitize items array
+        let items: any[] = [];
+        if (Array.isArray(raw.items)) {
+          items = raw.items
+            .filter((it: any) => it && typeof it === "object" && it.name)
+            .map((it: any) => ({
+              name: String(it.name).replace(/[<>]/g, "").slice(0, 200),
+              quantity: Math.max(1, Math.min(Number(it.quantity) || 1, 9999)),
+              price: Math.max(0, Math.min(Number(it.price) || 0, 999_999_999)),
+            }));
+        }
         parsed = {
           amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
           currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
@@ -167,6 +187,7 @@ Return ONLY the JSON, no other text.`;
           type: raw.type === "income" ? "income" : "expense",
           wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
           category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+          items,
         };
       }
     } catch {

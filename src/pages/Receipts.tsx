@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Download, Search, Trash2, Plus, Camera, Image as ImageIcon,
   X, ArrowLeft, Edit2, Link as LinkIcon, Archive, CheckCircle2, Loader2,
-  ChevronDown,
+  ChevronDown, BarChart3, Store, Tag,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,6 +91,7 @@ const Receipts = () => {
 
   // Image zoom
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"gallery" | "accounting">("gallery");
 
   useEffect(() => {
     if (user) fetchReceipts();
@@ -376,80 +377,100 @@ ${receiptPages}
           </motion.div>
         </div>
 
-        {/* Status filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {statusFilters.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setStatusFilter(f.key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${statusFilter === f.key ? "bg-primary text-primary-foreground" : "glass text-muted-foreground"}`}
-            >
-              {f.label}
-            </button>
-          ))}
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 glass rounded-xl">
+          <button
+            onClick={() => setActiveTab("gallery")}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activeTab === "gallery" ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <FileText className="w-3.5 h-3.5" /> Galerie
+          </button>
+          <button
+            onClick={() => setActiveTab("accounting")}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activeTab === "accounting" ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <BarChart3 className="w-3.5 h-3.5" /> Comptabilité
+          </button>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par marchand ou montant..." className="pl-9 bg-secondary border-border" />
-        </div>
+        {activeTab === "gallery" ? (
+          <>
+            {/* Status filters */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {statusFilters.map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${statusFilter === f.key ? "bg-primary text-primary-foreground" : "glass text-muted-foreground"}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Export buttons */}
-        <div className="flex gap-2">
-          <Button onClick={exportPDF} variant="outline" className="flex-1 glass" size="sm">
-            <Download className="w-4 h-4 mr-1" /> PDF
-          </Button>
-          <Button onClick={exportCSV} variant="outline" className="flex-1 glass" size="sm">
-            <Download className="w-4 h-4 mr-1" /> CSV
-          </Button>
-        </div>
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par marchand ou montant..." className="pl-9 bg-secondary border-border" />
+            </div>
 
-        {/* Receipt grid */}
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Chargement...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16 space-y-3">
-            <FileText className="w-12 h-12 mx-auto text-muted-foreground/40" />
-            <p className="text-muted-foreground font-medium">Aucun reçu</p>
-            <p className="text-xs text-muted-foreground">Scanne un reçu avec le bouton +</p>
-          </div>
+            {/* Export buttons */}
+            <div className="flex gap-2">
+              <Button onClick={exportPDF} variant="outline" className="flex-1 glass" size="sm">
+                <Download className="w-4 h-4 mr-1" /> PDF
+              </Button>
+              <Button onClick={exportCSV} variant="outline" className="flex-1 glass" size="sm">
+                <Download className="w-4 h-4 mr-1" /> CSV
+              </Button>
+            </div>
+
+            {/* Receipt grid */}
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Chargement...</div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-16 space-y-3">
+                <FileText className="w-12 h-12 mx-auto text-muted-foreground/40" />
+                <p className="text-muted-foreground font-medium">Aucun reçu</p>
+                <p className="text-xs text-muted-foreground">Scanne un reçu avec le bouton +</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {filtered.map((r, i) => (
+                  <motion.div
+                    key={r.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    onClick={() => openDetail(r)}
+                    className="cursor-pointer"
+                  >
+                    <BorderRotate className="overflow-hidden" animationSpeed={18}>
+                      <div className="h-28 bg-secondary flex items-center justify-center overflow-hidden">
+                        {r.image_base64 ? (
+                          <img src={`data:image/jpeg;base64,${r.image_base64}`} alt="reçu" className="w-full h-full object-cover" />
+                        ) : (
+                          <FileText className="w-8 h-8 text-muted-foreground/40" />
+                        )}
+                      </div>
+                      <div className="p-3 space-y-1">
+                        <p className="text-sm font-semibold text-foreground truncate">{r.merchant_name || "Reçu scanné"}</p>
+                        <p className="text-sm font-bold text-primary">{formatAmount(r.total_amount || 0)} F</p>
+                        <p className="text-[10px] text-muted-foreground">{r.receipt_date ? new Date(r.receipt_date).toLocaleDateString("fr-FR") : "-"}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(statusBadge[r.status] || statusBadge.pending).color}`}>
+                            {(statusBadge[r.status] || statusBadge.pending).label}
+                          </span>
+                          {r.transaction_id && <span className="text-[10px] text-primary">✅ Lié</span>}
+                        </div>
+                      </div>
+                    </BorderRotate>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {filtered.map((r, i) => (
-              <motion.div
-                key={r.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.03 }}
-                onClick={() => openDetail(r)}
-                className="cursor-pointer"
-              >
-                <BorderRotate className="overflow-hidden" animationSpeed={18}>
-                  {/* Thumbnail */}
-                  <div className="h-28 bg-secondary flex items-center justify-center overflow-hidden">
-                    {r.image_base64 ? (
-                      <img src={`data:image/jpeg;base64,${r.image_base64}`} alt="reçu" className="w-full h-full object-cover" />
-                    ) : (
-                      <FileText className="w-8 h-8 text-muted-foreground/40" />
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div className="p-3 space-y-1">
-                    <p className="text-sm font-semibold text-foreground truncate">{r.merchant_name || "Reçu scanné"}</p>
-                    <p className="text-sm font-bold text-primary">{formatAmount(r.total_amount || 0)} F</p>
-                    <p className="text-[10px] text-muted-foreground">{r.receipt_date ? new Date(r.receipt_date).toLocaleDateString("fr-FR") : "-"}</p>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(statusBadge[r.status] || statusBadge.pending).color}`}>
-                        {(statusBadge[r.status] || statusBadge.pending).label}
-                      </span>
-                      {r.transaction_id && <span className="text-[10px] text-primary">✅ Lié</span>}
-                    </div>
-                  </div>
-                </BorderRotate>
-              </motion.div>
-            ))}
-          </div>
+          <AccountingDashboard receipts={filtered} formatAmount={formatAmount} />
         )}
       </div>
 
@@ -614,6 +635,137 @@ ${receiptPages}
         )}
       </AnimatePresence>
     </DashboardLayout>
+  );
+};
+
+/* ── Accounting Dashboard ── */
+const AccountingDashboard = ({ receipts, formatAmount }: { receipts: Receipt[]; formatAmount: (n: number) => string }) => {
+  // Group by merchant
+  const byMerchant: Record<string, { count: number; total: number }> = {};
+  receipts.forEach(r => {
+    const name = r.merchant_name || "Non identifié";
+    if (!byMerchant[name]) byMerchant[name] = { count: 0, total: 0 };
+    byMerchant[name].count++;
+    byMerchant[name].total += Number(r.total_amount || 0);
+  });
+  const merchantList = Object.entries(byMerchant)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((a, b) => b.total - a.total);
+
+  // Group by category
+  const byCategory: Record<string, { count: number; total: number }> = {};
+  receipts.forEach(r => {
+    const cat = r.category || "Non catégorisé";
+    if (!byCategory[cat]) byCategory[cat] = { count: 0, total: 0 };
+    byCategory[cat].count++;
+    byCategory[cat].total += Number(r.total_amount || 0);
+  });
+  const categoryList = Object.entries(byCategory)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((a, b) => b.total - a.total);
+
+  // Monthly breakdown
+  const byMonth: Record<string, number> = {};
+  receipts.forEach(r => {
+    const key = r.receipt_date ? r.receipt_date.substring(0, 7) : "Inconnu";
+    byMonth[key] = (byMonth[key] || 0) + Number(r.total_amount || 0);
+  });
+  const monthList = Object.entries(byMonth)
+    .map(([key, total]) => {
+      if (key === "Inconnu") return { label: key, total };
+      const [y, m] = key.split("-").map(Number);
+      return { label: new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }), total };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  const grandTotal = receipts.reduce((s, r) => s + Number(r.total_amount || 0), 0);
+
+  if (receipts.length === 0) {
+    return (
+      <div className="text-center py-16 space-y-3">
+        <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground/40" />
+        <p className="text-muted-foreground font-medium">Aucune donnée comptable</p>
+        <p className="text-xs text-muted-foreground">Scanne des reçus pour voir les statistiques</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* By Merchant */}
+      <BorderRotate className="p-4" animationSpeed={18}>
+        <div className="flex items-center gap-2 mb-3">
+          <Store className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Par commerçant</h3>
+        </div>
+        <div className="space-y-2">
+          {merchantList.map(m => {
+            const pct = grandTotal > 0 ? (m.total / grandTotal) * 100 : 0;
+            return (
+              <div key={m.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-foreground truncate max-w-[50%]">{m.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">{m.count} reçu{m.count > 1 ? "s" : ""}</span>
+                    <span className="text-xs font-semibold text-foreground">{formatAmount(m.total)} F</span>
+                  </div>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </BorderRotate>
+
+      {/* By Category */}
+      <BorderRotate className="p-4" animationSpeed={18}>
+        <div className="flex items-center gap-2 mb-3">
+          <Tag className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Par catégorie</h3>
+        </div>
+        <div className="space-y-2">
+          {categoryList.map(c => {
+            const pct = grandTotal > 0 ? (c.total / grandTotal) * 100 : 0;
+            return (
+              <div key={c.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-foreground">{c.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">{c.count}</span>
+                    <span className="text-xs font-semibold text-foreground">{formatAmount(c.total)} F</span>
+                  </div>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </BorderRotate>
+
+      {/* Monthly */}
+      <BorderRotate className="p-4" animationSpeed={18}>
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Par mois</h3>
+        </div>
+        <div className="space-y-2">
+          {monthList.map(m => (
+            <div key={m.label} className="flex items-center justify-between">
+              <span className="text-xs text-foreground capitalize">{m.label}</span>
+              <span className="text-xs font-semibold text-foreground">{formatAmount(m.total)} F</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+          <span className="text-xs font-semibold text-foreground">Total général</span>
+          <span className="text-sm font-bold text-primary">{formatAmount(grandTotal)} F</span>
+        </div>
+      </BorderRotate>
+    </div>
   );
 };
 
