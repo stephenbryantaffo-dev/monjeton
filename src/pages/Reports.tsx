@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
 import { motion } from "framer-motion";
-import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from "lucide-react";
+import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
