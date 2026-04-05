@@ -225,6 +225,8 @@ const Budgets = () => {
       </div>
 
       <BudgetAlertBanner alerts={budgetAlerts} />
+
+      {loading ? (
         <div className="space-y-4">
           <CardSkeleton />
           <CardSkeleton />
