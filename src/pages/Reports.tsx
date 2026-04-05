@@ -599,8 +599,5 @@ const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapsho
     </>
   );
 };
-    </DashboardLayout>
-  );
-};
 
 export default Reports;
