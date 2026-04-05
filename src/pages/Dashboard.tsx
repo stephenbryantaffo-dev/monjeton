@@ -444,6 +444,7 @@ const Dashboard = () => {
         </>
       ) : !error && (
         <>
+          <BudgetAlertBanner alerts={budgetAlerts} />
           <div className="grid grid-cols-2 gap-3 mb-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <BorderRotate className="p-4 overflow-hidden" animationSpeed={10}>
