@@ -564,6 +564,7 @@ const Dashboard = () => {
         txCount={dailyReminder.txCount}
         firstName={profile?.full_name?.split(" ")[0] || ""}
         profileType={profile?.profile_type}
+        userId={user?.id}
       />
       <MonthlyBadge
         open={monthlyBadge.show}

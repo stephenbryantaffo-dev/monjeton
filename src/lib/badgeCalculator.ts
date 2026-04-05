@@ -121,8 +121,17 @@ export const BADGES_CI: Record<string, Badge> = {
 
 export const calculateMonthlyBadge = (
   transactions: any[],
-  profile: any
+  profile: any,
+  tontineStats?: { totalCycles: number; paidOnTime: number; hasLatePayments: boolean }
 ): Badge => {
+  // Tontine badges take priority if user has tontines
+  if (tontineStats && tontineStats.totalCycles > 0) {
+    if (tontineStats.hasLatePayments) return BADGES_CI.tontine_retard;
+    if (tontineStats.paidOnTime === tontineStats.totalCycles && tontineStats.totalCycles >= 1) {
+      return BADGES_CI.tontine_champion;
+    }
+  }
+
   const expenses = transactions.filter((t) => t.type === "expense");
   const income = transactions.filter((t) => t.type === "income");
   const totalExpense = expenses.reduce((s, t) => s + Number(t.amount), 0);
