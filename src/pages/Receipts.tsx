@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Download, Search, Trash2, Plus, Camera, Image as ImageIcon,
   X, ArrowLeft, Edit2, Link as LinkIcon, Archive, CheckCircle2, Loader2,
-  ChevronDown,
+  ChevronDown, BarChart3, Store, Tag,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
