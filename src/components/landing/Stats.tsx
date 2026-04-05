@@ -8,8 +8,8 @@ const stats = [
 ];
 
 const Stats = () => (
-  <section className="py-20 px-5 relative z-10">
-    <div className="max-w-5xl mx-auto grid sm:grid-cols-3 gap-5">
+  <section className="py-16 sm:py-20 px-4 sm:px-5 relative z-10">
+    <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
       {stats.map((s, i) => (
         <motion.div
           key={s.label}
@@ -20,7 +20,7 @@ const Stats = () => (
           className="rounded-2xl bg-[rgba(124,255,58,0.04)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[22px] p-6 text-center hover:border-[rgba(124,255,58,0.35)] transition-colors"
         >
           <s.icon className="w-6 h-6 text-[#7CFF3A] mx-auto mb-3" />
-          <div className="text-3xl font-black text-[#EAFBEA] mb-1">{s.value}</div>
+          <div className="text-2xl sm:text-3xl font-black text-[#EAFBEA] mb-1">{s.value}</div>
           <div className="text-sm text-[rgba(234,251,234,0.72)]">{s.label}</div>
         </motion.div>
       ))}

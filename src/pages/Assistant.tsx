@@ -1099,7 +1099,7 @@ const Assistant = () => {
                   <Bot className="w-4 h-4 text-primary-foreground" />
                 </div>
               )}
-              <div className="flex flex-col gap-1 max-w-[80%]">
+              <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%]">
                 {m.attachments && m.attachments.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
                     {m.attachments.map((att, j) => (

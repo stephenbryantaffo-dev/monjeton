@@ -20,7 +20,7 @@ const LimelightNav = () => {
       <div className="h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
       <div className="bg-card/80 backdrop-blur-xl border-t border-border/60">
-        <div className="flex items-center justify-around max-w-lg mx-auto py-1.5 px-2">
+        <div className="flex items-center justify-around max-w-lg mx-auto py-1.5 px-1 sm:px-2">
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
@@ -35,7 +35,7 @@ const LimelightNav = () => {
                 >
                   <motion.div
                     whileTap={{ scale: 0.9 }}
-                    className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-[0_4px_24px_hsla(84,81%,44%,0.4)] rotate-45"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-[0_4px_24px_hsla(84,81%,44%,0.4)] rotate-45"
                   >
                     <item.icon className="w-5 h-5 text-primary-foreground -rotate-45" />
                   </motion.div>
@@ -47,7 +47,7 @@ const LimelightNav = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className="relative flex flex-col items-center gap-0.5 py-1.5 px-3"
+                className="relative flex flex-col items-center gap-0.5 py-1.5 px-2 sm:px-3"
               >
                 <motion.div
                   whileTap={{ scale: 0.85 }}
@@ -87,7 +87,7 @@ const LimelightNav = () => {
         </div>
 
         {/* Safe area spacer for notched phones */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
+        <div className="pb-safe" />
       </div>
     </nav>
   );

@@ -20,7 +20,7 @@ const features = [
 ];
 
 const Features = () => (
-  <section id="features" data-demo="true" className="py-24 px-5" style={{ scrollMarginTop: 80 }}>
+  <section id="features" data-demo="true" className="py-16 sm:py-24 px-4 sm:px-5" style={{ scrollMarginTop: 80 }}>
     <div className="max-w-6xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -28,7 +28,7 @@ const Features = () => (
         viewport={{ once: true }}
         className="text-center mb-16"
       >
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#EAFBEA] mb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#EAFBEA] mb-4">
           Tout ce qu'il vous faut pour gérer votre argent
         </h2>
         <p className="text-[rgba(234,251,234,0.72)] max-w-xl mx-auto">
@@ -36,7 +36,7 @@ const Features = () => (
         </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {features.map((f, i) => (
           <motion.div
             key={f.title}
@@ -45,7 +45,7 @@ const Features = () => (
             viewport={{ once: true }}
             transition={{ delay: i * 0.1 }}
             whileHover={{ y: -6, boxShadow: "0 0 30px rgba(124,255,58,0.12)" }}
-            className="group rounded-2xl bg-[rgba(124,255,58,0.03)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[22px] p-8 hover:border-[rgba(124,255,58,0.4)] transition-all"
+            className="group rounded-2xl bg-[rgba(124,255,58,0.03)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[22px] p-5 sm:p-8 hover:border-[rgba(124,255,58,0.4)] transition-all"
           >
             <div className="w-12 h-12 rounded-xl bg-[rgba(124,255,58,0.1)] flex items-center justify-center mb-5 group-hover:bg-[rgba(124,255,58,0.2)] transition-colors">
               <f.icon className="w-6 h-6 text-[#7CFF3A]" />

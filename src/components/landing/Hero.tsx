@@ -138,7 +138,7 @@ const Hero = () => {
 
       {/* Content with parallax — GPU-promoted to avoid scroll jank */}
       <motion.div
-        className="relative z-10 max-w-5xl mx-auto px-5 pt-28 pb-20 text-center"
+        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-5 pt-24 sm:pt-28 pb-16 sm:pb-20 text-center"
         style={{ y: contentY, opacity: contentOpacity, willChange: "transform, opacity" }}
       >
         <motion.div
@@ -146,7 +146,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] mb-4 sm:mb-6">
             <span className="text-[#EAFBEA]">Gérez vos dépenses.</span>
             <br />
             <span className="text-[#EAFBEA]">Comprenez votre argent.</span>
@@ -156,7 +156,7 @@ const Hero = () => {
             </span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-[rgba(234,251,234,0.72)] max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-[rgba(234,251,234,0.72)] max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
             Mon Jeton vous aide à suivre vos dépenses en Franc CFA, analyser vos transactions, et convertir automatiquement les devises.
           </p>
 
