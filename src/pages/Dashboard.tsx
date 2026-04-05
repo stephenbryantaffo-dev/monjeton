@@ -272,6 +272,38 @@ const Dashboard = () => {
     fetchData();
   }, [fetchData]);
 
+  // Fetch predictions & budget alerts
+  useEffect(() => {
+    const fetchPredictions = async () => {
+      if (!user) return;
+      try {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+        const [catBudgetRes, txRes] = await Promise.all([
+          supabase.from("category_budgets").select("*, categories:category_id(name, icon, color)").eq("user_id", user.id).eq("month", month).eq("year", year),
+          supabase.from("transactions").select("*, categories:category_id(name, icon, color)").eq("user_id", user.id).eq("type", "expense").gte("date", threeMonthsAgo.toISOString().split("T")[0]),
+        ]);
+
+        const catBudgets = catBudgetRes.data || [];
+        const allTx = txRes.data || [];
+
+        if (catBudgets.length > 0) {
+          const preds = calculatePredictions(allTx, catBudgets);
+          setPredictions(preds);
+          const alerts = checkBudgetAlerts(catBudgets, allTx, preds);
+          setBudgetAlerts(alerts);
+        }
+      } catch {
+        // silent
+      }
+    };
+    fetchPredictions();
+  }, [user]);
+
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
 
