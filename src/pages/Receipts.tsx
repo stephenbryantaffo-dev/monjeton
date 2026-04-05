@@ -377,80 +377,100 @@ ${receiptPages}
           </motion.div>
         </div>
 
-        {/* Status filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {statusFilters.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setStatusFilter(f.key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${statusFilter === f.key ? "bg-primary text-primary-foreground" : "glass text-muted-foreground"}`}
-            >
-              {f.label}
-            </button>
-          ))}
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 glass rounded-xl">
+          <button
+            onClick={() => setActiveTab("gallery")}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activeTab === "gallery" ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <FileText className="w-3.5 h-3.5" /> Galerie
+          </button>
+          <button
+            onClick={() => setActiveTab("accounting")}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${activeTab === "accounting" ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <BarChart3 className="w-3.5 h-3.5" /> Comptabilité
+          </button>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par marchand ou montant..." className="pl-9 bg-secondary border-border" />
-        </div>
+        {activeTab === "gallery" ? (
+          <>
+            {/* Status filters */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {statusFilters.map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${statusFilter === f.key ? "bg-primary text-primary-foreground" : "glass text-muted-foreground"}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Export buttons */}
-        <div className="flex gap-2">
-          <Button onClick={exportPDF} variant="outline" className="flex-1 glass" size="sm">
-            <Download className="w-4 h-4 mr-1" /> PDF
-          </Button>
-          <Button onClick={exportCSV} variant="outline" className="flex-1 glass" size="sm">
-            <Download className="w-4 h-4 mr-1" /> CSV
-          </Button>
-        </div>
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par marchand ou montant..." className="pl-9 bg-secondary border-border" />
+            </div>
 
-        {/* Receipt grid */}
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Chargement...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16 space-y-3">
-            <FileText className="w-12 h-12 mx-auto text-muted-foreground/40" />
-            <p className="text-muted-foreground font-medium">Aucun reçu</p>
-            <p className="text-xs text-muted-foreground">Scanne un reçu avec le bouton +</p>
-          </div>
+            {/* Export buttons */}
+            <div className="flex gap-2">
+              <Button onClick={exportPDF} variant="outline" className="flex-1 glass" size="sm">
+                <Download className="w-4 h-4 mr-1" /> PDF
+              </Button>
+              <Button onClick={exportCSV} variant="outline" className="flex-1 glass" size="sm">
+                <Download className="w-4 h-4 mr-1" /> CSV
+              </Button>
+            </div>
+
+            {/* Receipt grid */}
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Chargement...</div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-16 space-y-3">
+                <FileText className="w-12 h-12 mx-auto text-muted-foreground/40" />
+                <p className="text-muted-foreground font-medium">Aucun reçu</p>
+                <p className="text-xs text-muted-foreground">Scanne un reçu avec le bouton +</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {filtered.map((r, i) => (
+                  <motion.div
+                    key={r.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    onClick={() => openDetail(r)}
+                    className="cursor-pointer"
+                  >
+                    <BorderRotate className="overflow-hidden" animationSpeed={18}>
+                      <div className="h-28 bg-secondary flex items-center justify-center overflow-hidden">
+                        {r.image_base64 ? (
+                          <img src={`data:image/jpeg;base64,${r.image_base64}`} alt="reçu" className="w-full h-full object-cover" />
+                        ) : (
+                          <FileText className="w-8 h-8 text-muted-foreground/40" />
+                        )}
+                      </div>
+                      <div className="p-3 space-y-1">
+                        <p className="text-sm font-semibold text-foreground truncate">{r.merchant_name || "Reçu scanné"}</p>
+                        <p className="text-sm font-bold text-primary">{formatAmount(r.total_amount || 0)} F</p>
+                        <p className="text-[10px] text-muted-foreground">{r.receipt_date ? new Date(r.receipt_date).toLocaleDateString("fr-FR") : "-"}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(statusBadge[r.status] || statusBadge.pending).color}`}>
+                            {(statusBadge[r.status] || statusBadge.pending).label}
+                          </span>
+                          {r.transaction_id && <span className="text-[10px] text-primary">✅ Lié</span>}
+                        </div>
+                      </div>
+                    </BorderRotate>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {filtered.map((r, i) => (
-              <motion.div
-                key={r.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.03 }}
-                onClick={() => openDetail(r)}
-                className="cursor-pointer"
-              >
-                <BorderRotate className="overflow-hidden" animationSpeed={18}>
-                  {/* Thumbnail */}
-                  <div className="h-28 bg-secondary flex items-center justify-center overflow-hidden">
-                    {r.image_base64 ? (
-                      <img src={`data:image/jpeg;base64,${r.image_base64}`} alt="reçu" className="w-full h-full object-cover" />
-                    ) : (
-                      <FileText className="w-8 h-8 text-muted-foreground/40" />
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div className="p-3 space-y-1">
-                    <p className="text-sm font-semibold text-foreground truncate">{r.merchant_name || "Reçu scanné"}</p>
-                    <p className="text-sm font-bold text-primary">{formatAmount(r.total_amount || 0)} F</p>
-                    <p className="text-[10px] text-muted-foreground">{r.receipt_date ? new Date(r.receipt_date).toLocaleDateString("fr-FR") : "-"}</p>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(statusBadge[r.status] || statusBadge.pending).color}`}>
-                        {(statusBadge[r.status] || statusBadge.pending).label}
-                      </span>
-                      {r.transaction_id && <span className="text-[10px] text-primary">✅ Lié</span>}
-                    </div>
-                  </div>
-                </BorderRotate>
-              </motion.div>
-            ))}
-          </div>
+          <AccountingDashboard receipts={filtered} formatAmount={formatAmount} />
         )}
       </div>
 
