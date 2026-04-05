@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
@@ -530,6 +530,22 @@ const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapsho
   });
   const sortedMonths = Object.keys(grouped).sort().reverse();
 
+  // Accuracy evolution data (last 6 months, chronological)
+  const accuracyChartData = Object.keys(grouped)
+    .sort()
+    .slice(-6)
+    .map(key => {
+      const items = grouped[key];
+      const [y, m] = key.split("-").map(Number);
+      const label = new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "short" });
+      const withAcc = items.filter((i: any) => i.accuracy_pct != null);
+      const avg = withAcc.length > 0
+        ? Math.round(withAcc.reduce((s: number, i: any) => s + Number(i.accuracy_pct), 0) / withAcc.length)
+        : null;
+      return { month: label, precision: avg };
+    })
+    .filter(d => d.precision !== null);
+
   return (
     <>
       {predictions.length > 0 && (
@@ -557,11 +573,40 @@ const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapsho
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Accuracy evolution chart */}
+          {accuracyChartData.length >= 2 && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <BorderRotate className="p-5" animationSpeed={14}>
+                <h2 className="text-sm font-semibold text-foreground mb-4">📈 Évolution de la précision</h2>
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={accuracyChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(150, 10%, 16%)" />
+                    <XAxis dataKey="month" tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 12 }} axisLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 10 }} axisLine={false} tickFormatter={(v) => `${v}%`} />
+                    <RTooltip
+                      contentStyle={{ backgroundColor: "hsl(0,0%,10%)", border: "1px solid hsl(0,0%,20%)", borderRadius: 12, fontSize: 12 }}
+                      formatter={(value: number) => [`${value}%`, "Précision"]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="precision"
+                      stroke="hsl(84, 81%, 44%)"
+                      strokeWidth={2.5}
+                      dot={{ fill: "hsl(84, 81%, 44%)", r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+                <p className="text-[10px] text-muted-foreground text-center mt-2">Moyenne de précision par mois sur les 6 derniers mois</p>
+              </BorderRotate>
+            </motion.div>
+          )}
+
           {sortedMonths.map(monthKey => {
             const items = grouped[monthKey];
             const [y, m] = monthKey.split("-").map(Number);
             const label = new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-            const avgAccuracy = items.filter(i => i.accuracy_pct != null);
+            const avgAccuracy = items.filter((i: any) => i.accuracy_pct != null);
             const accuracy = avgAccuracy.length > 0
               ? Math.round(avgAccuracy.reduce((s: number, i: any) => s + Number(i.accuracy_pct), 0) / avgAccuracy.length)
               : null;
