@@ -376,7 +376,7 @@ const NewTransaction = () => {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-2xl font-bold text-foreground">Nouvelle transaction</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
       </div>
 
       {/* Voice Input */}
@@ -520,7 +520,7 @@ const NewTransaction = () => {
                     e.preventDefault();
                   }
                 }}
-                className="bg-secondary border-border text-2xl font-bold h-14"
+                className="bg-secondary border-border text-xl sm:text-2xl font-bold h-14"
                 required
               />
             </div>
