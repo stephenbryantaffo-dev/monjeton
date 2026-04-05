@@ -345,6 +345,45 @@ export type Database = {
         }
         Relationships: []
       }
+      prediction_snapshots: {
+        Row: {
+          accuracy_pct: number | null
+          actual_amount: number | null
+          budget_amount: number | null
+          category: string
+          created_at: string | null
+          id: string
+          month: number
+          predicted_amount: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          accuracy_pct?: number | null
+          actual_amount?: number | null
+          budget_amount?: number | null
+          category: string
+          created_at?: string | null
+          id?: string
+          month: number
+          predicted_amount?: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          accuracy_pct?: number | null
+          actual_amount?: number | null
+          budget_amount?: number | null
+          category?: string
+          created_at?: string | null
+          id?: string
+          month?: number
+          predicted_amount?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           beauty_budget_range: string | null

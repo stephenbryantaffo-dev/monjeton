@@ -46,22 +46,41 @@ export async function checkAndCreateNotifications(
 
       if (budget && spentRes.data) {
         const totalSpent = spentRes.data.reduce((s, t) => s + Number(t.amount), 0);
-        if (totalSpent > budget) {
-          // Avoid duplicate: check if same notif exists today
-          const today = now.toISOString().split("T")[0];
+        const pct = (totalSpent / Number(budget)) * 100;
+        const today = now.toISOString().split("T")[0];
+
+        if (pct >= 100) {
           const { count } = await supabase
             .from("notifications")
             .select("id", { count: "exact", head: true })
             .eq("user_id", userId)
             .eq("type", "budget_exceeded")
+            .ilike("title", `%${categoryName}%`)
             .gte("created_at", today);
 
           if (!count || count === 0) {
             await supabase.from("notifications").insert({
               user_id: userId,
               type: "budget_exceeded",
-              title: `⚠️ Budget ${categoryName} dépassé`,
-              message: `Vous avez dépensé ${totalSpent.toLocaleString("fr-FR")} F sur un budget de ${Number(budget).toLocaleString("fr-FR")} F ce mois.`,
+              title: `🚨 Budget ${categoryName} dépassé`,
+              message: `Vous avez dépensé ${totalSpent.toLocaleString("fr-FR")} F sur un budget de ${Number(budget).toLocaleString("fr-FR")} F ce mois (${Math.round(pct)}%).`,
+            });
+          }
+        } else if (pct >= 80) {
+          const { count } = await supabase
+            .from("notifications")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("type", "budget_warning")
+            .ilike("title", `%${categoryName}%`)
+            .gte("created_at", today);
+
+          if (!count || count === 0) {
+            await supabase.from("notifications").insert({
+              user_id: userId,
+              type: "budget_warning",
+              title: `⚠️ Budget ${categoryName} à ${Math.round(pct)}%`,
+              message: `Il ne reste que ${(Number(budget) - totalSpent).toLocaleString("fr-FR")} F sur votre budget ${categoryName} de ${Number(budget).toLocaleString("fr-FR")} F.`,
             });
           }
         }

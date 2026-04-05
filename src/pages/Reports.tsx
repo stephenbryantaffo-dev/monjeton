@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
 import { motion } from "framer-motion";
-import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from "lucide-react";
+import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
@@ -19,7 +19,7 @@ interface Leak {
   total: number;
 }
 
-const tabs = ["Rapport", "Prévisions"];
+const tabs = ["Rapport", "Prévisions", "Historique"];
 
 const Reports = () => {
   const { user } = useAuth();
@@ -38,6 +38,8 @@ const Reports = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [aiInsight, setAiInsight] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [snapshotSaving, setSnapshotSaving] = useState(false);
 
   const goToPrevMonth = () => {
     if (reportMonth === 0) { setReportMonth(11); setReportYear(y => y - 1); }
@@ -333,7 +335,7 @@ const Reports = () => {
             </BorderRotate>
           </motion.div>
         </>
-      ) : (
+      ) : activeTab === 1 ? (
         /* PREDICTIONS TAB */
         <>
           {predictions.length === 0 ? (
@@ -430,8 +432,171 @@ const Reports = () => {
             </>
           )}
         </>
+      ) : (
+        /* HISTORY TAB */
+        <PredictionHistory
+          user={user}
+          predictions={predictions}
+          snapshots={snapshots}
+          setSnapshots={setSnapshots}
+          snapshotSaving={snapshotSaving}
+          setSnapshotSaving={setSnapshotSaving}
+          formatAmount={formatAmount}
+          toast={toast}
+        />
       )}
     </DashboardLayout>
+  );
+};
+
+/* ── Prediction History Sub-Component ── */
+interface PredictionHistoryProps {
+  user: any;
+  predictions: SpendingPrediction[];
+  snapshots: any[];
+  setSnapshots: (s: any[]) => void;
+  snapshotSaving: boolean;
+  setSnapshotSaving: (b: boolean) => void;
+  formatAmount: (n: number) => string;
+  toast: any;
+}
+
+const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapshotSaving, setSnapshotSaving, formatAmount, toast }: PredictionHistoryProps) => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchSnapshots = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("prediction_snapshots")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .limit(100);
+      setSnapshots(data || []);
+      setLoading(false);
+    };
+    fetchSnapshots();
+  }, [user]);
+
+  const saveCurrentPredictions = async () => {
+    if (!user || predictions.length === 0) return;
+    setSnapshotSaving(true);
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const rows = predictions.map(p => ({
+      user_id: user.id,
+      month,
+      year,
+      category: p.category,
+      predicted_amount: Math.round(p.predictedEndOfMonth),
+      actual_amount: Math.round(p.currentMonth),
+      budget_amount: p.budgetAmount || 0,
+      accuracy_pct: p.budgetAmount && p.budgetAmount > 0
+        ? Math.round(100 - Math.abs(p.predictedEndOfMonth - p.currentMonth) / p.budgetAmount * 100)
+        : null,
+    }));
+
+    const { error } = await supabase
+      .from("prediction_snapshots")
+      .upsert(rows, { onConflict: "user_id,month,year,category" });
+
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible de sauvegarder", variant: "destructive" });
+    } else {
+      toast({ title: "Snapshot sauvegardé ✅" });
+      const { data } = await supabase
+        .from("prediction_snapshots")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .limit(100);
+      setSnapshots(data || []);
+    }
+    setSnapshotSaving(false);
+  };
+
+  // Group by month-year
+  const grouped: Record<string, any[]> = {};
+  snapshots.forEach(s => {
+    const key = `${s.year}-${String(s.month).padStart(2, "0")}`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(s);
+  });
+  const sortedMonths = Object.keys(grouped).sort().reverse();
+
+  return (
+    <>
+      {predictions.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+          <Button
+            variant="hero"
+            size="lg"
+            className="w-full"
+            onClick={saveCurrentPredictions}
+            disabled={snapshotSaving}
+          >
+            {snapshotSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Sauvegarder les prévisions du mois
+          </Button>
+        </motion.div>
+      )}
+
+      {loading ? (
+        <div className="space-y-4"><CardSkeleton /><CardSkeleton /></div>
+      ) : sortedMonths.length === 0 ? (
+        <div className="glass-card rounded-2xl p-8 text-center">
+          <History className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">Aucun historique de prévisions.</p>
+          <p className="text-xs text-muted-foreground mt-1">Sauvegarde tes prévisions chaque mois pour suivre ta précision.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {sortedMonths.map(monthKey => {
+            const items = grouped[monthKey];
+            const [y, m] = monthKey.split("-").map(Number);
+            const label = new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+            const avgAccuracy = items.filter(i => i.accuracy_pct != null);
+            const accuracy = avgAccuracy.length > 0
+              ? Math.round(avgAccuracy.reduce((s: number, i: any) => s + Number(i.accuracy_pct), 0) / avgAccuracy.length)
+              : null;
+
+            return (
+              <BorderRotate key={monthKey} className="p-4" animationSpeed={18}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-foreground capitalize">{label}</h3>
+                  {accuracy !== null && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      accuracy >= 80 ? "bg-primary/20 text-primary" :
+                      accuracy >= 50 ? "bg-[hsl(45,96%,58%)]/20 text-[hsl(45,96%,58%)]" :
+                      "bg-destructive/20 text-destructive"
+                    }`}>
+                      Précision : {accuracy}%
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {items.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between text-xs">
+                      <span className="text-foreground">{item.category}</span>
+                      <div className="flex gap-3 text-muted-foreground">
+                        <span>Prévu : <span className="text-foreground">{formatAmount(item.predicted_amount)} F</span></span>
+                        <span>Réel : <span className="text-foreground">{formatAmount(item.actual_amount || 0)} F</span></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </BorderRotate>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 };
 
