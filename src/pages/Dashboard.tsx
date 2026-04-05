@@ -443,7 +443,9 @@ const Dashboard = () => {
               setTrendMode={setTrendMode}
               trendModes={trendModes}
             />
-          </Suspense>
+           </Suspense>
+
+          <DashboardTontineWidget />
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
