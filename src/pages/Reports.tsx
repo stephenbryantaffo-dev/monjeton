@@ -38,6 +38,8 @@ const Reports = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [aiInsight, setAiInsight] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [snapshotSaving, setSnapshotSaving] = useState(false);
 
   const goToPrevMonth = () => {
     if (reportMonth === 0) { setReportMonth(11); setReportYear(y => y - 1); }
