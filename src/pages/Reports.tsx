@@ -19,7 +19,7 @@ interface Leak {
   total: number;
 }
 
-const tabs = ["Rapport", "Prévisions"];
+const tabs = ["Rapport", "Prévisions", "Historique"];
 
 const Reports = () => {
   const { user } = useAuth();
