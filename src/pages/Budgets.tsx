@@ -7,11 +7,14 @@ import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Wallet, TrendingDown } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
+import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
+import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +55,8 @@ const Budgets = () => {
   const [newCatBudget, setNewCatBudget] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
+  const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -104,6 +109,30 @@ const Budgets = () => {
         spent: spentByCategory[cb.category_id] || 0,
       }));
       setCategoryBudgets(cBudgets);
+
+      // Calculate predictions for current month
+      const now = new Date();
+      const curMonth = now.getMonth() + 1;
+      const curYear = now.getFullYear();
+      if (month === curMonth && year === curYear && cBudgets.length > 0) {
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const { data: histTx } = await supabase
+          .from("transactions")
+          .select("*, categories:category_id(name, icon, color)")
+          .eq("user_id", user.id)
+          .eq("type", "expense")
+          .gte("date", threeMonthsAgo.toISOString().split("T")[0]);
+
+        const allTx = histTx || [];
+        const preds = calculatePredictions(allTx, cBudgets);
+        setPredictions(preds);
+        const alerts = checkBudgetAlerts(cBudgets, allTx, preds);
+        setBudgetAlerts(alerts);
+      } else {
+        setPredictions([]);
+        setBudgetAlerts([]);
+      }
     } catch {
       toast({ title: "Erreur de chargement", description: "Impossible de charger les budgets", variant: "destructive" });
     } finally {
@@ -195,6 +224,8 @@ const Budgets = () => {
         ))}
       </div>
 
+      <BudgetAlertBanner alerts={budgetAlerts} />
+
       {loading ? (
         <div className="space-y-4">
           <CardSkeleton />
@@ -273,10 +304,19 @@ const Budgets = () => {
         {categoryBudgets.map((cb) => {
           const pct = cb.budget_amount > 0 ? Math.min(((cb.spent || 0) / cb.budget_amount) * 100, 100) : 0;
           const over = (cb.spent || 0) > cb.budget_amount;
+          const pred = predictions.find(p => p.category === (cb.category?.name || ""));
+          const trendIcon = pred?.trend === "up"
+            ? <TrendingUp className="w-3.5 h-3.5 text-destructive" />
+            : pred?.trend === "down"
+              ? <TrendingDown className="w-3.5 h-3.5 text-primary" />
+              : pred ? <MinusIcon className="w-3.5 h-3.5 text-muted-foreground" /> : null;
           return (
             <BorderRotate key={cb.id} className={`p-4 ${over ? "border border-destructive/40" : ""}`} animationSpeed={18}>
               <div className="flex items-center justify-between mb-2 gap-2">
-                <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-medium text-foreground text-sm">{cb.category?.name || "—"}</span>
+                  {trendIcon}
+                </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-semibold ${over ? "text-destructive" : "text-muted-foreground"}`}>
                     {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
@@ -286,6 +326,11 @@ const Budgets = () => {
               </div>
               <Progress value={pct} className="h-1.5" />
               {over && <p className="text-[10px] text-destructive mt-1">Dépassement !</p>}
+              {pred && !over && pred.predictedEndOfMonth > cb.budget_amount && (
+                <p className="text-[10px] text-[hsl(30,90%,55%)] mt-1">
+                  ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} F en fin de mois
+                </p>
+              )}
             </BorderRotate>
           );
         })}

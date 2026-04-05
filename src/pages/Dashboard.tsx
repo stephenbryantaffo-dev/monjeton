@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
+import BudgetAlertBanner from "@/components/BudgetAlertBanner";
+import DashboardPredictions from "@/components/DashboardPredictions";
+import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
+import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -42,6 +46,8 @@ const Dashboard = () => {
   const [dailyReminder, setDailyReminder] = useState<{ show: boolean; txCount: number }>({ show: false, txCount: 0 });
   const [streak, setStreak] = useState(0);
   const [monthlyBadge, setMonthlyBadge] = useState<{ show: boolean; badge: Badge | null; month: string; savingsRate: number }>({ show: false, badge: null, month: "", savingsRate: 0 });
+  const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
+  const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
 
   // Long press for voice shortcut
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -266,6 +272,38 @@ const Dashboard = () => {
     fetchData();
   }, [fetchData]);
 
+  // Fetch predictions & budget alerts
+  useEffect(() => {
+    const fetchPredictions = async () => {
+      if (!user) return;
+      try {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+        const [catBudgetRes, txRes] = await Promise.all([
+          supabase.from("category_budgets").select("*, categories:category_id(name, icon, color)").eq("user_id", user.id).eq("month", month).eq("year", year),
+          supabase.from("transactions").select("*, categories:category_id(name, icon, color)").eq("user_id", user.id).eq("type", "expense").gte("date", threeMonthsAgo.toISOString().split("T")[0]),
+        ]);
+
+        const catBudgets = catBudgetRes.data || [];
+        const allTx = txRes.data || [];
+
+        if (catBudgets.length > 0) {
+          const preds = calculatePredictions(allTx, catBudgets);
+          setPredictions(preds);
+          const alerts = checkBudgetAlerts(catBudgets, allTx, preds);
+          setBudgetAlerts(alerts);
+        }
+      } catch {
+        // silent
+      }
+    };
+    fetchPredictions();
+  }, [user]);
+
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
 
@@ -406,6 +444,7 @@ const Dashboard = () => {
         </>
       ) : !error && (
         <>
+          <BudgetAlertBanner alerts={budgetAlerts} />
           <div className="grid grid-cols-2 gap-3 mb-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <BorderRotate className="p-4 overflow-hidden" animationSpeed={10}>
@@ -447,6 +486,8 @@ const Dashboard = () => {
            </Suspense>
 
           <DashboardTontineWidget />
+
+          <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
