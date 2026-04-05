@@ -14,7 +14,7 @@ const plans = [
     description: "Pour découvrir Mon Jeton et commencer à suivre vos finances.",
     price: 0,
     yearlyPrice: 0,
-    buttonText: "Créer un compte",
+    buttonText: "S'inscrire",
     popular: false,
     includes: [
       "1 portefeuille",
@@ -28,7 +28,7 @@ const plans = [
     description: "Pour les utilisateurs réguliers qui veulent aller plus loin.",
     price: 2000,
     yearlyPrice: 19900,
-    buttonText: "Créer un compte",
+    buttonText: "S'inscrire",
     popular: true,
     includes: [
       "5 portefeuilles",
@@ -43,7 +43,7 @@ const plans = [
     description: "L'expérience complète pour les équipes et les pros.",
     price: 5000,
     yearlyPrice: 49900,
-    buttonText: "Créer un compte",
+    buttonText: "S'inscrire",
     popular: false,
     includes: [
       "Portefeuilles illimités",
