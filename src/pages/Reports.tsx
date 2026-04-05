@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
 import { ChartSkeleton, CardSkeleton } from "@/components/DashboardSkeleton";
