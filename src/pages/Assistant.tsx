@@ -45,8 +45,17 @@ type DebtData = {
   note?: string;
 };
 
+const cleanMessageContent = (content: string): string => {
+  return content
+    .replace(/```transaction[\s\S]*?```/g, "")
+    .replace(/```debt[\s\S]*?```/g, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt)"[^}]*\}/g, "")
+    .trim();
+};
+
 const extractTransaction = (content: string): { cleanContent: string; transaction: TransactionData | null } => {
-  const regex = /```transaction\s*\n(\{[\s\S]*?\})\s*\n```/;
+  const regex = /```transaction\s*\n?(\{[\s\S]*?\})\s*\n?```/;
   const match = content.match(regex);
   if (match) {
     try {
@@ -76,7 +85,7 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
 };
 
 const extractDebt = (content: string): { cleanContent: string; debt: DebtData | null } => {
-  const regex = /```debt\s*\n(\{[\s\S]*?\})\s*\n```/;
+  const regex = /```debt\s*\n?(\{[\s\S]*?\})\s*\n?```/;
   const match = content.match(regex);
   if (match) {
     try {
