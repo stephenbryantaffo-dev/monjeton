@@ -109,6 +109,30 @@ const Budgets = () => {
         spent: spentByCategory[cb.category_id] || 0,
       }));
       setCategoryBudgets(cBudgets);
+
+      // Calculate predictions for current month
+      const now = new Date();
+      const curMonth = now.getMonth() + 1;
+      const curYear = now.getFullYear();
+      if (month === curMonth && year === curYear && cBudgets.length > 0) {
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const { data: histTx } = await supabase
+          .from("transactions")
+          .select("*, categories:category_id(name, icon, color)")
+          .eq("user_id", user.id)
+          .eq("type", "expense")
+          .gte("date", threeMonthsAgo.toISOString().split("T")[0]);
+
+        const allTx = histTx || [];
+        const preds = calculatePredictions(allTx, cBudgets);
+        setPredictions(preds);
+        const alerts = checkBudgetAlerts(cBudgets, allTx, preds);
+        setBudgetAlerts(alerts);
+      } else {
+        setPredictions([]);
+        setBudgetAlerts([]);
+      }
     } catch {
       toast({ title: "Erreur de chargement", description: "Impossible de charger les budgets", variant: "destructive" });
     } finally {
