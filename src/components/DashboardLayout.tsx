@@ -18,7 +18,7 @@ const DashboardLayout = ({ children, title, showBack }: DashboardLayoutProps) =>
 
   return (
     <div className="min-h-screen gradient-bg pb-24">
-      <header className="px-5 pt-6 pb-4 flex items-center gap-3">
+      <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3">
         {shouldShowBack && (
           <button
             onClick={() => navigate(-1)}
@@ -27,12 +27,12 @@ const DashboardLayout = ({ children, title, showBack }: DashboardLayoutProps) =>
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
         )}
-        {title && <h1 className="text-2xl font-bold text-foreground flex-1">{title}</h1>}
-        <div className="ml-auto">
+        {title && <h1 className="text-xl sm:text-2xl font-bold text-foreground flex-1 min-w-0 truncate">{title}</h1>}
+        <div className="ml-auto flex-shrink-0">
           <NotificationBell />
         </div>
       </header>
-      <main className="px-5">{children}</main>
+      <main className="px-4 sm:px-5">{children}</main>
       <LimelightNav />
     </div>
   );
