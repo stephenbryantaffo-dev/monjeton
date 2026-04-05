@@ -7,11 +7,14 @@ import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Wallet, TrendingDown } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
+import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
+import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import {
   Dialog,
   DialogContent,
