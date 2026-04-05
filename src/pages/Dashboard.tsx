@@ -354,10 +354,10 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="pt-6 pb-4 flex items-start justify-between">
-        <div>
+      <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
-          <h1 className="text-2xl font-bold text-foreground">{profile?.full_name || "Tableau de bord"}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
         {streak > 0 && (
           <motion.div
@@ -370,16 +370,16 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
-        <button onClick={() => setActivePeriod(0)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activePeriod === 0 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+      <div className="flex gap-1 p-1 glass-card rounded-xl mb-4 sm:mb-6">
+        <button onClick={() => setActivePeriod(0)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activePeriod === 0 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
           Hier
         </button>
-        <button onClick={() => setActivePeriod(1)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activePeriod === 1 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+        <button onClick={() => setActivePeriod(1)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activePeriod === 1 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
           Aujourd'hui
         </button>
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
               activePeriod === 2 && customRange?.from
                 ? "gradient-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-1 ring-offset-background font-semibold"
                 : activePeriod === 2
@@ -445,24 +445,24 @@ const Dashboard = () => {
       ) : !error && (
         <>
           <BudgetAlertBanner alerts={budgetAlerts} />
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <BorderRotate className="p-4 overflow-hidden" animationSpeed={10}>
-                <div className="flex items-center gap-2 mb-2">
+              <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
+                <div className="flex items-center gap-2 mb-1 sm:mb-2">
                   <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-muted-foreground">Revenus</span>
                 </div>
-                <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalIncome)}</p>
+                <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalIncome)}</p>
                 <p className="text-xs text-muted-foreground">FCFA</p>
               </BorderRotate>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <BorderRotate className="p-4 overflow-hidden" animationSpeed={10}>
-                <div className="flex items-center gap-2 mb-2">
+              <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
+                <div className="flex items-center gap-2 mb-1 sm:mb-2">
                   <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
                   <span className="text-xs text-muted-foreground">Dépenses</span>
                 </div>
-                <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatAmount(totalExpense)}</p>
+                <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalExpense)}</p>
                 <p className="text-xs text-muted-foreground">FCFA</p>
               </BorderRotate>
             </motion.div>
@@ -530,7 +530,7 @@ const Dashboard = () => {
                       <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
                       <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
                     </div>
-                    <span className={`text-sm font-semibold whitespace-nowrap ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
+                    <span className={`text-sm font-semibold whitespace-nowrap tabular-nums flex-shrink-0 ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
                       {t.type === "income" ? "+" : "-"}{formatAmount(Number(t.amount))}
                     </span>
                   </BorderRotate>
