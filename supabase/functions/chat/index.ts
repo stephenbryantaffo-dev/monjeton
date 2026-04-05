@@ -13,7 +13,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // JWT authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
@@ -42,7 +41,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate messages
     let messages = Array.isArray(body.messages) ? body.messages.slice(-MAX_MESSAGES) : [];
     messages = messages.map((m: any) => ({
       role: m.role === "assistant" ? "assistant" : "user",
@@ -51,19 +49,19 @@ serve(async (req) => {
 
     const attachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : [];
 
-    // Get user context from already-authenticated client
     let userContext = "";
     let userName = "utilisateur";
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (user) {
-      const [profileResult, txResult, walletsResult, debtsResult, savingsResult, budgetResult] = await Promise.all([
+      const [profileResult, txResult, walletsResult, debtsResult, savingsResult, budgetResult, tontinesResult] = await Promise.all([
         supabaseAuth.from("profiles").select("full_name, country, profile_type, financial_goal, income_range").eq("user_id", user.id).maybeSingle(),
         supabaseAuth.from("transactions").select("amount, type, note, date, categories(name), wallets(wallet_name)").eq("user_id", user.id).order("date", { ascending: false }).limit(15),
         supabaseAuth.from("wallets").select("wallet_name, currency, initial_balance").eq("user_id", user.id),
         supabaseAuth.from("debts").select("person_name, type, amount, due_date, status, note").eq("user_id", user.id).eq("status", "pending").order("due_date", { ascending: true }).limit(10),
         supabaseAuth.from("savings_goals").select("name, target_amount, current_amount, deadline").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
         supabaseAuth.from("budgets").select("month, year, total_budget").eq("user_id", user.id).order("year", { ascending: false }).order("month", { ascending: false }).limit(1).maybeSingle(),
+        supabaseAuth.from("tontines").select("id, name, frequency, contribution_amount, status, start_date").eq("user_id", user.id).eq("status", "active"),
       ]);
 
       const profile = profileResult.data;
@@ -72,8 +70,46 @@ serve(async (req) => {
       const debts = debtsResult.data || [];
       const savings = savingsResult.data || [];
       const budget = budgetResult.data;
+      const tontines = tontinesResult.data || [];
 
       if (profile?.full_name) userName = profile.full_name;
+
+      // Load tontine members and open cycles for each active tontine
+      let tontineContext = "";
+      if (tontines.length > 0) {
+        const tontineIds = tontines.map((t: any) => t.id);
+        const [membersResult, cyclesResult] = await Promise.all([
+          supabaseAuth.from("tontine_members").select("id, name, tontine_id, is_owner").in("tontine_id", tontineIds),
+          supabaseAuth.from("tontine_cycles").select("id, tontine_id, cycle_number, period_label, status, total_expected, total_collected").in("tontine_id", tontineIds).eq("status", "open"),
+        ]);
+        const members = membersResult.data || [];
+        const cycles = cyclesResult.data || [];
+
+        // Load payments for open cycles
+        const openCycleIds = cycles.map((c: any) => c.id);
+        let payments: any[] = [];
+        if (openCycleIds.length > 0) {
+          const { data: payData } = await supabaseAuth.from("tontine_payments").select("cycle_id, member_id, amount_paid").in("cycle_id", openCycleIds);
+          payments = payData || [];
+        }
+
+        for (const t of tontines) {
+          const tMembers = members.filter((m: any) => m.tontine_id === t.id);
+          const tCycle = cycles.find((c: any) => c.tontine_id === t.id);
+          const memberNames = tMembers.map((m: any) => m.name).join(", ");
+          
+          let cycleInfo = "Aucun cycle ouvert";
+          if (tCycle) {
+            const cyclePays = payments.filter((p: any) => p.cycle_id === tCycle.id);
+            const paidMemberIds = new Set(cyclePays.map((p: any) => p.member_id));
+            const paidMembers = tMembers.filter((m: any) => paidMemberIds.has(m.id)).map((m: any) => m.name);
+            const unpaidMembers = tMembers.filter((m: any) => !paidMemberIds.has(m.id)).map((m: any) => m.name);
+            cycleInfo = `Cycle ${tCycle.cycle_number} (${tCycle.period_label}) — ${Number(tCycle.total_collected).toLocaleString()}/${Number(tCycle.total_expected).toLocaleString()} F collectés\n  Ont payé: ${paidMembers.join(", ") || "personne"}\n  Pas encore payé: ${unpaidMembers.join(", ") || "tous ont payé"}`;
+          }
+
+          tontineContext += `\n- Tontine "${t.name}" (ID: ${t.id}) — ${Number(t.contribution_amount).toLocaleString()} F/${t.frequency}\n  Membres: ${memberNames || "aucun"}\n  ${cycleInfo}`;
+        }
+      }
 
       const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
       const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
@@ -93,6 +129,7 @@ REVENUS RÉCENTS : ${totalIncome.toLocaleString()} FCFA
 DÉPENSES RÉCENTES : ${totalExpense.toLocaleString()} FCFA
 SOLDE NET : ${(totalIncome - totalExpense).toLocaleString()} FCFA
 ${budget ? `BUDGET MENSUEL : ${Number(budget.total_budget).toLocaleString()} FCFA (${budget.month}/${budget.year})` : ""}
+=== TONTINES ACTIVES ===${tontineContext || "\nAucune tontine active"}
 === DETTES QUE L'UTILISATEUR DOIT PAYER ===
 ${debtOwed || "Aucune dette à payer"}
 === CRÉANCES (ce qu'on lui doit) ===
@@ -157,12 +194,34 @@ RÈGLES DETTES :
 - Si un nom est ambigu, demander une précision
 - Pour les paiements partiels, toujours inclure aussi un bloc transaction (revenu) pour le montant reçu
 
-EXEMPLES DETTES :
-User: "Je dois 25000 à Kouamé avant vendredi"
-Toi: "📝 Dette notée : 25 000F à Kouamé avant vendredi. Je te rappellerai ! 💪"
+ACTIONS TONTINE :
+Quand l'utilisateur mentionne un paiement de cotisation tontine (ex: "Ahmed a payé", "Ahmed vient de cotiser", "cotisation de Fatou 7000"), tu DOIS :
+1. Identifier la tontine et le membre dans le contexte ci-dessous
+2. Inclure un bloc action :
+\`\`\`tontine_action
+{"action":"record_tontine_payment","tontine_id":"ID_TONTINE","tontine_name":"NOM","member_name":"Ahmed","amount":7000,"cycle_id":"ID_CYCLE"}
+\`\`\`
+- Utilise l'ID exact de la tontine et du cycle ouvert depuis le contexte
+- Si le montant n'est pas précisé, utilise le contribution_amount de la tontine
+- Si le membre n'existe pas dans la tontine, dis-le et ne génère pas de bloc
 
-User: "Jean me devait 10000, il m'a donné 7000 hier"
-Toi: "✅ 7 000F reçus de Jean, noté en revenu ! 💳 Reste dû : 3 000F. Je mets à jour."
+OBJECTIF D'ÉPARGNE :
+Quand l'utilisateur veut créer un objectif d'épargne (ex: "je veux économiser 500000 pour un téléphone", "objectif 1 million pour le loyer avant décembre") :
+\`\`\`savings_action
+{"action":"create_savings_goal","name":"Téléphone","target_amount":500000,"deadline":"YYYY-MM-DD ou null"}
+\`\`\`
+
+CONSULTATION DE SOLDE :
+Quand l'utilisateur demande son solde ou combien il a dépensé :
+- Calcule à partir des données du contexte
+- Réponds directement avec les chiffres, pas besoin de bloc action
+
+EXEMPLES TONTINE :
+User: "Ahmed a cotisé"
+Toi: "✅ Cotisation d'Ahmed notée ! 💰 7 000F pour la tontine [nom]. Il reste [X] membres à payer ce mois."
+
+User: "Qui n'a pas encore payé dans ma tontine ?"
+Toi: "📋 Tontine [nom] — Cycle [N] : [Liste des impayés]. Total collecté : [X]/[Y] F."
 
 CONTEXTE LOCAL OBLIGATOIRE :
 - Mobile Money : Wave, Orange Money, MTN Mobile Money, Moov Money.
@@ -191,8 +250,13 @@ Toi: "✅ 20 000F envoyés à famille, c'est noté 💚 Tu envoies souvent à ta
 User: "Où est parti mon argent ce mois ?"
 Toi: "Ce mois tu as dépensé [X]F. Le plus gros poste : [catégorie] ([montant]F). Veux-tu des conseils pour réduire ça ?"
 
+User: "Ahmed vient de cotiser 7000"
+Toi: "✅ Cotisation d'Ahmed notée ! 💰 7 000F pour [tontine]. Il reste [X] membres à payer."
+
 RÈGLES ABSOLUES :
 - Si l'utilisateur mentionne une dépense ou un revenu, TOUJOURS inclure le bloc transaction JSON. Ne jamais demander de confirmation avant de créer le bloc — l'app gère la confirmation.
+- Si l'utilisateur mentionne un paiement tontine, TOUJOURS inclure le bloc tontine_action JSON avec les bons IDs du contexte.
+- Si l'utilisateur veut épargner, TOUJOURS inclure le bloc savings_action JSON.
 - Montants en FCFA uniquement.
 - Si tu manques d'info, pose UNE question précise. Ne devine jamais.
 - Ne jamais inventer des données ou statistiques.
@@ -202,7 +266,7 @@ RÈGLES ABSOLUES :
 - Si on t'envoie un fichier, résume son contenu en 1 phrase.
 ${userContext}`;
 
-    // Build messages for Lovable AI gateway (OpenAI-compatible format)
+    // Build messages for Lovable AI gateway
     const conversationMessages: any[] = [];
 
     for (const msg of messages) {
@@ -234,7 +298,6 @@ ${userContext}`;
       conversationMessages.push({ role: msg.role, content: msg.content });
     }
 
-    // Ensure first message is "user"
     while (conversationMessages.length > 0 && conversationMessages[0].role === "assistant") {
       conversationMessages.shift();
     }
@@ -246,7 +309,6 @@ ${userContext}`;
       );
     }
 
-    // Call Lovable AI Gateway (OpenAI-compatible)
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -291,7 +353,6 @@ ${userContext}`;
       );
     }
 
-    // Gateway returns OpenAI-compatible SSE — pass through directly
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });

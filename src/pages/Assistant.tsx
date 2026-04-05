@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2 } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users } from "lucide-react";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -45,12 +45,30 @@ type DebtData = {
   note?: string;
 };
 
+type TontinePaymentData = {
+  action: "record_tontine_payment";
+  tontine_id: string;
+  tontine_name: string;
+  member_name: string;
+  amount: number;
+  cycle_id: string;
+};
+
+type SavingsGoalData = {
+  action: "create_savings_goal";
+  name: string;
+  target_amount: number;
+  deadline?: string | null;
+};
+
 const cleanMessageContent = (content: string): string => {
   return content
     .replace(/```transaction[\s\S]*?```/g, "")
     .replace(/```debt[\s\S]*?```/g, "")
+    .replace(/```tontine_action[\s\S]*?```/g, "")
+    .replace(/```savings_action[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
-    .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt)"[^}]*\}/g, "")
+    .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt|record_tontine_payment|create_savings_goal)"[^}]*\}/g, "")
     .trim();
 };
 
@@ -61,12 +79,9 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
     try {
       const parsed = JSON.parse(match[1]);
       if (parsed.action === "create_transaction" && parsed.amount) {
-        return {
-          cleanContent: content.replace(regex, "").trim(),
-          transaction: parsed as TransactionData,
-        };
+        return { cleanContent: content.replace(regex, "").trim(), transaction: parsed as TransactionData };
       }
-    } catch { /* ignore parse errors */ }
+    } catch { /* ignore */ }
   }
   const inlineRegex = /\{"action"\s*:\s*"create_transaction"[^}]+\}/;
   const inlineMatch = content.match(inlineRegex);
@@ -74,10 +89,7 @@ const extractTransaction = (content: string): { cleanContent: string; transactio
     try {
       const parsed = JSON.parse(inlineMatch[0]);
       if (parsed.amount) {
-        return {
-          cleanContent: content.replace(inlineRegex, "").trim(),
-          transaction: parsed as TransactionData,
-        };
+        return { cleanContent: content.replace(inlineRegex, "").trim(), transaction: parsed as TransactionData };
       }
     } catch { /* ignore */ }
   }
@@ -91,14 +103,39 @@ const extractDebt = (content: string): { cleanContent: string; debt: DebtData | 
     try {
       const parsed = JSON.parse(match[1]);
       if (parsed.action && parsed.person_name) {
-        return {
-          cleanContent: content.replace(regex, "").trim(),
-          debt: parsed as DebtData,
-        };
+        return { cleanContent: content.replace(regex, "").trim(), debt: parsed as DebtData };
       }
     } catch { /* ignore */ }
   }
   return { cleanContent: content, debt: null };
+};
+
+const extractTontineAction = (content: string): { cleanContent: string; tontinePayment: TontinePaymentData | null } => {
+  const regex = /```tontine_action\s*\n?(\{[\s\S]*?\})\s*\n?```/;
+  const match = content.match(regex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.action === "record_tontine_payment" && parsed.member_name) {
+        return { cleanContent: content.replace(regex, "").trim(), tontinePayment: parsed as TontinePaymentData };
+      }
+    } catch { /* ignore */ }
+  }
+  return { cleanContent: content, tontinePayment: null };
+};
+
+const extractSavingsAction = (content: string): { cleanContent: string; savingsGoal: SavingsGoalData | null } => {
+  const regex = /```savings_action\s*\n?(\{[\s\S]*?\})\s*\n?```/;
+  const match = content.match(regex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.action === "create_savings_goal" && parsed.name) {
+        return { cleanContent: content.replace(regex, "").trim(), savingsGoal: parsed as SavingsGoalData };
+      }
+    } catch { /* ignore */ }
+  }
+  return { cleanContent: content, savingsGoal: null };
 };
 
 const getGreeting = () => {
@@ -110,7 +147,7 @@ const getGreeting = () => {
 
 const initialMessages: Message[] = [{
   role: "assistant",
-  content: `${getGreeting()} ! 👋\n\nDis-moi juste ce que tu as dépensé ou reçu aujourd'hui. Même en nouchi, je comprends tout ! 😄\n\nExemples :\n🗣️ "Garba 500"\n🗣️ "Taxi 2000 Wave"\n🗣️ "Reçu 50 mille de mon mari"\n🗣️ "Marché 15000"`,
+  content: `${getGreeting()} ! 👋\n\nDis-moi juste ce que tu as dépensé ou reçu aujourd'hui. Même en nouchi, je comprends tout ! 😄\n\nExemples :\n🗣️ "Garba 500"\n🗣️ "Taxi 2000 Wave"\n🗣️ "Ahmed a cotisé 7000"\n🗣️ "Je veux économiser 100000"`,
   type: "text",
 }];
 
@@ -121,8 +158,8 @@ const QUICK_ACTIONS = [
   { emoji: "📱", label: "Recharge", text: "Recharge téléphone " },
   { emoji: "💸", label: "Envoi argent", text: "J'ai envoyé " },
   { emoji: "💰", label: "Reçu argent", text: "J'ai reçu " },
-  { emoji: "📊", label: "Mon bilan", text: "Quel est mon bilan ce mois ?" },
-  { emoji: "💡", label: "Conseil", text: "Donne-moi un conseil pour économiser" },
+  { emoji: "🤝", label: "Tontine", text: "Qui n'a pas payé la tontine ?" },
+  { emoji: "🎯", label: "Épargne", text: "Je veux économiser " },
 ];
 
 const Assistant = () => {
@@ -146,10 +183,8 @@ const Assistant = () => {
   const continuousModeRef = useRef(false);
   const { toast } = useToast();
 
-  // Keep ref in sync
   useEffect(() => { continuousModeRef.current = continuousMode; }, [continuousMode]);
 
-  // Preload voices
   useEffect(() => {
     speechSynthesis.getVoices();
     speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
@@ -200,7 +235,6 @@ const Assistant = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // --- Anti-hallucination filter ---
   const HALLUCINATIONS = [
     "merci", "merci.", "sous-titres", "sous-titrage",
     "transcription", "music", "musique", "♪",
@@ -220,7 +254,7 @@ const Assistant = () => {
     return false;
   };
 
-  // --- Speech Synthesis with quality voice ---
+  // --- Speech Synthesis ---
   const speak = useCallback((text: string, index: number) => {
     if (speakingId === index) {
       speechSynthesis.cancel();
@@ -252,6 +286,18 @@ const Assistant = () => {
     setSpeakingId(index);
     speechSynthesis.speak(utterance);
   }, [speakingId, toast]);
+
+  const speakText = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "fr-FR";
+    utterance.rate = 1.05;
+    const voices = speechSynthesis.getVoices();
+    const fr = voices.find(v => v.lang === "fr-FR" || v.lang.startsWith("fr"));
+    if (fr) utterance.voice = fr;
+    speechSynthesis.speak(utterance);
+  }, []);
 
   // --- Image Compression ---
   const compressImage = (file: File): Promise<string> =>
@@ -424,7 +470,7 @@ const Assistant = () => {
     }
   };
 
-  // --- Quick Save Transaction ---
+  // --- Action Handlers ---
   const handleQuickSave = async (transaction: TransactionData) => {
     if (!user) return;
     try {
@@ -444,44 +490,36 @@ const Assistant = () => {
         date: transaction.date || today,
         category_id: cat?.id || null,
       });
-      const confirmMsg: Message = {
-        role: "assistant",
-        content: `✅ C'est noté ! ${transaction.amount.toLocaleString()} FCFA enregistré.\n\nTu as autre chose à noter ?`,
-        type: "text",
-      };
+      const confirmText = `✅ C'est noté ! ${transaction.amount.toLocaleString()} FCFA enregistré.`;
+      const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
       toast({ title: "✅ Transaction enregistrée !" });
+      speakText(confirmText);
     } catch {
       toast({ title: "Erreur d'enregistrement", variant: "destructive" });
     }
   };
 
-  // --- Quick Save Debt ---
   const handleQuickDebt = async (debt: DebtData) => {
     if (!user) return;
     try {
       const today = new Date().toISOString().split("T")[0];
 
       if (debt.action === "create_debt") {
-        const { error } = await supabase
-          .from("debts")
-          .insert({
-            user_id: user.id,
-            person_name: debt.person_name,
-            type: debt.debt_type === "owed_to_me" ? "owed_to_me" : "i_owe",
-            amount: debt.amount || 0,
-            due_date: debt.due_date || null,
-            note: debt.note || "",
-            status: "pending",
-          });
-
+        const { error } = await supabase.from("debts").insert({
+          user_id: user.id,
+          person_name: debt.person_name,
+          type: debt.debt_type === "owed_to_me" ? "owed_to_me" : "i_owe",
+          amount: debt.amount || 0,
+          due_date: debt.due_date || null,
+          note: debt.note || "",
+          status: "pending",
+        });
         if (error) {
-          console.error("Debt insert error:", error);
           toast({ title: "Erreur Supabase", description: error.message, variant: "destructive" });
           return;
         }
-
         if (debt.debt_type === "owed_to_me" && debt.amount_paid && debt.amount_paid > 0) {
           await supabase.from("transactions").insert({
             user_id: user.id,
@@ -494,7 +532,7 @@ const Assistant = () => {
       }
 
       if (debt.action === "update_debt") {
-        const { data: existing, error: findError } = await supabase
+        const { data: existing } = await supabase
           .from("debts")
           .select("*")
           .eq("user_id", user.id)
@@ -503,23 +541,12 @@ const Assistant = () => {
           .limit(1)
           .maybeSingle();
 
-        if (findError) {
-          console.error("Find debt error:", findError);
-        }
-
         if (existing) {
           const newAmount = Math.max(0, Number(existing.amount) - (debt.amount_paid || 0));
-          const { error: updateError } = await supabase
-            .from("debts")
-            .update({
-              amount: newAmount,
-              status: newAmount <= 0 ? "paid" : "pending",
-            })
-            .eq("id", existing.id);
-
-          if (updateError) {
-            console.error("Update debt error:", updateError);
-          }
+          await supabase.from("debts").update({
+            amount: newAmount,
+            status: newAmount <= 0 ? "paid" : "pending",
+          }).eq("id", existing.id);
         }
 
         if (debt.amount_paid && debt.amount_paid > 0) {
@@ -533,39 +560,120 @@ const Assistant = () => {
         }
       }
 
-      const confirmMsg: Message = {
-        role: "assistant",
-        content: debt.action === "create_debt"
-          ? `✅ Enregistré dans la section Dettes !\n\n${
-              debt.debt_type === "owed_to_me"
-                ? `💚 ${debt.person_name} te doit ${(debt.amount || 0).toLocaleString()}F`
-                : `📝 Tu dois ${(debt.amount || 0).toLocaleString()}F à ${debt.person_name}`
-            }${debt.due_date ? `\n📅 Échéance : ${new Date(debt.due_date).toLocaleDateString("fr-FR")}` : ""}\n\nVa dans Dettes pour vérifier 👀`
-          : `✅ Mis à jour dans Dettes !\n💰 ${debt.amount_paid?.toLocaleString()}F reçu de ${debt.person_name}\n📝 Reste : ${debt.remaining?.toLocaleString()}F`,
-        type: "text",
-      };
+      const confirmText = debt.action === "create_debt"
+        ? `✅ Dette enregistrée pour ${debt.person_name} — ${(debt.amount || 0).toLocaleString()} FCFA`
+        : `✅ Mis à jour ! ${debt.amount_paid?.toLocaleString()} FCFA reçu de ${debt.person_name}`;
+      const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
-      toast({ title: "✅ Dette enregistrée dans Dettes !" });
-    } catch (e) {
-      console.error("handleQuickDebt catch:", e);
+      toast({ title: "✅ Dette enregistrée !" });
+      speakText(confirmText);
+    } catch {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la dette", variant: "destructive" });
     }
   };
 
-  // --- Handle update_transaction action from assistant ---
+  const handleTontinePayment = async (payment: TontinePaymentData) => {
+    if (!user) return;
+    try {
+      // Find the member by name in the tontine
+      const { data: members } = await supabase
+        .from("tontine_members" as any)
+        .select("id, name")
+        .eq("tontine_id", payment.tontine_id)
+        .ilike("name", `%${payment.member_name}%`);
+
+      const member = (members as any)?.[0];
+      if (!member) {
+        toast({ title: `Membre "${payment.member_name}" introuvable`, variant: "destructive" });
+        return;
+      }
+
+      // Insert payment
+      const { error } = await supabase.from("tontine_payments" as any).insert({
+        cycle_id: payment.cycle_id,
+        member_id: member.id,
+        amount_paid: payment.amount,
+        payment_date: new Date().toISOString().split("T")[0],
+        note: `Cotisation via assistant`,
+      });
+
+      if (error) {
+        toast({ title: "Erreur d'enregistrement", description: (error as any).message, variant: "destructive" });
+        return;
+      }
+
+      // Update cycle total_collected
+      const { data: cycle } = await supabase
+        .from("tontine_cycles" as any)
+        .select("total_collected")
+        .eq("id", payment.cycle_id)
+        .maybeSingle();
+
+      if (cycle) {
+        await supabase.from("tontine_cycles" as any)
+          .update({ total_collected: Number((cycle as any).total_collected) + payment.amount })
+          .eq("id", payment.cycle_id);
+      }
+
+      // Count remaining unpaid members
+      const { data: allMembers } = await supabase
+        .from("tontine_members" as any)
+        .select("id")
+        .eq("tontine_id", payment.tontine_id);
+
+      const { data: payments } = await supabase
+        .from("tontine_payments" as any)
+        .select("member_id")
+        .eq("cycle_id", payment.cycle_id);
+
+      const paidIds = new Set((payments as any[] || []).map((p: any) => p.member_id));
+      const remaining = (allMembers as any[] || []).filter((m: any) => !paidIds.has(m.id)).length;
+
+      const confirmText = `C'est noté. ${payment.member_name} a payé ${payment.amount.toLocaleString()} francs. Il reste ${remaining} membre${remaining > 1 ? "s" : ""} à payer ce mois-ci.`;
+      const confirmMsg: Message = { role: "assistant", content: `✅ ${confirmText}`, type: "text" };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage("assistant", confirmMsg.content);
+      toast({ title: "✅ Cotisation enregistrée !" });
+      speakText(confirmText);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la cotisation", variant: "destructive" });
+    }
+  };
+
+  const handleCreateSavingsGoal = async (goal: SavingsGoalData) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.from("savings_goals").insert({
+        user_id: user.id,
+        name: goal.name,
+        target_amount: goal.target_amount,
+        deadline: goal.deadline || null,
+        current_amount: 0,
+      });
+
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      const confirmText = `Objectif "${goal.name}" créé ! ${goal.target_amount.toLocaleString()} francs à atteindre${goal.deadline ? ` avant le ${new Date(goal.deadline).toLocaleDateString("fr-FR")}` : ""}. Tu peux suivre ta progression dans Épargne.`;
+      const confirmMsg: Message = { role: "assistant", content: `🎯 ${confirmText}`, type: "text" };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage("assistant", confirmMsg.content);
+      toast({ title: "🎯 Objectif d'épargne créé !" });
+      speakText(confirmText);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de créer l'objectif", variant: "destructive" });
+    }
+  };
+
+  // --- Handle update_transaction action ---
   const handleAssistantAction = async (rawContent: string) => {
-    // Check for update_transaction
     const updateMatch = rawContent.match(/```transaction\s*\n?([\s\S]*?)\n?```/);
     if (!updateMatch) return;
-
     let action: any;
-    try {
-      action = JSON.parse(updateMatch[1].trim());
-    } catch {
-      return;
-    }
-
+    try { action = JSON.parse(updateMatch[1].trim()); } catch { return; }
     if (!user || !action?.action) return;
 
     if (action.action === "update_transaction") {
@@ -573,45 +681,19 @@ const Assistant = () => {
       const date = String(action.date || "");
       const catName = String(action.category || "").trim();
 
-      const { data: cat } = await supabase
-        .from("categories")
-        .select("id, name")
-        .eq("user_id", user.id)
-        .ilike("name", catName)
-        .maybeSingle();
+      const { data: cat } = await supabase.from("categories").select("id, name").eq("user_id", user.id).ilike("name", catName).maybeSingle();
+      if (!cat) { toast({ title: `Catégorie "${catName}" introuvable`, variant: "destructive" }); return; }
 
-      if (!cat) {
-        toast({ title: `Catégorie "${catName}" introuvable`, description: "Vérifie l'orthographe dans ton message", variant: "destructive" });
-        return;
-      }
-
-      let query = supabase
-        .from("transactions")
-        .select("id, amount, note, merchant_name")
-        .eq("user_id", user.id);
-
+      let query = supabase.from("transactions").select("id, amount, note, merchant_name").eq("user_id", user.id);
       if (date) query = query.eq("date", date);
-      if (amount > 0) {
-        query = query.gte("amount", amount * 0.85).lte("amount", amount * 1.15);
-      }
+      if (amount > 0) query = query.gte("amount", amount * 0.85).lte("amount", amount * 1.15);
 
       const { data: txList } = await query.limit(1);
       const tx = txList?.[0];
+      if (!tx) { toast({ title: "Transaction introuvable", variant: "destructive" }); return; }
 
-      if (!tx) {
-        toast({ title: "Transaction introuvable", description: `Aucune transaction de ${amount.toLocaleString()} FCFA trouvée`, variant: "destructive" });
-        return;
-      }
-
-      const { error } = await supabase
-        .from("transactions")
-        .update({ category_id: cat.id })
-        .eq("id", tx.id);
-
-      if (error) {
-        toast({ title: "Erreur Supabase", variant: "destructive" });
-        return;
-      }
+      const { error } = await supabase.from("transactions").update({ category_id: cat.id }).eq("id", tx.id);
+      if (error) { toast({ title: "Erreur Supabase", variant: "destructive" }); return; }
 
       const label = tx.merchant_name || tx.note || "Transaction";
       const confirmText = `✅ Catégorie mise à jour !\n📦 ${label} — ${Number(tx.amount).toLocaleString()} FCFA\n📂 Déplacé vers : ${cat.name}`;
@@ -730,12 +812,10 @@ const Assistant = () => {
           } catch { /* ignore */ }
         }
       }
-      // Save raw assistant response, then clean display and execute actions
+      // Save raw, clean display, execute actions
       if (assistantSoFar) {
         await saveMessage("assistant", assistantSoFar);
 
-        // Clean the displayed message (remove JSON blocks)
-        const cleanDisplay = cleanMessageContent(assistantSoFar);
         setMessages(prev => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant") {
@@ -779,6 +859,200 @@ const Assistant = () => {
       setSpeakingId(null);
       if (isRecording) stopRecording();
     }
+  };
+
+  // --- Render Action Cards ---
+  const renderActionCards = (content: string, messageIndex: number) => {
+    const cards: JSX.Element[] = [];
+
+    // Transaction card
+    const { transaction } = extractTransaction(content);
+    if (transaction) {
+      cards.push(
+        <div key="tx" className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+            ✅ Transaction détectée
+          </p>
+          <div className="text-sm text-foreground space-y-0.5">
+            <p>💰 <strong>{transaction.amount.toLocaleString()} FCFA</strong></p>
+            <p>📁 {transaction.category}</p>
+            {transaction.note && <p>📝 {transaction.note}</p>}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirmedCards.has(messageIndex)) return;
+                setConfirmedCards(prev => new Set(prev).add(messageIndex));
+                handleQuickSave(transaction);
+              }}
+              disabled={confirmedCards.has(messageIndex)}
+              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                confirmedCards.has(messageIndex)
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              {confirmedCards.has(messageIndex) ? "✅ Enregistré" : "✅ Oui, enregistrer"}
+            </button>
+            <button
+              onClick={() => {
+                setMessages(prev => prev.map((msg, idx) =>
+                  idx === messageIndex ? { ...msg, content: extractTransaction(msg.content).cleanContent } : msg
+                ));
+              }}
+              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+            >
+              ❌ Non
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Debt card
+    const { debt } = extractDebt(content);
+    if (debt) {
+      cards.push(
+        <div key="debt" className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+            {debt.action === "update_debt" ? "📊 Mise à jour dette" :
+             debt.debt_type === "owed_to_me" ? "💚 Créance détectée" : "📝 Dette détectée"}
+          </p>
+          <div className="text-sm text-foreground space-y-1">
+            <p>👤 <strong>{debt.person_name}</strong></p>
+            {debt.amount != null && <p>💰 Montant : <strong>{debt.amount.toLocaleString()} FCFA</strong></p>}
+            {debt.amount_paid != null && <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()} FCFA</strong></p>}
+            {debt.remaining != null && <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()} FCFA</strong></p>}
+            {debt.due_date && <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirmedCards.has(messageIndex + 1000)) return;
+                setConfirmedCards(prev => new Set(prev).add(messageIndex + 1000));
+                handleQuickDebt(debt);
+              }}
+              disabled={confirmedCards.has(messageIndex + 1000)}
+              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                confirmedCards.has(messageIndex + 1000)
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              {confirmedCards.has(messageIndex + 1000) ? "✅ Confirmé" : "✅ Confirmer"}
+            </button>
+            <button
+              onClick={() => {
+                setMessages(prev => prev.map((msg, idx) =>
+                  idx === messageIndex ? { ...msg, content: extractDebt(extractTransaction(msg.content).cleanContent).cleanContent } : msg
+                ));
+              }}
+              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+            >
+              ❌ Annuler
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Tontine payment card
+    const { tontinePayment } = extractTontineAction(content);
+    if (tontinePayment) {
+      cards.push(
+        <div key="tontine" className="mt-2 rounded-2xl border border-accent/30 bg-accent/5 p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-accent-foreground" />
+            <p className="text-xs font-semibold text-accent-foreground uppercase tracking-wide">
+              💰 Paiement Tontine détecté
+            </p>
+          </div>
+          <div className="text-sm text-foreground space-y-1">
+            <p>👤 Membre : <strong>{tontinePayment.member_name}</strong></p>
+            <p>💰 Montant : <strong>{tontinePayment.amount.toLocaleString()} FCFA</strong></p>
+            <p>🤝 Tontine : <strong>{tontinePayment.tontine_name}</strong></p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirmedCards.has(messageIndex + 2000)) return;
+                setConfirmedCards(prev => new Set(prev).add(messageIndex + 2000));
+                handleTontinePayment(tontinePayment);
+              }}
+              disabled={confirmedCards.has(messageIndex + 2000)}
+              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                confirmedCards.has(messageIndex + 2000)
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              {confirmedCards.has(messageIndex + 2000) ? "✅ Enregistré" : "✅ Confirmer"}
+            </button>
+            <button
+              onClick={() => {
+                setMessages(prev => prev.map((msg, idx) =>
+                  idx === messageIndex ? { ...msg, content: extractTontineAction(msg.content).cleanContent } : msg
+                ));
+              }}
+              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+            >
+              ❌ Annuler
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Savings goal card
+    const { savingsGoal } = extractSavingsAction(content);
+    if (savingsGoal) {
+      cards.push(
+        <div key="savings" className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Target className="w-4 h-4 text-primary" />
+            <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+              🎯 Objectif d'épargne détecté
+            </p>
+          </div>
+          <div className="text-sm text-foreground space-y-1">
+            <p>📌 Nom : <strong>{savingsGoal.name}</strong></p>
+            <p>💰 Objectif : <strong>{savingsGoal.target_amount.toLocaleString()} FCFA</strong></p>
+            {savingsGoal.deadline && (
+              <p>📅 Avant le : <strong>{new Date(savingsGoal.deadline).toLocaleDateString("fr-FR")}</strong></p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirmedCards.has(messageIndex + 3000)) return;
+                setConfirmedCards(prev => new Set(prev).add(messageIndex + 3000));
+                handleCreateSavingsGoal(savingsGoal);
+              }}
+              disabled={confirmedCards.has(messageIndex + 3000)}
+              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
+                confirmedCards.has(messageIndex + 3000)
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              {confirmedCards.has(messageIndex + 3000) ? "🎯 Créé" : "✅ Créer l'objectif"}
+            </button>
+            <button
+              onClick={() => {
+                setMessages(prev => prev.map((msg, idx) =>
+                  idx === messageIndex ? { ...msg, content: extractSavingsAction(msg.content).cleanContent } : msg
+                ));
+              }}
+              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+            >
+              ❌ Annuler
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return cards;
   };
 
   return (
@@ -846,17 +1120,12 @@ const Assistant = () => {
                   <audio src={m.audioUrl} controls className="h-8 w-48" />
                 )}
                 {(() => {
-                  const { cleanContent: afterDebt, debt } = m.role === "assistant"
-                    ? extractDebt(m.content)
-                    : { cleanContent: m.content, debt: null };
-                  const { cleanContent, transaction } = m.role === "assistant"
-                    ? extractTransaction(afterDebt)
-                    : { cleanContent: afterDebt, transaction: null };
+                  const displayContent = cleanMessageContent(m.content);
                   return (
                     <>
                       {i === 0 && m.role === "assistant" ? (
                         <BorderRotate className="rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap text-foreground" animationSpeed={14}>
-                          {cleanContent}
+                          {displayContent}
                         </BorderRotate>
                       ) : (
                         <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
@@ -864,105 +1133,13 @@ const Assistant = () => {
                             ? "gradient-primary text-primary-foreground"
                             : "glass-card text-foreground"
                         }`}>
-                          {cleanContent}
+                          {displayContent}
                         </div>
                       )}
-                      {transaction && (
-                        <div className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                            ✅ Transaction détectée
-                          </p>
-                          <div className="text-sm text-foreground space-y-0.5">
-                            <p>💰 <strong>{transaction.amount.toLocaleString()} FCFA</strong></p>
-                            <p>📁 {transaction.category}</p>
-                            {transaction.note && <p>📝 {transaction.note}</p>}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                if (confirmedCards.has(i)) return;
-                                setConfirmedCards(prev => new Set(prev).add(i));
-                                handleQuickSave(transaction);
-                              }}
-                              disabled={confirmedCards.has(i)}
-                              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
-                                confirmedCards.has(i)
-                                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-                              }`}
-                            >
-                              {confirmedCards.has(i) ? "✅ Enregistré" : "✅ Oui, enregistrer"}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setMessages(prev => prev.map((msg, idx) =>
-                                  idx === i
-                                    ? { ...msg, content: extractTransaction(msg.content).cleanContent }
-                                    : msg
-                                ));
-                              }}
-                              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
-                            >
-                              ❌ Non
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                      {debt && m.role === "assistant" && (
-                        <div className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-                          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                            {debt.action === "update_debt" ? "📊 Mise à jour dette" :
-                             debt.debt_type === "owed_to_me" ? "💚 Créance détectée" : "📝 Dette détectée"}
-                          </p>
-                          <div className="text-sm text-foreground space-y-1">
-                            <p>👤 <strong>{debt.person_name}</strong></p>
-                            {debt.amount != null && (
-                              <p>💰 Montant : <strong>{debt.amount.toLocaleString()} FCFA</strong></p>
-                            )}
-                            {debt.amount_paid != null && (
-                              <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()} FCFA</strong></p>
-                            )}
-                            {debt.remaining != null && (
-                              <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()} FCFA</strong></p>
-                            )}
-                            {debt.due_date && (
-                              <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                if (confirmedCards.has(i)) return;
-                                setConfirmedCards(prev => new Set(prev).add(i));
-                                handleQuickDebt(debt);
-                              }}
-                              disabled={confirmedCards.has(i)}
-                              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
-                                confirmedCards.has(i)
-                                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-                              }`}
-                            >
-                              {confirmedCards.has(i) ? "✅ Confirmé" : "✅ Confirmer"}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setMessages(prev => prev.map((msg, idx) =>
-                                  idx === i
-                                    ? { ...msg, content: extractDebt(extractTransaction(msg.content).cleanContent).cleanContent }
-                                    : msg
-                                ));
-                              }}
-                              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
-                            >
-                              ❌ Annuler
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                      {m.role === "assistant" && cleanContent && i > 0 && (
+                      {m.role === "assistant" && renderActionCards(m.content, i)}
+                      {m.role === "assistant" && displayContent && i > 0 && (
                         <button
-                          onClick={() => speak(cleanContent, i)}
+                          onClick={() => speak(displayContent, i)}
                           className="self-start flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {speakingId === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
