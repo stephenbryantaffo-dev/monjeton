@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
+import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
