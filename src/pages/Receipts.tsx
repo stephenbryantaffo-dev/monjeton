@@ -638,4 +638,135 @@ ${receiptPages}
   );
 };
 
+/* ── Accounting Dashboard ── */
+const AccountingDashboard = ({ receipts, formatAmount }: { receipts: Receipt[]; formatAmount: (n: number) => string }) => {
+  // Group by merchant
+  const byMerchant: Record<string, { count: number; total: number }> = {};
+  receipts.forEach(r => {
+    const name = r.merchant_name || "Non identifié";
+    if (!byMerchant[name]) byMerchant[name] = { count: 0, total: 0 };
+    byMerchant[name].count++;
+    byMerchant[name].total += Number(r.total_amount || 0);
+  });
+  const merchantList = Object.entries(byMerchant)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((a, b) => b.total - a.total);
+
+  // Group by category
+  const byCategory: Record<string, { count: number; total: number }> = {};
+  receipts.forEach(r => {
+    const cat = r.category || "Non catégorisé";
+    if (!byCategory[cat]) byCategory[cat] = { count: 0, total: 0 };
+    byCategory[cat].count++;
+    byCategory[cat].total += Number(r.total_amount || 0);
+  });
+  const categoryList = Object.entries(byCategory)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((a, b) => b.total - a.total);
+
+  // Monthly breakdown
+  const byMonth: Record<string, number> = {};
+  receipts.forEach(r => {
+    const key = r.receipt_date ? r.receipt_date.substring(0, 7) : "Inconnu";
+    byMonth[key] = (byMonth[key] || 0) + Number(r.total_amount || 0);
+  });
+  const monthList = Object.entries(byMonth)
+    .map(([key, total]) => {
+      if (key === "Inconnu") return { label: key, total };
+      const [y, m] = key.split("-").map(Number);
+      return { label: new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }), total };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  const grandTotal = receipts.reduce((s, r) => s + Number(r.total_amount || 0), 0);
+
+  if (receipts.length === 0) {
+    return (
+      <div className="text-center py-16 space-y-3">
+        <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground/40" />
+        <p className="text-muted-foreground font-medium">Aucune donnée comptable</p>
+        <p className="text-xs text-muted-foreground">Scanne des reçus pour voir les statistiques</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* By Merchant */}
+      <BorderRotate className="p-4" animationSpeed={18}>
+        <div className="flex items-center gap-2 mb-3">
+          <Store className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Par commerçant</h3>
+        </div>
+        <div className="space-y-2">
+          {merchantList.map(m => {
+            const pct = grandTotal > 0 ? (m.total / grandTotal) * 100 : 0;
+            return (
+              <div key={m.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-foreground truncate max-w-[50%]">{m.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">{m.count} reçu{m.count > 1 ? "s" : ""}</span>
+                    <span className="text-xs font-semibold text-foreground">{formatAmount(m.total)} F</span>
+                  </div>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </BorderRotate>
+
+      {/* By Category */}
+      <BorderRotate className="p-4" animationSpeed={18}>
+        <div className="flex items-center gap-2 mb-3">
+          <Tag className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Par catégorie</h3>
+        </div>
+        <div className="space-y-2">
+          {categoryList.map(c => {
+            const pct = grandTotal > 0 ? (c.total / grandTotal) * 100 : 0;
+            return (
+              <div key={c.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-foreground">{c.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">{c.count}</span>
+                    <span className="text-xs font-semibold text-foreground">{formatAmount(c.total)} F</span>
+                  </div>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </BorderRotate>
+
+      {/* Monthly */}
+      <BorderRotate className="p-4" animationSpeed={18}>
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Par mois</h3>
+        </div>
+        <div className="space-y-2">
+          {monthList.map(m => (
+            <div key={m.label} className="flex items-center justify-between">
+              <span className="text-xs text-foreground capitalize">{m.label}</span>
+              <span className="text-xs font-semibold text-foreground">{formatAmount(m.total)} F</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+          <span className="text-xs font-semibold text-foreground">Total général</span>
+          <span className="text-sm font-bold text-primary">{formatAmount(grandTotal)} F</span>
+        </div>
+      </BorderRotate>
+    </div>
+  );
+};
+
 export default Receipts;
