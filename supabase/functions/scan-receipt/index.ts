@@ -90,8 +90,18 @@ Extract the following information as JSON:
   "date": "YYYY-MM-DD",
   "merchant": "store or merchant name",
   "type": "expense",
-  "category": "most likely category"
+  "category": "most likely category",
+  "items": [
+    { "name": "item name", "quantity": number, "price": number (unit price × quantity) }
+  ]
 }
+
+ITEMS EXTRACTION RULES:
+- Extract EVERY individual line item visible on the receipt
+- For each item: name, quantity (default 1 if not shown), price (total for that line)
+- Include discounts as negative amounts
+- If no individual items are readable, return an empty array []
+- Items should be in the order they appear on the receipt
 
 CATEGORY DETECTION (French/English):
 - "alimentation/food/grocery/supermarché/market" → "Alimentation"
@@ -107,7 +117,7 @@ CATEGORY DETECTION (French/English):
 AMOUNT RULES:
 - Look for: Total, Total TTC, Amount Due, Grand Total, Montant Total, Total à Payer, TOTAL, NET AMOUNT
 - Always take the FINAL total (after taxes)
-- Ignore subtotals and individual item prices
+- Ignore subtotals and individual item prices for the main amount
 
 CURRENCY DETECTION:
 - $ → USD, € → EUR, £ → GBP
