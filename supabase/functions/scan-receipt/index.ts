@@ -168,7 +168,17 @@ Return ONLY the JSON, no other text.`;
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const raw = JSON.parse(jsonMatch[0]);
-        // Sanitize output
+        // Sanitize items array
+        let items: any[] = [];
+        if (Array.isArray(raw.items)) {
+          items = raw.items
+            .filter((it: any) => it && typeof it === "object" && it.name)
+            .map((it: any) => ({
+              name: String(it.name).replace(/[<>]/g, "").slice(0, 200),
+              quantity: Math.max(1, Math.min(Number(it.quantity) || 1, 9999)),
+              price: Math.max(0, Math.min(Number(it.price) || 0, 999_999_999)),
+            }));
+        }
         parsed = {
           amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
           currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
@@ -177,6 +187,7 @@ Return ONLY the JSON, no other text.`;
           type: raw.type === "income" ? "income" : "expense",
           wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
           category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+          items,
         };
       }
     } catch {
