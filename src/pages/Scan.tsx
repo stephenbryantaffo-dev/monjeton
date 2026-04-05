@@ -143,14 +143,17 @@ const Scan = () => {
         await supabase.from("receipts" as any).insert({
           user_id: user.id,
           image_base64: base64Data.length > 500000 ? base64Data.slice(0, 500000) : base64Data,
-          amount: parsed.amount || null,
+          image_path: path,
+          total_amount: parsed.amount || null,
           currency: parsed.currency || "XOF",
-          merchant: parsed.merchant || null,
-          date: parsed.date || new Date().toISOString().split("T")[0],
+          merchant_name: parsed.merchant || null,
+          receipt_date: parsed.date || new Date().toISOString().split("T")[0],
           category: parsed.category || null,
           type: parsed.type || "expense",
           wallet: parsed.wallet || null,
           raw_data: parsed,
+          items: null,
+          status: "pending",
         });
         toast({ title: "🧾 Reçu sauvegardé", description: "Disponible dans Mes Reçus pour audit" });
       } catch (e) {

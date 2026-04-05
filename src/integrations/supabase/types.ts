@@ -476,48 +476,57 @@ export type Database = {
       }
       receipts: {
         Row: {
-          amount: number | null
           category: string | null
           created_at: string
           currency: string | null
-          date: string | null
           id: string
           image_base64: string | null
-          merchant: string | null
+          image_path: string | null
+          items: Json | null
+          merchant_name: string | null
           note: string | null
           raw_data: Json | null
+          receipt_date: string | null
+          status: string
+          total_amount: number | null
           transaction_id: string | null
           type: string | null
           user_id: string
           wallet: string | null
         }
         Insert: {
-          amount?: number | null
           category?: string | null
           created_at?: string
           currency?: string | null
-          date?: string | null
           id?: string
           image_base64?: string | null
-          merchant?: string | null
+          image_path?: string | null
+          items?: Json | null
+          merchant_name?: string | null
           note?: string | null
           raw_data?: Json | null
+          receipt_date?: string | null
+          status?: string
+          total_amount?: number | null
           transaction_id?: string | null
           type?: string | null
           user_id: string
           wallet?: string | null
         }
         Update: {
-          amount?: number | null
           category?: string | null
           created_at?: string
           currency?: string | null
-          date?: string | null
           id?: string
           image_base64?: string | null
-          merchant?: string | null
+          image_path?: string | null
+          items?: Json | null
+          merchant_name?: string | null
           note?: string | null
           raw_data?: Json | null
+          receipt_date?: string | null
+          status?: string
+          total_amount?: number | null
           transaction_id?: string | null
           type?: string | null
           user_id?: string
