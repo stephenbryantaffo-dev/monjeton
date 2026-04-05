@@ -186,30 +186,30 @@ const CyclesTab = ({ tontines }: Props) => {
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.04 * i }}
-                    className="glass-card rounded-xl p-3 flex items-center justify-between cursor-pointer"
+                    className="glass-card rounded-xl p-3 flex items-center gap-3 cursor-pointer"
                     onClick={() => s.status !== "paid" && openPayModal(s.member)}
                   >
-                    <div className="flex items-center gap-2">
-                      {s.status === "paid" && <CheckCircle className="w-4 h-4 text-emerald-400" />}
-                      {s.status === "partial" && <AlertTriangle className="w-4 h-4 text-amber-400" />}
-                      {s.status === "pending" && <Clock className="w-4 h-4 text-muted-foreground" />}
-                      <div>
-                        <span className="text-sm font-medium text-foreground">
-                          {s.member.name}
-                          {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
-                        </span>
-                        {s.status === "paid" && s.lastDate && (
-                          <p className="text-xs text-muted-foreground">Payé le {new Date(s.lastDate).toLocaleDateString("fr-FR")}</p>
-                        )}
-                        {s.status === "partial" && (
-                          <p className="text-xs text-amber-400">Partiel : {fmt(s.totalPaid)} / {fmt(s.expected)} F</p>
-                        )}
-                        {s.status === "pending" && (
-                          <p className="text-xs text-muted-foreground">En attente</p>
-                        )}
-                      </div>
+                    <div className="flex-shrink-0">
+                      {s.status === "paid" && <CheckCircle className="w-5 h-5 text-emerald-400" />}
+                      {s.status === "partial" && <AlertTriangle className="w-5 h-5 text-amber-400" />}
+                      {s.status === "pending" && <Clock className="w-5 h-5 text-muted-foreground" />}
                     </div>
-                    <span className="text-sm font-bold text-foreground">{fmt(s.totalPaid)} F</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {s.member.name}
+                        {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                      </p>
+                      {s.status === "paid" && s.lastDate && (
+                        <p className="text-xs text-muted-foreground">Payé le {new Date(s.lastDate).toLocaleDateString("fr-FR")}</p>
+                      )}
+                      {s.status === "partial" && (
+                        <p className="text-xs text-amber-400 truncate">Partiel : {fmt(s.totalPaid)} / {fmt(s.expected)} F</p>
+                      )}
+                      {s.status === "pending" && (
+                        <p className="text-xs text-muted-foreground">En attente</p>
+                      )}
+                    </div>
+                    <span className="text-sm font-bold text-foreground flex-shrink-0">{fmt(s.totalPaid)} F</span>
                   </motion.div>
                 ))}
               </div>
