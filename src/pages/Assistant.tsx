@@ -730,16 +730,30 @@ const Assistant = () => {
           } catch { /* ignore */ }
         }
       }
-      // Save assistant response
+      // Save raw assistant response, then clean display and execute actions
       if (assistantSoFar) {
         await saveMessage("assistant", assistantSoFar);
+
+        // Clean the displayed message (remove JSON blocks)
+        const cleanDisplay = cleanMessageContent(assistantSoFar);
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant") {
+            return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+          }
+          return prev;
+        });
+
+        // Execute update_transaction action if present
+        handleAssistantAction(assistantSoFar);
+
         if (continuousModeRef.current) {
           setMessages(prev => {
             const lastIdx = prev.length - 1;
             if (lastIdx >= 0 && prev[lastIdx].role === "assistant") {
-              const { cleanContent } = extractTransaction(prev[lastIdx].content);
-              if (cleanContent) {
-                setTimeout(() => speak(cleanContent, lastIdx), 200);
+              const clean = cleanMessageContent(prev[lastIdx].content);
+              if (clean) {
+                setTimeout(() => speak(clean, lastIdx), 200);
               }
             }
             return prev;
