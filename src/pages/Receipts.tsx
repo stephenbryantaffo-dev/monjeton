@@ -91,6 +91,7 @@ const Receipts = () => {
 
   // Image zoom
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"gallery" | "accounting">("gallery");
 
   useEffect(() => {
     if (user) fetchReceipts();
