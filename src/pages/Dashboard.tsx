@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
+import OnboardingInline from "@/components/Onboarding";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
@@ -457,12 +458,10 @@ const Dashboard = () => {
       ) : !error && (
         <>
           {allTimeEmpty ? (
-            <div className="glass-card rounded-2xl p-8 text-center mb-6">
-              <p className="text-4xl mb-3">👋</p>
-              <p className="font-semibold text-foreground mb-1">Bienvenue sur Mon Jeton !</p>
-              <p className="text-sm text-muted-foreground mb-4">Commence par enregistrer ta première dépense</p>
-              <Link to="/transactions/new" className="gradient-primary text-primary-foreground px-6 py-3 rounded-xl text-sm font-medium inline-block">+ Ajouter une transaction</Link>
-            </div>
+            <OnboardingInline onComplete={() => {
+              localStorage.setItem('onboarding_done', '1');
+              window.location.reload();
+            }} />
           ) : (
           <>
           <BudgetAlertBanner alerts={budgetAlerts} />
