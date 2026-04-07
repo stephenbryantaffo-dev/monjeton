@@ -562,6 +562,8 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+          </>
+          )}
         </>
       )}
 
