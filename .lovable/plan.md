@@ -1,58 +1,49 @@
 
 
-## Two bugs identified
+# Fix All Security Warnings
 
-### Bug 1 — Voice-detected date is ignored on save
+Three warn-level security issues to resolve from the scan results.
 
-In `handleVoiceConfirm` (NewTransaction.tsx, line 209-248), the date used when inserting into the database is always `today`:
+## Issue 1: RLS Policy Always True on `brvm_cache` (x2 warnings)
 
-```typescript
-const today = new Date().toISOString().split("T")[0];
-// ...
-date: today,  // line 248 — ignores tx.date entirely
+The `brvm_cache` table has two overly permissive policies:
+- `brvm_cache_insert_authenticated`: `WITH CHECK (true)` — any authenticated user can insert
+- `brvm_cache_delete_authenticated`: `USING (true)` — any authenticated user can delete
+
+**Context**: This table is only accessed by the `brvm-data` edge function using the service role key (which bypasses RLS). No client-side code touches this table.
+
+**Fix**: Drop both permissive policies. The edge function uses `SUPABASE_SERVICE_ROLE_KEY` so it bypasses RLS entirely. No authenticated user should directly insert or delete cache rows.
+
+```sql
+DROP POLICY "brvm_cache_insert_authenticated" ON public.brvm_cache;
+DROP POLICY "brvm_cache_delete_authenticated" ON public.brvm_cache;
 ```
 
-The `ParsedTransaction` interface already has a `date` field, and the VoiceConfirmationDialog lets the user edit it. But `handleVoiceConfirm` never reads `tx.date`.
+## Issue 2: Leaked Password Protection Disabled
 
-**Fix**: Replace `date: today` with `date: tx.date || today` on line 248.
+The HIBP (Have I Been Pwned) check is disabled. This allows users to sign up with passwords known to be compromised in data breaches.
 
-### Bug 2 — Voice-detected date is not mapped from AI response
+**Fix**: Enable the leaked password protection via the auth configuration tool. This is a setting change, not a code change.
 
-In `processVoice` (NewTransaction.tsx, lines 177-186), the mapped transactions object does **not** include the `date` field from the AI response:
+## Issue 3: Receipts Storage Bucket Lacks UPDATE Policy
 
-```typescript
-const mappedTxs: ParsedTransaction[] = parsed.transactions.map((tx: any) => ({
-  amount: tx.amount || 0,
-  type: tx.type || "expense",
-  // ... no "date" field here
-}));
+The `receipts` storage bucket has SELECT, INSERT, and DELETE policies but no UPDATE policy, which could cause errors if file updates are attempted.
+
+**Fix**: Add an UPDATE policy scoped to the owning user, matching the pattern of existing policies:
+
+```sql
+CREATE POLICY "Users can update own receipts"
+ON storage.objects FOR UPDATE
+TO public
+USING (bucket_id = 'receipts' AND auth.uid()::text = (storage.foldername(name))[1]);
 ```
 
-**Fix**: Add `date: tx.date || null` to the mapping.
+## Implementation Steps
 
-### Bug 3 — Dashboard does not refresh when navigating back
+1. Create a single database migration with all three SQL changes (drop 2 brvm_cache policies, add receipts storage UPDATE policy)
+2. Enable leaked password protection via auth settings
+3. Delete resolved security findings
 
-The Dashboard fetches data in a `useEffect` that depends on `[user, activePeriod, customRange]`. When you navigate away and come back, React re-mounts the component and the effect runs again, so it *should* refresh. However, if the component is cached by React Router or if state persists, the data may be stale.
-
-The more likely cause is **Bug 1**: the voice transaction is saved with today's date hardcoded, but if the user said "hier" (yesterday), the transaction gets date = today. Then on the Dashboard, if "Aujourd'hui" is selected, the transaction appears. But if "Hier" is selected, it does not — creating the illusion that the dashboard is not updating.
-
-Once Bug 1 and Bug 2 are fixed, the dashboard will show voice transactions on the correct date.
-
----
-
-## Implementation plan
-
-### File: `src/pages/NewTransaction.tsx`
-
-**Change 1** — Add `date` to the mapped voice transactions (around line 186):
-```typescript
-date: tx.date || null,
-```
-
-**Change 2** — Use the parsed date when inserting (line 248):
-```typescript
-date: tx.date || today,
-```
-
-Both changes are single-line edits. No database or edge function changes needed.
+## Files Changed
+- New migration file only (no application code changes needed)
 
