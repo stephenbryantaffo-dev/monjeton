@@ -44,7 +44,7 @@ const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-4">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
+            <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" loading="lazy" />
             <span className="text-lg font-bold text-[#EAFBEA]">Mon Jeton</span>
           </Link>
 
