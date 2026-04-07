@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ import { toast } from "@/hooks/use-toast";
 import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
 import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
-import ScanHistory from "@/components/scan/ScanHistory";
 
 const FREE_SCAN_LIMIT = 5;
 
