@@ -483,9 +483,14 @@ const TontinePage = () => {
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="Détail..." className="bg-secondary border-border" />
             </div>
-            <Button onClick={confirmPayment} disabled={saving} className="w-full gradient-primary text-primary-foreground">
-              <CheckCircle2 className="w-4 h-4 mr-2" /> Confirmer le paiement
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setPayModalOpen(false)} className="flex-1 glass">
+                Annuler
+              </Button>
+              <Button onClick={confirmPayment} disabled={saving} className="flex-1 gradient-primary text-primary-foreground">
+                Confirmer
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
