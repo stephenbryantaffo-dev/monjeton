@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
+import CaisseView from "@/components/caisse/CaisseView";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import {
   Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
@@ -31,6 +32,7 @@ type MemberStatus = {
 const TontinePage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<"tontine" | "caisse">("tontine");
   const [tontines, setTontines] = useState<TontineData[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -235,69 +237,89 @@ const TontinePage = () => {
     "bg-purple-500/20 text-purple-400",
   ];
 
+  const tabToggle = (
+    <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
+      <button onClick={() => setActiveTab("tontine")}
+        className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "tontine" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
+        🔄 Tontine
+      </button>
+      <button onClick={() => setActiveTab("caisse")}
+        className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "caisse" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
+        🏦 Caisse commune
+      </button>
+    </div>
+  );
+
   // ─── LIST VIEW ───
   if (!selectedId) {
     return (
-      <DashboardLayout title="Tontines">
-        <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> Nouvelle tontine
-        </Button>
-        <CreateTontineModal open={createOpen} onOpenChange={setCreateOpen} onCreated={loadTontines} />
+      <DashboardLayout title={activeTab === "tontine" ? "Tontines" : "Caisses communes"}>
+        {tabToggle}
+        {activeTab === "caisse" ? (
+          <CaisseView />
+        ) : (
+          <>
+            <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground">
+              <Plus className="w-4 h-4 mr-2" /> Nouvelle tontine
+            </Button>
+            <CreateTontineModal open={createOpen} onOpenChange={setCreateOpen} onCreated={loadTontines} />
 
-        <div className="space-y-3">
-          {loading ? (
-            Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
-          ) : tontines.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-4xl mb-3">🪙</p>
-              <p className="font-semibold text-foreground mb-1">Aucune tontine</p>
-              <p className="text-sm text-muted-foreground">Crée ta première tontine pour commencer</p>
+            <div className="space-y-3">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
+              ) : tontines.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-4xl mb-3">🪙</p>
+                  <p className="font-semibold text-foreground mb-1">Aucune tontine</p>
+                  <p className="text-sm text-muted-foreground">Crée ta première tontine pour commencer</p>
+                </div>
+              ) : (
+                tontines.map((t, i) => {
+                  const cycle = cycleMap[t.id];
+                  const mc = memberCounts[t.id] || 0;
+                  const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
+                  const pct = mc > 0 ? Math.round((paidInCycle / mc) * 100) : 0;
+
+                  return (
+                    <motion.div
+                      key={t.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      onClick={() => openDetail(t.id)}
+                      className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-foreground truncate">{t.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {fmt(t.contribution_amount)} F/cycle · {mc} membres
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
+                            <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
+                          </ConfirmDeleteDialog>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>{paidInCycle}/{mc} ont payé</span>
+                          <span>{Math.min(pct, 100)}%</span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-1.5">
+                          <div className="h-1.5 gradient-primary rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
-          ) : (
-            tontines.map((t, i) => {
-              const cycle = cycleMap[t.id];
-              const mc = memberCounts[t.id] || 0;
-              const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
-              const pct = mc > 0 ? Math.round((paidInCycle / mc) * 100) : 0;
-
-              return (
-                <motion.div
-                  key={t.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * i }}
-                  onClick={() => openDetail(t.id)}
-                  className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-foreground truncate">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {fmt(t.contribution_amount)} F/cycle · {mc} membres
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
-                        <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
-                      </ConfirmDeleteDialog>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{paidInCycle}/{mc} ont payé</span>
-                      <span>{Math.min(pct, 100)}%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-1.5">
-                      <div className="h-1.5 gradient-primary rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })
-          )}
-        </div>
+          </>
+        )}
       </DashboardLayout>
     );
   }
