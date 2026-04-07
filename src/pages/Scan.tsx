@@ -232,19 +232,16 @@ const Scan = () => {
       return;
     }
     await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
-    await refreshHistory();
+    await refreshReceiptStats();
     toast({ title: "Transaction créée ✅" });
     reset();
-    setTimeout(() => {
-      document.getElementById("scan-history")?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
   };
 
   const handleReject = async () => {
     if (scanId) await supabase.from("receipt_scans").update({ status: "rejected" }).eq("id", scanId);
     toast({ title: "Scan rejeté" });
     reset();
-    refreshHistory();
+    refreshReceiptStats();
   };
 
   const handleManualEntry = () => {
@@ -386,9 +383,21 @@ const Scan = () => {
         </div>
       )}
 
-      <div id="scan-history">
-        <ScanHistory scans={history} onRefresh={refreshHistory} />
-      </div>
+      <Link
+        to="/receipts"
+        className="w-full glass-card rounded-xl p-3.5 flex items-center justify-between mt-6 border border-primary/20"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🧾</span>
+          <div>
+            <p className="text-sm font-medium text-foreground">Mes reçus</p>
+            <p className="text-xs text-muted-foreground">
+              {totalConfirmed} confirmé{totalConfirmed > 1 ? "s" : ""} · {totalAmount.toLocaleString("fr-FR")} F total
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </Link>
     </DashboardLayout>
   );
 };
