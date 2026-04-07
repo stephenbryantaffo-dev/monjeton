@@ -230,9 +230,12 @@ const Scan = () => {
       return;
     }
     await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
+    await refreshHistory();
     toast({ title: "Transaction créée ✅" });
     reset();
-    refreshHistory();
+    setTimeout(() => {
+      document.getElementById("scan-history")?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
   };
 
   const handleReject = async () => {
@@ -257,7 +260,7 @@ const Scan = () => {
 
   const refreshHistory = async () => {
     if (!user) return;
-    const { data } = await supabase.from("receipt_scans").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
+    const { data } = await supabase.from("receipt_scans").select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, status, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
     setHistory(data || []);
   };
 
@@ -379,7 +382,9 @@ const Scan = () => {
         </div>
       )}
 
-      <ScanHistory scans={history} onRefresh={refreshHistory} />
+      <div id="scan-history">
+        <ScanHistory scans={history} onRefresh={refreshHistory} />
+      </div>
     </DashboardLayout>
   );
 };
