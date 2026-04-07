@@ -1,49 +1,35 @@
 
 
-# Fix All Security Warnings
+# Update App — Clean Up Recent Feature Integrations
 
-Three warn-level security issues to resolve from the scan results.
+After reviewing the entire codebase, all recent features (receipt audit system, PIN lock, discreet mode, caisse de cotisation, security fixes) are properly integrated. Routes exist, components are imported, and the database schema matches. The remaining work is cleanup and polish.
 
-## Issue 1: RLS Policy Always True on `brvm_cache` (x2 warnings)
+## Changes
 
-The `brvm_cache` table has two overly permissive policies:
-- `brvm_cache_insert_authenticated`: `WITH CHECK (true)` — any authenticated user can insert
-- `brvm_cache_delete_authenticated`: `USING (true)` — any authenticated user can delete
+### 1. Remove unnecessary `as any` casts in Receipts.tsx
+The `receipt_scan_history` table now exists in the auto-generated types. Remove the `as any` casts on lines 94 and 190 for proper type safety.
 
-**Context**: This table is only accessed by the `brvm-data` edge function using the service role key (which bypasses RLS). No client-side code touches this table.
+### 2. Remove unnecessary `as any` casts in Scan.tsx  
+The `receipt_scans` insert on line 189 uses `as any` but the types already support all those fields. Clean it up. Same for the `receipts` table insert (line 145) and `transactions` insert (line 228).
 
-**Fix**: Drop both permissive policies. The edge function uses `SUPABASE_SERVICE_ROLE_KEY` so it bypasses RLS entirely. No authenticated user should directly insert or delete cache rows.
+### 3. Add lock icon on "Mes Reçus" link in Settings.tsx
+When PIN is enabled, show a small Lock icon next to "Mes Reçus" in the settings menu to indicate it's protected. Import `usePrivacy` (already imported) and conditionally render the icon.
 
-```sql
-DROP POLICY "brvm_cache_insert_authenticated" ON public.brvm_cache;
-DROP POLICY "brvm_cache_delete_authenticated" ON public.brvm_cache;
-```
+### 4. Add lock icon on the Scan.tsx receipts link
+Same lock indicator on the "Mes reçus" link at the bottom of the Scan page.
 
-## Issue 2: Leaked Password Protection Disabled
+### 5. Remove `as any` casts in Tontine.tsx
+Clean up type casts for `tontine_payments`, `tontine_cycles` inserts/updates (lines 173, 178, 210, 212) since these tables exist in types.
 
-The HIBP (Have I Been Pwned) check is disabled. This allows users to sign up with passwords known to be compromised in data breaches.
+### 6. Remove `as any` in Wallets.tsx
+Clean the wallet insert/update casts (lines 99, 110).
 
-**Fix**: Enable the leaked password protection via the auth configuration tool. This is a setting change, not a code change.
+## Files Modified
+- `src/pages/Receipts.tsx` — remove 2x `as any`
+- `src/pages/Scan.tsx` — remove 3x `as any`, add lock icon
+- `src/pages/Settings.tsx` — add lock icon on Mes Reçus menu item
+- `src/pages/Tontine.tsx` — remove 4x `as any`
+- `src/pages/Wallets.tsx` — remove 2x `as any`
 
-## Issue 3: Receipts Storage Bucket Lacks UPDATE Policy
-
-The `receipts` storage bucket has SELECT, INSERT, and DELETE policies but no UPDATE policy, which could cause errors if file updates are attempted.
-
-**Fix**: Add an UPDATE policy scoped to the owning user, matching the pattern of existing policies:
-
-```sql
-CREATE POLICY "Users can update own receipts"
-ON storage.objects FOR UPDATE
-TO public
-USING (bucket_id = 'receipts' AND auth.uid()::text = (storage.foldername(name))[1]);
-```
-
-## Implementation Steps
-
-1. Create a single database migration with all three SQL changes (drop 2 brvm_cache policies, add receipts storage UPDATE policy)
-2. Enable leaked password protection via auth settings
-3. Delete resolved security findings
-
-## Files Changed
-- New migration file only (no application code changes needed)
+No database changes needed. No new dependencies.
 
