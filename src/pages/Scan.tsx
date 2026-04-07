@@ -260,10 +260,12 @@ const Scan = () => {
     setShowSuccess(false);
   };
 
-  const refreshHistory = async () => {
+  const refreshReceiptStats = async () => {
     if (!user) return;
-    const { data } = await supabase.from("receipt_scans").select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, status, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
-    setHistory(data || []);
+    const { data } = await supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed");
+    const confirmed = data || [];
+    setTotalConfirmed(confirmed.length);
+    setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
   };
 
   const resultIsEmpty = result && (!result.amount || result.amount === 0);
