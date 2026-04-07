@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
-  ChevronRight, ArrowUpDown,
+  ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import ReceiptsPinLock from "@/components/ReceiptsPinLock";
 
 interface ScanItem {
   id: string;
@@ -39,10 +40,16 @@ interface HistoryEntry {
 
 type FilterStatus = "all" | "confirmed" | "pending" | "rejected";
 
+const MASK = "•••••";
+const MASK_SHORT = "••••";
+
 const Receipts = () => {
   const { user } = useAuth();
-  const { formatAmount } = usePrivacy();
+  const { formatAmount, pinEnabled, isDiscreetMode } = usePrivacy();
   const { toast } = useToast();
+
+  // PIN gate — resets every mount so PIN is asked each visit
+  const [isUnlocked, setIsUnlocked] = useState(!pinEnabled);
 
   const [scans, setScans] = useState<ScanItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +69,13 @@ const Receipts = () => {
   const [editReason, setEditReason] = useState("");
 
   useEffect(() => {
-    if (user) fetchScans();
-  }, [user]);
+    if (user && isUnlocked) fetchScans();
+  }, [user, isUnlocked]);
+
+  // Show PIN lock if enabled and not yet unlocked
+  if (pinEnabled && !isUnlocked) {
+    return <ReceiptsPinLock onUnlocked={() => setIsUnlocked(true)} />;
+  }
 
   const fetchScans = async () => {
     if (!user) return;
@@ -205,11 +217,39 @@ const Receipts = () => {
     await loadScanHistory(selectedScan.id);
   };
 
-  // Detail view
+  // Helper: mask text in discreet mode
+  const maskText = (text: string | null, fallback: string) => {
+    if (isDiscreetMode) return MASK;
+    return text || fallback;
+  };
+
+  // Discreet mode banner
+  const DiscreetBanner = () =>
+    isDiscreetMode ? (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card rounded-xl p-3 flex items-center gap-3 border border-primary/20"
+      >
+        <EyeOff className="w-4 h-4 text-primary flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-foreground">
+            Mode discret activé — données masquées
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Désactive dans Paramètres
+          </p>
+        </div>
+      </motion.div>
+    ) : null;
+
+  // ━━━━━━━━━ Detail view ━━━━━━━━━
   if (selectedScan) {
     return (
       <DashboardLayout title="Détail du reçu">
         <div className="space-y-4">
+          <DiscreetBanner />
+
           {/* Back button */}
           <button
             onClick={() => setSelectedScan(null)}
@@ -218,31 +258,54 @@ const Receipts = () => {
             <ArrowLeft className="w-4 h-4" /> Retour aux reçus
           </button>
 
-          {/* Image */}
+          {/* Image — blurred in discreet mode */}
           {selectedScan.image_url && (
-            <img
-              src={selectedScan.image_url}
-              alt="Reçu original"
-              className="w-full rounded-2xl object-contain max-h-64 border border-border"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
+            <div className="relative">
+              <img
+                src={selectedScan.image_url}
+                alt="Reçu original"
+                className={`w-full rounded-2xl object-contain max-h-64 border border-border ${
+                  isDiscreetMode ? "blur-lg" : ""
+                }`}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+              {isDiscreetMode && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
+                    <EyeOff className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Mode discret activé</span>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Extracted data */}
+          {/* Extracted data — masked in discreet mode */}
           <div className="glass-card rounded-2xl p-4 space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Données extraites</h3>
             {[
-              { label: "Marchand", value: selectedScan.parsed_merchant },
+              {
+                label: "Marchand",
+                value: isDiscreetMode ? MASK : selectedScan.parsed_merchant,
+              },
               {
                 label: "Montant",
-                value: selectedScan.parsed_amount
+                value: isDiscreetMode
+                  ? `${MASK_SHORT} F`
+                  : selectedScan.parsed_amount
                   ? `${Number(selectedScan.parsed_amount).toLocaleString("fr-FR")} F`
                   : null,
               },
-              { label: "Devise", value: selectedScan.parsed_currency },
-              { label: "Catégorie", value: selectedScan.parsed_category },
+              {
+                label: "Devise",
+                value: isDiscreetMode ? MASK_SHORT : selectedScan.parsed_currency,
+              },
+              {
+                label: "Catégorie",
+                value: isDiscreetMode ? MASK : selectedScan.parsed_category,
+              },
               { label: "Date", value: selectedScan.parsed_date },
               {
                 label: "Type",
@@ -285,7 +348,8 @@ const Receipts = () => {
                       {h.old_value && h.new_value && (
                         <span className="text-muted-foreground">
                           {" "}
-                          · {h.old_value} → {h.new_value}
+                          · {isDiscreetMode ? MASK_SHORT : h.old_value} →{" "}
+                          {isDiscreetMode ? MASK_SHORT : h.new_value}
                         </span>
                       )}
                     </p>
@@ -387,10 +451,12 @@ const Receipts = () => {
     );
   }
 
-  // Main list view
+  // ━━━━━━━━━ Main list view ━━━━━━━━━
   return (
     <DashboardLayout title="Mes Reçus">
       <div className="space-y-4">
+        <DiscreetBanner />
+
         {/* Stats row 1 */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div
@@ -400,7 +466,7 @@ const Receipts = () => {
           >
             <p className="text-xs text-muted-foreground mb-1">Total des reçus confirmés</p>
             <p className="text-2xl font-bold text-primary tabular-nums">
-              {formatAmount(stats.totalAmount)}
+              {formatAmount(stats.totalAmount)} F
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""}
@@ -414,7 +480,7 @@ const Receipts = () => {
           >
             <p className="text-xs text-muted-foreground mb-1">Ce mois-ci</p>
             <p className="text-2xl font-bold text-foreground tabular-nums">
-              {formatAmount(stats.thisMonthAmount)}
+              {formatAmount(stats.thisMonthAmount)} F
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
@@ -454,13 +520,15 @@ const Receipts = () => {
                     <div className="flex justify-between text-xs mb-1">
                       <span className="text-foreground font-medium">{cat}</span>
                       <span className="text-muted-foreground tabular-nums">
-                        {amount.toLocaleString("fr-FR")} F · {pct}%
+                        {isDiscreetMode
+                          ? `${MASK_SHORT} F · ••%`
+                          : `${amount.toLocaleString("fr-FR")} F · ${pct}%`}
                       </span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-1.5">
                       <div
-                        className="h-1.5 gradient-primary rounded-full"
-                        style={{ width: `${pct}%` }}
+                        className="h-1.5 gradient-primary rounded-full transition-all"
+                        style={{ width: isDiscreetMode ? "0%" : `${pct}%` }}
                       />
                     </div>
                   </div>
@@ -542,7 +610,9 @@ const Receipts = () => {
                   <img
                     src={scan.image_url}
                     alt="Reçu"
-                    className="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-border"
+                    className={`w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-border ${
+                      isDiscreetMode ? "blur-sm" : ""
+                    }`}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
@@ -556,10 +626,10 @@ const Receipts = () => {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">
-                    {scan.parsed_merchant || "Marchand inconnu"}
+                    {isDiscreetMode ? MASK : (scan.parsed_merchant || "Marchand inconnu")}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {scan.parsed_category || "Catégorie inconnue"} ·{" "}
+                    {isDiscreetMode ? MASK : (scan.parsed_category || "Catégorie inconnue")} ·{" "}
                     {scan.parsed_date ||
                       new Date(scan.created_at).toLocaleDateString("fr-FR")}
                   </p>
@@ -582,9 +652,11 @@ const Receipts = () => {
                 {scan.parsed_amount != null && (
                   <div className="flex-shrink-0 text-right">
                     <p className="text-sm font-bold text-foreground tabular-nums">
-                      {Number(scan.parsed_amount).toLocaleString("fr-FR")} F
+                      {isDiscreetMode
+                        ? `${MASK_SHORT} F`
+                        : `${Number(scan.parsed_amount).toLocaleString("fr-FR")} F`}
                     </p>
-                    {scan.parsed_currency && scan.parsed_currency !== "XOF" && (
+                    {scan.parsed_currency && scan.parsed_currency !== "XOF" && !isDiscreetMode && (
                       <p className="text-xs text-muted-foreground">
                         ({scan.parsed_currency})
                       </p>
