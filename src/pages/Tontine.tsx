@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import {
-  Plus, Users, ChevronLeft, CheckCircle2, Clock, AlertTriangle,
+  Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
   Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -257,8 +257,8 @@ const TontinePage = () => {
             tontines.map((t, i) => {
               const cycle = cycleMap[t.id];
               const mc = memberCounts[t.id] || 0;
-              const pct = cycle && cycle.total_expected > 0
-                ? Math.round((cycle.total_collected / cycle.total_expected) * 100) : 0;
+              const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
+              const pct = mc > 0 ? Math.round((paidInCycle / mc) * 100) : 0;
 
               return (
                 <motion.div
@@ -266,37 +266,33 @@ const TontinePage = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.05 * i }}
+                  onClick={() => openDetail(t.id)}
+                  className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform"
                 >
-                  <BorderRotate className="p-4 cursor-pointer" animationSpeed={18} onClick={() => openDetail(t.id)}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="font-semibold text-foreground text-sm truncate">{t.name}</p>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${FREQ_BADGE_CLASSES[t.frequency] || FREQ_BADGE_CLASSES.custom}`}>
-                            {FREQ_LABELS[t.frequency] || t.frequency}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {fmt(t.contribution_amount)} F · {mc} membres
-                        </p>
-                      </div>
-                      <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
-                        <button className="text-muted-foreground hover:text-destructive shrink-0 p-1" onClick={e => e.stopPropagation()}>✕</button>
-                      </ConfirmDeleteDialog>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-foreground truncate">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {fmt(t.contribution_amount)} F/cycle · {mc} membres
+                      </p>
                     </div>
-                    {cycle && (
-                      <div>
-                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                          <span className="truncate">{cycle.period_label}</span>
-                          <span className="shrink-0">{fmt(cycle.total_collected)} / {fmt(cycle.total_expected)} F</span>
-                        </div>
-                        <Progress value={pct} className="h-2" />
-                      </div>
-                    )}
-                  </BorderRotate>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
+                        <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
+                      </ConfirmDeleteDialog>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{paidInCycle}/{mc} ont payé</span>
+                      <span>{Math.min(pct, 100)}%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-1.5">
+                      <div className="h-1.5 gradient-primary rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                  </div>
                 </motion.div>
               );
             })
@@ -367,60 +363,47 @@ const TontinePage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.04 * i }}
           >
-            <div className="glass-card rounded-xl p-3 flex items-center gap-3">
+            <div className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
               {/* Avatar */}
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>
-                {getInitials(s.member.name)}
+              <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                <p className="text-sm font-bold text-primary-foreground">
+                  {s.member.name.charAt(0).toUpperCase()}
+                </p>
               </div>
-
               {/* Name + status */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {s.member.name}
                   {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {s.status === "paid" && s.lastDate && `Payé le ${new Date(s.lastDate).toLocaleDateString("fr-FR")}`}
-                  {s.status === "partial" && `${fmt(s.totalPaid)} / ${fmt(s.expected)} F`}
-                  {s.status === "pending" && "En attente"}
+                <p className="text-xs text-muted-foreground">
+                  {s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
                 </p>
               </div>
-
-              {/* Badge */}
-              <div className="shrink-0">
+              {/* Action + status */}
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {s.status === "paid" ? (
-                  <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30">
-                    <CheckCircle2 className="w-3 h-3 mr-0.5" /> Payé
-                  </Badge>
-                ) : s.status === "partial" ? (
-                  <Badge className="text-[10px] bg-amber-500/20 text-amber-500 border-amber-500/30">
-                    <AlertTriangle className="w-3 h-3 mr-0.5" /> Partiel
-                  </Badge>
+                  <CheckCircle className="w-5 h-5 text-primary" />
                 ) : (
-                  <Badge variant="secondary" className="text-[10px]">
-                    <Clock className="w-3 h-3 mr-0.5" /> Attente
-                  </Badge>
+                  <button
+                    onClick={() => openPayModal(s.member)}
+                    className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium"
+                  >
+                    + Payer
+                  </button>
                 )}
               </div>
-
-              {/* Pay button */}
-              {s.status !== "paid" && (
-                <button
-                  onClick={() => openPayModal(s.member)}
-                  className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 hover:bg-primary/30 transition-colors"
-                >
-                  <Plus className="w-4 h-4 text-primary" />
-                </button>
-              )}
             </div>
           </motion.div>
         )) : members.length > 0 ? members.map((m, i) => (
-          <div key={m.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>
-              {getInitials(m.name)}
+          <div key={m.id} className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+              <p className="text-sm font-bold text-primary-foreground">
+                {m.name.charAt(0).toUpperCase()}
+              </p>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="text-sm font-semibold text-foreground truncate">
                 {m.name}
                 {m.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
               </p>
@@ -500,9 +483,14 @@ const TontinePage = () => {
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="Détail..." className="bg-secondary border-border" />
             </div>
-            <Button onClick={confirmPayment} disabled={saving} className="w-full gradient-primary text-primary-foreground">
-              <CheckCircle2 className="w-4 h-4 mr-2" /> Confirmer le paiement
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setPayModalOpen(false)} className="flex-1 glass">
+                Annuler
+              </Button>
+              <Button onClick={confirmPayment} disabled={saving} className="flex-1 gradient-primary text-primary-foreground">
+                Confirmer
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
