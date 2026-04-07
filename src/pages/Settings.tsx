@@ -70,12 +70,12 @@ const Settings = () => {
     navigate("/");
   };
 
-  const handleSetPin = () => {
+  const handleSetPin = async () => {
     if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
       toast({ title: "Le PIN doit contenir 4 chiffres", variant: "destructive" });
       return;
     }
-    setPin(newPin);
+    await setPin(newPin);
     setNewPin("");
     setShowPinSetup(false);
     toast({ title: "Code PIN activé 🔒" });

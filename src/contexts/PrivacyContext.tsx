@@ -4,15 +4,22 @@ import { formatMoneySmart } from "@/lib/formatMoney";
 const PIN_STORAGE_KEY = "track_emoney_pin";
 const SALT = "monjeton_2025_salt_";
 
-const hashPin = (pin: string): string => btoa(SALT + pin);
+const hashPin = async (pin: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(SALT + pin);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
 
 interface PrivacyContextType {
   isLocked: boolean;
   isDiscreetMode: boolean;
   pinEnabled: boolean;
-  unlock: (pin: string) => boolean;
+  unlock: (pin: string) => Promise<boolean>;
   lock: () => void;
-  setPin: (pin: string) => void;
+  setPin: (pin: string) => Promise<void>;
   removePin: () => void;
   toggleDiscreetMode: () => void;
   formatAmount: (amount: number) => string;
@@ -33,9 +40,10 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
     setIsDiscreetMode(discreet);
   }, []);
 
-  const unlock = (pin: string): boolean => {
+  const unlock = async (pin: string): Promise<boolean> => {
     const storedHash = localStorage.getItem(PIN_STORAGE_KEY);
-    if (hashPin(pin) === storedHash) {
+    const pinHash = await hashPin(pin);
+    if (pinHash === storedHash) {
       setIsLocked(false);
       return true;
     }
@@ -46,8 +54,9 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
     if (pinEnabled) setIsLocked(true);
   };
 
-  const setPin = (newPin: string) => {
-    localStorage.setItem(PIN_STORAGE_KEY, hashPin(newPin));
+  const setPin = async (newPin: string) => {
+    const pinHash = await hashPin(newPin);
+    localStorage.setItem(PIN_STORAGE_KEY, pinHash);
     setPinEnabled(true);
     setIsLocked(false);
   };

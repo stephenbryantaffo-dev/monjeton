@@ -40,24 +40,26 @@ const PinLockScreen = () => {
     setPin(next);
     setError(false);
     if (next.length === 4) {
-      if (unlock(next)) {
-        setAttempts(0);
-      } else {
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
-        setError(true);
+      unlock(next).then((success) => {
+        if (success) {
+          setAttempts(0);
+        } else {
+          const newAttempts = attempts + 1;
+          setAttempts(newAttempts);
+          setError(true);
 
-        if (newAttempts >= MAX_ATTEMPTS_HARD) {
-          signOut();
-          return;
+          if (newAttempts >= MAX_ATTEMPTS_HARD) {
+            signOut();
+            return;
+          }
+
+          if (newAttempts >= MAX_ATTEMPTS_SOFT) {
+            startLockout();
+          }
+
+          setTimeout(() => { setPin(""); setError(false); }, 600);
         }
-
-        if (newAttempts >= MAX_ATTEMPTS_SOFT) {
-          startLockout();
-        }
-
-        setTimeout(() => { setPin(""); setError(false); }, 600);
-      }
+      });
     }
   };
 
