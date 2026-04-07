@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import DailyReminderModal from "@/components/DailyReminderModal";
 import MonthlyBadge from "@/components/MonthlyBadge";
 import { calculateMonthlyBadge, type Badge } from "@/lib/badgeCalculator";
-const trendModes = ["Par jour", "Par mois"];
+const trendModes = ["Jour", "Mois"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
