@@ -170,12 +170,12 @@ const TontinePage = () => {
         amount_paid: Number(payAmount),
         payment_date: payDate,
         note: payNote || null,
-      } as any);
+      });
       if (error) throw error;
 
       const { data: allP } = await supabase.from("tontine_payments").select("amount_paid").eq("cycle_id", openCycle.id);
       const newTotal = (allP || []).reduce((s: number, p: any) => s + Number(p.amount_paid), 0);
-      await supabase.from("tontine_cycles").update({ total_collected: newTotal } as any).eq("id", openCycle.id);
+      await supabase.from("tontine_cycles").update({ total_collected: newTotal }).eq("id", openCycle.id);
 
       toast({ title: `Paiement de ${payMember.name} enregistré ✅` });
       setPayModalOpen(false);
@@ -207,9 +207,9 @@ const TontinePage = () => {
   const closeCycle = async () => {
     if (!openCycle || !selected) return;
     try {
-      await supabase.from("tontine_cycles").update({ status: "closed" } as any).eq("id", openCycle.id);
+      await supabase.from("tontine_cycles").update({ status: "closed" }).eq("id", openCycle.id);
       const nextInfo = generateCycleInfo(selected, openCycle.cycle_number + 1, members.length, openCycle.end_date);
-      await supabase.from("tontine_cycles").insert({ tontine_id: selected.id, ...nextInfo } as any);
+      await supabase.from("tontine_cycles").insert({ tontine_id: selected.id, ...nextInfo });
       toast({ title: "Cycle clôturé, nouveau cycle ouvert ✅" });
       loadDetail(selected.id);
     } catch {
