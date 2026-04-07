@@ -42,7 +42,8 @@ const Scan = () => {
   const [scanId, setScanId] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
+  const [totalConfirmed, setTotalConfirmed] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
@@ -52,12 +53,14 @@ const Scan = () => {
     Promise.all([
       supabase.from("categories").select("*").eq("user_id", user.id),
       supabase.from("wallets").select("*").eq("user_id", user.id),
-      supabase.from("receipt_scans").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+      supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed"),
       supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
     ]).then(([catRes, walRes, histRes, subRes]) => {
       setCategories(catRes.data || []);
       setWallets(walRes.data || []);
-      setHistory(histRes.data || []);
+      const confirmed = histRes.data || [];
+      setTotalConfirmed(confirmed.length);
+      setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
       setIsPremium(!!subRes.data || isAdmin);
     });
 
