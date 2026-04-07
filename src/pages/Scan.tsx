@@ -33,6 +33,7 @@ const incrementScanCount = () => {
 
 const Scan = () => {
   const { user, isAdmin } = useAuth();
+  const { pinEnabled } = usePrivacy();
   const navigate = useNavigate();
   const [preview, setPreview] = useState<string | null>(null);
   const [isPdf, setIsPdf] = useState(false);
@@ -154,7 +155,7 @@ const Scan = () => {
           category: parsed.category || null,
           type: parsed.type || "expense",
           wallet: parsed.wallet || null,
-          raw_data: parsed,
+          raw_data: parsed as any,
           items: null,
           status: "pending",
         });
