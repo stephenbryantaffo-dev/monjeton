@@ -83,6 +83,166 @@ export type Database = {
         }
         Relationships: []
       }
+      caisse_cotisations: {
+        Row: {
+          amount: number
+          caisse_id: string
+          cotisation_date: string
+          created_at: string
+          cycle_label: string | null
+          id: string
+          member_id: string
+          note: string | null
+        }
+        Insert: {
+          amount: number
+          caisse_id: string
+          cotisation_date?: string
+          created_at?: string
+          cycle_label?: string | null
+          id?: string
+          member_id: string
+          note?: string | null
+        }
+        Update: {
+          amount?: number
+          caisse_id?: string
+          cotisation_date?: string
+          created_at?: string
+          cycle_label?: string | null
+          id?: string
+          member_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_cotisations_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caisse_cotisations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "caisse_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caisse_depenses: {
+        Row: {
+          amount: number
+          beneficiaire: string | null
+          caisse_id: string
+          category: string | null
+          created_at: string
+          depense_date: string
+          id: string
+          label: string
+          note: string | null
+        }
+        Insert: {
+          amount: number
+          beneficiaire?: string | null
+          caisse_id: string
+          category?: string | null
+          created_at?: string
+          depense_date?: string
+          id?: string
+          label: string
+          note?: string | null
+        }
+        Update: {
+          amount?: number
+          beneficiaire?: string | null
+          caisse_id?: string
+          category?: string | null
+          created_at?: string
+          depense_date?: string
+          id?: string
+          label?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_depenses_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caisse_members: {
+        Row: {
+          caisse_id: string
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          caisse_id: string
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          caisse_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_members_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caisses: {
+        Row: {
+          contribution_amount: number
+          created_at: string
+          description: string | null
+          frequency: string
+          id: string
+          name: string
+          total_collected: number
+          total_spent: number
+          user_id: string
+        }
+        Insert: {
+          contribution_amount?: number
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          name: string
+          total_collected?: number
+          total_spent?: number
+          user_id: string
+        }
+        Update: {
+          contribution_amount?: number
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          name?: string
+          total_collected?: number
+          total_spent?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
