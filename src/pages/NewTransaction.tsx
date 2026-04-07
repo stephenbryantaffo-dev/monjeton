@@ -388,7 +388,7 @@ const NewTransaction = () => {
         <button
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isProcessing}
-          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
+          className={`min-w-[56px] min-h-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
             isRecording
               ? "bg-destructive text-destructive-foreground animate-pulse"
               : "gradient-primary text-primary-foreground neon-glow"
@@ -530,7 +530,7 @@ const NewTransaction = () => {
               <div className="flex flex-wrap gap-2">
                 {filteredCategories.map((c) => (
                   <button key={c.id} type="button" onClick={() => setCategoryId(c.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${categoryId === c.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors max-w-[calc(50%-4px)] truncate ${categoryId === c.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
                     {c.name}
                   </button>
                 ))}

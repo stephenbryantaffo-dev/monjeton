@@ -162,7 +162,7 @@ const CyclesTab = ({ tontines }: Props) => {
       {openCycle ? (
         <>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4">
-            <p className="text-lg font-bold text-foreground">Cycle {openCycle.cycle_number} — {openCycle.period_label}</p>
+            <p className="text-base sm:text-lg font-bold text-foreground truncate">Cycle {openCycle.cycle_number} — {openCycle.period_label}</p>
             <p className="text-xs text-muted-foreground mb-3">
               Du {new Date(openCycle.start_date).toLocaleDateString("fr-FR")} au {new Date(openCycle.end_date).toLocaleDateString("fr-FR")}
             </p>

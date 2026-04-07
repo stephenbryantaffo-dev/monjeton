@@ -1099,7 +1099,7 @@ const Assistant = () => {
                   <Bot className="w-4 h-4 text-primary-foreground" />
                 </div>
               )}
-              <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%]">
+              <div className="flex flex-col gap-1 max-w-[85%]">
                 {m.attachments && m.attachments.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
                     {m.attachments.map((att, j) => (
@@ -1224,12 +1224,12 @@ const Assistant = () => {
           className="hidden"
           onChange={handleFileSelect}
         />
-        <div className="space-y-2 pb-2">
+        <div className="space-y-2 pb-2" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))" }}>
           <div className="flex gap-2 items-center">
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading || isRecording}
-              className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
             >
               <Paperclip className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -1252,7 +1252,7 @@ const Assistant = () => {
               <button
                 onClick={handleSend}
                 disabled={isLoading}
-                className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
               >
                 <Send className="w-4 h-4 text-primary-foreground" />
               </button>

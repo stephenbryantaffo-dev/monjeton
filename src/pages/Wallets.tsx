@@ -237,7 +237,7 @@ const Wallets = () => {
                       ) : (
                         <TrendingDown className="w-3 h-3 text-destructive" />
                       )}
-                      <span className={`text-sm font-semibold whitespace-nowrap ${solde >= 0 ? "text-primary" : "text-destructive"}`}>
+                      <span className={`text-sm font-semibold whitespace-nowrap tabular-nums ${solde >= 0 ? "text-primary" : "text-destructive"}`}>
                         {formatAmount(solde)} F
                       </span>
                     </div>
@@ -281,11 +281,11 @@ const Wallets = () => {
       <div className="flex gap-2 mb-4">
         {!showAdd && (
           <>
-            <Button variant="glass" size="lg" className="flex-1" onClick={() => setShowAdd(true)}>
+            <Button variant="glass" size="lg" className="flex-1 text-sm" onClick={() => setShowAdd(true)}>
               <Plus className="w-4 h-4" /> Ajouter
             </Button>
             {wallets.length >= 2 && (
-              <Button variant="glass" size="lg" className="flex-1" onClick={() => setShowTransfer(true)}>
+              <Button variant="glass" size="lg" className="flex-1 text-sm" onClick={() => setShowTransfer(true)}>
                 <ArrowRightLeft className="w-4 h-4" /> Transférer
               </Button>
             )}

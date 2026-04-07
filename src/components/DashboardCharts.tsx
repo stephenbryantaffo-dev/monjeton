@@ -30,7 +30,7 @@ const DashboardCharts = ({
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={160}>
             <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,20%)" />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(0,0%,60%)" }} axisLine={false} tickLine={false} />
