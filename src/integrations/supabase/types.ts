@@ -189,6 +189,54 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          note: string | null
+          payment_date: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          debt_id: string
+          id?: string
+          note?: string | null
+          payment_date?: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          debt_id?: string
+          id?: string
+          note?: string | null
+          payment_date?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_payments_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debts: {
         Row: {
           amount: number
@@ -196,6 +244,7 @@ export type Database = {
           due_date: string | null
           id: string
           note: string | null
+          paid_amount: number
           person_name: string
           status: string
           type: string
@@ -207,6 +256,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           note?: string | null
+          paid_amount?: number
           person_name: string
           status?: string
           type: string
@@ -218,6 +268,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           note?: string | null
+          paid_amount?: number
           person_name?: string
           status?: string
           type?: string
