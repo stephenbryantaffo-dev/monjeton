@@ -145,7 +145,8 @@
 /* Autofill fix for dark theme */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px hsl(150, 20%, 4%) inset !important;
   -webkit-text-fill-color: hsl(150, 5%, 92%) !important;
   caret-color: hsl(150, 5%, 92%);

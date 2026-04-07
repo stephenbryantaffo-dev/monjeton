@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { formatMoneySmart } from "@/lib/formatMoney";
 
 const PIN_STORAGE_KEY = "track_emoney_pin";
-const SALT = "monjeton_2024_";
+const SALT = "monjeton_2025_salt_";
 
 const hashPin = (pin: string): string => btoa(SALT + pin);
 
