@@ -91,7 +91,7 @@ const Receipts = () => {
 
   const loadScanHistory = async (scanId: string) => {
     const { data } = await supabase
-      .from("receipt_scan_history" as any)
+      .from("receipt_scan_history")
       .select("id, changed_at, changed_field, old_value, new_value, change_reason")
       .eq("scan_id", scanId)
       .order("changed_at", { ascending: false });
@@ -187,7 +187,7 @@ const Receipts = () => {
     }
 
     if (changes.length > 0) {
-      await supabase.from("receipt_scan_history" as any).insert(changes);
+      await supabase.from("receipt_scan_history").insert(changes);
     }
 
     await supabase

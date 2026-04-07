@@ -96,7 +96,7 @@ const Wallets = () => {
   const handleAdd = async () => {
     if (!newName.trim() || !user) return;
     const initBal = parseFloat(newInitialBalance) || 0;
-    await supabase.from("wallets").insert({ user_id: user.id, wallet_name: newName, initial_balance: initBal } as any);
+    await supabase.from("wallets").insert({ user_id: user.id, wallet_name: newName, initial_balance: initBal });
     toast({ title: "Portefeuille ajouté ✅" });
     setNewName("");
     setNewInitialBalance("");
@@ -107,7 +107,7 @@ const Wallets = () => {
   const handleUpdateBalance = async (id: string) => {
     const val = parseFloat(editBalance);
     if (isNaN(val)) return;
-    await supabase.from("wallets").update({ initial_balance: val } as any).eq("id", id);
+    await supabase.from("wallets").update({ initial_balance: val }).eq("id", id);
     toast({ title: "Solde initial mis à jour ✅" });
     setEditingId(null);
     fetchData();

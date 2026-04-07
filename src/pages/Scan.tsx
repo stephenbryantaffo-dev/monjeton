@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ChevronRight, Lock } from "lucide-react";
+import { usePrivacy } from "@/contexts/PrivacyContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +33,7 @@ const incrementScanCount = () => {
 
 const Scan = () => {
   const { user, isAdmin } = useAuth();
+  const { pinEnabled } = usePrivacy();
   const navigate = useNavigate();
   const [preview, setPreview] = useState<string | null>(null);
   const [isPdf, setIsPdf] = useState(false);
@@ -142,7 +144,7 @@ const Scan = () => {
       // Save receipt to receipts table
       try {
         const base64Data = preview.split(",")[1] || "";
-        await supabase.from("receipts" as any).insert({
+        await supabase.from("receipts").insert({
           user_id: user.id,
           image_base64: base64Data.length > 500000 ? base64Data.slice(0, 500000) : base64Data,
           image_path: path,
@@ -153,7 +155,7 @@ const Scan = () => {
           category: parsed.category || null,
           type: parsed.type || "expense",
           wallet: parsed.wallet || null,
-          raw_data: parsed,
+          raw_data: parsed as any,
           items: null,
           status: "pending",
         });
@@ -186,7 +188,7 @@ const Scan = () => {
         parsed_exchange_rate_used: parsed.exchange_rate_used || null,
         parsed_exchange_rate_source: parsed.exchange_rate_source || null,
         status: "pending",
-      } as any).select().single();
+      }).select().single();
 
       if (scanData) setScanId(scanData.id);
     } catch (err: any) {
@@ -225,7 +227,7 @@ const Scan = () => {
       exchange_rate_used: data.exchange_rate_used || null,
       exchange_rate_source: data.exchange_rate_source || null,
       conversion_date: needsConversion ? new Date().toISOString().split("T")[0] : null,
-    } as any);
+    });
 
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
@@ -390,7 +392,7 @@ const Scan = () => {
         <div className="flex items-center gap-2">
           <span className="text-lg">🧾</span>
           <div>
-            <p className="text-sm font-medium text-foreground">Mes reçus</p>
+            <p className="text-sm font-medium text-foreground flex items-center gap-1">Mes reçus {pinEnabled && <Lock className="w-3 h-3 text-muted-foreground" />}</p>
             <p className="text-xs text-muted-foreground">
               {totalConfirmed} confirmé{totalConfirmed > 1 ? "s" : ""} · {totalAmount.toLocaleString("fr-FR")} F total
             </p>
