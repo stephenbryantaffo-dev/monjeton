@@ -379,7 +379,7 @@ const Scan = () => {
         </div>
       )}
 
-      <ScanHistory scans={history} />
+      <ScanHistory scans={history} onRefresh={refreshHistory} />
     </DashboardLayout>
   );
 };
