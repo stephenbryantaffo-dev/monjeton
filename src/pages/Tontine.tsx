@@ -32,6 +32,7 @@ type MemberStatus = {
 const TontinePage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<"tontine" | "caisse">("tontine");
   const [tontines, setTontines] = useState<TontineData[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
