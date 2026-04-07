@@ -67,7 +67,7 @@ const PinLockScreen = () => {
 
   return (
     <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-5">
-      <img src={logoImg} alt="Mon Jeton" className="h-16 w-auto rounded-xl mb-4" />
+      <img src={logoImg} alt="Mon Jeton" className="h-16 w-auto rounded-xl mb-4" fetchPriority="high" />
       <h1 className="text-xl font-bold text-foreground mb-2">Mon Jeton</h1>
       <p className="text-sm text-muted-foreground mb-8">Entrez votre code PIN</p>
 
