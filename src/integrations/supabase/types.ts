@@ -661,6 +661,47 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_scan_history: {
+        Row: {
+          change_reason: string | null
+          changed_at: string
+          changed_field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          scan_id: string
+          user_id: string
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          scan_id: string
+          user_id: string
+        }
+        Update: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          scan_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_scan_history_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receipt_scans: {
         Row: {
           created_at: string

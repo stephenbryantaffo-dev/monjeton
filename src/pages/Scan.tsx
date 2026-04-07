@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ import { toast } from "@/hooks/use-toast";
 import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
 import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
-import ScanHistory from "@/components/scan/ScanHistory";
 
 const FREE_SCAN_LIMIT = 5;
 
@@ -43,7 +42,8 @@ const Scan = () => {
   const [scanId, setScanId] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
+  const [totalConfirmed, setTotalConfirmed] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
@@ -53,12 +53,14 @@ const Scan = () => {
     Promise.all([
       supabase.from("categories").select("*").eq("user_id", user.id),
       supabase.from("wallets").select("*").eq("user_id", user.id),
-      supabase.from("receipt_scans").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+      supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed"),
       supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
     ]).then(([catRes, walRes, histRes, subRes]) => {
       setCategories(catRes.data || []);
       setWallets(walRes.data || []);
-      setHistory(histRes.data || []);
+      const confirmed = histRes.data || [];
+      setTotalConfirmed(confirmed.length);
+      setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
       setIsPremium(!!subRes.data || isAdmin);
     });
 
@@ -230,19 +232,16 @@ const Scan = () => {
       return;
     }
     await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
-    await refreshHistory();
+    await refreshReceiptStats();
     toast({ title: "Transaction créée ✅" });
     reset();
-    setTimeout(() => {
-      document.getElementById("scan-history")?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
   };
 
   const handleReject = async () => {
     if (scanId) await supabase.from("receipt_scans").update({ status: "rejected" }).eq("id", scanId);
     toast({ title: "Scan rejeté" });
     reset();
-    refreshHistory();
+    refreshReceiptStats();
   };
 
   const handleManualEntry = () => {
@@ -258,10 +257,12 @@ const Scan = () => {
     setShowSuccess(false);
   };
 
-  const refreshHistory = async () => {
+  const refreshReceiptStats = async () => {
     if (!user) return;
-    const { data } = await supabase.from("receipt_scans").select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, status, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
-    setHistory(data || []);
+    const { data } = await supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed");
+    const confirmed = data || [];
+    setTotalConfirmed(confirmed.length);
+    setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
   };
 
   const resultIsEmpty = result && (!result.amount || result.amount === 0);
@@ -382,9 +383,21 @@ const Scan = () => {
         </div>
       )}
 
-      <div id="scan-history">
-        <ScanHistory scans={history} onRefresh={refreshHistory} />
-      </div>
+      <Link
+        to="/receipts"
+        className="w-full glass-card rounded-xl p-3.5 flex items-center justify-between mt-6 border border-primary/20"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🧾</span>
+          <div>
+            <p className="text-sm font-medium text-foreground">Mes reçus</p>
+            <p className="text-xs text-muted-foreground">
+              {totalConfirmed} confirmé{totalConfirmed > 1 ? "s" : ""} · {totalAmount.toLocaleString("fr-FR")} F total
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </Link>
     </DashboardLayout>
   );
 };
