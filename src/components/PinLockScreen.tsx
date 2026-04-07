@@ -61,23 +61,6 @@ const PinLockScreen = () => {
         }
       });
     }
-      } else {
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
-        setError(true);
-
-        if (newAttempts >= MAX_ATTEMPTS_HARD) {
-          signOut();
-          return;
-        }
-
-        if (newAttempts >= MAX_ATTEMPTS_SOFT) {
-          startLockout();
-        }
-
-        setTimeout(() => { setPin(""); setError(false); }, 600);
-      }
-    }
   };
 
   const handleDelete = () => {
