@@ -104,16 +104,19 @@ const TontineList = ({ tontines, loading, onRefresh }: Props) => {
                   transition={{ delay: 0.05 * i }}
                   className="glass-card rounded-2xl p-4"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-foreground">{t.name}</p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${FREQ_BADGE_CLASSES[t.frequency] || FREQ_BADGE_CLASSES.custom}`}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-semibold text-foreground text-sm truncate">{t.name}</p>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${FREQ_BADGE_CLASSES[t.frequency] || FREQ_BADGE_CLASSES.custom}`}>
                           {FREQ_LABELS[t.frequency] || t.frequency}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {fmt(t.contribution_amount)} F · <Users className="w-3 h-3 inline" /> {mc} membres
+                      <p className="text-xs text-muted-foreground truncate">
+                        {fmt(t.contribution_amount)} F · {mc} membres
                       </p>
                     </div>
                     <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">

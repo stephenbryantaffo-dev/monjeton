@@ -17,7 +17,7 @@ const DashboardLayout = ({ children, title, showBack }: DashboardLayoutProps) =>
   const shouldShowBack = showBack !== undefined ? showBack : !isDashboard;
 
   return (
-    <div className="min-h-screen gradient-bg pb-24">
+    <div className="min-h-screen gradient-bg pb-24" style={{ paddingBottom: "max(96px, calc(80px + env(safe-area-inset-bottom)))" }}>
       <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3">
         {shouldShowBack && (
           <button
