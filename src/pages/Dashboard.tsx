@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import DailyReminderModal from "@/components/DailyReminderModal";
 import MonthlyBadge from "@/components/MonthlyBadge";
 import { calculateMonthlyBadge, type Badge } from "@/lib/badgeCalculator";
-const trendModes = ["Par jour", "Par mois"];
+const trendModes = ["Jour", "Mois"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -38,6 +38,7 @@ const Dashboard = () => {
   const [activePeriod, setActivePeriod] = useState(1);
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [allTimeEmpty, setAllTimeEmpty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
@@ -55,7 +56,7 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    const save = () => localStorage.setItem("dashboard_last_visit", new Date().toISOString());
+    const save = () => sessionStorage.setItem("dashboard_last_visit", new Date().toISOString());
     window.addEventListener("beforeunload", save);
     return () => {
       window.removeEventListener("beforeunload", save);
@@ -256,7 +257,18 @@ const Dashboard = () => {
     const txs = data || [];
     setTransactions(txs);
 
-    const lastVisit = localStorage.getItem("dashboard_last_visit");
+    // Check if user has zero transactions ever (for welcome state)
+    if (txs.length === 0 && activePeriod === 1) {
+      const { count } = await supabase
+        .from("transactions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setAllTimeEmpty(count === 0);
+    } else {
+      setAllTimeEmpty(false);
+    }
+
+    const lastVisit = sessionStorage.getItem("dashboard_last_visit");
     if (lastVisit) {
       const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
       setNewTxCount(count);
@@ -444,6 +456,15 @@ const Dashboard = () => {
         </>
       ) : !error && (
         <>
+          {allTimeEmpty ? (
+            <div className="glass-card rounded-2xl p-8 text-center mb-6">
+              <p className="text-4xl mb-3">👋</p>
+              <p className="font-semibold text-foreground mb-1">Bienvenue sur Mon Jeton !</p>
+              <p className="text-sm text-muted-foreground mb-4">Commence par enregistrer ta première dépense</p>
+              <Link to="/transactions/new" className="gradient-primary text-primary-foreground px-6 py-3 rounded-xl text-sm font-medium inline-block">+ Ajouter une transaction</Link>
+            </div>
+          ) : (
+          <>
           <BudgetAlertBanner alerts={budgetAlerts} />
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -541,6 +562,8 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+          </>
+          )}
         </>
       )}
 
