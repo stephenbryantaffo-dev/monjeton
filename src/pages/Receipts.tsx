@@ -511,16 +511,32 @@ const Receipts = () => {
             </div>
           )}
 
-          {/* Edit button for confirmed scans */}
-          {selectedScan.status === "confirmed" && (
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            {selectedScan.status === "confirmed" && (
+              <button
+                onClick={openEdit}
+                className="flex-1 glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-border"
+              >
+                <Edit3 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">Modifier</span>
+              </button>
+            )}
             <button
-              onClick={openEdit}
-              className="w-full glass-card rounded-xl p-3.5 flex items-center justify-center gap-2 border border-border"
+              onClick={() => printReceipt(selectedScan)}
+              className="flex-1 glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-border"
             >
-              <Edit3 className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">Modifier ce reçu</span>
+              <Printer className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-foreground">Imprimer</span>
             </button>
-          )}
+            <button
+              onClick={() => exportReceiptPDF(selectedScan)}
+              className="flex-1 glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-primary/30"
+            >
+              <Download className="w-4 h-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Export PDF</span>
+            </button>
+          </div>
         </div>
 
         {/* Edit Dialog */}
