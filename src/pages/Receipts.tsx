@@ -612,6 +612,19 @@ const Receipts = () => {
       <div className="space-y-4">
         <DiscreetBanner />
 
+        {/* Global export button */}
+        {stats.totalConfirmed > 0 && (
+          <button
+            onClick={exportAllReceipts}
+            className="w-full glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-primary/30"
+          >
+            <FileDown className="w-4 h-4 text-primary" />
+            <span className="text-sm text-primary font-medium">
+              Tout exporter ({stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""})
+            </span>
+          </button>
+        )}
+
         {/* Stats row 1 */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div
