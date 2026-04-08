@@ -748,6 +748,7 @@ const Assistant = () => {
     }
   };
 
+  const handleSend = async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
     const userMsg: Message = {
