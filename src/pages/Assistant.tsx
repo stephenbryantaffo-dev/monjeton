@@ -876,16 +876,27 @@ const Assistant = () => {
         // Execute update_transaction action if present
         handleAssistantAction(assistantSoFar);
 
-        // Detect update_transaction action from JSON response
-        try {
-          const cleaned = assistantSoFar.trim();
-          if (cleaned.startsWith('{')) {
-            const parsed = JSON.parse(cleaned);
+        // Detect update_transaction action from update_action block or JSON
+        const updateBlockRegex = /```update_action\s*\n?(\{[\s\S]*?\})\s*\n?```/;
+        const updateBlockMatch = assistantSoFar.match(updateBlockRegex);
+        if (updateBlockMatch) {
+          try {
+            const parsed = JSON.parse(updateBlockMatch[1]);
             if (parsed.action?.type === 'update_transaction') {
               setPendingAction(parsed);
             }
-          }
-        } catch { /* normal text response */ }
+          } catch { /* ignore */ }
+        } else {
+          try {
+            const cleaned = assistantSoFar.trim();
+            if (cleaned.startsWith('{')) {
+              const parsed = JSON.parse(cleaned);
+              if (parsed.action?.type === 'update_transaction') {
+                setPendingAction(parsed);
+              }
+            }
+          } catch { /* normal text response */ }
+        }
 
         if (continuousModeRef.current) {
           setMessages(prev => {
