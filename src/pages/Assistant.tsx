@@ -67,8 +67,10 @@ const cleanMessageContent = (content: string): string => {
     .replace(/```debt[\s\S]*?```/g, "")
     .replace(/```tontine_action[\s\S]*?```/g, "")
     .replace(/```savings_action[\s\S]*?```/g, "")
+    .replace(/```update_action[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt|record_tontine_payment|create_savings_goal)"[^}]*\}/g, "")
+    .replace(/\{"action"\s*:\s*\{[^}]*"type"\s*:\s*"update_transaction"[^}]*\}[^}]*\}/g, "")
     .trim();
 };
 
@@ -174,6 +176,7 @@ const Assistant = () => {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [continuousMode, setContinuousMode] = useState(false);
   const [confirmedCards, setConfirmedCards] = useState<Set<number>>(new Set());
+  const [pendingAction, setPendingAction] = useState<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -702,6 +705,49 @@ const Assistant = () => {
     }
   };
 
+  const executeUpdate = async (action: any) => {
+    if (!user) return;
+    try {
+      let transactionId = action.transaction_id;
+      if (!transactionId) {
+        const { data: lastTx } = await supabase
+          .from('transactions')
+          .select('id, amount, note, type')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!lastTx) {
+          toast({ title: 'Aucune transaction trouvée', variant: 'destructive' });
+          return;
+        }
+        transactionId = lastTx.id;
+      }
+      const { error } = await supabase
+        .from('transactions')
+        .update({ amount: action.new_value })
+        .eq('id', transactionId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      const confirmMsg: Message = {
+        role: 'assistant',
+        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} F → ${Number(action.new_value).toLocaleString('fr-FR')} F`,
+        type: 'text',
+      };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage('assistant', confirmMsg.content);
+      const utterance = new SpeechSynthesisUtterance(
+        `Transaction modifiée. Nouveau montant : ${Number(action.new_value).toLocaleString('fr-FR')} francs.`
+      );
+      utterance.lang = 'fr-FR';
+      speechSynthesis.speak(utterance);
+      setPendingAction(null);
+      toast({ title: 'Transaction modifiée ✅' });
+    } catch (err: any) {
+      toast({ title: 'Erreur de modification', description: err.message, variant: 'destructive' });
+    }
+  };
+
   const handleSend = async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
@@ -729,7 +775,10 @@ const Assistant = () => {
       const allMessages = [...messages];
       allMessages.push({ role: "user", content: latestContent, type: "text" });
       const body: any = {
-        messages: allMessages.map(m => ({ role: m.role, content: m.content })),
+        messages: allMessages
+          .slice(-10)
+          .map(m => ({ role: m.role, content: m.content }))
+          .filter(m => m.content && m.content.trim().length > 0),
       };
       const atts = fileAttachments || attachments;
       if (atts.length > 0) {
@@ -826,6 +875,28 @@ const Assistant = () => {
 
         // Execute update_transaction action if present
         handleAssistantAction(assistantSoFar);
+
+        // Detect update_transaction action from update_action block or JSON
+        const updateBlockRegex = /```update_action\s*\n?(\{[\s\S]*?\})\s*\n?```/;
+        const updateBlockMatch = assistantSoFar.match(updateBlockRegex);
+        if (updateBlockMatch) {
+          try {
+            const parsed = JSON.parse(updateBlockMatch[1]);
+            if (parsed.action?.type === 'update_transaction') {
+              setPendingAction(parsed);
+            }
+          } catch { /* ignore */ }
+        } else {
+          try {
+            const cleaned = assistantSoFar.trim();
+            if (cleaned.startsWith('{')) {
+              const parsed = JSON.parse(cleaned);
+              if (parsed.action?.type === 'update_transaction') {
+                setPendingAction(parsed);
+              }
+            }
+          } catch { /* normal text response */ }
+        }
 
         if (continuousModeRef.current) {
           setMessages(prev => {
@@ -1137,6 +1208,29 @@ const Assistant = () => {
                         </div>
                       )}
                       {m.role === "assistant" && renderActionCards(m.content, i)}
+                      {m.role === "assistant" && pendingAction?.action?.type === 'update_transaction' && i === messages.length - 1 && (
+                        <div className="rounded-2xl p-4 mt-2 border border-primary/40 glass-card ml-10">
+                          <p className="text-sm font-bold text-foreground mb-3">✏️ Modification détectée</p>
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Transaction</span>
+                              <span className="text-foreground font-medium">{pendingAction.action.description}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Ancien montant</span>
+                              <span className="text-destructive font-bold tabular-nums line-through">{Number(pendingAction.action.old_value).toLocaleString('fr-FR')} F</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Nouveau montant</span>
+                              <span className="text-primary font-bold tabular-nums">{Number(pendingAction.action.new_value).toLocaleString('fr-FR')} F</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => executeUpdate(pendingAction.action)} className="flex-1 gradient-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium">✅ Confirmer</button>
+                            <button onClick={() => setPendingAction(null)} className="flex-1 glass text-muted-foreground rounded-xl py-2.5 text-sm">❌ Annuler</button>
+                          </div>
+                        </div>
+                      )}
                       {m.role === "assistant" && displayContent && i > 0 && (
                         <button
                           onClick={() => speak(displayContent, i)}
