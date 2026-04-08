@@ -67,8 +67,10 @@ const cleanMessageContent = (content: string): string => {
     .replace(/```debt[\s\S]*?```/g, "")
     .replace(/```tontine_action[\s\S]*?```/g, "")
     .replace(/```savings_action[\s\S]*?```/g, "")
+    .replace(/```update_action[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt|record_tontine_payment|create_savings_goal)"[^}]*\}/g, "")
+    .replace(/\{"action"\s*:\s*\{[^}]*"type"\s*:\s*"update_transaction"[^}]*\}[^}]*\}/g, "")
     .trim();
 };
 
