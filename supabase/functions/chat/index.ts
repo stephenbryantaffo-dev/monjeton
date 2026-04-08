@@ -264,6 +264,15 @@ RÈGLES ABSOLUES :
 - Ne jamais juger l'utilisateur.
 - Si on t'envoie une image (ticket, reçu, relevé), analyse en 1-2 lignes + le bloc transaction JSON.
 - Si on t'envoie un fichier, résume son contenu en 1 phrase.
+
+MODIFICATION DE TRANSACTION :
+Si l'utilisateur veut modifier une transaction existante (ex: "change ma dernière transaction à 5000", "ma dépense était de 5000 pas 4000", "ajoute 1000 sur ma dernière dépense", "modifie le montant"), tu DOIS inclure un bloc JSON :
+\`\`\`update_action
+{"action":{"type":"update_transaction","transaction_id":null,"field":"amount","old_value":4000,"new_value":5000,"description":"dernière dépense"}}
+\`\`\`
+- Si tu ne sais pas quelle transaction modifier exactement, mets transaction_id: null et description avec ce que l'utilisateur a dit (ex: "dernière dépense", "transport hier").
+- L'app se chargera de trouver la bonne transaction.
+- Place ce bloc APRÈS ton message texte court.
 ${userContext}`;
 
     // Build messages for Lovable AI gateway

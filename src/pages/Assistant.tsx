@@ -174,6 +174,7 @@ const Assistant = () => {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [continuousMode, setContinuousMode] = useState(false);
   const [confirmedCards, setConfirmedCards] = useState<Set<number>>(new Set());
+  const [pendingAction, setPendingAction] = useState<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -729,7 +730,10 @@ const Assistant = () => {
       const allMessages = [...messages];
       allMessages.push({ role: "user", content: latestContent, type: "text" });
       const body: any = {
-        messages: allMessages.map(m => ({ role: m.role, content: m.content })),
+        messages: allMessages
+          .slice(-10)
+          .map(m => ({ role: m.role, content: m.content }))
+          .filter(m => m.content && m.content.trim().length > 0),
       };
       const atts = fileAttachments || attachments;
       if (atts.length > 0) {
@@ -826,6 +830,17 @@ const Assistant = () => {
 
         // Execute update_transaction action if present
         handleAssistantAction(assistantSoFar);
+
+        // Detect update_transaction action from JSON response
+        try {
+          const cleaned = assistantSoFar.trim();
+          if (cleaned.startsWith('{')) {
+            const parsed = JSON.parse(cleaned);
+            if (parsed.action?.type === 'update_transaction') {
+              setPendingAction(parsed);
+            }
+          }
+        } catch { /* normal text response */ }
 
         if (continuousModeRef.current) {
           setMessages(prev => {
