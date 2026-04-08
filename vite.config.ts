@@ -52,12 +52,11 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-react": ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
           "vendor-motion": ["framer-motion"],
-          "vendor-ui": ["lucide-react", "@radix-ui/react-dialog", "@radix-ui/react-popover", "@radix-ui/react-select"],
+          "vendor-ui": ["lucide-react"],
           "vendor-charts": ["recharts"],
           "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-query": ["@tanstack/react-query"],
           "vendor-forms": ["react-hook-form", "zod", "@hookform/resolvers"],
         },
       },
