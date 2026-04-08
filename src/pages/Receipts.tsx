@@ -347,19 +347,119 @@ const Receipts = () => {
     toast({ title: 'PDF exporté ✅', description: fileName });
   };
 
-  // ━━━ Export all confirmed receipts ━━━
+  // ━━━ Export all confirmed receipts in one PDF ━━━
   const exportAllReceipts = async () => {
     const confirmed = scans.filter(s => s.status === 'confirmed');
     if (confirmed.length === 0) {
       toast({ title: 'Aucun reçu confirmé à exporter', variant: 'destructive' });
       return;
     }
-    toast({ title: `Export de ${confirmed.length} reçus...` });
+    toast({ title: `Génération du PDF (${confirmed.length} reçus)...` });
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // ── Cover page ──
+    let y = 60;
+    doc.setFontSize(28);
+    doc.setTextColor(126, 200, 69);
+    doc.text('Mon Jeton', pageWidth / 2, y, { align: 'center' });
+    y += 12;
+    doc.setFontSize(14);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Rapport de recus confirmes', pageWidth / 2, y, { align: 'center' });
+    y += 10;
+    doc.setDrawColor(126, 200, 69);
+    doc.setLineWidth(1);
+    doc.line(50, y, pageWidth - 50, y);
+    y += 16;
+
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`${confirmed.length} recu${confirmed.length > 1 ? 's' : ''} confirme${confirmed.length > 1 ? 's' : ''}`, pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    const totalAmount = confirmed.reduce((sum, s) => sum + (s.parsed_amount || 0), 0);
+    doc.setFontSize(18);
+    doc.setTextColor(30, 30, 30);
+    doc.text(`${totalAmount.toLocaleString('fr-FR')} F CFA`, pageWidth / 2, y, { align: 'center' });
+    y += 12;
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Genere le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`, pageWidth / 2, y, { align: 'center' });
+
+    // ── One page per receipt ──
     for (let i = 0; i < confirmed.length; i++) {
-      await exportReceiptPDF(confirmed[i]);
-      await new Promise(r => setTimeout(r, 800));
+      const scan = confirmed[i];
+      doc.addPage();
+      y = 20;
+
+      // Page header
+      doc.setFontSize(9);
+      doc.setTextColor(180, 180, 180);
+      doc.text(`Mon Jeton - Recu ${i + 1}/${confirmed.length}`, 20, y);
+      doc.text(`Ref: ${scan.id.slice(0, 8).toUpperCase()}`, pageWidth - 20, y, { align: 'right' });
+      y += 4;
+      doc.setDrawColor(126, 200, 69);
+      doc.setLineWidth(0.5);
+      doc.line(20, y, pageWidth - 20, y);
+      y += 10;
+
+      // Receipt image
+      if (scan.image_url) {
+        try {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = scan.image_url;
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            setTimeout(reject, 3000);
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0);
+          const imgData = canvas.toDataURL('image/jpeg', 0.8);
+          const imgWidth = 80;
+          const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth;
+          doc.addImage(imgData, 'JPEG', (pageWidth - imgWidth) / 2, y, imgWidth, Math.min(imgHeight, 80));
+          y += Math.min(imgHeight, 80) + 8;
+        } catch { /* skip */ }
+      }
+
+      // Fields
+      const fields: [string, string][] = [
+        ['Marchand', scan.parsed_merchant || 'Inconnu'],
+        ['Montant', scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non detecte'],
+        ['Categorie', scan.parsed_category || 'Non categorise'],
+        ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
+        ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
+      ];
+
+      fields.forEach(([label, value]) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(label, 20, y);
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(11);
+        doc.text(String(value), pageWidth - 20, y, { align: 'right' });
+        doc.setDrawColor(240, 240, 240);
+        doc.setLineWidth(0.3);
+        doc.line(20, y + 2, pageWidth - 20, y + 2);
+        y += 12;
+      });
+
+      // Page footer
+      doc.setFontSize(8);
+      doc.setTextColor(180, 180, 180);
+      doc.text('monjeton.lovable.app', pageWidth / 2, pageHeight - 10, { align: 'center' });
     }
-    toast({ title: `${confirmed.length} reçus exportés ✅` });
+
+    const fileName = `recus_monjeton_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
+    toast({ title: `${confirmed.length} reçus exportés ✅`, description: fileName });
   };
 
   // Discreet mode banner
