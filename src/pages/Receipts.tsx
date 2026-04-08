@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
+  Printer, Download, FileDown,
 } from "lucide-react";
+import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -223,6 +225,143 @@ const Receipts = () => {
     return text || fallback;
   };
 
+  // ━━━ Print receipt ━━━
+  const printReceipt = (scan: ScanItem) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reçu Mon Jeton</title>
+      <style>
+        body{font-family:system-ui,sans-serif;max-width:420px;margin:40px auto;padding:20px;color:#1a1a1a}
+        .header{text-align:center;border-bottom:2px solid #7EC845;padding-bottom:16px;margin-bottom:20px}
+        .brand{font-size:22px;font-weight:700;color:#7EC845}.subtitle{font-size:13px;color:#888;margin-top:4px}
+        .receipt-img{display:block;max-width:100%;max-height:200px;margin:0 auto 16px;border-radius:12px;border:1px solid #eee}
+        .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0}
+        .row-label{font-size:12px;color:#888}.row-value{font-size:13px;font-weight:600}
+        .ref{background:#f8f8f8;border-radius:8px;padding:10px;text-align:center;font-size:11px;color:#666;margin:16px 0}
+        .footer{text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:12px;margin-top:16px}
+        @media print{body{padding:0}button{display:none}}
+      </style></head><body>
+      <div class="header"><div class="brand">🪙 Mon Jeton</div><div class="subtitle">Reçu de transaction</div></div>
+      ${scan.image_url ? `<img class="receipt-img" src="${scan.image_url}" alt="Reçu"/>` : ''}
+      <div class="row"><span class="row-label">Marchand</span><span class="row-value">${scan.parsed_merchant || 'Inconnu'}</span></div>
+      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non détecté'}</span></div>
+      <div class="row"><span class="row-label">Catégorie</span><span class="row-value">${scan.parsed_category || 'Non catégorisé'}</span></div>
+      <div class="row"><span class="row-label">Date</span><span class="row-value">${scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')}</span></div>
+      <div class="row"><span class="row-label">Type</span><span class="row-value">${scan.scan_type === 'screenshot' ? '📱 Capture Mobile Money' : '🧾 Ticket de caisse'}</span></div>
+      <div class="row"><span class="row-label">Statut</span><span class="row-value">${scan.status === 'confirmed' ? '✅ Confirmé' : scan.status === 'rejected' ? '❌ Rejeté' : '⏳ En attente'}</span></div>
+      <div class="ref">Référence : ${scan.id.slice(0, 8).toUpperCase()}</div>
+      <div class="footer">Généré par Mon Jeton · ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · monjeton.lovable.app</div>
+      </body></html>`;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 500);
+  };
+
+  // ━━━ Export single receipt as PDF ━━━
+  const exportReceiptPDF = async (scan: ScanItem) => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    doc.setFontSize(22);
+    doc.setTextColor(126, 200, 69);
+    doc.text('Mon Jeton', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Recu de transaction scanne', pageWidth / 2, y, { align: 'center' });
+    y += 4;
+    doc.setDrawColor(126, 200, 69);
+    doc.setLineWidth(0.8);
+    doc.line(20, y, pageWidth - 20, y);
+    y += 10;
+
+    if (scan.image_url) {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = scan.image_url;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          setTimeout(reject, 3000);
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        const imgWidth = 80;
+        const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth;
+        doc.addImage(imgData, 'JPEG', (pageWidth - imgWidth) / 2, y, imgWidth, Math.min(imgHeight, 80));
+        y += Math.min(imgHeight, 80) + 8;
+      } catch { /* skip image */ }
+    }
+
+    const fields: [string, string][] = [
+      ['Marchand', scan.parsed_merchant || 'Inconnu'],
+      ['Montant', scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non detecte'],
+      ['Categorie', scan.parsed_category || 'Non categorise'],
+      ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
+      ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
+      ['Statut', scan.status === 'confirmed' ? 'Confirme' : scan.status === 'rejected' ? 'Rejete' : 'En attente'],
+    ];
+
+    fields.forEach(([label, value]) => {
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(label, 20, y);
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(11);
+      doc.text(String(value), pageWidth - 20, y, { align: 'right' });
+      doc.setDrawColor(240, 240, 240);
+      doc.setLineWidth(0.3);
+      doc.line(20, y + 2, pageWidth - 20, y + 2);
+      y += 12;
+    });
+
+    y += 6;
+    doc.setFillColor(248, 248, 248);
+    doc.roundedRect(20, y, pageWidth - 40, 12, 2, 2, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Reference : ${scan.id.slice(0, 8).toUpperCase()}`, pageWidth / 2, y + 8, { align: 'center' });
+    y += 20;
+
+    doc.setDrawColor(220, 220, 220);
+    doc.line(20, y, pageWidth - 20, y);
+    y += 6;
+    doc.setFontSize(9);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Genere par Mon Jeton - ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} - monjeton.lovable.app`,
+      pageWidth / 2, y, { align: 'center' }
+    );
+
+    const fileName = `recu_${scan.parsed_merchant?.replace(/\s+/g, '_') || 'monjeton'}_${scan.id.slice(0, 6)}.pdf`;
+    doc.save(fileName);
+    toast({ title: 'PDF exporté ✅', description: fileName });
+  };
+
+  // ━━━ Export all confirmed receipts ━━━
+  const exportAllReceipts = async () => {
+    const confirmed = scans.filter(s => s.status === 'confirmed');
+    if (confirmed.length === 0) {
+      toast({ title: 'Aucun reçu confirmé à exporter', variant: 'destructive' });
+      return;
+    }
+    toast({ title: `Export de ${confirmed.length} reçus...` });
+    for (let i = 0; i < confirmed.length; i++) {
+      await exportReceiptPDF(confirmed[i]);
+      await new Promise(r => setTimeout(r, 800));
+    }
+    toast({ title: `${confirmed.length} reçus exportés ✅` });
+  };
+
   // Discreet mode banner
   const DiscreetBanner = () =>
     isDiscreetMode ? (
@@ -372,16 +511,32 @@ const Receipts = () => {
             </div>
           )}
 
-          {/* Edit button for confirmed scans */}
-          {selectedScan.status === "confirmed" && (
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            {selectedScan.status === "confirmed" && (
+              <button
+                onClick={openEdit}
+                className="flex-1 glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-border"
+              >
+                <Edit3 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">Modifier</span>
+              </button>
+            )}
             <button
-              onClick={openEdit}
-              className="w-full glass-card rounded-xl p-3.5 flex items-center justify-center gap-2 border border-border"
+              onClick={() => printReceipt(selectedScan)}
+              className="flex-1 glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-border"
             >
-              <Edit3 className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">Modifier ce reçu</span>
+              <Printer className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-foreground">Imprimer</span>
             </button>
-          )}
+            <button
+              onClick={() => exportReceiptPDF(selectedScan)}
+              className="flex-1 glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-primary/30"
+            >
+              <Download className="w-4 h-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Export PDF</span>
+            </button>
+          </div>
         </div>
 
         {/* Edit Dialog */}
@@ -456,6 +611,19 @@ const Receipts = () => {
     <DashboardLayout title="Mes Reçus">
       <div className="space-y-4">
         <DiscreetBanner />
+
+        {/* Global export button */}
+        {stats.totalConfirmed > 0 && (
+          <button
+            onClick={exportAllReceipts}
+            className="w-full glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-primary/30"
+          >
+            <FileDown className="w-4 h-4 text-primary" />
+            <span className="text-sm text-primary font-medium">
+              Tout exporter ({stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""})
+            </span>
+          </button>
+        )}
 
         {/* Stats row 1 */}
         <div className="grid grid-cols-2 gap-3">
