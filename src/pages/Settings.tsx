@@ -178,10 +178,7 @@ const Settings = () => {
         {menuItems.map((item) => (
           <Link key={item.path} to={item.path} className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
             <item.icon className="w-5 h-5 text-muted-foreground" />
-            <span className="flex-1 text-sm font-medium text-foreground flex items-center gap-1">
-              {item.label}
-              {item.path === "/receipts" && pinEnabled && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
-            </span>
+            <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </Link>
         ))}
