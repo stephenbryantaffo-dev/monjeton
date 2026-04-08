@@ -705,7 +705,49 @@ const Assistant = () => {
     }
   };
 
-  const handleSend = async () => {
+  const executeUpdate = async (action: any) => {
+    if (!user) return;
+    try {
+      let transactionId = action.transaction_id;
+      if (!transactionId) {
+        const { data: lastTx } = await supabase
+          .from('transactions')
+          .select('id, amount, note, type')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!lastTx) {
+          toast({ title: 'Aucune transaction trouvée', variant: 'destructive' });
+          return;
+        }
+        transactionId = lastTx.id;
+      }
+      const { error } = await supabase
+        .from('transactions')
+        .update({ amount: action.new_value })
+        .eq('id', transactionId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      const confirmMsg: Message = {
+        role: 'assistant',
+        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} F → ${Number(action.new_value).toLocaleString('fr-FR')} F`,
+        type: 'text',
+      };
+      setMessages(prev => [...prev, confirmMsg]);
+      await saveMessage('assistant', confirmMsg.content);
+      const utterance = new SpeechSynthesisUtterance(
+        `Transaction modifiée. Nouveau montant : ${Number(action.new_value).toLocaleString('fr-FR')} francs.`
+      );
+      utterance.lang = 'fr-FR';
+      speechSynthesis.speak(utterance);
+      setPendingAction(null);
+      toast({ title: 'Transaction modifiée ✅' });
+    } catch (err: any) {
+      toast({ title: 'Erreur de modification', description: err.message, variant: 'destructive' });
+    }
+  };
+
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
     const userMsg: Message = {
