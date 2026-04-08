@@ -1208,6 +1208,29 @@ const Assistant = () => {
                         </div>
                       )}
                       {m.role === "assistant" && renderActionCards(m.content, i)}
+                      {m.role === "assistant" && pendingAction?.action?.type === 'update_transaction' && i === messages.length - 1 && (
+                        <div className="rounded-2xl p-4 mt-2 border border-primary/40 glass-card ml-10">
+                          <p className="text-sm font-bold text-foreground mb-3">✏️ Modification détectée</p>
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Transaction</span>
+                              <span className="text-foreground font-medium">{pendingAction.action.description}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Ancien montant</span>
+                              <span className="text-destructive font-bold tabular-nums line-through">{Number(pendingAction.action.old_value).toLocaleString('fr-FR')} F</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Nouveau montant</span>
+                              <span className="text-primary font-bold tabular-nums">{Number(pendingAction.action.new_value).toLocaleString('fr-FR')} F</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => executeUpdate(pendingAction.action)} className="flex-1 gradient-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium">✅ Confirmer</button>
+                            <button onClick={() => setPendingAction(null)} className="flex-1 glass text-muted-foreground rounded-xl py-2.5 text-sm">❌ Annuler</button>
+                          </div>
+                        </div>
+                      )}
                       {m.role === "assistant" && displayContent && i > 0 && (
                         <button
                           onClick={() => speak(displayContent, i)}
