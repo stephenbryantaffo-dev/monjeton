@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { 
   Search, Filter, X, Utensils, Car, Smartphone, Heart, 
   ShoppingBag, Home, Gamepad2, Users, CreditCard, Briefcase, 
-  GraduationCap, Building2, ArrowRightLeft, DollarSign, Wallet
+  GraduationCap, Building2, ArrowRightLeft, DollarSign, Wallet,
+  ArrowUpDown
 } from "lucide-react";
 import { getCatIcon } from "@/lib/getCatIcon";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -38,6 +39,7 @@ const Transactions = () => {
   const [filterPeriod, setFilterPeriod] = useState("all");
   const [filterMinAmount, setFilterMinAmount] = useState("");
   const [filterMaxAmount, setFilterMaxAmount] = useState("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   const fetchData = async (pageNum = 0) => {
     if (!user) return;
@@ -91,9 +93,10 @@ const Transactions = () => {
     setFilterPeriod("all");
     setFilterMinAmount("");
     setFilterMaxAmount("");
+    setSortOrder("desc");
   };
 
-  const hasActiveFilters = filterCategory !== "all" || filterWallet !== "all" || filterPeriod !== "all" || filterMinAmount || filterMaxAmount;
+  const hasActiveFilters = filterCategory !== "all" || filterWallet !== "all" || filterPeriod !== "all" || filterMinAmount || filterMaxAmount || sortOrder !== "desc";
 
   const filtered = useMemo(() => {
     let result = transactions;
@@ -141,8 +144,15 @@ const Transactions = () => {
       result = result.filter(t => Number(t.amount) <= Number(filterMaxAmount));
     }
 
+    // Sort by amount
+    if (sortOrder === "asc") {
+      result = [...result].sort((a, b) => Number(a.amount) - Number(b.amount));
+    } else if (sortOrder === "desc") {
+      result = [...result].sort((a, b) => Number(b.amount) - Number(a.amount));
+    }
+
     return result;
-  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount]);
+  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder]);
 
   return (
     <DashboardLayout title="Transactions">
@@ -204,6 +214,17 @@ const Transactions = () => {
               <Input type="number" placeholder="Min" value={filterMinAmount} onChange={e => setFilterMinAmount(e.target.value)} className="bg-secondary border-border text-sm" />
               <Input type="number" placeholder="Max" value={filterMaxAmount} onChange={e => setFilterMaxAmount(e.target.value)} className="bg-secondary border-border text-sm" />
             </div>
+
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "asc" | "desc")}>
+              <SelectTrigger className="bg-secondary border-border text-sm">
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1.5" />
+                <SelectValue placeholder="Tri montant" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">Montant décroissant</SelectItem>
+                <SelectItem value="asc">Montant croissant</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <p className="text-xs text-muted-foreground text-center">{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</p>
