@@ -50,8 +50,8 @@ const Signup = () => {
     if (error) {
       toast({ title: "Erreur", description: "Impossible de créer le compte", variant: "destructive" });
     } else {
-      toast({ title: "Compte créé ! ✅", description: "Vérifie ton email pour confirmer ton compte." });
-      navigate("/login");
+      toast({ title: "Compte créé ! ✅", description: "Bienvenue sur Mon Jeton 🎉" });
+      navigate("/dashboard", { replace: true });
     }
   };
 
