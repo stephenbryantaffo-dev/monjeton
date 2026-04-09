@@ -38,6 +38,7 @@ const Transactions = () => {
   const [filterPeriod, setFilterPeriod] = useState("all");
   const [filterMinAmount, setFilterMinAmount] = useState("");
   const [filterMaxAmount, setFilterMaxAmount] = useState("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   const fetchData = async (pageNum = 0) => {
     if (!user) return;
