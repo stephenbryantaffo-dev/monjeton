@@ -247,6 +247,7 @@ const Scan = () => {
     }
     await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
     await refreshReceiptStats();
+    await fetchHistory();
     toast({ title: "Transaction créée ✅" });
     reset();
   };
@@ -255,7 +256,8 @@ const Scan = () => {
     if (scanId) await supabase.from("receipt_scans").update({ status: "rejected" }).eq("id", scanId);
     toast({ title: "Scan rejeté" });
     reset();
-    refreshReceiptStats();
+    await refreshReceiptStats();
+    await fetchHistory();
   };
 
   const handleManualEntry = () => {
