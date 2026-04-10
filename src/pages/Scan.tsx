@@ -399,6 +399,8 @@ const Scan = () => {
         </div>
       )}
 
+      <ScanHistory scans={history} onRefresh={fetchHistory} />
+
       <Link
         to="/receipts"
         className="w-full glass-card rounded-xl p-3.5 flex items-center justify-between mt-6 border border-primary/20"
