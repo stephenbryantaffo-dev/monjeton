@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import CreateTontineModal from "@/components/tontine/CreateTontineModal";
+import ReportsTab from "@/components/tontine/ReportsTab";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, FREQ_LABELS, FREQ_BADGE_CLASSES } from "@/components/tontine/types";
 import { fmt, generateCycleInfo } from "@/components/tontine/utils";
 
