@@ -55,8 +55,9 @@ const TontinePage = () => {
   const [payNote, setPayNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // History
+  // History & Reports
   const [showHistory, setShowHistory] = useState(false);
+  const [showReports, setShowReports] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
