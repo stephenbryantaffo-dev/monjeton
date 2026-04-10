@@ -48,6 +48,18 @@ const Scan = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
+  const [history, setHistory] = useState<any[]>([]);
+
+  const fetchHistory = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("receipt_scans")
+      .select("id,scan_type,parsed_amount,parsed_merchant,parsed_category,parsed_date,parsed_currency,image_url,status,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setHistory(data || []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -64,10 +76,11 @@ const Scan = () => {
       setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
       setIsPremium(!!subRes.data || isAdmin);
     });
+    fetchHistory();
 
     const scanData = getScanCount();
     setScansRemaining(FREE_SCAN_LIMIT - scanData.count);
-  }, [user]);
+  }, [user, fetchHistory]);
 
   const handleFileSelected = (f: File) => {
     setFile(f);
