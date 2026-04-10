@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
 import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
+import ScanHistory from "@/components/scan/ScanHistory";
 
 const FREE_SCAN_LIMIT = 5;
 
@@ -47,6 +48,18 @@ const Scan = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
+  const [history, setHistory] = useState<any[]>([]);
+
+  const fetchHistory = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("receipt_scans")
+      .select("id,scan_type,parsed_amount,parsed_merchant,parsed_category,parsed_date,parsed_currency,image_url,status,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setHistory(data || []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -63,10 +76,11 @@ const Scan = () => {
       setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
       setIsPremium(!!subRes.data || isAdmin);
     });
+    fetchHistory();
 
     const scanData = getScanCount();
     setScansRemaining(FREE_SCAN_LIMIT - scanData.count);
-  }, [user]);
+  }, [user, fetchHistory]);
 
   const handleFileSelected = (f: File) => {
     setFile(f);
@@ -233,6 +247,7 @@ const Scan = () => {
     }
     await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
     await refreshReceiptStats();
+    await fetchHistory();
     toast({ title: "Transaction créée ✅" });
     reset();
   };
@@ -241,7 +256,8 @@ const Scan = () => {
     if (scanId) await supabase.from("receipt_scans").update({ status: "rejected" }).eq("id", scanId);
     toast({ title: "Scan rejeté" });
     reset();
-    refreshReceiptStats();
+    await refreshReceiptStats();
+    await fetchHistory();
   };
 
   const handleManualEntry = () => {
@@ -382,6 +398,8 @@ const Scan = () => {
           )}
         </div>
       )}
+
+      <ScanHistory scans={history} onRefresh={fetchHistory} />
 
       <Link
         to="/receipts"
