@@ -109,10 +109,36 @@ const Categories = () => {
   const [editError, setEditError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const createDefaults = async () => {
+    if (!user) return;
+    const defaults = [
+      { name: "Transport", icon: "Car", color: "hsl(20,90%,52%)", type: "expense" },
+      { name: "Nourriture", icon: "Utensils", color: "hsl(45,96%,58%)", type: "expense" },
+      { name: "Logement", icon: "Home", color: "hsl(200,70%,50%)", type: "expense" },
+      { name: "Santé", icon: "Heart", color: "hsl(0,70%,55%)", type: "expense" },
+      { name: "Communication", icon: "Phone", color: "hsl(270,70%,60%)", type: "expense" },
+      { name: "Loisirs", icon: "Gamepad2", color: "hsl(160,60%,45%)", type: "expense" },
+      { name: "Éducation", icon: "GraduationCap", color: "hsl(260,70%,55%)", type: "expense" },
+      { name: "Autre", icon: "Package", color: "hsl(0,0%,60%)", type: "expense" },
+      { name: "Salaire", icon: "Briefcase", color: "hsl(84,81%,44%)", type: "income" },
+      { name: "Business", icon: "Building2", color: "hsl(150,60%,45%)", type: "income" },
+      { name: "Transfert", icon: "HandCoins", color: "hsl(200,70%,60%)", type: "income" },
+    ];
+    await supabase.from("categories").insert(
+      defaults.map(d => ({ ...d, user_id: user.id }))
+    );
+  };
+
   const fetchCategories = async () => {
     if (!user) return;
     const { data } = await supabase.from("categories").select("*").eq("user_id", user.id).order("created_at");
-    setCategories(data || []);
+    if (!data || data.length === 0) {
+      await createDefaults();
+      const { data: refreshed } = await supabase.from("categories").select("*").eq("user_id", user.id).order("created_at");
+      setCategories(refreshed || []);
+    } else {
+      setCategories(data);
+    }
     setLoading(false);
   };
 
