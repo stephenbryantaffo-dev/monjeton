@@ -488,6 +488,64 @@ const TontinePage = () => {
         </>
       )}
 
+      {/* ─── MONTHLY SUMMARY & REPORTS ─── */}
+      {(closedCycles.length > 0 || openCycle) && (
+        <div className="mb-4">
+          {/* Monthly summary card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card rounded-2xl p-4 mb-3"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="w-4 h-4 text-primary shrink-0" />
+              <p className="text-sm font-bold text-foreground">Récapitulatif</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="bg-secondary rounded-xl p-2.5 text-center">
+                <p className="text-[10px] text-muted-foreground font-medium">Cycles</p>
+                <p className="text-sm font-bold text-foreground">{closedCycles.length + (openCycle ? 1 : 0)}</p>
+              </div>
+              <div className="bg-secondary rounded-xl p-2.5 text-center">
+                <p className="text-[10px] text-muted-foreground font-medium">Total collecté</p>
+                <p className="text-sm font-bold text-primary tabular-nums">
+                  {fmt(closedCycles.reduce((s, c) => s + c.total_collected, 0) + (openCycle?.total_collected || 0))} F
+                </p>
+              </div>
+              <div className="bg-secondary rounded-xl p-2.5 text-center">
+                <p className="text-[10px] text-muted-foreground font-medium">Membres</p>
+                <p className="text-sm font-bold text-foreground">{members.length}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 glass"
+                onClick={() => setShowReports(!showReports)}
+              >
+                <FileText className="w-3.5 h-3.5 mr-1.5" />
+                {showReports ? "Masquer rapport" : "Voir rapport & PDF"}
+              </Button>
+            </div>
+          </motion.div>
+
+          {/* Reports detail */}
+          <AnimatePresence>
+            {showReports && selected && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <ReportsTab tontines={[selected]} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* ─── PAYMENT MODAL ─── */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>
         <DialogContent className="glass-card border-border">
