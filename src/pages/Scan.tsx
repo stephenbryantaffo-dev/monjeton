@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
 import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
+import ScanHistory from "@/components/scan/ScanHistory";
 
 const FREE_SCAN_LIMIT = 5;
 
