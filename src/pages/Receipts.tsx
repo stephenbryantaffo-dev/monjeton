@@ -86,7 +86,7 @@ const Receipts = () => {
     setLoading(true);
     const { data } = await supabase
       .from("receipt_scans")
-      .select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, status, created_at, extracted_text")
+      .select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, storage_path, status, created_at, extracted_text")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     setScans((data as unknown as ScanItem[]) || []);
