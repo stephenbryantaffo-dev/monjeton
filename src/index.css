@@ -176,26 +176,6 @@ input:-webkit-autofill:active {
   border-radius: 50% !important;
 }
 
-/* Fix SVG rendering iOS 18 Safari + Android */
-svg {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  display: block;
-  overflow: visible;
-}
-
-.transaction-icon svg,
-.category-icon svg {
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px;
-  min-height: 20px;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}
 
 @property --gradient-angle {
   syntax: '<angle>';

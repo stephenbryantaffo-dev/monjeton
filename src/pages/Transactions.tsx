@@ -257,12 +257,6 @@ const Transactions = () => {
                   flexShrink: 0,
                   backgroundColor: `${t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20`,
                   color: t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(150,5%,60%)"),
-                  WebkitTransform: 'translateZ(0)',
-                  transform: 'translateZ(0)',
-                  WebkitBackfaceVisibility: 'hidden',
-                  backfaceVisibility: 'hidden',
-                  isolation: 'isolate',
-                  position: 'relative',
                   overflow: 'visible',
                 }}
               >
