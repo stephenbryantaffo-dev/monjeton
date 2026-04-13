@@ -26,6 +26,7 @@ interface ScanItem {
   parsed_date: string | null;
   parsed_currency: string | null;
   image_url: string | null;
+  storage_path: string | null;
   status: string;
   created_at: string;
   extracted_text: string | null;
