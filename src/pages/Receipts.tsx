@@ -613,6 +613,46 @@ const Receipts = () => {
             </div>
           )}
 
+          {/* Download from Storage */}
+          {selectedScan.storage_path ? (
+            <button
+              onClick={async () => {
+                if (!selectedScan.storage_path) return;
+                try {
+                  setDownloading(true);
+                  const { data, error } = await supabase.storage
+                    .from("receipts")
+                    .download(selectedScan.storage_path);
+                  if (error || !data) throw error;
+                  const url = URL.createObjectURL(data);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `recu_${selectedScan.parsed_merchant || "monjeton"}_${selectedScan.parsed_date || new Date().toISOString().split("T")[0]}.jpg`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast({ title: "Photo téléchargée ✅" });
+                } catch {
+                  toast({ title: "Erreur de téléchargement", variant: "destructive" });
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              disabled={downloading}
+              className="w-full glass-card rounded-xl p-3.5 flex items-center justify-center gap-2 border border-primary/30 mb-2"
+            >
+              <Download className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                {downloading ? "Téléchargement..." : "Télécharger la photo du reçu"}
+              </span>
+            </button>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              Photo non disponible pour ce reçu (scans anciens)
+            </p>
+          )}
+
           {/* Action buttons */}
           <div className="flex gap-2">
             {selectedScan.status === "confirmed" && (
