@@ -210,6 +210,47 @@ const Scan = () => {
     }
   };
 
+  const compressImage = (f: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      const img = new Image();
+      const url = URL.createObjectURL(f);
+      img.src = url;
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1024;
+        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg", 0.8);
+      };
+      img.onerror = reject;
+    });
+  };
+
+  const uploadReceiptImage = async (f: File, sid: string): Promise<string | null> => {
+    try {
+      const compressed = await compressImage(f);
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const path = `${user!.id}/${year}/${month}/${sid}.jpg`;
+      const { error } = await supabase.storage.from("receipts").upload(path, compressed, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+      if (error) {
+        console.error("Storage upload error:", error);
+        return null;
+      }
+      return path;
+    } catch (err) {
+      console.error("Compress/upload error:", err);
+      return null;
+    }
+  };
+
   const handleConfirm = async (data: ParsedResult) => {
     if (!user || !scanId) return;
     let categoryId: string | null = null;
@@ -245,10 +286,25 @@ const Scan = () => {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
       return;
     }
-    await supabase.from("receipt_scans").update({ status: "confirmed" }).eq("id", scanId);
+
+    // Upload image to permanent storage
+    let storagePath: string | null = null;
+    if (file) {
+      storagePath = await uploadReceiptImage(file, scanId);
+    }
+
+    // Update receipt_scans with storage_path and confirmed status
+    await supabase.from("receipt_scans").update({
+      status: "confirmed",
+      ...(storagePath ? { storage_path: storagePath } : {}),
+    } as any).eq("id", scanId);
+
     await refreshReceiptStats();
     await fetchHistory();
-    toast({ title: "Transaction créée ✅" });
+    toast({
+      title: storagePath ? "✅ Reçu confirmé et sauvegardé" : "✅ Transaction créée",
+      description: storagePath ? "Photo stockée en sécurité dans le cloud" : undefined,
+    });
     reset();
   };
 
