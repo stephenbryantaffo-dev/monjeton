@@ -721,6 +721,7 @@ export type Database = {
           parsed_wallet: string | null
           scan_type: string
           status: string
+          storage_path: string | null
           user_id: string
         }
         Insert: {
@@ -741,6 +742,7 @@ export type Database = {
           parsed_wallet?: string | null
           scan_type?: string
           status?: string
+          storage_path?: string | null
           user_id: string
         }
         Update: {
@@ -761,6 +763,7 @@ export type Database = {
           parsed_wallet?: string | null
           scan_type?: string
           status?: string
+          storage_path?: string | null
           user_id?: string
         }
         Relationships: []
