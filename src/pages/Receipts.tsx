@@ -56,6 +56,7 @@ const Receipts = () => {
 
   const [scans, setScans] = useState<ScanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [searchText, setSearchText] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
