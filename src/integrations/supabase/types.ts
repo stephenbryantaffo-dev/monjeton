@@ -87,32 +87,41 @@ export type Database = {
         Row: {
           amount: number
           caisse_id: string
+          cancel_reason: string | null
+          cancelled_at: string | null
           cotisation_date: string
           created_at: string
           cycle_label: string | null
           id: string
           member_id: string
           note: string | null
+          status: string
         }
         Insert: {
           amount: number
           caisse_id: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           cotisation_date?: string
           created_at?: string
           cycle_label?: string | null
           id?: string
           member_id: string
           note?: string | null
+          status?: string
         }
         Update: {
           amount?: number
           caisse_id?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           cotisation_date?: string
           created_at?: string
           cycle_label?: string | null
           id?: string
           member_id?: string
           note?: string | null
+          status?: string
         }
         Relationships: [
           {
@@ -175,6 +184,51 @@ export type Database = {
           },
         ]
       }
+      caisse_member_history: {
+        Row: {
+          action: string
+          caisse_id: string
+          created_at: string
+          id: string
+          member_id: string
+          performed_by: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          caisse_id: string
+          created_at?: string
+          id?: string
+          member_id: string
+          performed_by: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          caisse_id?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          performed_by?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_member_history_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caisse_member_history_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "caisse_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caisse_members: {
         Row: {
           caisse_id: string
@@ -182,6 +236,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          status: string
         }
         Insert: {
           caisse_id: string
@@ -189,6 +244,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          status?: string
         }
         Update: {
           caisse_id?: string
@@ -196,6 +252,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          status?: string
         }
         Relationships: [
           {

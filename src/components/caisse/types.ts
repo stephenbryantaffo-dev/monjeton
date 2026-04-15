@@ -15,6 +15,7 @@ export interface CaisseMember {
   caisse_id: string;
   name: string;
   phone: string | null;
+  status: string; // 'active' | 'removed' | 'suspended'
   created_at: string;
 }
 
@@ -26,6 +27,19 @@ export interface CaisseCotisation {
   cotisation_date: string;
   cycle_label: string | null;
   note: string | null;
+  status: string; // 'confirmed' | 'cancelled' | 'partial'
+  cancel_reason: string | null;
+  cancelled_at: string | null;
+  created_at: string;
+}
+
+export interface CaisseMemberHistory {
+  id: string;
+  caisse_id: string;
+  member_id: string;
+  action: string;
+  reason: string | null;
+  performed_by: string;
   created_at: string;
 }
 
