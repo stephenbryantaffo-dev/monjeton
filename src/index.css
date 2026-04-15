@@ -147,10 +147,44 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px hsl(150, 20%, 4%) inset !important;
-  -webkit-text-fill-color: hsl(150, 5%, 92%) !important;
-  caret-color: hsl(150, 5%, 92%);
+  -webkit-box-shadow: 0 0 0 1000px rgba(5, 7, 10, 0.95) inset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  caret-color: #7EC845 !important;
+  border-bottom: 2px solid #7EC845 !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Smokey auth inputs */
+.smokey-input {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  color: #ffffff;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+  outline: none;
+  appearance: none;
+  transition: border-color 0.3s;
+}
+.smokey-input:focus {
+  border-color: #7EC845;
+}
+.smokey-label {
+  position: absolute;
+  left: 1.5rem;
+  top: 0.625rem;
+  font-size: 0.875rem;
+  color: #8892A4;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+.smokey-input:focus ~ .smokey-label,
+.smokey-input:not(:placeholder-shown) ~ .smokey-label {
+  top: -0.75rem;
+  font-size: 0.7rem;
+  color: #7EC845;
 }
 
 /* Plage de dates sélectionnée */
