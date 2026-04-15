@@ -1,47 +1,64 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { checkRateLimit, resetRateLimit } from "@/lib/security";
-import { lovable } from "@/integrations/lovable/index";
-import { SmokeyBackground } from "@/components/ui/smokey-background";
+import logoImg from "@/assets/logo-monjeton.png";
+import {
+  AnimatedInput,
+  AnimatedForm,
+  BoxReveal,
+  Ripple,
+  OrbitingCircles,
+} from "@/components/ui/animated-login";
+
+// Mobile money operator colors
+const operators = [
+  { name: "Wave", color: "#1BA8F0", emoji: "🌊" },
+  { name: "Orange Money", color: "#FF6600", emoji: "🟠" },
+  { name: "MTN", color: "#FFCC00", emoji: "🟡" },
+  { name: "Moov Money", color: "#0066CC", emoji: "🔵" },
+];
 
 const Login = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Remplis tous les champs.");
-      return;
-    }
 
     const rl = checkRateLimit(`login:${email}`, 5, 5 * 60 * 1000);
     if (!rl.allowed) {
       const seconds = Math.ceil(rl.retryAfterMs / 1000);
-      setError(`Trop de tentatives. Réessaye dans ${seconds}s`);
+      toast({
+        title: "Trop de tentatives",
+        description: `Réessayez dans ${seconds}s`,
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
-    setError("");
-    const { error: err } = await signIn(email, password);
-    if (err) {
-      setError("Email ou mot de passe incorrect.");
+    const { error } = await signIn(email, password);
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "Email ou mot de passe incorrect",
+        variant: "destructive",
+      });
     } else {
       resetRateLimit(`login:${email}`);
       navigate("/dashboard", { replace: true });
     }
-    setLoading(false);
   };
 
   const handleForgotPassword = async () => {
@@ -54,170 +71,175 @@ const Login = () => {
       return;
     }
     const { supabase } = await import("@/integrations/supabase/client");
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + "/reset-password",
     });
-    if (err) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Email envoyé ✅", description: "Vérifie ta boîte mail." });
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      toast({
+        title: "Email envoyé ✅",
+        description: "Vérifie ta boîte mail pour réinitialiser ton mot de passe.",
       });
-      if (result.error) {
-        setError("Connexion Google échouée.");
-        return;
-      }
-      if (result.redirected) return;
-      navigate("/dashboard", { replace: true });
-    } catch {
-      setError("Erreur de connexion.");
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
-      <SmokeyBackground
-        color1="#030504"
-        color2="#7EC845"
-        color3="#1a3a0a"
-        intensity={1.0}
-      />
+    <div className="min-h-screen flex bg-background">
+      {/* ── Left: Orbital animation (hidden on mobile) ── */}
+      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden"
+           style={{ background: "linear-gradient(135deg, hsl(240 20% 8%), hsl(150 20% 6%))" }}>
+        <Ripple />
 
-      <div className="relative z-10 w-full max-w-md px-6 py-10">
-        <div
-          className="rounded-2xl p-8 backdrop-blur-xl border"
-          style={{
-            background: "rgba(10, 13, 18, 0.75)",
-            borderColor: "rgba(126, 200, 69, 0.15)",
-          }}
+        {/* Central logo */}
+        <motion.div
+          className="relative z-10 flex flex-col items-center"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: "rgba(126, 200, 69, 0.12)" }}>
-              <span className="text-3xl">🪙</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white">Bienvenue sur Mon Jeton</h1>
-            <p className="text-sm mt-1" style={{ color: "#8892A4" }}>
-              Gérez votre argent mobile money
-            </p>
-          </div>
+          <img
+            src={logoImg}
+            alt="Mon Jeton"
+            className="w-20 h-20 rounded-2xl shadow-lg"
+          />
+          <span className="mt-3 text-lg font-bold text-foreground">Mon Jeton</span>
+        </motion.div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div className="relative">
-              <User className="absolute left-0 top-3 w-4 h-4" style={{ color: "#8892A4" }} />
-              <input
+        {/* Orbiting operator circles */}
+        {operators.map((op, i) => (
+          <OrbitingCircles
+            key={op.name}
+            radius={140 + (i % 2) * 60}
+            duration={18 + i * 4}
+            delay={i * 1.5}
+            reverse={i % 2 === 1}
+          >
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-lg border border-white/10"
+              style={{ background: op.color }}
+              title={op.name}
+            >
+              {op.emoji}
+            </div>
+          </OrbitingCircles>
+        ))}
+
+        {/* Decorative glow */}
+        <div className="absolute w-72 h-72 rounded-full bg-primary/5 blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+
+      {/* ── Right: Login form ── */}
+      <div className="flex-1 flex items-center justify-center px-5 py-10">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <motion.div
+            className="flex items-center gap-2 mb-8 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Link to="/" className="flex items-center gap-2">
+              <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
+              <span className="text-xl font-bold text-primary">Mon Jeton</span>
+            </Link>
+          </motion.div>
+
+          {/* Glass card */}
+          <motion.div
+            className="glass rounded-2xl p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="mb-8">
+              <BoxReveal delay={0.1}>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Bienvenue sur Mon Jeton
+                </h1>
+              </BoxReveal>
+              <BoxReveal delay={0.25}>
+                <p className="text-muted-foreground mt-2">
+                  Gérez votre argent mobile money
+                </p>
+              </BoxReveal>
+            </div>
+
+            <AnimatedForm onSubmit={handleSubmit}>
+              <AnimatedInput
+                label="Email"
                 type="email"
+                placeholder="ton@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder=" "
+                icon={<Mail className="w-4 h-4" />}
                 required
-                className="smokey-input peer"
               />
-              <label className="smokey-label">Adresse email</label>
-            </div>
 
-            {/* Password */}
-            <div className="relative">
-              <Lock className="absolute left-0 top-3 w-4 h-4" style={{ color: "#8892A4" }} />
-              <input
+              <AnimatedInput
+                label="Mot de passe"
                 type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder=" "
+                icon={<Lock className="w-4 h-4" />}
+                endIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                }
                 required
-                className="smokey-input pr-8 peer"
               />
-              <label className="smokey-label">Mot de passe</label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 top-2.5 p-0 bg-transparent border-none cursor-pointer"
-                style={{ color: "#8892A4" }}
-                tabIndex={-1}
+
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+                <Button
+                  type="submit"
+                  variant="hero"
+                  size="lg"
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? "Connexion..." : "Se connecter"}
+                </Button>
+              </motion.div>
+            </AnimatedForm>
 
-            {/* Error */}
-            {error && (
-              <p className="text-sm text-center" style={{ color: "#ef4444" }}>
-                {error}
-              </p>
-            )}
-
-            {/* Forgot password */}
-            <div className="text-right">
+            <motion.div
+              className="mt-5 space-y-3 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-sm font-medium bg-transparent border-none cursor-pointer"
-                style={{ color: "#7EC845" }}
+                className="text-sm text-primary hover:underline"
               >
                 Mot de passe oublié ?
               </button>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 disabled:opacity-50"
-              style={{
-                background: "linear-gradient(135deg, #7EC845, #5ba832)",
-                color: "#0a0d12",
-              }}
-            >
-              {loading ? "Connexion..." : "Se connecter"}
-              {!loading && <ArrowRight className="w-4 h-4" />}
-            </button>
-
-            {/* Separator */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.1)" }} />
-              <span className="text-xs" style={{ color: "#8892A4" }}>ou continuer avec</span>
-              <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.1)" }} />
-            </div>
-
-            {/* Google */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={googleLoading}
-              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-300 disabled:opacity-50"
-              style={{
-                background: "rgba(255,255,255,0.92)",
-                color: "#1a1a1a",
-              }}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-              </svg>
-              {googleLoading ? "Connexion..." : "Continuer avec Google"}
-            </button>
-          </form>
-
-          {/* Link */}
-          <p className="text-center text-sm mt-6" style={{ color: "#8892A4" }}>
-            Pas encore de compte ?{" "}
-            <Link to="/signup" className="font-medium hover:underline" style={{ color: "#7EC845" }}>
-              S'inscrire gratuitement
-            </Link>
-          </p>
+              <p className="text-sm text-muted-foreground">
+                Pas encore de compte ?{" "}
+                <Link
+                  to="/signup"
+                  className="text-primary hover:underline font-medium"
+                >
+                  S'inscrire
+                </Link>
+              </p>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </div>
