@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import CreateCaisseModal from "./CreateCaisseModal";
 import { CaisseData, CaisseMember, CaisseCotisation, CaisseDepense, CaisseMemberHistory, DEPENSE_CATEGORIES, DEPENSE_CAT_LABELS } from "./types";
+import { generateCaissePdf } from "./generateCaissePdf";
 
 const fmt = (n: number) => n?.toLocaleString("fr-FR") ?? "0";
 
@@ -487,6 +488,19 @@ const CaisseView = () => {
           className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-border">
           <UserPlus className="w-5 h-5 text-muted-foreground" />
           <span className="text-xs font-medium text-foreground">Membre</span>
+        </button>
+        <button onClick={() => generateCaissePdf({
+            caisse: selected,
+            members,
+            cotisations: cotisations.filter(c => c.status === "confirmed"),
+            cancelledCotisations: cotisations.filter(c => c.status === "cancelled"),
+            depenses,
+            memberHistory,
+            soldeDisponible,
+          })}
+          className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-border">
+          <FileDown className="w-5 h-5 text-muted-foreground" />
+          <span className="text-xs font-medium text-foreground">PDF</span>
         </button>
       </div>
 
