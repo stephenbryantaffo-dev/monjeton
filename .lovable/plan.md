@@ -1,46 +1,40 @@
 
 
-## Redesign Login & Signup — Style HextaUI adapté Mon Jeton
+## Signup Desktop — Design HextaUI 2 colonnes adapté Mon Jeton
 
 ### Objectif
-Refondre les pages Login (`/login`) et Signup (`/signup`) en s'inspirant du design centré HextaUI (carte glass centrée, inputs arrondis, bouton Google, fond sombre) tout en conservant les couleurs Mon Jeton (primary lime `#7EC845`, fond dark `#0F0F1A`, accents verts/violets) et en optimisant pour mobile.
-
-### Design cible
-- Fond sombre uni (background existant) — pas de split-screen
-- Carte centrée avec glassmorphism (existant `glass` class)
-- Logo Mon Jeton centré en haut de la carte
-- Inputs avec fond `bg-secondary`, coins arrondis `rounded-xl`, placeholders
-- Bouton principal `gradient-primary` (lime)
-- Bouton Google OAuth avec icône G colorée
-- Liens "Mot de passe oublié" et "S'inscrire / Se connecter"
-- Mobile-first : `max-w-sm`, padding adapté, pas de colonne desktop
+Ajouter un layout desktop full-screen 2 colonnes au Signup, inspiré du composant HextaUI (screenshot). Mobile garde le design card centré actuel.
 
 ### Plan technique
 
-**1. Refondre `src/pages/Login.tsx`**
-- Supprimer le layout split-screen (colonne gauche orbitale)
-- Layout : `min-h-screen flex items-center justify-center bg-background`
-- Carte centrée : logo Mon Jeton, titre "Mon Jeton", inputs email/password (arrondis, fond secondary), bouton "Se connecter" (gradient-primary), bouton "Continuer avec Google", lien mot de passe oublié, lien inscription
-- Conserver toute la logique existante (signIn, rate limit, forgot password, toast)
-- Ajouter Google OAuth via `lovable.auth.signInWithOAuth("google")`
+**Fichier modifié : `src/pages/Signup.tsx`**
 
-**2. Refondre `src/pages/Signup.tsx`**
-- Même layout centré que Login
-- Carte : logo, titre "Créer ton compte", inputs nom/email/password avec PasswordStrengthIndicator, bouton "Créer mon compte", bouton Google, lien connexion
-- Conserver la logique existante (signUp, rate limit, password validation, sanitize)
-- Ajouter Google OAuth
+Restructurer le return JSX en deux blocs :
 
-**3. Configurer Google OAuth**
-- Utiliser l'outil Configure Social Auth pour générer le module `lovable.auth`
-- Importer `lovable.auth.signInWithOAuth("google")` dans Login et Signup
+1. **Mobile (`flex md:hidden`)** : Conserver le design card centré existant tel quel (lignes 78-186 actuelles).
 
-### Fichiers modifiés
-- `src/pages/Login.tsx` — refonte complète du template
-- `src/pages/Signup.tsx` — refonte complète du template
-- Configuration Google OAuth via outil dédié
+2. **Desktop (`hidden md:flex`)** : Layout full-screen 2 colonnes `min-h-screen` sur fond `#05070A` :
+
+   - **Colonne gauche (50%)** : Fond sombre avec effets visuels :
+     - 6 lignes verticales avec gradient vert (`rgba(126,200,69,0.15)`) style HextaUI
+     - Blob radial vert principal (420px, blur 30px)
+     - Blob secondaire teal
+     - Overlay gradient top pour fondre
+     - Texte en bas : slogan "Tu vas voir clair dans ton jeton." en blanc, grande typo
+
+   - **Colonne droite (50%)** : Fond `#0A0D12` (légèrement plus clair), formulaire centré verticalement :
+     - Logo Mon Jeton + titre "Créer ton compte" + sous-titre
+     - Inputs nom/email/password avec labels, fond `#12151A`, bordure `#1E2330`, coins arrondis
+     - PasswordStrengthIndicator
+     - Bouton "Créer mon compte" gradient-primary (lime)
+     - Séparateur "ou"
+     - Bouton Google OAuth outline
+     - Lien "Déjà un compte ? Se connecter"
+
+3. **Logique partagée** : Les handlers (`handleSubmit`, `handleGoogleSignIn`) et state restent identiques, utilisés par les deux layouts. Les formulaires desktop et mobile partagent les mêmes `id` (pas de conflit car un seul est rendu).
 
 ### Ce qui ne change PAS
-- Toute la logique métier (auth, rate limiting, validation, navigation)
-- Les imports et dépendances existants
-- Le routing dans App.tsx
+- Toute la logique métier (signUp, rate limit, password validation, Google OAuth)
+- Le design mobile actuel
+- Login.tsx (pas touché dans ce ticket)
 
