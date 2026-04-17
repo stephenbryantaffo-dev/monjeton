@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,7 +136,24 @@ const CaisseView = () => {
 
   // Current cycle label helper
   const now = new Date();
-  const defaultCycleLabel = `${now.toLocaleString("fr-FR", { month: "long" })} ${now.getFullYear()}`;
+  const computedDefaultCycleLabel = `${now.toLocaleString("fr-FR", { month: "long" })} ${now.getFullYear()}`;
+  const [activeCycleLabel, setActiveCycleLabel] = useState<string>(computedDefaultCycleLabel);
+  const defaultCycleLabel = activeCycleLabel;
+
+  const startNewCycle = () => {
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    // Find a cycle label not yet used
+    const usedLabels = new Set(cotisations.map(c => c.cycle_label).filter(Boolean));
+    let candidate = `${next.toLocaleString("fr-FR", { month: "long" })} ${next.getFullYear()}`;
+    let cursor = new Date(next);
+    while (usedLabels.has(candidate)) {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+      candidate = `${cursor.toLocaleString("fr-FR", { month: "long" })} ${cursor.getFullYear()}`;
+    }
+    setActiveCycleLabel(candidate);
+    setCycleLabel(candidate);
+    toast({ title: "Nouveau cycle démarré ✅", description: `Cycle : ${candidate}. Tous les membres repassent à Non payé.` });
+  };
 
   const getMemberName = (id: string) => members.find((m) => m.id === id)?.name || "?";
 
@@ -501,6 +518,19 @@ const CaisseView = () => {
           className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-border">
           <FileDown className="w-5 h-5 text-muted-foreground" />
           <span className="text-xs font-medium text-foreground">PDF</span>
+        </button>
+      </div>
+
+      {/* CYCLE INFO + RESET */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground">Cycle en cours</p>
+          <p className="text-sm font-semibold text-foreground capitalize truncate">{defaultCycleLabel}</p>
+        </div>
+        <button onClick={startNewCycle}
+          className="glass-card rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground border border-border flex items-center gap-1.5 flex-shrink-0 hover:text-foreground transition">
+          <RefreshCw className="w-3.5 h-3.5" />
+          Nouveau cycle
         </button>
       </div>
 
