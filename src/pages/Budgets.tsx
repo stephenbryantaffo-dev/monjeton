@@ -40,9 +40,12 @@ interface CategoryBudget {
 }
 
 interface AISuggestion {
-  category_id: string;
-  category_name: string;
-  avg_amount: number;
+  categorie: string;
+  montant_suggere: number;
+  pourcentage: number;
+  conseil: string;
+  category_id?: string;
+  already_spent?: number;
 }
 
 // Color-coded progress bar
