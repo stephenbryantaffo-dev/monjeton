@@ -40,9 +40,12 @@ interface CategoryBudget {
 }
 
 interface AISuggestion {
-  category_id: string;
-  category_name: string;
-  avg_amount: number;
+  categorie: string;
+  montant_suggere: number;
+  pourcentage: number;
+  conseil: string;
+  category_id?: string;
+  already_spent?: number;
 }
 
 // Color-coded progress bar
@@ -89,6 +92,8 @@ const Budgets = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [aiGlobalAdvice, setAiGlobalAdvice] = useState<string>("");
+  const [aiBudgetSnapshot, setAiBudgetSnapshot] = useState<number>(0);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -220,61 +225,92 @@ const Budgets = () => {
     }
   };
 
-  // AI Suggestions: analyze last 3 months average per category
+  // AI Suggestions: ask Claude to allocate the actual user budget across categories
   const generateAISuggestions = async () => {
     if (!user) return;
+
+    if (!totalBudget || totalBudget <= 0) {
+      toast({
+        title: "Définis d'abord ton budget global",
+        description: "L'IA répartit ton budget total réel — fixe-le avant de demander des suggestions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSuggestionsLoading(true);
     setShowSuggestions(true);
+    setAiSuggestions([]);
+    setAiGlobalAdvice("");
 
     try {
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Non authentifié");
 
-      const { data: histTx } = await supabase
-        .from("transactions")
-        .select("amount, category_id")
-        .eq("user_id", user.id)
-        .eq("type", "expense")
-        .gte("date", threeMonthsAgo.toISOString().split("T")[0]);
-
-      if (!histTx || histTx.length === 0) {
-        toast({ title: "Pas assez de données", description: "Il faut au moins 1 mois d'historique", variant: "destructive" });
-        setShowSuggestions(false);
-        return;
-      }
-
-      // Group by category and compute monthly average
-      const byCat: Record<string, number[]> = {};
-      histTx.forEach((t) => {
-        if (t.category_id) {
-          if (!byCat[t.category_id]) byCat[t.category_id] = [];
-          byCat[t.category_id].push(Number(t.amount));
-        }
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/budget-suggest`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ month, year, totalBudget }),
       });
 
-      // Calculate average (total / 3 months)
-      const suggestions: AISuggestion[] = [];
-      for (const [catId, amounts] of Object.entries(byCat)) {
-        const total = amounts.reduce((s, a) => s + a, 0);
-        const avg = Math.round(total / 3);
-        if (avg > 0) {
-          const cat = categories.find((c) => c.id === catId);
-          if (cat) {
-            // Only suggest if no budget exists yet for this category
-            const existing = categoryBudgets.find((cb) => cb.category_id === catId);
-            suggestions.push({
-              category_id: catId,
-              category_name: cat.name,
-              avg_amount: existing ? Math.round(avg * 1.1) : avg, // +10% buffer if already budgeted
-            });
-          }
-        }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erreur du service IA");
       }
 
-      suggestions.sort((a, b) => b.avg_amount - a.avg_amount);
-      setAiSuggestions(suggestions);
-    } catch {
-      toast({ title: "Erreur", variant: "destructive" });
+      const data = await res.json();
+      let suggestions: AISuggestion[] = Array.isArray(data.suggestions) ? data.suggestions : [];
+      const expensesByCategory: Record<string, number> = data.expensesByCategory || {};
+
+      // Frontend safeguard: re-calibrate if AI somehow exceeds budget
+      const totalSuggere = suggestions.reduce((sum, s) => sum + s.montant_suggere, 0);
+      if (totalSuggere > totalBudget && totalSuggere > 0) {
+        const ratio = totalBudget / totalSuggere;
+        suggestions = suggestions.map((s) => ({
+          ...s,
+          montant_suggere: Math.floor(s.montant_suggere * ratio),
+          pourcentage: Math.round(((s.montant_suggere * ratio) / totalBudget) * 100),
+        }));
+      }
+
+      // Match each suggestion to a real category id (case-insensitive) + attach already_spent
+      const enriched: AISuggestion[] = suggestions.map((s) => {
+        const norm = s.categorie.trim().toLowerCase();
+        const cat = categories.find((c) => c.name.trim().toLowerCase() === norm);
+        const spent =
+          Object.entries(expensesByCategory).find(
+            ([k]) => k.trim().toLowerCase() === norm
+          )?.[1] ?? 0;
+        return {
+          ...s,
+          category_id: cat?.id,
+          already_spent: Number(spent) || 0,
+        };
+      });
+
+      setAiSuggestions(enriched);
+      setAiGlobalAdvice(String(data.conseil_global || ""));
+      setAiBudgetSnapshot(Number(data.totalBudget) || totalBudget);
+
+      if (enriched.length === 0) {
+        toast({
+          title: "Aucune suggestion",
+          description: "L'IA n'a pas pu générer de répartition pour ce budget.",
+          variant: "destructive",
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: "Erreur IA",
+        description: e?.message || "Impossible de générer les suggestions",
+        variant: "destructive",
+      });
+      setShowSuggestions(false);
     } finally {
       setSuggestionsLoading(false);
     }
@@ -282,16 +318,30 @@ const Budgets = () => {
 
   const applySuggestion = async (suggestion: AISuggestion) => {
     if (!user) return;
+    if (!suggestion.category_id) {
+      toast({
+        title: "Catégorie introuvable",
+        description: `Crée d'abord la catégorie "${suggestion.categorie}".`,
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase.from("category_budgets").upsert(
-      { user_id: user.id, category_id: suggestion.category_id, month, year, budget_amount: suggestion.avg_amount },
+      {
+        user_id: user.id,
+        category_id: suggestion.category_id,
+        month,
+        year,
+        budget_amount: suggestion.montant_suggere,
+      },
       { onConflict: "user_id,category_id,month,year" }
     );
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
       return;
     }
-    setAiSuggestions((prev) => prev.filter((s) => s.category_id !== suggestion.category_id));
-    toast({ title: `Budget ${suggestion.category_name} appliqué ✅` });
+    setAiSuggestions((prev) => prev.filter((s) => s.categorie !== suggestion.categorie));
+    toast({ title: `Budget ${suggestion.categorie} appliqué ✅` });
     loadData();
   };
 
@@ -467,32 +517,73 @@ const Budgets = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 glass-card rounded-xl p-3 space-y-2"
+                  className="mt-3 space-y-3"
                 >
-                  <p className="text-xs text-muted-foreground font-medium mb-2">
-                    📊 Basé sur tes 3 derniers mois
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {aiSuggestions.map((s) => (
-                      <motion.button
-                        key={s.category_id}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => applySuggestion(s)}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-xs hover:bg-primary/20 transition-colors"
-                      >
-                        <span className="text-foreground font-medium">{s.category_name}</span>
-                        <span className="text-muted-foreground">:</span>
-                        <span className="text-primary font-semibold tabular-nums">
-                          moy. {fmt(s.avg_amount)} F
-                        </span>
-                      </motion.button>
-                    ))}
+                  {/* Total budget header */}
+                  <div className="glass-card rounded-xl p-3 border border-primary/20">
+                    <p className="text-sm font-bold text-foreground tabular-nums">
+                      Budget total : {fmt(aiBudgetSnapshot || totalBudget)} F
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Les suggestions ci-dessous respectent strictement ton enveloppe budgétaire.
+                    </p>
                   </div>
+
+                  {aiGlobalAdvice && (
+                    <p className="text-xs text-muted-foreground italic px-1">
+                      💡 {aiGlobalAdvice}
+                    </p>
+                  )}
+
+                  <div className="space-y-2">
+                    {aiSuggestions.map((s) => {
+                      const restant = Math.max(0, s.montant_suggere - (s.already_spent || 0));
+                      const noMatch = !s.category_id;
+                      return (
+                        <motion.div
+                          key={s.categorie}
+                          initial={{ scale: 0.97, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="glass-card rounded-xl p-3 border border-primary/15"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">
+                                {s.categorie}{" "}
+                                <span className="text-[10px] text-muted-foreground font-normal">
+                                  · {s.pourcentage}%
+                                </span>
+                              </p>
+                              {s.conseil && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  {s.conseil}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="glass border-primary/30 text-primary text-xs h-7 px-2 flex-shrink-0"
+                              onClick={() => applySuggestion(s)}
+                              disabled={noMatch}
+                              title={noMatch ? `Crée d'abord la catégorie "${s.categorie}"` : ""}
+                            >
+                              Appliquer
+                            </Button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground tabular-nums">
+                            Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
+                            {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
+                            {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
+                          </p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
                   <button
                     onClick={() => setShowSuggestions(false)}
-                    className="text-[10px] text-muted-foreground mt-1"
+                    className="text-[10px] text-muted-foreground"
                   >
                     Fermer
                   </button>
@@ -504,7 +595,7 @@ const Budgets = () => {
                   animate={{ opacity: 1 }}
                   className="text-xs text-muted-foreground text-center mt-2"
                 >
-                  Aucune suggestion disponible. Ajoute plus de transactions.
+                  Aucune suggestion disponible.
                 </motion.p>
               )}
             </AnimatePresence>
