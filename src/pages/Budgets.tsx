@@ -225,61 +225,92 @@ const Budgets = () => {
     }
   };
 
-  // AI Suggestions: analyze last 3 months average per category
+  // AI Suggestions: ask Claude to allocate the actual user budget across categories
   const generateAISuggestions = async () => {
     if (!user) return;
+
+    if (!totalBudget || totalBudget <= 0) {
+      toast({
+        title: "Définis d'abord ton budget global",
+        description: "L'IA répartit ton budget total réel — fixe-le avant de demander des suggestions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSuggestionsLoading(true);
     setShowSuggestions(true);
+    setAiSuggestions([]);
+    setAiGlobalAdvice("");
 
     try {
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Non authentifié");
 
-      const { data: histTx } = await supabase
-        .from("transactions")
-        .select("amount, category_id")
-        .eq("user_id", user.id)
-        .eq("type", "expense")
-        .gte("date", threeMonthsAgo.toISOString().split("T")[0]);
-
-      if (!histTx || histTx.length === 0) {
-        toast({ title: "Pas assez de données", description: "Il faut au moins 1 mois d'historique", variant: "destructive" });
-        setShowSuggestions(false);
-        return;
-      }
-
-      // Group by category and compute monthly average
-      const byCat: Record<string, number[]> = {};
-      histTx.forEach((t) => {
-        if (t.category_id) {
-          if (!byCat[t.category_id]) byCat[t.category_id] = [];
-          byCat[t.category_id].push(Number(t.amount));
-        }
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/budget-suggest`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ month, year, totalBudget }),
       });
 
-      // Calculate average (total / 3 months)
-      const suggestions: AISuggestion[] = [];
-      for (const [catId, amounts] of Object.entries(byCat)) {
-        const total = amounts.reduce((s, a) => s + a, 0);
-        const avg = Math.round(total / 3);
-        if (avg > 0) {
-          const cat = categories.find((c) => c.id === catId);
-          if (cat) {
-            // Only suggest if no budget exists yet for this category
-            const existing = categoryBudgets.find((cb) => cb.category_id === catId);
-            suggestions.push({
-              category_id: catId,
-              category_name: cat.name,
-              avg_amount: existing ? Math.round(avg * 1.1) : avg, // +10% buffer if already budgeted
-            });
-          }
-        }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erreur du service IA");
       }
 
-      suggestions.sort((a, b) => b.avg_amount - a.avg_amount);
-      setAiSuggestions(suggestions);
-    } catch {
-      toast({ title: "Erreur", variant: "destructive" });
+      const data = await res.json();
+      let suggestions: AISuggestion[] = Array.isArray(data.suggestions) ? data.suggestions : [];
+      const expensesByCategory: Record<string, number> = data.expensesByCategory || {};
+
+      // Frontend safeguard: re-calibrate if AI somehow exceeds budget
+      const totalSuggere = suggestions.reduce((sum, s) => sum + s.montant_suggere, 0);
+      if (totalSuggere > totalBudget && totalSuggere > 0) {
+        const ratio = totalBudget / totalSuggere;
+        suggestions = suggestions.map((s) => ({
+          ...s,
+          montant_suggere: Math.floor(s.montant_suggere * ratio),
+          pourcentage: Math.round(((s.montant_suggere * ratio) / totalBudget) * 100),
+        }));
+      }
+
+      // Match each suggestion to a real category id (case-insensitive) + attach already_spent
+      const enriched: AISuggestion[] = suggestions.map((s) => {
+        const norm = s.categorie.trim().toLowerCase();
+        const cat = categories.find((c) => c.name.trim().toLowerCase() === norm);
+        const spent =
+          Object.entries(expensesByCategory).find(
+            ([k]) => k.trim().toLowerCase() === norm
+          )?.[1] ?? 0;
+        return {
+          ...s,
+          category_id: cat?.id,
+          already_spent: Number(spent) || 0,
+        };
+      });
+
+      setAiSuggestions(enriched);
+      setAiGlobalAdvice(String(data.conseil_global || ""));
+      setAiBudgetSnapshot(Number(data.totalBudget) || totalBudget);
+
+      if (enriched.length === 0) {
+        toast({
+          title: "Aucune suggestion",
+          description: "L'IA n'a pas pu générer de répartition pour ce budget.",
+          variant: "destructive",
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: "Erreur IA",
+        description: e?.message || "Impossible de générer les suggestions",
+        variant: "destructive",
+      });
+      setShowSuggestions(false);
     } finally {
       setSuggestionsLoading(false);
     }
@@ -287,16 +318,30 @@ const Budgets = () => {
 
   const applySuggestion = async (suggestion: AISuggestion) => {
     if (!user) return;
+    if (!suggestion.category_id) {
+      toast({
+        title: "Catégorie introuvable",
+        description: `Crée d'abord la catégorie "${suggestion.categorie}".`,
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase.from("category_budgets").upsert(
-      { user_id: user.id, category_id: suggestion.category_id, month, year, budget_amount: suggestion.avg_amount },
+      {
+        user_id: user.id,
+        category_id: suggestion.category_id,
+        month,
+        year,
+        budget_amount: suggestion.montant_suggere,
+      },
       { onConflict: "user_id,category_id,month,year" }
     );
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
       return;
     }
-    setAiSuggestions((prev) => prev.filter((s) => s.category_id !== suggestion.category_id));
-    toast({ title: `Budget ${suggestion.category_name} appliqué ✅` });
+    setAiSuggestions((prev) => prev.filter((s) => s.categorie !== suggestion.categorie));
+    toast({ title: `Budget ${suggestion.categorie} appliqué ✅` });
     loadData();
   };
 
