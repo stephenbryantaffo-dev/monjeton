@@ -92,6 +92,8 @@ const Budgets = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [aiGlobalAdvice, setAiGlobalAdvice] = useState<string>("");
+  const [aiBudgetSnapshot, setAiBudgetSnapshot] = useState<number>(0);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
