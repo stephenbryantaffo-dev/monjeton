@@ -517,32 +517,73 @@ const Budgets = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 glass-card rounded-xl p-3 space-y-2"
+                  className="mt-3 space-y-3"
                 >
-                  <p className="text-xs text-muted-foreground font-medium mb-2">
-                    📊 Basé sur tes 3 derniers mois
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {aiSuggestions.map((s) => (
-                      <motion.button
-                        key={s.category_id}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => applySuggestion(s)}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-xs hover:bg-primary/20 transition-colors"
-                      >
-                        <span className="text-foreground font-medium">{s.category_name}</span>
-                        <span className="text-muted-foreground">:</span>
-                        <span className="text-primary font-semibold tabular-nums">
-                          moy. {fmt(s.avg_amount)} F
-                        </span>
-                      </motion.button>
-                    ))}
+                  {/* Total budget header */}
+                  <div className="glass-card rounded-xl p-3 border border-primary/20">
+                    <p className="text-sm font-bold text-foreground tabular-nums">
+                      Budget total : {fmt(aiBudgetSnapshot || totalBudget)} F
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Les suggestions ci-dessous respectent strictement ton enveloppe budgétaire.
+                    </p>
                   </div>
+
+                  {aiGlobalAdvice && (
+                    <p className="text-xs text-muted-foreground italic px-1">
+                      💡 {aiGlobalAdvice}
+                    </p>
+                  )}
+
+                  <div className="space-y-2">
+                    {aiSuggestions.map((s) => {
+                      const restant = Math.max(0, s.montant_suggere - (s.already_spent || 0));
+                      const noMatch = !s.category_id;
+                      return (
+                        <motion.div
+                          key={s.categorie}
+                          initial={{ scale: 0.97, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="glass-card rounded-xl p-3 border border-primary/15"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">
+                                {s.categorie}{" "}
+                                <span className="text-[10px] text-muted-foreground font-normal">
+                                  · {s.pourcentage}%
+                                </span>
+                              </p>
+                              {s.conseil && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  {s.conseil}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="glass border-primary/30 text-primary text-xs h-7 px-2 flex-shrink-0"
+                              onClick={() => applySuggestion(s)}
+                              disabled={noMatch}
+                              title={noMatch ? `Crée d'abord la catégorie "${s.categorie}"` : ""}
+                            >
+                              Appliquer
+                            </Button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground tabular-nums">
+                            Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
+                            {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
+                            {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
+                          </p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
                   <button
                     onClick={() => setShowSuggestions(false)}
-                    className="text-[10px] text-muted-foreground mt-1"
+                    className="text-[10px] text-muted-foreground"
                   >
                     Fermer
                   </button>
@@ -554,7 +595,7 @@ const Budgets = () => {
                   animate={{ opacity: 1 }}
                   className="text-xs text-muted-foreground text-center mt-2"
                 >
-                  Aucune suggestion disponible. Ajoute plus de transactions.
+                  Aucune suggestion disponible.
                 </motion.p>
               )}
             </AnimatePresence>
