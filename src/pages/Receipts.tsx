@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown,
+  Printer, Download, FileDown, ZoomIn, X,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
