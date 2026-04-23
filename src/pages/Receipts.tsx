@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown,
+  Printer, Download, FileDown, ZoomIn, X,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -30,6 +30,7 @@ interface ScanItem {
   status: string;
   created_at: string;
   extracted_text: string | null;
+  signedImageUrl?: string | null;
 }
 
 interface HistoryEntry {
@@ -72,6 +73,10 @@ const Receipts = () => {
   const [editCategory, setEditCategory] = useState("");
   const [editReason, setEditReason] = useState("");
 
+  // Fullscreen image viewer
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [fullscreenScan, setFullscreenScan] = useState<ScanItem | null>(null);
+
   useEffect(() => {
     if (user && isUnlocked) fetchScans();
   }, [user, isUnlocked]);
@@ -81,6 +86,18 @@ const Receipts = () => {
     return <ReceiptsPinLock onUnlocked={() => setIsUnlocked(true)} />;
   }
 
+  const getSignedUrl = async (storagePath: string): Promise<string | null> => {
+    if (!storagePath) return null;
+    try {
+      const { data, error } = await supabase.storage
+        .from("receipts")
+        .createSignedUrl(storagePath, 3600);
+      return error ? null : data.signedUrl;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchScans = async () => {
     if (!user) return;
     setLoading(true);
@@ -89,7 +106,16 @@ const Receipts = () => {
       .select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, storage_path, status, created_at, extracted_text")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setScans((data as unknown as ScanItem[]) || []);
+    const rows = (data as unknown as ScanItem[]) || [];
+    const scansWithUrls = await Promise.all(
+      rows.map(async (scan) => ({
+        ...scan,
+        signedImageUrl: scan.storage_path
+          ? await getSignedUrl(scan.storage_path)
+          : scan.image_url || null,
+      }))
+    );
+    setScans(scansWithUrls);
     setLoading(false);
   };
 
@@ -913,28 +939,67 @@ const Receipts = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.03 * i }}
-                onClick={() => openDetail(scan)}
-                className="glass-card rounded-xl p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                className="glass-card rounded-xl p-3.5 flex items-center gap-3 active:scale-[0.98] transition-transform"
               >
-                {scan.image_url ? (
-                  <img
-                    src={scan.image_url}
-                    alt="Reçu"
-                    className={`w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-border ${
-                      isDiscreetMode ? "blur-sm" : ""
-                    }`}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">
-                      {scan.scan_type === "screenshot" ? "📱" : "🧾"}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
+                {/* Clickable thumbnail (opens fullscreen) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (scan.signedImageUrl && !isDiscreetMode) {
+                      setFullscreenImage(scan.signedImageUrl);
+                      setFullscreenScan(scan);
+                    } else {
+                      openDetail(scan);
+                    }
+                  }}
+                  className={`flex-shrink-0 ${
+                    scan.signedImageUrl && !isDiscreetMode ? "cursor-pointer" : "cursor-default"
+                  }`}
+                  aria-label={scan.signedImageUrl ? "Voir l'image en plein écran" : "Reçu"}
+                >
+                  {scan.signedImageUrl ? (
+                    <div
+                      className={`relative w-14 h-14 rounded-xl overflow-hidden border border-border transition-all hover:border-primary/50 hover:scale-105 active:scale-95 group ${
+                        isDiscreetMode ? "blur-sm" : ""
+                      }`}
+                    >
+                      <img
+                        src={scan.signedImageUrl}
+                        alt="Reçu"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const img = e.currentTarget as HTMLImageElement;
+                          img.style.display = "none";
+                          const fallback = img.nextElementSibling as HTMLElement | null;
+                          fallback?.classList.remove("hidden");
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 bg-secondary/50 items-center justify-center">
+                        <span className="text-2xl">
+                          {scan.scan_type === "screenshot" ? "📱" : "🧾"}
+                        </span>
+                      </div>
+                      {!isDiscreetMode && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <ZoomIn className="w-5 h-5 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-secondary/50 flex items-center justify-center border border-border">
+                      <span className="text-2xl">
+                        {scan.scan_type === "screenshot" ? "📱" : "🧾"}
+                      </span>
+                    </div>
+                  )}
+                </button>
+
+                {/* Body (opens detail) */}
+                <div
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => openDetail(scan)}
+                >
                   <p className="text-sm font-semibold text-foreground truncate">
                     {isDiscreetMode ? MASK : (scan.parsed_merchant || "Marchand inconnu")}
                   </p>
@@ -958,9 +1023,17 @@ const Receipts = () => {
                       ? "❌ Rejeté"
                       : "⏳ En attente"}
                   </span>
+                  {!scan.signedImageUrl && scan.status === "confirmed" && (
+                    <span className="text-xs text-muted-foreground/50 italic mt-0.5 block">
+                      Pas d'image disponible
+                    </span>
+                  )}
                 </div>
                 {scan.parsed_amount != null && (
-                  <div className="flex-shrink-0 text-right">
+                  <div
+                    className="flex-shrink-0 text-right cursor-pointer"
+                    onClick={() => openDetail(scan)}
+                  >
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       {isDiscreetMode
                         ? `${MASK_SHORT} F`
@@ -978,6 +1051,142 @@ const Receipts = () => {
           </div>
         )}
       </div>
+
+      {/* Fullscreen image viewer */}
+      <AnimatePresence>
+        {fullscreenImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col"
+            style={{ background: "rgba(0,0,0,0.97)" }}
+            onClick={() => {
+              setFullscreenImage(null);
+              setFullscreenScan(null);
+            }}
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 py-4 z-10"
+              onClick={(e) => e.stopPropagation()}
+              style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
+            >
+              <div className="min-w-0 flex-1 pr-3">
+                <p className="text-sm font-bold text-white truncate">
+                  {fullscreenScan?.parsed_merchant || "Reçu scanné"}
+                </p>
+                <p className="text-xs text-white/60 truncate">
+                  {fullscreenScan?.parsed_date ||
+                    (fullscreenScan
+                      ? new Date(fullscreenScan.created_at).toLocaleDateString("fr-FR")
+                      : "")}
+                  {fullscreenScan?.parsed_amount != null && (
+                    <span className="ml-2 text-primary font-bold">
+                      · {Number(fullscreenScan.parsed_amount).toLocaleString("fr-FR")} F
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex gap-3 items-center flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!fullscreenImage) return;
+                    try {
+                      const res = await fetch(fullscreenImage);
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `recu_${
+                        fullscreenScan?.parsed_merchant?.replace(/\s+/g, "_") || "monjeton"
+                      }_${Date.now()}.jpg`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    } catch {
+                      toast({ title: "Erreur de téléchargement", variant: "destructive" });
+                    }
+                  }}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  aria-label="Télécharger l'image"
+                >
+                  <Download className="w-5 h-5 text-white" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFullscreenImage(null);
+                    setFullscreenScan(null);
+                  }}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  aria-label="Fermer"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Image */}
+            <div
+              className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={fullscreenImage}
+                alt="Reçu plein écran"
+                className="max-w-full max-h-full object-contain rounded-xl"
+                style={{ touchAction: "pinch-zoom" }}
+              />
+            </div>
+
+            {/* Footer infos */}
+            {fullscreenScan && (
+              <div
+                className="px-4 pb-6 pt-2"
+                onClick={(e) => e.stopPropagation()}
+                style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+              >
+                <div className="glass-card rounded-2xl p-4 border border-white/10">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      {
+                        label: "Statut",
+                        value:
+                          fullscreenScan.status === "confirmed"
+                            ? "✅ Confirmé"
+                            : fullscreenScan.status === "rejected"
+                            ? "❌ Rejeté"
+                            : "⏳ En attente",
+                      },
+                      {
+                        label: "Catégorie",
+                        value: fullscreenScan.parsed_category || "—",
+                      },
+                      {
+                        label: "Type",
+                        value:
+                          fullscreenScan.scan_type === "screenshot"
+                            ? "📱 Capture"
+                            : "🧾 Ticket",
+                      },
+                    ].map((item) => (
+                      <div key={item.label} className="text-center">
+                        <p className="text-xs text-white/50 mb-1">{item.label}</p>
+                        <p className="text-xs font-semibold text-white truncate">
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </DashboardLayout>
   );
 };
