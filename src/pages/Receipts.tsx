@@ -86,6 +86,18 @@ const Receipts = () => {
     return <ReceiptsPinLock onUnlocked={() => setIsUnlocked(true)} />;
   }
 
+  const getSignedUrl = async (storagePath: string): Promise<string | null> => {
+    if (!storagePath) return null;
+    try {
+      const { data, error } = await supabase.storage
+        .from("receipts")
+        .createSignedUrl(storagePath, 3600);
+      return error ? null : data.signedUrl;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchScans = async () => {
     if (!user) return;
     setLoading(true);
@@ -94,7 +106,16 @@ const Receipts = () => {
       .select("id, scan_type, parsed_amount, parsed_merchant, parsed_category, parsed_date, parsed_currency, image_url, storage_path, status, created_at, extracted_text")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setScans((data as unknown as ScanItem[]) || []);
+    const rows = (data as unknown as ScanItem[]) || [];
+    const scansWithUrls = await Promise.all(
+      rows.map(async (scan) => ({
+        ...scan,
+        signedImageUrl: scan.storage_path
+          ? await getSignedUrl(scan.storage_path)
+          : scan.image_url || null,
+      }))
+    );
+    setScans(scansWithUrls);
     setLoading(false);
   };
 
