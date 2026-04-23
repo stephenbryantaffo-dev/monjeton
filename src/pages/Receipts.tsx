@@ -30,6 +30,7 @@ interface ScanItem {
   status: string;
   created_at: string;
   extracted_text: string | null;
+  signedImageUrl?: string | null;
 }
 
 interface HistoryEntry {
