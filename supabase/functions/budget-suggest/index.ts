@@ -135,6 +135,8 @@ ${histList}
 
 RÈGLE ABSOLUE : La somme de TOUTES tes suggestions de budget par catégorie NE DOIT JAMAIS dépasser ${fmt(totalBudget)} F CFA. C'est le budget que l'utilisateur a fixé. Respecte-le strictement.
 
+RÈGLE CRITIQUE #2 : Pour CHAQUE catégorie, le montant suggéré DOIT être SUPÉRIEUR OU ÉGAL au montant déjà dépensé sur cette catégorie ce mois (voir liste ci-dessus). Il est INTERDIT de proposer un budget inférieur à ce qui a déjà été dépensé — sinon l'utilisateur serait déjà en dépassement. Si une catégorie a déjà dépensé X F, propose au minimum X F (idéalement avec une petite marge).
+
 Génère 5 à 7 suggestions de répartition par catégorie (Alimentation, Transport, Téléphone, Shopping, Factures, Santé, Loisirs, Épargne, Autre) en tenant compte des dépenses déjà effectuées et de l'historique. Les montants suggérés doivent être RÉALISTES pour l'Afrique de l'Ouest et adaptés au budget de ${fmt(totalBudget)} F CFA. Utilise le tool "suggest_budget" pour répondre.`;
 
     const aiBody = {
