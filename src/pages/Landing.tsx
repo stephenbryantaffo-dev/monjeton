@@ -39,6 +39,10 @@ const Landing = () => {
         <SectionReveal><Suspense fallback={<SectionFallback />}><Features /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
+      <AnimatedSectionBackground variant={0} glow>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><ForWhoSection /></Suspense></SectionReveal>
+      </AnimatedSectionBackground>
+
       <AnimatedSectionBackground variant={2} glow glowBottom>
         <SectionReveal><Suspense fallback={<SectionFallback />}><AIScan /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
