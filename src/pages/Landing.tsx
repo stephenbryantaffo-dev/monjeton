@@ -8,6 +8,7 @@ import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
 
 const Stats = lazy(() => import("@/components/landing/Stats"));
 const Features = lazy(() => import("@/components/landing/Features"));
+const ForWhoSection = lazy(() => import("@/components/landing/ForWhoSection"));
 const AIScan = lazy(() => import("@/components/landing/AIScan"));
 const Enterprise = lazy(() => import("@/components/landing/Enterprise"));
 const Pricing = lazy(() => import("@/components/landing/Pricing"));
