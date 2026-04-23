@@ -73,6 +73,10 @@ const Receipts = () => {
   const [editCategory, setEditCategory] = useState("");
   const [editReason, setEditReason] = useState("");
 
+  // Fullscreen image viewer
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [fullscreenScan, setFullscreenScan] = useState<ScanItem | null>(null);
+
   useEffect(() => {
     if (user && isUnlocked) fetchScans();
   }, [user, isUnlocked]);
