@@ -135,6 +135,8 @@ ${histList}
 
 RÈGLE ABSOLUE : La somme de TOUTES tes suggestions de budget par catégorie NE DOIT JAMAIS dépasser ${fmt(totalBudget)} F CFA. C'est le budget que l'utilisateur a fixé. Respecte-le strictement.
 
+RÈGLE CRITIQUE #2 : Pour CHAQUE catégorie, le montant suggéré DOIT être SUPÉRIEUR OU ÉGAL au montant déjà dépensé sur cette catégorie ce mois (voir liste ci-dessus). Il est INTERDIT de proposer un budget inférieur à ce qui a déjà été dépensé — sinon l'utilisateur serait déjà en dépassement. Si une catégorie a déjà dépensé X F, propose au minimum X F (idéalement avec une petite marge).
+
 Génère 5 à 7 suggestions de répartition par catégorie (Alimentation, Transport, Téléphone, Shopping, Factures, Santé, Loisirs, Épargne, Autre) en tenant compte des dépenses déjà effectuées et de l'historique. Les montants suggérés doivent être RÉALISTES pour l'Afrique de l'Ouest et adaptés au budget de ${fmt(totalBudget)} F CFA. Utilise le tool "suggest_budget" pour répondre.`;
 
     const aiBody = {
@@ -227,15 +229,57 @@ Génère 5 à 7 suggestions de répartition par catégorie (Alimentation, Transp
       }))
       .filter((s: any) => s.categorie && s.montant_suggere > 0);
 
-    // Server-side recalibration safeguard
+    // Build spent lookup (case-insensitive)
+    const spentLookup: Record<string, number> = {};
+    for (const [k, v] of Object.entries(expensesByCategory)) {
+      spentLookup[k.trim().toLowerCase()] = Number(v) || 0;
+    }
+
+    // Enforce floor: montant_suggere >= already spent on that category
+    suggestions = suggestions.map((s: any) => {
+      const spent = spentLookup[s.categorie.trim().toLowerCase()] || 0;
+      if (spent > s.montant_suggere) {
+        return { ...s, montant_suggere: Math.ceil(spent) };
+      }
+      return s;
+    });
+
+    // Server-side recalibration safeguard (cap to totalBudget while preserving floors)
     if (totalBudget > 0) {
       const totalSuggere = suggestions.reduce((sum: number, s: any) => sum + s.montant_suggere, 0);
       if (totalSuggere > totalBudget && totalSuggere > 0) {
-        const ratio = totalBudget / totalSuggere;
+        const floors = suggestions.map((s: any) => spentLookup[s.categorie.trim().toLowerCase()] || 0);
+        const totalFloor = floors.reduce((a: number, b: number) => a + b, 0);
+        if (totalFloor >= totalBudget) {
+          // Spending already exceeds budget — keep floors, no scaling possible
+          suggestions = suggestions.map((s: any, i: number) => ({
+            ...s,
+            montant_suggere: Math.ceil(floors[i]),
+            pourcentage: Math.round((floors[i] / totalBudget) * 100),
+          }));
+        } else {
+          // Scale only the surplus above each floor proportionally
+          const surplusBudget = totalBudget - totalFloor;
+          const totalSurplus = suggestions.reduce(
+            (sum: number, s: any, i: number) => sum + Math.max(0, s.montant_suggere - floors[i]),
+            0
+          );
+          const ratio = totalSurplus > 0 ? surplusBudget / totalSurplus : 0;
+          suggestions = suggestions.map((s: any, i: number) => {
+            const surplus = Math.max(0, s.montant_suggere - floors[i]);
+            const newAmount = Math.floor(floors[i] + surplus * ratio);
+            return {
+              ...s,
+              montant_suggere: newAmount,
+              pourcentage: Math.round((newAmount / totalBudget) * 100),
+            };
+          });
+        }
+      } else {
+        // Recompute pourcentage based on enforced floors
         suggestions = suggestions.map((s: any) => ({
           ...s,
-          montant_suggere: Math.floor(s.montant_suggere * ratio),
-          pourcentage: Math.round((s.montant_suggere * ratio / totalBudget) * 100),
+          pourcentage: Math.round((s.montant_suggere / totalBudget) * 100),
         }));
       }
     }
