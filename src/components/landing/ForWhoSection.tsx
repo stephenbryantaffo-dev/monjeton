@@ -5,59 +5,79 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const profiles = [
   {
     id: 0,
-    emoji: "💼",
-    label: "Chefs d'entreprise",
-    tag: "GESTION PRO",
-    title: "Gardez le contrôle\nde chaque franc CFA.",
-    subtitle:
-      "Vous gérez plusieurs comptes mobile money pour votre activité ? " +
-      "Mon Jeton centralise Wave, Orange et MTN en une seule vue. " +
-      "Suivez vos entrées, vos sorties et vos caisses communes " +
-      "depuis votre téléphone.",
-    points: [
-      "Multi-portefeuilles Wave, Orange, MTN, Moov",
-      "Caisse commune pour vos équipes",
-      "Scan des reçus fournisseurs en 5 secondes",
-      "Rapports mensuels générés par l'IA",
-    ],
-    accent: "#7EC845",
-  },
-  {
-    id: 1,
     emoji: "👩‍👧",
-    label: "Les mamans",
+    label: "Nos mamans",
     tag: "BUDGET FAMILLE",
     title: "Sachez toujours\noù va l'argent du foyer.",
     subtitle:
-      "Entre les dépenses du marché, les frais scolaires et les " +
-      "cotisations de tontine, il est facile de perdre le fil. " +
-      "Mon Jeton vous aide à tout suivre simplement, même à la voix.",
+      "Entre les dépenses du marché, les frais scolaires et les cotisations de tontine, " +
+      "il est facile de perdre le fil. Mon Jeton vous aide à tout suivre simplement, même à la voix.",
     points: [
       "Saisie vocale : dites vos dépenses sans taper",
       "Budget mensuel par catégorie avec alertes",
       "Gestion de tontine avec vos amies",
       "Mode discret pour préserver la confidentialité",
     ],
+    image:
+      "https://images.unsplash.com/photo-1531983412531-1f49a365ffed?w=900&auto=format&fit=crop&q=60",
     accent: "#00D2B4",
   },
   {
-    id: 2,
+    id: 1,
     emoji: "🎯",
-    label: "Les jeunes ambitieux",
+    label: "Les jeunes",
     tag: "DISCIPLINE FINANCIÈRE",
     title: "Construisez votre\navenir financier dès aujourd'hui.",
     subtitle:
-      "Commencer à gérer son argent tôt, c'est la meilleure décision. " +
-      "Mon Jeton vous guide avec un score financier hebdomadaire, " +
-      "des objectifs d'épargne et un assistant IA qui vous coache " +
-      "en franc CFA.",
+      "Commencer à gérer son argent tôt, c'est la meilleure décision. Mon Jeton vous guide " +
+      "avec un score financier hebdomadaire, des objectifs d'épargne et un coach IA en franc CFA.",
     points: [
       "Score financier IA chaque semaine",
       "Objectifs d'épargne avec calcul quotidien",
-      "Assistant Claude pour vos questions finances",
+      "Assistant IA pour vos questions finances",
       "Budgets intelligents par catégorie",
     ],
+    image:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=900&auto=format&fit=crop&q=60",
     accent: "#FFB347",
+  },
+  {
+    id: 2,
+    emoji: "💼",
+    label: "Chefs d'entreprise",
+    tag: "GESTION PRO",
+    title: "Gardez le contrôle\nde chaque franc CFA.",
+    subtitle:
+      "Vous gérez plusieurs comptes mobile money pour votre activité ? Mon Jeton centralise " +
+      "Wave, Orange et MTN en une seule vue. Suivez vos entrées, vos sorties et vos caisses.",
+    points: [
+      "Multi-portefeuilles Wave, Orange, MTN, Moov",
+      "Caisse commune pour vos équipes",
+      "Scan des reçus fournisseurs en 5 secondes",
+      "Rapports mensuels générés par l'IA",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&auto=format&fit=crop&q=60",
+    accent: "#7CFF3A",
+  },
+  {
+    id: 3,
+    emoji: "🛒",
+    label: "Les commerçants",
+    tag: "COMMERCE QUOTIDIEN",
+    title: "Vos ventes et vos stocks,\nsous contrôle.",
+    subtitle:
+      "Boutique, étal au marché ou commerce mobile : enregistrez chaque vente en un geste, " +
+      "suivez vos marges et identifiez vos meilleurs jours grâce aux rapports automatiques.",
+    points: [
+      "Enregistrement rapide des ventes du jour",
+      "Suivi des dettes clients (crédits)",
+      "Rapports journaliers et hebdomadaires",
+      "Scan instantané des reçus fournisseurs",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=900&auto=format&fit=crop&q=60",
+    accent: "#FF6B9D",
   },
 ];
 
@@ -81,7 +101,7 @@ const ForWhoSection = () => {
   };
 
   useEffect(() => {
-    const timer = setInterval(next, 5000);
+    const timer = setInterval(next, 5500);
     return () => clearInterval(timer);
   }, [next]);
 
@@ -134,7 +154,7 @@ const ForWhoSection = () => {
       </div>
 
       {/* Tabs */}
-      <div className="relative max-w-4xl mx-auto flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-10">
+      <div className="relative max-w-5xl mx-auto flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-10">
         {profiles.map((p, i) => (
           <button
             key={p.id}
@@ -157,136 +177,137 @@ const ForWhoSection = () => {
         ))}
       </div>
 
-      {/* Card */}
-      <div className="relative max-w-6xl mx-auto">
+      {/* Carrousel d'images (centrale + adjacentes) */}
+      <div className="relative max-w-6xl mx-auto mb-8 sm:mb-10">
+        <div className="relative h-[260px] sm:h-[340px] flex items-center justify-center">
+          {profiles.map((p, index) => {
+            const offset = index - active;
+            const total = profiles.length;
+            let pos = ((offset + total) % total);
+            if (pos > Math.floor(total / 2)) pos = pos - total;
+
+            const isCenter = pos === 0;
+            const isAdjacent = Math.abs(pos) === 1;
+            const isVisible = Math.abs(pos) <= 1;
+
+            return (
+              <motion.div
+                key={p.id}
+                onClick={() => goTo(index)}
+                animate={{
+                  x: pos * (typeof window !== 'undefined' && window.innerWidth < 640 ? 180 : 300),
+                  scale: isCenter ? 1 : isAdjacent ? 0.75 : 0.5,
+                  opacity: isVisible ? (isCenter ? 1 : 0.5) : 0,
+                  zIndex: isCenter ? 30 : isAdjacent ? 20 : 10,
+                }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                className="absolute cursor-pointer rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl"
+                style={{
+                  width: '320px',
+                  height: '240px',
+                  border: `2px solid ${isCenter ? p.accent : 'rgba(255,255,255,0.1)'}`,
+                  boxShadow: isCenter ? `0 20px 60px ${p.accent}50` : '0 10px 30px rgba(0,0,0,0.4)',
+                  pointerEvents: isVisible ? 'auto' : 'none',
+                }}
+              >
+                <img
+                  src={p.image}
+                  alt={p.label}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(180deg, transparent 40%, ${p.accent}40 100%, rgba(5,7,10,0.9) 100%)`,
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-[#05070A] via-[#05070A]/80 to-transparent">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{p.emoji}</span>
+                    <span className="text-sm sm:text-base font-bold text-[#EAFBEA]">
+                      {p.label}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Card descriptive */}
+      <div className="relative max-w-5xl mx-auto">
         <div className="relative rounded-3xl overflow-hidden border border-[rgba(255,255,255,0.08)] bg-[rgba(124,255,58,0.02)] backdrop-blur-xl">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={profile.id}
               custom={direction}
-              initial={{ opacity: 0, x: direction * 40 }}
+              initial={{ opacity: 0, x: direction * 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -direction * 40 }}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 p-6 sm:p-10 md:p-14"
+              exit={{ opacity: 0, x: -direction * 30 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="p-6 sm:p-10 md:p-12 flex flex-col gap-5"
             >
-              {/* Texte */}
-              <div className="flex flex-col gap-5">
-                <span
-                  className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-widest"
-                  style={{
-                    background: `${profile.accent}15`,
-                    color: profile.accent,
-                    border: `1px solid ${profile.accent}40`,
-                  }}
-                >
-                  <span>{profile.emoji}</span>
-                  {profile.tag}
-                </span>
+              <span
+                className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-widest"
+                style={{
+                  background: `${profile.accent}15`,
+                  color: profile.accent,
+                  border: `1px solid ${profile.accent}40`,
+                }}
+              >
+                <span>{profile.emoji}</span>
+                {profile.tag}
+              </span>
 
-                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#EAFBEA] leading-tight whitespace-pre-line">
-                  {profile.title}
-                </h3>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#EAFBEA] leading-tight whitespace-pre-line">
+                {profile.title}
+              </h3>
 
-                <p className="text-sm sm:text-base text-[rgba(234,251,234,0.7)] leading-relaxed">
-                  {profile.subtitle}
-                </p>
+              <p className="text-sm sm:text-base text-[rgba(234,251,234,0.7)] leading-relaxed max-w-3xl">
+                {profile.subtitle}
+              </p>
 
-                <ul className="flex flex-col gap-3 mt-2">
-                  {profile.points.map((point, i) => (
-                    <motion.li
-                      key={point}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + i * 0.08 }}
-                      className="flex items-start gap-3"
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                {profile.points.map((point, i) => (
+                  <motion.li
+                    key={point}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + i * 0.08 }}
+                    className="flex items-start gap-3"
+                  >
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                      style={{
+                        background: `${profile.accent}25`,
+                        border: `1px solid ${profile.accent}60`,
+                      }}
                     >
                       <span
-                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                        style={{
-                          background: `${profile.accent}25`,
-                          border: `1px solid ${profile.accent}60`,
-                        }}
-                      >
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ background: profile.accent }}
-                        />
-                      </span>
-                      <span className="text-sm text-[rgba(234,251,234,0.85)]">
-                        {point}
-                      </span>
-                    </motion.li>
-                  ))}
-                </ul>
-
-                <a
-                  href="/signup"
-                  className="inline-flex items-center justify-center self-start mt-4 px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
-                  style={{
-                    background: profile.accent,
-                    color: '#05070A',
-                    boxShadow: `0 0 24px ${profile.accent}60`,
-                  }}
-                >
-                  Commencer gratuitement →
-                </a>
-              </div>
-
-              {/* Illustration */}
-              <div className="relative min-h-[280px] sm:min-h-[360px] flex items-center justify-center">
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: `radial-gradient(circle, ${profile.accent}30 0%, transparent 65%)`,
-                    filter: 'blur(40px)',
-                  }}
-                />
-
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative text-[120px] sm:text-[180px] leading-none select-none"
-                  style={{
-                    filter: `drop-shadow(0 10px 30px ${profile.accent}60)`,
-                  }}
-                >
-                  {profile.emoji}
-                </motion.div>
-
-                {profile.points.slice(0, 2).map((point, i) => (
-                  <motion.div
-                    key={point}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{
-                      opacity: 1,
-                      y: [0, i === 0 ? -8 : 8, 0],
-                    }}
-                    transition={{
-                      opacity: { delay: 0.3 + i * 0.2 },
-                      y: {
-                        duration: 4 + i,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      },
-                    }}
-                    className="absolute px-3 py-2 rounded-xl text-[11px] sm:text-xs font-semibold backdrop-blur-md"
-                    style={{
-                      background: 'rgba(5,7,10,0.7)',
-                      border: `1px solid ${profile.accent}40`,
-                      color: profile.accent,
-                      top: i === 0 ? '15%' : 'auto',
-                      bottom: i === 1 ? '15%' : 'auto',
-                      left: i === 0 ? '5%' : 'auto',
-                      right: i === 1 ? '5%' : 'auto',
-                    }}
-                  >
-                    ✓ {point.split(':')[0]}
-                  </motion.div>
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ background: profile.accent }}
+                      />
+                    </span>
+                    <span className="text-sm text-[rgba(234,251,234,0.85)]">
+                      {point}
+                    </span>
+                  </motion.li>
                 ))}
-              </div>
+              </ul>
+
+              <a
+                href="/signup"
+                className="inline-flex items-center justify-center self-start mt-4 px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
+                style={{
+                  background: profile.accent,
+                  color: '#05070A',
+                  boxShadow: `0 0 24px ${profile.accent}60`,
+                }}
+              >
+                Commencer gratuitement →
+              </a>
             </motion.div>
           </AnimatePresence>
         </div>
