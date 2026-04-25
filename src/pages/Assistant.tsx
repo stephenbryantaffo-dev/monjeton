@@ -178,6 +178,11 @@ const Assistant = () => {
   const [continuousMode, setContinuousMode] = useState(false);
   const [confirmedCards, setConfirmedCards] = useState<Set<number>>(new Set());
   const [pendingAction, setPendingAction] = useState<any>(null);
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Array<{ id: string; title: string; last_message_at: string }>>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -195,16 +200,49 @@ const Assistant = () => {
   }, []);
 
   useEffect(() => {
-    if (user) loadHistory();
+    if (user) bootstrapConversations();
   }, [user]);
 
-  const loadHistory = async () => {
+  // Load conversation list and resume the most recent one
+  const bootstrapConversations = async () => {
     if (!user) return;
+    const { data: convs } = await supabase
+      .from("assistant_conversations")
+      .select("id,title,last_message_at")
+      .eq("user_id", user.id)
+      .order("last_message_at", { ascending: false });
+
+    setConversations(convs || []);
+
+    if (convs && convs.length > 0) {
+      await openConversation(convs[0].id);
+    } else {
+      // No conversation yet — keep ephemeral state; one will be created on first message
+      setCurrentConvId(null);
+      setMessages(initialMessages);
+    }
+  };
+
+  const refreshConversations = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("assistant_conversations")
+      .select("id,title,last_message_at")
+      .eq("user_id", user.id)
+      .order("last_message_at", { ascending: false });
+    setConversations(data || []);
+  };
+
+  const openConversation = async (convId: string) => {
+    if (!user) return;
+    setCurrentConvId(convId);
+    setConfirmedCards(new Set());
     const { data } = await supabase
       .from("assistant_messages")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
+
     if (data && data.length > 0) {
       const restored: Message[] = [
         initialMessages[0],
@@ -215,25 +253,82 @@ const Assistant = () => {
         })),
       ];
       setMessages(restored);
+    } else {
+      setMessages(initialMessages);
     }
+    setHistoryOpen(false);
+  };
+
+  const ensureConversation = async (firstUserMessage?: string): Promise<string | null> => {
+    if (!user) return null;
+    if (currentConvId) return currentConvId;
+    const title = firstUserMessage
+      ? firstUserMessage.slice(0, 60) + (firstUserMessage.length > 60 ? "…" : "")
+      : "Nouvelle conversation";
+    const { data, error } = await supabase
+      .from("assistant_conversations")
+      .insert({ user_id: user.id, title })
+      .select("id")
+      .single();
+    if (error || !data) return null;
+    setCurrentConvId(data.id);
+    refreshConversations();
+    return data.id;
   };
 
   const saveMessage = async (role: string, content: string) => {
     if (!user) return;
+    const convId = await ensureConversation(role === "user" ? content : undefined);
+    if (!convId) return;
     await supabase.from("assistant_messages").insert({
       user_id: user.id,
+      conversation_id: convId,
       message_role: role,
       content,
     });
   };
 
+  const startNewConversation = () => {
+    setCurrentConvId(null);
+    setMessages(initialMessages);
+    setConfirmedCards(new Set());
+    setHistoryOpen(false);
+    toast({ title: "Nouvelle conversation", description: "Commence à écrire pour la créer." });
+  };
+
+  const renameConversation = async (id: string, newTitle: string) => {
+    if (!user || !newTitle.trim()) return;
+    await supabase
+      .from("assistant_conversations")
+      .update({ title: newTitle.trim() })
+      .eq("id", id);
+    setRenamingId(null);
+    refreshConversations();
+  };
+
+  const deleteConversation = async (id: string) => {
+    if (!user) return;
+    await supabase.from("assistant_messages").delete().eq("conversation_id", id);
+    await supabase.from("assistant_conversations").delete().eq("id", id);
+    if (currentConvId === id) {
+      setCurrentConvId(null);
+      setMessages(initialMessages);
+    }
+    refreshConversations();
+  };
+
   const clearHistory = async () => {
     if (!user) return;
+    // Delete ALL conversations + messages for this user (full reset)
     await supabase.from("assistant_messages").delete().eq("user_id", user.id);
+    await supabase.from("assistant_conversations").delete().eq("user_id", user.id);
+    setCurrentConvId(null);
     setMessages(initialMessages);
+    setConversations([]);
     setConfirmedCards(new Set());
     toast({ title: "Historique supprimé", description: "Toutes les conversations ont été effacées." });
   };
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
