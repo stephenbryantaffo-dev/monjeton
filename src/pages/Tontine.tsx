@@ -615,6 +615,49 @@ const TontinePage = () => {
         </div>
       )}
 
+      {/* ─── ADD MEMBER MODAL ─── */}
+      <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader>
+            <DialogTitle>Ajouter un membre</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Nom *</label>
+              <Input
+                autoFocus
+                value={newMemberName}
+                onChange={(e) => setNewMemberName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") addMember(); }}
+                placeholder="Ex: Aïssatou Diallo"
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Téléphone (optionnel)</label>
+              <Input
+                value={newMemberPhone}
+                onChange={(e) => setNewMemberPhone(e.target.value)}
+                placeholder="+225 ..."
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setAddMemberOpen(false)} className="flex-1 glass">
+                Annuler
+              </Button>
+              <Button
+                onClick={addMember}
+                disabled={addingMember || !newMemberName.trim()}
+                className="flex-1 gradient-primary text-primary-foreground"
+              >
+                {addingMember ? "Ajout..." : "Ajouter"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ─── PAYMENT MODAL ─── */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>
         <DialogContent className="glass-card border-border">
