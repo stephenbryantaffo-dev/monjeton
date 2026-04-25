@@ -229,22 +229,35 @@ const TontinePage = () => {
 
   const addMember = async () => {
     if (!newMemberName.trim() || !selected || addingMember) return;
+    if (!isOwner) {
+      toast({ title: "Action réservée au créateur", variant: "destructive" });
+      return;
+    }
     setAddingMember(true);
     try {
-      const { error } = await supabase.from("tontine_members" as any).insert({
+      const phoneTrimmed = newMemberPhone.trim() || null;
+      const { data: inserted, error } = await supabase.from("tontine_members" as any).insert({
         tontine_id: selected.id,
         name: newMemberName.trim(),
-        phone: newMemberPhone.trim() || null,
+        phone: phoneTrimmed,
         is_owner: false,
-      });
+      } as any).select().single();
       if (error) throw error;
 
-      // If a cycle is open, bump its expected total to reflect the new member
       if (openCycle) {
         await supabase
           .from("tontine_cycles" as any)
           .update({ total_expected: (members.length + 1) * selected.contribution_amount } as any)
           .eq("id", openCycle.id);
+      }
+
+      if (inserted && phoneTrimmed) {
+        await sendWhatsAppTontine(
+          selected.name,
+          inserted as unknown as TontineMember,
+          "bienvenue",
+          { montant: selected.contribution_amount, tontineId: selected.id }
+        );
       }
 
       toast({ title: `${newMemberName.trim()} ajouté ✅` });
@@ -261,13 +274,33 @@ const TontinePage = () => {
   };
 
   const startFirstCycle = async () => {
-    if (!selected || members.length === 0) return;
+    if (!selected || members.length === 0 || !isOwner) return;
     try {
       const cycleInfo = generateCycleInfo(selected, 1, members.length);
-      const { error } = await supabase
+      const { data: cycle, error } = await supabase
         .from("tontine_cycles" as any)
-        .insert({ tontine_id: selected.id, ...cycleInfo } as any);
+        .insert({ tontine_id: selected.id, ...cycleInfo } as any)
+        .select().single();
       if (error) throw error;
+
+      const cyc: any = cycle;
+      for (const m of members) {
+        if (m.phone) {
+          await sendWhatsAppTontine(selected.name, m, "nouveau_cycle", {
+            montant: selected.contribution_amount,
+            cycleNumero: cyc?.cycle_number || 1,
+            dateProchaineEcheance: cyc?.end_date,
+            tontineId: selected.id,
+          });
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+      await logNotification({
+        tontineId: selected.id,
+        type: "systeme",
+        message: `Cycle 1 ouvert pour la tontine "${selected.name}".`,
+        canal: "systeme",
+      });
       toast({ title: "Premier cycle ouvert ✅" });
       await loadDetail(selected.id);
     } catch (e: any) {
@@ -277,16 +310,95 @@ const TontinePage = () => {
   };
 
   const closeCycle = async () => {
-    if (!openCycle || !selected) return;
+    if (!openCycle || !selected || !isOwner) return;
     try {
       await supabase.from("tontine_cycles").update({ status: "closed" } as any).eq("id", openCycle.id);
       const nextInfo = generateCycleInfo(selected, openCycle.cycle_number + 1, members.length, openCycle.end_date);
-      await supabase.from("tontine_cycles").insert({ tontine_id: selected.id, ...nextInfo } as any);
+      const { data: newCycle } = await supabase
+        .from("tontine_cycles")
+        .insert({ tontine_id: selected.id, ...nextInfo } as any)
+        .select().single();
+
+      const nc: any = newCycle;
+      for (const m of members) {
+        if (m.phone) {
+          await sendWhatsAppTontine(selected.name, m, "nouveau_cycle", {
+            montant: selected.contribution_amount,
+            cycleNumero: nc?.cycle_number || openCycle.cycle_number + 1,
+            dateProchaineEcheance: nc?.end_date,
+            tontineId: selected.id,
+          });
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
       toast({ title: "Cycle clôturé, nouveau cycle ouvert ✅" });
       loadDetail(selected.id);
     } catch {
       toast({ title: "Erreur clôture", variant: "destructive" });
     }
+  };
+
+  const pauseTontine = async () => {
+    if (!selected || !isOwner) return;
+    const { error } = await supabase.from("tontines").update({ status: "paused" } as any).eq("id", selected.id);
+    if (error) { toast({ title: "Erreur pause", variant: "destructive" }); return; }
+    await logNotification({
+      tontineId: selected.id, type: "systeme",
+      message: `Tontine "${selected.name}" mise en pause.`, canal: "systeme",
+    });
+    toast({ title: "⏸️ Tontine mise en pause", description: "Les cotisations sont suspendues." });
+    loadTontines();
+  };
+
+  const resumeTontine = async () => {
+    if (!selected || !isOwner) return;
+    const { error } = await supabase.from("tontines").update({ status: "active" } as any).eq("id", selected.id);
+    if (error) { toast({ title: "Erreur reprise", variant: "destructive" }); return; }
+    await logNotification({
+      tontineId: selected.id, type: "systeme",
+      message: `Tontine "${selected.name}" reprise.`, canal: "systeme",
+    });
+    toast({ title: "▶️ Tontine reprise ✅" });
+    loadTontines();
+  };
+
+  const closeTontine = async () => {
+    if (!selected || !isOwner) return;
+    for (const m of members) {
+      if (m.phone) {
+        await sendWhatsAppTontine(selected.name, m, "cloture", { tontineId: selected.id });
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    }
+    await supabase.from("tontines").update({ status: "closed" } as any).eq("id", selected.id);
+    await logNotification({
+      tontineId: selected.id, type: "cloture",
+      message: `Tontine "${selected.name}" clôturée.`, canal: "systeme",
+    });
+    const notifiedCount = members.filter((m) => m.phone).length;
+    toast({
+      title: "🔒 Tontine clôturée",
+      description: notifiedCount > 0 ? `${notifiedCount} membre(s) notifié(s) sur WhatsApp` : undefined,
+    });
+    loadTontines();
+  };
+
+  const remindAllUnpaid = async () => {
+    if (!selected || !openCycle || !isOwner) return;
+    const paidIds = new Set(
+      members.filter(m => {
+        const total = payments.filter(p => p.member_id === m.id).reduce((s, p) => s + Number(p.amount_paid), 0);
+        return total >= selected.contribution_amount;
+      }).map(m => m.id)
+    );
+    const count = await notifyAllUnpaid(
+      members, paidIds, selected.name,
+      openCycle.cycle_number, selected.contribution_amount, selected.id, openCycle.end_date
+    );
+    toast({
+      title: count > 0 ? `${count} rappel(s) envoyé(s) 📲` : "Tous les membres ont déjà payé ✅",
+      description: count > 0 ? "WhatsApp ouvert pour chaque membre" : undefined,
+    });
   };
 
   const deleteTontine = async (id: string) => {
