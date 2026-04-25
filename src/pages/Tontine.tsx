@@ -558,6 +558,9 @@ const TontinePage = () => {
         </>
       )}
 
+      {/* ─── HISTORIQUE (cycles + paiements + filtres + PDF) ─── */}
+      {selected && <TontineHistory tontine={selected} />}
+
       {/* ─── MONTHLY SUMMARY & REPORTS ─── */}
       {(closedCycles.length > 0 || openCycle) && (
         <div className="mb-4">
