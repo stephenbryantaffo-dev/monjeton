@@ -19,6 +19,7 @@ import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import CreateTontineModal from "@/components/tontine/CreateTontineModal";
 import ReportsTab from "@/components/tontine/ReportsTab";
+import TontineHistory from "@/components/tontine/TontineHistory";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, FREQ_LABELS, FREQ_BADGE_CLASSES } from "@/components/tontine/types";
 import { fmt, generateCycleInfo } from "@/components/tontine/utils";
 
@@ -556,6 +557,9 @@ const TontinePage = () => {
           </AnimatePresence>
         </>
       )}
+
+      {/* ─── HISTORIQUE (cycles + paiements + filtres + PDF) ─── */}
+      {selected && <TontineHistory tontine={selected} />}
 
       {/* ─── MONTHLY SUMMARY & REPORTS ─── */}
       {(closedCycles.length > 0 || openCycle) && (
