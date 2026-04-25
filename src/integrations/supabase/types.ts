@@ -1107,6 +1107,7 @@ export type Database = {
           is_owner: boolean
           name: string
           phone: string | null
+          role: string
           tontine_id: string
         }
         Insert: {
@@ -1115,6 +1116,7 @@ export type Database = {
           is_owner?: boolean
           name: string
           phone?: string | null
+          role?: string
           tontine_id: string
         }
         Update: {
@@ -1123,11 +1125,60 @@ export type Database = {
           is_owner?: boolean
           name?: string
           phone?: string | null
+          role?: string
           tontine_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "tontine_members_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tontine_notifications: {
+        Row: {
+          canal: string
+          envoye_at: string
+          id: string
+          membre_id: string | null
+          message: string
+          statut: string
+          tontine_id: string
+          type: string
+        }
+        Insert: {
+          canal?: string
+          envoye_at?: string
+          id?: string
+          membre_id?: string | null
+          message: string
+          statut?: string
+          tontine_id: string
+          type: string
+        }
+        Update: {
+          canal?: string
+          envoye_at?: string
+          id?: string
+          membre_id?: string | null
+          message?: string
+          statut?: string
+          tontine_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_notifications_membre_id_fkey"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "tontine_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tontine_notifications_tontine_id_fkey"
             columns: ["tontine_id"]
             isOneToOne: false
             referencedRelation: "tontines"
@@ -1698,6 +1749,10 @@ export type Database = {
           _user_id: string
           _workspace_id: string
         }
+        Returns: boolean
+      }
+      is_tontine_owner: {
+        Args: { p_tontine_id: string; p_user_id: string }
         Returns: boolean
       }
       is_workspace_member: {
