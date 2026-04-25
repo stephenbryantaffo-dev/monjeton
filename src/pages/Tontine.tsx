@@ -55,6 +55,12 @@ const TontinePage = () => {
   const [payNote, setPayNote] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Add-member modal (from detail view)
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+  const [addingMember, setAddingMember] = useState(false);
+
   // History & Reports
   const [showHistory, setShowHistory] = useState(false);
   const [showReports, setShowReports] = useState(false);
@@ -203,6 +209,55 @@ const TontinePage = () => {
       toast({ title: "Erreur paiement", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const addMember = async () => {
+    if (!newMemberName.trim() || !selected || addingMember) return;
+    setAddingMember(true);
+    try {
+      const { error } = await supabase.from("tontine_members" as any).insert({
+        tontine_id: selected.id,
+        name: newMemberName.trim(),
+        phone: newMemberPhone.trim() || null,
+        is_owner: false,
+      });
+      if (error) throw error;
+
+      // If a cycle is open, bump its expected total to reflect the new member
+      if (openCycle) {
+        await supabase
+          .from("tontine_cycles" as any)
+          .update({ total_expected: (members.length + 1) * selected.contribution_amount } as any)
+          .eq("id", openCycle.id);
+      }
+
+      toast({ title: `${newMemberName.trim()} ajouté ✅` });
+      setNewMemberName("");
+      setNewMemberPhone("");
+      setAddMemberOpen(false);
+      await loadDetail(selected.id);
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Erreur ajout membre", description: e?.message, variant: "destructive" });
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  const startFirstCycle = async () => {
+    if (!selected || members.length === 0) return;
+    try {
+      const cycleInfo = generateCycleInfo(selected, 1, members.length);
+      const { error } = await supabase
+        .from("tontine_cycles" as any)
+        .insert({ tontine_id: selected.id, ...cycleInfo } as any);
+      if (error) throw error;
+      toast({ title: "Premier cycle ouvert ✅" });
+      await loadDetail(selected.id);
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Erreur ouverture cycle", description: e?.message, variant: "destructive" });
     }
   };
 
@@ -374,11 +429,25 @@ const TontinePage = () => {
           )}
         </motion.div>
       ) : (
-        <p className="text-center text-muted-foreground text-sm py-4 mb-4">Aucun cycle ouvert</p>
+        <div className="glass-card rounded-2xl p-4 mb-4 text-center">
+          <p className="text-sm text-muted-foreground mb-3">Aucun cycle ouvert</p>
+          {members.length > 0 ? (
+            <Button onClick={startFirstCycle} className="gradient-primary text-primary-foreground">
+              <Plus className="w-4 h-4 mr-1" /> Ouvrir le 1er cycle
+            </Button>
+          ) : (
+            <p className="text-xs text-muted-foreground">Ajoute d'abord des membres ci-dessous</p>
+          )}
+        </div>
       )}
 
       {/* ─── MEMBERS ─── */}
-      <p className="text-sm font-semibold text-foreground mb-2">Membres</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-semibold text-foreground">Membres ({members.length})</p>
+        <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
+          <Plus className="w-3.5 h-3.5 mr-1" /> Membre
+        </Button>
+      </div>
       <div className="space-y-2 mb-4">
         {statuses.length > 0 ? statuses.map((s, i) => (
           <motion.div
@@ -545,6 +614,49 @@ const TontinePage = () => {
           </AnimatePresence>
         </div>
       )}
+
+      {/* ─── ADD MEMBER MODAL ─── */}
+      <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader>
+            <DialogTitle>Ajouter un membre</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Nom *</label>
+              <Input
+                autoFocus
+                value={newMemberName}
+                onChange={(e) => setNewMemberName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") addMember(); }}
+                placeholder="Ex: Aïssatou Diallo"
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Téléphone (optionnel)</label>
+              <Input
+                value={newMemberPhone}
+                onChange={(e) => setNewMemberPhone(e.target.value)}
+                placeholder="+225 ..."
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setAddMemberOpen(false)} className="flex-1 glass">
+                Annuler
+              </Button>
+              <Button
+                onClick={addMember}
+                disabled={addingMember || !newMemberName.trim()}
+                className="flex-1 gradient-primary text-primary-foreground"
+              >
+                {addingMember ? "Ajout..." : "Ajouter"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ─── PAYMENT MODAL ─── */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>
