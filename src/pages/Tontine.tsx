@@ -55,6 +55,12 @@ const TontinePage = () => {
   const [payNote, setPayNote] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Add-member modal (from detail view)
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+  const [addingMember, setAddingMember] = useState(false);
+
   // History & Reports
   const [showHistory, setShowHistory] = useState(false);
   const [showReports, setShowReports] = useState(false);
