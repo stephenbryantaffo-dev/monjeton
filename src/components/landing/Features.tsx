@@ -1,21 +1,79 @@
 import { motion } from "framer-motion";
-import { Wallet, ArrowLeftRight, BarChart3 } from "lucide-react";
+import {
+  Mic,
+  ScanLine,
+  Sparkles,
+  Users,
+  PiggyBank,
+  Wallet,
+  Target,
+  TrendingUp,
+  Receipt,
+  WifiOff,
+  EyeOff,
+  Brain,
+} from "lucide-react";
 
 const features = [
   {
+    icon: Mic,
+    title: "Saisie Vocale IA",
+    desc: "Dites « J'ai payé taxi 3 000 francs » pendant que vous montez dans la voiture. C'est enregistré avant d'arriver.",
+  },
+  {
+    icon: ScanLine,
+    title: "Scan OCR",
+    desc: "Votre ticket de caisse devient une transaction propre, catégorisée et archivée — en 5 secondes, photo comprise.",
+  },
+  {
+    icon: Sparkles,
+    title: "Assistant Claude",
+    desc: "« Combien j'ai dépensé en transport ce mois ? » — Réponse instantanée, en FCFA, basée sur vos vraies données.",
+  },
+  {
+    icon: Users,
+    title: "Tontine Intelligente",
+    desc: "Fini les tableaux Excel et les disputes. Chaque membre voit ce qu'il doit, vous voyez qui a payé.",
+  },
+  {
+    icon: PiggyBank,
+    title: "Caisse Commune",
+    desc: "Pour le terrain, la fête ou l'urgence. Chacun cotise, tout le monde voit le solde. Aucune mauvaise surprise.",
+  },
+  {
     icon: Wallet,
-    title: "Suivi des dépenses en FCFA",
-    desc: "Chaque transaction est enregistrée, catégorisée et analysée automatiquement pour vous donner une vision claire de vos finances.",
+    title: "Multi-Portefeuilles",
+    desc: "4 opérateurs, un seul tableau de bord. Vous savez exactement où est votre argent à tout moment.",
   },
   {
-    icon: ArrowLeftRight,
-    title: "Conversion automatique USD/EUR vers FCFA",
-    desc: "Scannez une facture en dollars ou en euros. Mon Jeton détecte la devise et convertit instantanément au taux du jour.",
+    icon: Target,
+    title: "Budgets Intelligents",
+    desc: "Mon Jeton vous prévient avant que vous dépassiez — pas après. L'IA suggère une répartition basée sur vos habitudes.",
   },
   {
-    icon: BarChart3,
-    title: "Rapports clairs : semaine / mois / année",
-    desc: "Des graphiques intuitifs pour comprendre vos habitudes de dépenses et mieux planifier votre budget.",
+    icon: TrendingUp,
+    title: "Objectifs d'Épargne",
+    desc: "Fixez un objectif. Mon Jeton calcule combien économiser par jour. Versez quand vous pouvez. L'app suit tout.",
+  },
+  {
+    icon: Receipt,
+    title: "Mes Reçus Sécurisés",
+    desc: "Chaque reçu confirmé est stocké dans le cloud, protégé par PIN, exportable en PDF. Vos preuves toujours disponibles.",
+  },
+  {
+    icon: WifiOff,
+    title: "Mode Hors-Ligne",
+    desc: "Le réseau coupe ? Mon Jeton continue. Vos transactions attendent en local et synchronisent dès que la connexion revient.",
+  },
+  {
+    icon: EyeOff,
+    title: "PIN & Mode Discret",
+    desc: "Quelqu'un regarde votre écran ? Un tap masque tous les montants. Votre argent reste votre affaire.",
+  },
+  {
+    icon: Brain,
+    title: "Score Financier IA",
+    desc: "Chaque semaine, Claude analyse vos dépenses et vous donne UN conseil concret pour mieux gérer la semaine suivante.",
   },
 ];
 
@@ -28,11 +86,11 @@ const Features = () => (
         viewport={{ once: true }}
         className="text-center mb-16"
       >
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#EAFBEA] mb-4">
-          Tout ce qu'il vous faut pour gérer votre argent
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#EAFBEA] mb-4 font-syne">
+          Tout ce dont vous avez besoin.
         </h2>
         <p className="text-[rgba(234,251,234,0.72)] max-w-xl mx-auto">
-          Des outils puissants pensés pour l'Afrique, accessibles à tous.
+          Pas une app de plus. L'app qui remplace toutes les autres — pour votre argent mobile money, vos groupes et vos projets.
         </p>
       </motion.div>
 
@@ -43,7 +101,7 @@ const Features = () => (
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
+            transition={{ delay: (i % 3) * 0.1 }}
             whileHover={{ y: -6, boxShadow: "0 0 30px rgba(124,255,58,0.12)" }}
             className="group rounded-2xl bg-[rgba(124,255,58,0.03)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[22px] p-5 sm:p-8 hover:border-[rgba(124,255,58,0.4)] transition-all"
           >
