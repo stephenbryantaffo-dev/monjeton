@@ -368,10 +368,3 @@ ${userContext}`;
     });
   }
 });
-  } catch (e) {
-    console.error("chat error:", e);
-    return new Response(JSON.stringify({ error: "Erreur de traitement" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
