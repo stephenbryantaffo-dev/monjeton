@@ -33,10 +33,10 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Configuration serveur manquante (ANTHROPIC_API_KEY). Contacte le support." }),
+        JSON.stringify({ error: "Configuration serveur manquante (LOVABLE_API_KEY). Contacte le support." }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -318,61 +318,37 @@ ${userContext}`;
       );
     }
 
-    // Convert messages to Anthropic format (system is separate, images use Anthropic source format)
-    const anthropicMessages = conversationMessages.map((msg: any) => {
-      if (Array.isArray(msg.content)) {
-        const content = msg.content.map((part: any) => {
-          if (part.type === "image_url") {
-            const url = part.image_url?.url || "";
-            const match = url.match(/^data:([^;]+);base64,(.+)$/);
-            if (match) {
-              return { type: "image", source: { type: "base64", media_type: match[1], data: match[2] } };
-            }
-            return { type: "text", text: "[Image non supportée]" };
-          }
-          return part;
-        });
-        return { role: msg.role, content };
-      }
-      return { role: msg.role, content: msg.content };
-    });
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Call Lovable AI Gateway (OpenAI-compatible, supports OpenAI image_url format directly)
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2048,
-        system: systemPrompt,
-        messages: anthropicMessages,
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...conversationMessages,
+        ],
         stream: true,
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Anthropic API error:", response.status, errText);
+      console.error("Lovable AI gateway error:", response.status, errText);
 
-      if (response.status === 401) {
-        return new Response(
-          JSON.stringify({ error: "Clé API Anthropic invalide." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Trop de requêtes. Réessaie dans quelques secondes." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 529) {
+      if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Service IA temporairement surchargé. Réessaie dans un instant." }),
-          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Crédits IA épuisés. Ajoute des crédits dans les paramètres de ton workspace Lovable." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       return new Response(
@@ -381,57 +357,8 @@ ${userContext}`;
       );
     }
 
-    // Transform Anthropic SSE stream to OpenAI-compatible SSE format
-    const encoder = new TextEncoder();
-    const readable = new ReadableStream({
-      async start(controller) {
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-
-            let newlineIdx: number;
-            while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
-              let line = buffer.slice(0, newlineIdx);
-              buffer = buffer.slice(newlineIdx + 1);
-              if (line.endsWith("\r")) line = line.slice(0, -1);
-              if (!line.startsWith("data: ") || line.trim() === "") continue;
-
-              const jsonStr = line.slice(6).trim();
-              if (!jsonStr || jsonStr === "[DONE]") continue;
-
-              try {
-                const event = JSON.parse(jsonStr);
-
-                if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
-                  const openaiChunk = {
-                    choices: [{ delta: { content: event.delta.text }, index: 0, finish_reason: null }],
-                  };
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(openaiChunk)}\n\n`));
-                }
-
-                if (event.type === "message_stop") {
-                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                }
-              } catch { /* skip malformed */ }
-            }
-          }
-          // Ensure DONE is sent
-          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        } catch (err) {
-          console.error("Stream transform error:", err);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(readable, {
+    // Stream is already in OpenAI-compatible SSE format — pass through directly
+    return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
