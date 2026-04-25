@@ -212,6 +212,55 @@ const TontinePage = () => {
     }
   };
 
+  const addMember = async () => {
+    if (!newMemberName.trim() || !selected || addingMember) return;
+    setAddingMember(true);
+    try {
+      const { error } = await supabase.from("tontine_members" as any).insert({
+        tontine_id: selected.id,
+        name: newMemberName.trim(),
+        phone: newMemberPhone.trim() || null,
+        is_owner: false,
+      });
+      if (error) throw error;
+
+      // If a cycle is open, bump its expected total to reflect the new member
+      if (openCycle) {
+        await supabase
+          .from("tontine_cycles" as any)
+          .update({ total_expected: (members.length + 1) * selected.contribution_amount } as any)
+          .eq("id", openCycle.id);
+      }
+
+      toast({ title: `${newMemberName.trim()} ajouté ✅` });
+      setNewMemberName("");
+      setNewMemberPhone("");
+      setAddMemberOpen(false);
+      await loadDetail(selected.id);
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Erreur ajout membre", description: e?.message, variant: "destructive" });
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  const startFirstCycle = async () => {
+    if (!selected || members.length === 0) return;
+    try {
+      const cycleInfo = generateCycleInfo(selected, 1, members.length);
+      const { error } = await supabase
+        .from("tontine_cycles" as any)
+        .insert({ tontine_id: selected.id, ...cycleInfo } as any);
+      if (error) throw error;
+      toast({ title: "Premier cycle ouvert ✅" });
+      await loadDetail(selected.id);
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Erreur ouverture cycle", description: e?.message, variant: "destructive" });
+    }
+  };
+
   const closeCycle = async () => {
     if (!openCycle || !selected) return;
     try {
