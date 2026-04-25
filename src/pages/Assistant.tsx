@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check } from "lucide-react";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,6 +178,11 @@ const Assistant = () => {
   const [continuousMode, setContinuousMode] = useState(false);
   const [confirmedCards, setConfirmedCards] = useState<Set<number>>(new Set());
   const [pendingAction, setPendingAction] = useState<any>(null);
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Array<{ id: string; title: string; last_message_at: string }>>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -194,16 +200,49 @@ const Assistant = () => {
   }, []);
 
   useEffect(() => {
-    if (user) loadHistory();
+    if (user) bootstrapConversations();
   }, [user]);
 
-  const loadHistory = async () => {
+  // Load conversation list and resume the most recent one
+  const bootstrapConversations = async () => {
     if (!user) return;
+    const { data: convs } = await supabase
+      .from("assistant_conversations")
+      .select("id,title,last_message_at")
+      .eq("user_id", user.id)
+      .order("last_message_at", { ascending: false });
+
+    setConversations(convs || []);
+
+    if (convs && convs.length > 0) {
+      await openConversation(convs[0].id);
+    } else {
+      // No conversation yet — keep ephemeral state; one will be created on first message
+      setCurrentConvId(null);
+      setMessages(initialMessages);
+    }
+  };
+
+  const refreshConversations = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("assistant_conversations")
+      .select("id,title,last_message_at")
+      .eq("user_id", user.id)
+      .order("last_message_at", { ascending: false });
+    setConversations(data || []);
+  };
+
+  const openConversation = async (convId: string) => {
+    if (!user) return;
+    setCurrentConvId(convId);
+    setConfirmedCards(new Set());
     const { data } = await supabase
       .from("assistant_messages")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
+
     if (data && data.length > 0) {
       const restored: Message[] = [
         initialMessages[0],
@@ -214,25 +253,82 @@ const Assistant = () => {
         })),
       ];
       setMessages(restored);
+    } else {
+      setMessages(initialMessages);
     }
+    setHistoryOpen(false);
+  };
+
+  const ensureConversation = async (firstUserMessage?: string): Promise<string | null> => {
+    if (!user) return null;
+    if (currentConvId) return currentConvId;
+    const title = firstUserMessage
+      ? firstUserMessage.slice(0, 60) + (firstUserMessage.length > 60 ? "…" : "")
+      : "Nouvelle conversation";
+    const { data, error } = await supabase
+      .from("assistant_conversations")
+      .insert({ user_id: user.id, title })
+      .select("id")
+      .single();
+    if (error || !data) return null;
+    setCurrentConvId(data.id);
+    refreshConversations();
+    return data.id;
   };
 
   const saveMessage = async (role: string, content: string) => {
     if (!user) return;
+    const convId = await ensureConversation(role === "user" ? content : undefined);
+    if (!convId) return;
     await supabase.from("assistant_messages").insert({
       user_id: user.id,
+      conversation_id: convId,
       message_role: role,
       content,
     });
   };
 
+  const startNewConversation = () => {
+    setCurrentConvId(null);
+    setMessages(initialMessages);
+    setConfirmedCards(new Set());
+    setHistoryOpen(false);
+    toast({ title: "Nouvelle conversation", description: "Commence à écrire pour la créer." });
+  };
+
+  const renameConversation = async (id: string, newTitle: string) => {
+    if (!user || !newTitle.trim()) return;
+    await supabase
+      .from("assistant_conversations")
+      .update({ title: newTitle.trim() })
+      .eq("id", id);
+    setRenamingId(null);
+    refreshConversations();
+  };
+
+  const deleteConversation = async (id: string) => {
+    if (!user) return;
+    await supabase.from("assistant_messages").delete().eq("conversation_id", id);
+    await supabase.from("assistant_conversations").delete().eq("id", id);
+    if (currentConvId === id) {
+      setCurrentConvId(null);
+      setMessages(initialMessages);
+    }
+    refreshConversations();
+  };
+
   const clearHistory = async () => {
     if (!user) return;
+    // Delete ALL conversations + messages for this user (full reset)
     await supabase.from("assistant_messages").delete().eq("user_id", user.id);
+    await supabase.from("assistant_conversations").delete().eq("user_id", user.id);
+    setCurrentConvId(null);
     setMessages(initialMessages);
+    setConversations([]);
     setConfirmedCards(new Set());
     toast({ title: "Historique supprimé", description: "Toutes les conversations ont été effacées." });
   };
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1130,36 +1226,150 @@ const Assistant = () => {
     <DashboardLayout title="Assistant IA">
       <div className="flex flex-col" style={{ height: "calc(100vh - 160px)" }}>
         {/* Top action bar */}
-        <div className="flex items-center justify-end gap-2 pb-3">
-          <button
-            onClick={toggleContinuousMode}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              continuousMode
-                ? "bg-primary/20 text-primary border border-primary/30"
-                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-            }`}
-          >
-            <Mic className="w-3.5 h-3.5" />
-            <span>{continuousMode ? "Conversation ON" : "Conversation"}</span>
-          </button>
-          <ConfirmDeleteDialog
-            onConfirm={clearHistory}
-            title="Supprimer l'historique"
-            description="Tout l'historique de discussion sera supprimé définitivement. Continuer ?"
-          >
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-destructive hover:bg-secondary/80 transition-colors">
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Effacer</span>
+        <div className="flex items-center justify-between gap-2 pb-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+              <SheetTrigger asChild>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Historique</span>
+                  {conversations.length > 0 && (
+                    <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 rounded-full">{conversations.length}</span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[320px] sm:w-[380px] flex flex-col">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center justify-between">
+                    <span>Mes conversations</span>
+                    <button
+                      onClick={startNewConversation}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg gradient-primary text-primary-foreground text-xs font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Nouvelle
+                    </button>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto mt-4 space-y-1.5">
+                  {conversations.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Aucune conversation pour l'instant.
+                    </p>
+                  )}
+                  {conversations.map((c) => {
+                    const isActive = c.id === currentConvId;
+                    const isRenaming = renamingId === c.id;
+                    return (
+                      <div
+                        key={c.id}
+                        className={`group rounded-lg p-2.5 transition-colors ${
+                          isActive ? "bg-primary/15 border border-primary/30" : "bg-secondary hover:bg-secondary/80"
+                        }`}
+                      >
+                        {isRenaming ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") renameConversation(c.id, renameValue);
+                                if (e.key === "Escape") setRenamingId(null);
+                              }}
+                              autoFocus
+                              className="h-7 text-sm"
+                            />
+                            <button
+                              onClick={() => renameConversation(c.id, renameValue)}
+                              className="p-1.5 rounded-md hover:bg-primary/20 text-primary"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => openConversation(c.id)}
+                              className="flex-1 min-w-0 text-left"
+                            >
+                              <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : "text-foreground"}`}>
+                                {c.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(c.last_message_at).toLocaleString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </button>
+                            <button
+                              onClick={() => { setRenamingId(c.id); setRenameValue(c.title); }}
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              aria-label="Renommer"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <ConfirmDeleteDialog
+                              onConfirm={() => deleteConversation(c.id)}
+                              title="Supprimer la conversation"
+                              description="Cette conversation et tous ses messages seront supprimés définitivement."
+                            >
+                              <button
+                                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                aria-label="Supprimer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </ConfirmDeleteDialog>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
+            <button
+              onClick={startNewConversation}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Nouvelle</span>
             </button>
-          </ConfirmDeleteDialog>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Quitter</span>
-          </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleContinuousMode}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                continuousMode
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5" />
+              <span>{continuousMode ? "Conversation ON" : "Conversation"}</span>
+            </button>
+            <ConfirmDeleteDialog
+              onConfirm={clearHistory}
+              title="Tout effacer"
+              description="Toutes les conversations seront supprimées définitivement. Continuer ?"
+            >
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-destructive hover:bg-secondary/80 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tout effacer</span>
+              </button>
+            </ConfirmDeleteDialog>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Quitter</span>
+            </button>
+          </div>
         </div>
+
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-3 pb-4">
