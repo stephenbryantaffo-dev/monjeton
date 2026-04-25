@@ -1,85 +1,147 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
-const profiles = [
+type AccentToken = 'primary' | 'accent' | 'neon-yellow';
+
+const profiles: {
+  id: number;
+  emoji: string;
+  label: string;
+  tag: string;
+  title: string;
+  subtitle: string;
+  points: string[];
+  image: string;
+  accent: AccentToken;
+}[] = [
   {
     id: 0,
-    emoji: "👩‍👧",
-    label: "Nos mamans",
-    tag: "BUDGET FAMILLE",
+    emoji: '👩‍👧',
+    label: 'Nos mamans',
+    tag: 'BUDGET FAMILLE',
     title: "Sachez toujours\noù va l'argent du foyer.",
     subtitle:
       "Entre les dépenses du marché, les frais scolaires et les cotisations de tontine, " +
-      "il est facile de perdre le fil. Mon Jeton vous aide à tout suivre simplement, même à la voix.",
+      'il est facile de perdre le fil. Mon Jeton vous aide à tout suivre simplement, même à la voix.',
     points: [
-      "Saisie vocale : dites vos dépenses sans taper",
-      "Budget mensuel par catégorie avec alertes",
-      "Gestion de tontine avec vos amies",
-      "Mode discret pour préserver la confidentialité",
+      'Saisie vocale : dites vos dépenses sans taper',
+      'Budget mensuel par catégorie avec alertes',
+      'Gestion de tontine avec vos amies',
+      'Mode discret pour préserver la confidentialité',
     ],
     image:
-      "https://images.unsplash.com/photo-1531983412531-1f49a365ffed?w=900&auto=format&fit=crop&q=60",
-    accent: "#00D2B4",
+      'https://images.unsplash.com/photo-1531983412531-1f49a365ffed?w=900&auto=format&fit=crop&q=60',
+    accent: 'primary',
   },
   {
     id: 1,
-    emoji: "🎯",
-    label: "Les jeunes",
-    tag: "DISCIPLINE FINANCIÈRE",
-    title: "Construisez votre\navenir financier dès aujourd'hui.",
+    emoji: '🎯',
+    label: 'Les jeunes',
+    tag: 'DISCIPLINE FINANCIÈRE',
+    title: 'Construisez votre\navenir financier dès aujourd’hui.',
     subtitle:
-      "Commencer à gérer son argent tôt, c'est la meilleure décision. Mon Jeton vous guide " +
+      "Commencer à gérer son argent tôt, c’est la meilleure décision. Mon Jeton vous guide " +
       "avec un score financier hebdomadaire, des objectifs d'épargne et un coach IA en franc CFA.",
     points: [
-      "Score financier IA chaque semaine",
-      "Objectifs d'épargne avec calcul quotidien",
-      "Assistant IA pour vos questions finances",
-      "Budgets intelligents par catégorie",
+      'Score financier IA chaque semaine',
+      'Objectifs d’épargne avec calcul quotidien',
+      'Assistant IA pour vos questions finances',
+      'Budgets intelligents par catégorie',
     ],
     image:
-      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=900&auto=format&fit=crop&q=60",
-    accent: "#FFB347",
+      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=900&auto=format&fit=crop&q=60',
+    accent: 'neon-yellow',
   },
   {
     id: 2,
-    emoji: "💼",
+    emoji: '💼',
     label: "Chefs d'entreprise",
-    tag: "GESTION PRO",
-    title: "Gardez le contrôle\nde chaque franc CFA.",
+    tag: 'GESTION PRO',
+    title: 'Gardez le contrôle\nde chaque franc CFA.',
     subtitle:
-      "Vous gérez plusieurs comptes mobile money pour votre activité ? Mon Jeton centralise " +
-      "Wave, Orange et MTN en une seule vue. Suivez vos entrées, vos sorties et vos caisses.",
+      'Vous gérez plusieurs comptes mobile money pour votre activité ? Mon Jeton centralise ' +
+      'Wave, Orange et MTN en une seule vue. Suivez vos entrées, vos sorties et vos caisses.',
     points: [
-      "Multi-portefeuilles Wave, Orange, MTN, Moov",
-      "Caisse commune pour vos équipes",
-      "Scan des reçus fournisseurs en 5 secondes",
-      "Rapports mensuels générés par l'IA",
+      'Multi-portefeuilles Wave, Orange, MTN, Moov',
+      'Caisse commune pour vos équipes',
+      'Scan des reçus fournisseurs en 5 secondes',
+      'Rapports mensuels générés par l’IA',
     ],
     image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&auto=format&fit=crop&q=60",
-    accent: "#7CFF3A",
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&auto=format&fit=crop&q=60',
+    accent: 'primary',
   },
   {
     id: 3,
-    emoji: "🛒",
-    label: "Les commerçants",
-    tag: "COMMERCE QUOTIDIEN",
-    title: "Vos ventes et vos stocks,\nsous contrôle.",
+    emoji: '🛒',
+    label: 'Les commerçants',
+    tag: 'COMMERCE QUOTIDIEN',
+    title: 'Vos ventes et vos stocks,\nsous contrôle.',
     subtitle:
-      "Boutique, étal au marché ou commerce mobile : enregistrez chaque vente en un geste, " +
-      "suivez vos marges et identifiez vos meilleurs jours grâce aux rapports automatiques.",
+      'Boutique, étal au marché ou commerce mobile : enregistrez chaque vente en un geste, ' +
+      'suivez vos marges et identifiez vos meilleurs jours grâce aux rapports automatiques.',
     points: [
-      "Enregistrement rapide des ventes du jour",
-      "Suivi des dettes clients (crédits)",
-      "Rapports journaliers et hebdomadaires",
-      "Scan instantané des reçus fournisseurs",
+      'Enregistrement rapide des ventes du jour',
+      'Suivi des dettes clients (crédits)',
+      'Rapports journaliers et hebdomadaires',
+      'Scan instantané des reçus fournisseurs',
     ],
     image:
-      "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=900&auto=format&fit=crop&q=60",
-    accent: "#FF6B9D",
+      'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=900&auto=format&fit=crop&q=60',
+    accent: 'accent',
   },
 ];
+
+// Map accent token -> tailwind utility classes (semantic tokens only)
+const accentClasses: Record<
+  AccentToken,
+  {
+    bg: string;
+    bgSoft: string;
+    text: string;
+    border: string;
+    ring: string;
+    glow: string;
+    button: 'default' | 'accent';
+    dot: string;
+  }
+> = {
+  primary: {
+    bg: 'bg-primary',
+    bgSoft: 'bg-primary/10',
+    text: 'text-primary',
+    border: 'border-primary',
+    ring: 'ring-primary/40',
+    glow: 'neon-glow',
+    button: 'default',
+    dot: 'bg-primary',
+  },
+  accent: {
+    bg: 'bg-accent',
+    bgSoft: 'bg-accent/10',
+    text: 'text-accent',
+    border: 'border-accent',
+    ring: 'ring-accent/40',
+    glow: 'neon-glow-purple',
+    button: 'accent',
+    dot: 'bg-accent',
+  },
+  'neon-yellow': {
+    bg: 'bg-[hsl(var(--neon-yellow))]',
+    bgSoft: 'bg-[hsl(var(--neon-yellow)/0.1)]',
+    text: 'text-[hsl(var(--neon-yellow))]',
+    border: 'border-[hsl(var(--neon-yellow))]',
+    ring: 'ring-[hsl(var(--neon-yellow)/0.4)]',
+    glow: 'shadow-[0_0_20px_hsl(var(--neon-yellow)/0.35),0_0_60px_hsl(var(--neon-yellow)/0.12)]',
+    button: 'default',
+    dot: 'bg-[hsl(var(--neon-yellow))]',
+  },
+};
 
 const ForWhoSection = () => {
   const [active, setActive] = useState(0);
@@ -106,6 +168,7 @@ const ForWhoSection = () => {
   }, [next]);
 
   const profile = profiles[active];
+  const a = accentClasses[profile.accent];
 
   return (
     <section
@@ -113,77 +176,65 @@ const ForWhoSection = () => {
       className="relative py-16 sm:py-24 px-4 sm:px-5 overflow-hidden"
       style={{ scrollMarginTop: 80 }}
     >
-      {/* Glow dynamique */}
+      {/* Glow d'ambiance basé sur l'accent actif */}
       <motion.div
         key={`glow-${profile.id}`}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5 }}
+        animate={{ opacity: 0.4 }}
         transition={{ duration: 1 }}
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-        style={{
-          background: `radial-gradient(circle, ${profile.accent}30 0%, transparent 70%)`,
-          filter: 'blur(60px)',
-        }}
+        aria-hidden
+        className={cn(
+          'absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none blur-3xl',
+          a.bgSoft,
+        )}
       />
 
       {/* Header */}
       <div className="relative max-w-6xl mx-auto text-center mb-10 sm:mb-14">
-        <span
-          className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest mb-4"
-          style={{
-            background: 'rgba(124,255,58,0.08)',
-            color: '#7CFF3A',
-            border: '1px solid rgba(124,255,58,0.25)',
-          }}
+        <Badge
+          variant="outline"
+          className="mb-4 border-primary/30 bg-primary/10 text-primary tracking-widest"
         >
           POUR QUI ?
-        </span>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#EAFBEA] leading-tight">
-          Mon Jeton s'adapte
+        </Badge>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-tight">
+          Mon Jeton s’adapte
           <br />
-          <span
-            className="bg-clip-text text-transparent"
-            style={{
-              backgroundImage:
-                'linear-gradient(135deg, #7CFF3A 0%, #00D2B4 100%)',
-            }}
-          >
-            à votre vie.
-          </span>
+          <span className="text-gradient-hero">à votre vie.</span>
         </h2>
       </div>
 
       {/* Tabs */}
       <div className="relative max-w-5xl mx-auto flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-10">
-        {profiles.map((p, i) => (
-          <button
-            key={p.id}
-            onClick={() => goTo(i)}
-            className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300"
-            style={{
-              background:
-                active === i ? p.accent : 'rgba(255,255,255,0.05)',
-              color: active === i ? '#05070A' : '#8892A4',
-              border: `1px solid ${
-                active === i ? p.accent : 'rgba(255,255,255,0.08)'
-              }`,
-              boxShadow:
-                active === i ? `0 0 20px ${p.accent}50` : 'none',
-            }}
-          >
-            <span>{p.emoji}</span>
-            <span>{p.label}</span>
-          </button>
-        ))}
+        {profiles.map((p, i) => {
+          const pa = accentClasses[p.accent];
+          const isActive = active === i;
+          return (
+            <button
+              key={p.id}
+              onClick={() => goTo(i)}
+              className={cn(
+                'flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 border',
+                isActive
+                  ? cn(pa.bg, 'text-primary-foreground border-transparent', pa.glow)
+                  : 'bg-secondary/60 text-muted-foreground border-border hover:text-foreground hover:bg-secondary',
+              )}
+            >
+              <span>{p.emoji}</span>
+              <span>{p.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Carrousel d'images (centrale + adjacentes) */}
+      {/* Carrousel d'images */}
       <div className="relative max-w-6xl mx-auto mb-8 sm:mb-10">
         <div className="relative h-[260px] sm:h-[340px] flex items-center justify-center">
           {profiles.map((p, index) => {
+            const pa = accentClasses[p.accent];
             const offset = index - active;
             const total = profiles.length;
-            let pos = ((offset + total) % total);
+            let pos = (offset + total) % total;
             if (pos > Math.floor(total / 2)) pos = pos - total;
 
             const isCenter = pos === 0;
@@ -191,22 +242,29 @@ const ForWhoSection = () => {
             const isVisible = Math.abs(pos) <= 1;
 
             return (
-              <motion.div
+              <motion.button
+                type="button"
                 key={p.id}
                 onClick={() => goTo(index)}
+                aria-label={p.label}
                 animate={{
-                  x: pos * (typeof window !== 'undefined' && window.innerWidth < 640 ? 180 : 300),
+                  x:
+                    pos *
+                    (typeof window !== 'undefined' && window.innerWidth < 640
+                      ? 180
+                      : 300),
                   scale: isCenter ? 1 : isAdjacent ? 0.75 : 0.5,
                   opacity: isVisible ? (isCenter ? 1 : 0.5) : 0,
                   zIndex: isCenter ? 30 : isAdjacent ? 20 : 10,
                 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="absolute cursor-pointer rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl"
+                className={cn(
+                  'absolute cursor-pointer rounded-2xl overflow-hidden border-2 shadow-xl',
+                  isCenter ? cn(pa.border, pa.glow) : 'border-border',
+                )}
                 style={{
                   width: '320px',
                   height: '240px',
-                  border: `2px solid ${isCenter ? p.accent : 'rgba(255,255,255,0.1)'}`,
-                  boxShadow: isCenter ? `0 20px 60px ${p.accent}50` : '0 10px 30px rgba(0,0,0,0.4)',
                   pointerEvents: isVisible ? 'auto' : 'none',
                 }}
               >
@@ -217,20 +275,18 @@ const ForWhoSection = () => {
                   className="w-full h-full object-cover"
                 />
                 <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `linear-gradient(180deg, transparent 40%, ${p.accent}40 100%, rgba(5,7,10,0.9) 100%)`,
-                  }}
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent"
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-[#05070A] via-[#05070A]/80 to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{p.emoji}</span>
-                    <span className="text-sm sm:text-base font-bold text-[#EAFBEA]">
+                    <span className="text-sm sm:text-base font-bold text-foreground">
                       {p.label}
                     </span>
                   </div>
                 </div>
-              </motion.div>
+              </motion.button>
             );
           })}
         </div>
@@ -238,7 +294,7 @@ const ForWhoSection = () => {
 
       {/* Card descriptive */}
       <div className="relative max-w-5xl mx-auto">
-        <div className="relative rounded-3xl overflow-hidden border border-[rgba(255,255,255,0.08)] bg-[rgba(124,255,58,0.02)] backdrop-blur-xl">
+        <Card className="glass-card overflow-hidden border-border">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={profile.id}
@@ -249,23 +305,24 @@ const ForWhoSection = () => {
               transition={{ duration: 0.4, ease: 'easeOut' }}
               className="p-6 sm:p-10 md:p-12 flex flex-col gap-5"
             >
-              <span
-                className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-widest"
-                style={{
-                  background: `${profile.accent}15`,
-                  color: profile.accent,
-                  border: `1px solid ${profile.accent}40`,
-                }}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'self-start tracking-widest gap-2',
+                  a.bgSoft,
+                  a.text,
+                  'border-current/40',
+                )}
               >
                 <span>{profile.emoji}</span>
                 {profile.tag}
-              </span>
+              </Badge>
 
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#EAFBEA] leading-tight whitespace-pre-line">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight whitespace-pre-line">
                 {profile.title}
               </h3>
 
-              <p className="text-sm sm:text-base text-[rgba(234,251,234,0.7)] leading-relaxed max-w-3xl">
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
                 {profile.subtitle}
               </p>
 
@@ -279,73 +336,70 @@ const ForWhoSection = () => {
                     className="flex items-start gap-3"
                   >
                     <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                      style={{
-                        background: `${profile.accent}25`,
-                        border: `1px solid ${profile.accent}60`,
-                      }}
+                      className={cn(
+                        'flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 border',
+                        a.bgSoft,
+                        a.border,
+                      )}
                     >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ background: profile.accent }}
-                      />
+                      <span className={cn('w-1.5 h-1.5 rounded-full', a.dot)} />
                     </span>
-                    <span className="text-sm text-[rgba(234,251,234,0.85)]">
-                      {point}
-                    </span>
+                    <span className="text-sm text-foreground/85">{point}</span>
                   </motion.li>
                 ))}
               </ul>
 
-              <a
-                href="/signup"
-                className="inline-flex items-center justify-center self-start mt-4 px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
-                style={{
-                  background: profile.accent,
-                  color: '#05070A',
-                  boxShadow: `0 0 24px ${profile.accent}60`,
-                }}
+              <Button
+                asChild
+                size="lg"
+                variant={a.button}
+                className="self-start mt-4"
               >
-                Commencer gratuitement →
-              </a>
+                <a href="/signup">Commencer gratuitement →</a>
+              </Button>
             </motion.div>
           </AnimatePresence>
-        </div>
+        </Card>
 
         {/* Navigation */}
         <div className="flex items-center justify-center gap-4 mt-6">
-          <button
+          <Button
+            variant="glass"
+            size="icon"
             onClick={prev}
             aria-label="Précédent"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.1)] hover:border-[rgba(124,255,58,0.3)] transition-all"
+            className="rounded-full"
           >
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
-            {profiles.map((p, i) => (
-              <button
-                key={p.id}
-                onClick={() => goTo(i)}
-                aria-label={`Aller à ${p.label}`}
-                className="transition-all duration-300 rounded-full"
-                style={{
-                  width: active === i ? 24 : 8,
-                  height: 8,
-                  background:
-                    active === i ? p.accent : 'rgba(255,255,255,0.2)',
-                }}
-              />
-            ))}
+            {profiles.map((p, i) => {
+              const pa = accentClasses[p.accent];
+              const isActive = active === i;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => goTo(i)}
+                  aria-label={`Aller à ${p.label}`}
+                  className={cn(
+                    'h-2 rounded-full transition-all duration-300',
+                    isActive ? cn('w-6', pa.dot) : 'w-2 bg-muted',
+                  )}
+                />
+              );
+            })}
           </div>
 
-          <button
+          <Button
+            variant="glass"
+            size="icon"
             onClick={next}
             aria-label="Suivant"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.1)] hover:border-[rgba(124,255,58,0.3)] transition-all"
+            className="rounded-full"
           >
             <ChevronRight className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
       </div>
     </section>
