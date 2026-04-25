@@ -628,77 +628,118 @@ const TontinePage = () => {
         </div>
       )}
 
-      {/* ─── MEMBERS ─── */}
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm font-semibold text-foreground">Membres ({members.length})</p>
-        <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
-          <Plus className="w-3.5 h-3.5 mr-1" /> Membre
-        </Button>
-      </div>
-      <div className="space-y-2 mb-4">
-        {statuses.length > 0 ? statuses.map((s, i) => (
-          <motion.div
-            key={s.member.id}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.04 * i }}
-          >
-            <div className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-                <p className="text-sm font-bold text-primary-foreground">
-                  {s.member.name.charAt(0).toUpperCase()}
-                </p>
-              </div>
-              {/* Name + status */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {s.member.name}
-                  {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
-                </p>
-              </div>
-              {/* Action + status */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {s.status === "paid" ? (
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                ) : (
-                  <button
-                    onClick={() => openPayModal(s.member)}
-                    className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium"
-                  >
-                    + Payer
-                  </button>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )) : members.length > 0 ? members.map((m, i) => (
-          <div key={m.id} className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-              <p className="text-sm font-bold text-primary-foreground">
-                {m.name.charAt(0).toUpperCase()}
-              </p>
-            </div>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="text-sm font-semibold text-foreground truncate">
-                {m.name}
-                {m.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
-              </p>
-            </div>
-          </div>
-        )) : (
-          <p className="text-xs text-muted-foreground text-center py-4">Aucun membre</p>
-        )}
+      {/* ─── DETAIL TABS ─── */}
+      <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
+        {[
+          { key: "membres" as const, label: "Membres", icon: <Users className="w-3.5 h-3.5" /> },
+          { key: "calendrier" as const, label: "Calendrier", icon: <Calendar className="w-3.5 h-3.5" /> },
+          { key: "notifs" as const, label: "Notifs", icon: <Bell className="w-3.5 h-3.5" /> },
+        ].map(t => (
+          <button key={t.key} onClick={() => setDetailTab(t.key)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              detailTab === t.key ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
+            }`}>
+            {t.icon} {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* ─── ACTIONS ─── */}
-      {openCycle && (
-        <Button onClick={closeCycle} variant="glass" className="w-full mb-4">
-          <Lock className="w-4 h-4 mr-2" /> Clôturer ce cycle
-        </Button>
+      {/* ─── TAB: MEMBRES ─── */}
+      {detailTab === "membres" && (<>
+        {isOwner && openCycle && isActive && statuses.some(s => s.status !== "paid") && (
+          <button onClick={remindAllUnpaid}
+            className="w-full glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-primary/30 mb-3 hover:bg-primary/5 transition-colors">
+            <MessageCircle className="w-4 h-4 text-primary" />
+            <span className="text-xs font-bold text-foreground">
+              Rappeler tous les non-payés ({statuses.filter(s => s.status !== "paid").length})
+            </span>
+          </button>
+        )}
+
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-semibold text-foreground">Membres ({members.length})</p>
+          <Button size="sm" variant="outline" className="glass" disabled={!isOwner || isClosed}
+            onClick={() => setAddMemberOpen(true)}>
+            <Plus className="w-3.5 h-3.5 mr-1" /> Membre
+          </Button>
+        </div>
+        <div className="space-y-2 mb-4">
+          {statuses.length > 0 ? statuses.map((s, i) => (
+            <motion.div key={s.member.id}
+              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.04 * i }}>
+              <div className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                  <p className="text-sm font-bold text-primary-foreground">{s.member.name.charAt(0).toUpperCase()}</p>
+                </div>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {s.member.name}
+                    {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {s.member.phone && s.status !== "paid" && isOwner && isActive && openCycle && (
+                    <button
+                      onClick={() => sendWhatsAppTontine(selected!.name, s.member, "rappel_cotisation", {
+                        montant: selected!.contribution_amount,
+                        cycleNumero: openCycle.cycle_number,
+                        dateProchaineEcheance: openCycle.end_date,
+                        tontineId: selected!.id,
+                      })}
+                      className="p-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
+                      title="Rappeler sur WhatsApp">
+                      <MessageCircle className="w-4 h-4 text-primary" />
+                    </button>
+                  )}
+                  {s.status === "paid" ? (
+                    <CheckCircle className="w-5 h-5 text-primary" />
+                  ) : (
+                    <button
+                      onClick={() => openPayModal(s.member)}
+                      disabled={!isOwner || !isActive}
+                      className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+                      + Payer
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )) : members.length > 0 ? members.map((m) => (
+            <div key={m.id} className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                <p className="text-sm font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</p>
+              </div>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {m.name}
+                  {m.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                </p>
+              </div>
+            </div>
+          )) : (
+            <p className="text-xs text-muted-foreground text-center py-4">Aucun membre</p>
+          )}
+        </div>
+
+        {openCycle && isOwner && isActive && (
+          <Button onClick={closeCycle} variant="glass" className="w-full mb-4">
+            <Lock className="w-4 h-4 mr-2" /> Clôturer ce cycle
+          </Button>
+        )}
+      </>)}
+
+      {/* ─── TAB: CALENDRIER ─── */}
+      {detailTab === "calendrier" && selected && (
+        <CalendrierTab tontine={selected} openCycle={openCycle} members={members} />
+      )}
+
+      {/* ─── TAB: NOTIFICATIONS ─── */}
+      {detailTab === "notifs" && selected && (
+        <NotificationHistory tontineId={selected.id} />
       )}
 
       {/* ─── HISTORY ─── */}
