@@ -1226,36 +1226,150 @@ const Assistant = () => {
     <DashboardLayout title="Assistant IA">
       <div className="flex flex-col" style={{ height: "calc(100vh - 160px)" }}>
         {/* Top action bar */}
-        <div className="flex items-center justify-end gap-2 pb-3">
-          <button
-            onClick={toggleContinuousMode}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              continuousMode
-                ? "bg-primary/20 text-primary border border-primary/30"
-                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-            }`}
-          >
-            <Mic className="w-3.5 h-3.5" />
-            <span>{continuousMode ? "Conversation ON" : "Conversation"}</span>
-          </button>
-          <ConfirmDeleteDialog
-            onConfirm={clearHistory}
-            title="Supprimer l'historique"
-            description="Tout l'historique de discussion sera supprimé définitivement. Continuer ?"
-          >
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-destructive hover:bg-secondary/80 transition-colors">
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Effacer</span>
+        <div className="flex items-center justify-between gap-2 pb-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+              <SheetTrigger asChild>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Historique</span>
+                  {conversations.length > 0 && (
+                    <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 rounded-full">{conversations.length}</span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[320px] sm:w-[380px] flex flex-col">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center justify-between">
+                    <span>Mes conversations</span>
+                    <button
+                      onClick={startNewConversation}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg gradient-primary text-primary-foreground text-xs font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Nouvelle
+                    </button>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto mt-4 space-y-1.5">
+                  {conversations.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Aucune conversation pour l'instant.
+                    </p>
+                  )}
+                  {conversations.map((c) => {
+                    const isActive = c.id === currentConvId;
+                    const isRenaming = renamingId === c.id;
+                    return (
+                      <div
+                        key={c.id}
+                        className={`group rounded-lg p-2.5 transition-colors ${
+                          isActive ? "bg-primary/15 border border-primary/30" : "bg-secondary hover:bg-secondary/80"
+                        }`}
+                      >
+                        {isRenaming ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") renameConversation(c.id, renameValue);
+                                if (e.key === "Escape") setRenamingId(null);
+                              }}
+                              autoFocus
+                              className="h-7 text-sm"
+                            />
+                            <button
+                              onClick={() => renameConversation(c.id, renameValue)}
+                              className="p-1.5 rounded-md hover:bg-primary/20 text-primary"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => openConversation(c.id)}
+                              className="flex-1 min-w-0 text-left"
+                            >
+                              <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : "text-foreground"}`}>
+                                {c.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(c.last_message_at).toLocaleString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </button>
+                            <button
+                              onClick={() => { setRenamingId(c.id); setRenameValue(c.title); }}
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              aria-label="Renommer"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <ConfirmDeleteDialog
+                              onConfirm={() => deleteConversation(c.id)}
+                              title="Supprimer la conversation"
+                              description="Cette conversation et tous ses messages seront supprimés définitivement."
+                            >
+                              <button
+                                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                aria-label="Supprimer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </ConfirmDeleteDialog>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
+            <button
+              onClick={startNewConversation}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Nouvelle</span>
             </button>
-          </ConfirmDeleteDialog>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Quitter</span>
-          </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleContinuousMode}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                continuousMode
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5" />
+              <span>{continuousMode ? "Conversation ON" : "Conversation"}</span>
+            </button>
+            <ConfirmDeleteDialog
+              onConfirm={clearHistory}
+              title="Tout effacer"
+              description="Toutes les conversations seront supprimées définitivement. Continuer ?"
+            >
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-destructive hover:bg-secondary/80 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tout effacer</span>
+              </button>
+            </ConfirmDeleteDialog>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Quitter</span>
+            </button>
+          </div>
         </div>
+
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-3 pb-4">
