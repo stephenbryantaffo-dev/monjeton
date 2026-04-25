@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import CaisseView from "@/components/caisse/CaisseView";
@@ -6,7 +6,9 @@ import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import {
   Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
   Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
+  PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert,
 } from "lucide-react";
+import { sendWhatsAppTontine, notifyAllUnpaid, logNotification } from "@/lib/tontineNotifications";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
