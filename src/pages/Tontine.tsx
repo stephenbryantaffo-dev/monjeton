@@ -919,7 +919,195 @@ const TontinePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ─── CONFIRM CLOTURE DIALOG ─── */}
+      <Dialog open={showCloture} onOpenChange={setShowCloture}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader>
+            <DialogTitle>Clôturer cette tontine ?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Cette action est irréversible. La tontine sera fermée et tous les membres avec un numéro WhatsApp seront notifiés automatiquement.
+          </p>
+          {members.filter(m => m.phone).length > 0 && (
+            <div className="glass-card rounded-xl p-3 border border-primary/20 mt-2">
+              <p className="text-xs text-foreground">
+                📲 {members.filter(m => m.phone).length} membre(s) seront notifiés sur WhatsApp.
+              </p>
+            </div>
+          )}
+          <div className="flex gap-2 mt-4">
+            <Button variant="outline" className="flex-1 glass" onClick={() => setShowCloture(false)}>
+              Annuler
+            </Button>
+            <Button variant="destructive" className="flex-1" onClick={async () => {
+              setShowCloture(false);
+              await closeTontine();
+            }}>
+              Clôturer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
+  );
+};
+
+// ─── CALENDRIER TAB ───
+const CalendrierTab = ({
+  tontine, openCycle, members,
+}: {
+  tontine: TontineData;
+  openCycle: TontineCycle | null;
+  members: TontineMember[];
+}) => {
+  const planning = useMemo(() => {
+    if (members.length === 0) return [];
+    const today = new Date();
+    const startBase = openCycle ? new Date(openCycle.start_date) : new Date(tontine.start_date || today);
+    const baseCycle = openCycle?.cycle_number || 1;
+    const daysFor = (f: string) => {
+      if (f === "weekly") return 7;
+      if (f === "monthly") return 30;
+      if (f === "quarterly") return 90;
+      if (f === "annual") return 365;
+      if (f === "custom" && tontine.custom_frequency_days) return tontine.custom_frequency_days;
+      return 30;
+    };
+    const days = daysFor(tontine.frequency);
+    const count = Math.min(members.length * 2, 12);
+    const out: Array<{ cycle: number; member: TontineMember; date: Date; pot: number; isPast: boolean; isCurrent: boolean }> = [];
+    for (let i = 0; i < count; i++) {
+      const cycleNum = baseCycle + i;
+      const d = new Date(startBase);
+      d.setDate(startBase.getDate() + i * days);
+      const member = members[(cycleNum - 1) % members.length];
+      out.push({
+        cycle: cycleNum, member, date: d,
+        pot: members.length * tontine.contribution_amount,
+        isPast: d < today && cycleNum !== baseCycle,
+        isCurrent: cycleNum === baseCycle,
+      });
+    }
+    return out;
+  }, [tontine, openCycle, members]);
+
+  if (members.length === 0) {
+    return (
+      <div className="glass-card rounded-2xl p-6 text-center">
+        <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">Ajoute des membres pour voir le calendrier</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="glass-card rounded-xl p-3 mb-2">
+        <p className="text-xs text-muted-foreground">
+          Basé sur la fréquence{" "}
+          <span className="text-foreground font-bold">{tontine.frequency}</span>
+          {" "}· Pot par cycle :{" "}
+          <span className="text-primary font-bold">
+            {(members.length * tontine.contribution_amount).toLocaleString("fr-FR")} F
+          </span>
+        </p>
+      </div>
+      {planning.map((item) => (
+        <div key={item.cycle}
+          className={`glass-card rounded-xl p-3 flex items-center gap-3 ${
+            item.isCurrent ? "border border-primary/40" : item.isPast ? "opacity-60" : ""
+          }`}>
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-xs ${
+            item.isCurrent ? "gradient-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+          }`}>
+            C{item.cycle}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-bold text-foreground truncate">
+                🏆 {item.member?.name || "À définir"}
+              </p>
+              {item.isCurrent && (
+                <Badge className="bg-primary/20 text-primary text-[10px] py-0 h-4">En cours</Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              📅 {item.date.toLocaleDateString("fr-FR", {
+                weekday: "short", day: "2-digit", month: "long", year: "numeric",
+              })}
+            </p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-sm font-bold text-primary tabular-nums">
+              {item.pot.toLocaleString("fr-FR")} F
+            </p>
+            <p className="text-[10px] text-muted-foreground">pot total</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── NOTIFICATION HISTORY ───
+const NotificationHistory = ({ tontineId }: { tontineId: string }) => {
+  const [notifs, setNotifs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from("tontine_notifications" as any)
+      .select("*, tontine_members(name)")
+      .eq("tontine_id", tontineId)
+      .order("envoye_at", { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        setNotifs((data as any[]) || []);
+        setLoading(false);
+      });
+  }, [tontineId]);
+
+  const typeIcon: Record<string, string> = {
+    rappel_cotisation: "📲",
+    nouveau_cycle: "🔔",
+    bienvenue: "👋",
+    cloture: "🔒",
+    systeme: "⚙️",
+  };
+
+  if (loading) return <p className="text-xs text-muted-foreground text-center py-6">Chargement...</p>;
+  if (!notifs.length) return (
+    <div className="glass-card rounded-2xl p-6 text-center">
+      <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+      <p className="text-sm text-muted-foreground">Aucune notification envoyée</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      {notifs.map((n) => (
+        <div key={n.id} className="glass-card rounded-xl p-3 flex gap-3">
+          <span className="text-xl flex-shrink-0">{typeIcon[n.type] || "📩"}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <p className="text-xs font-bold text-foreground truncate">
+                {n.tontine_members?.name || "Système"}
+              </p>
+              <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                {new Date(n.envoye_at).toLocaleDateString("fr-FR", {
+                  day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                })}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-3 whitespace-pre-line">
+              {n.message}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 
