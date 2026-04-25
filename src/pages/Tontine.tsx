@@ -429,11 +429,25 @@ const TontinePage = () => {
           )}
         </motion.div>
       ) : (
-        <p className="text-center text-muted-foreground text-sm py-4 mb-4">Aucun cycle ouvert</p>
+        <div className="glass-card rounded-2xl p-4 mb-4 text-center">
+          <p className="text-sm text-muted-foreground mb-3">Aucun cycle ouvert</p>
+          {members.length > 0 ? (
+            <Button onClick={startFirstCycle} className="gradient-primary text-primary-foreground">
+              <Plus className="w-4 h-4 mr-1" /> Ouvrir le 1er cycle
+            </Button>
+          ) : (
+            <p className="text-xs text-muted-foreground">Ajoute d'abord des membres ci-dessous</p>
+          )}
+        </div>
       )}
 
       {/* ─── MEMBERS ─── */}
-      <p className="text-sm font-semibold text-foreground mb-2">Membres</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-semibold text-foreground">Membres ({members.length})</p>
+        <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
+          <Plus className="w-3.5 h-3.5 mr-1" /> Membre
+        </Button>
+      </div>
       <div className="space-y-2 mb-4">
         {statuses.length > 0 ? statuses.map((s, i) => (
           <motion.div
