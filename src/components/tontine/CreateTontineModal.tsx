@@ -88,35 +88,54 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         .insert(tontinePayload)
         .select()
         .single();
-      if (tErr || !tontine) throw tErr;
+      if (tErr || !tontine) {
+        console.error("[Tontine] insert tontine failed", tErr);
+        throw new Error(tErr?.message || "Création de la tontine impossible");
+      }
+
+      const tontineId = (tontine as any).id;
 
       const membersPayload = members.map((m) => ({
-        tontine_id: (tontine as any).id,
+        tontine_id: tontineId,
         name: m.name,
         phone: m.phone || null,
         is_owner: m.is_owner,
       }));
       const { error: mErr } = await supabase.from("tontine_members" as any).insert(membersPayload);
-      if (mErr) throw mErr;
+      if (mErr) {
+        console.error("[Tontine] insert members failed", mErr);
+        // rollback orphan tontine to avoid blocked UI
+        await supabase.from("tontines" as any).delete().eq("id", tontineId);
+        throw new Error(`Membres non enregistrés : ${mErr.message}`);
+      }
 
       const cycleInfo = generateCycleInfo(
-        { ...tontinePayload, id: (tontine as any).id } as any,
+        { ...tontinePayload, id: tontineId } as any,
         1,
         members.length
       );
       const { error: cErr } = await supabase.from("tontine_cycles" as any).insert({
-        tontine_id: (tontine as any).id,
+        tontine_id: tontineId,
         ...cycleInfo,
       });
-      if (cErr) throw cErr;
+      if (cErr) {
+        console.error("[Tontine] insert cycle failed", cErr);
+        await supabase.from("tontine_members" as any).delete().eq("tontine_id", tontineId);
+        await supabase.from("tontines" as any).delete().eq("id", tontineId);
+        throw new Error(`Premier cycle non créé : ${cErr.message}`);
+      }
 
-      toast({ title: "Tontine créée ✅" });
+      toast({ title: "Tontine créée ✅", description: `${members.length} membres · cycle 1 ouvert` });
       reset();
       onOpenChange(false);
       onCreated();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast({ title: "Erreur de création", variant: "destructive" });
+      toast({
+        title: "Erreur de création",
+        description: e?.message || "Réessayez ou contactez le support.",
+        variant: "destructive",
+      });
     } finally {
       setCreating(false);
     }
