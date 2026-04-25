@@ -33,10 +33,10 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Configuration serveur manquante (ANTHROPIC_API_KEY). Contacte le support." }),
+        JSON.stringify({ error: "Configuration serveur manquante (LOVABLE_API_KEY). Contacte le support." }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
