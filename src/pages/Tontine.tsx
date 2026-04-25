@@ -515,6 +515,66 @@ const TontinePage = () => {
         <ChevronLeft className="w-4 h-4" /> Retour
       </button>
 
+      {/* ─── STATUS BADGE + ACTIONS ─── */}
+      <div className="flex items-center justify-between mb-3">
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+          isClosed ? "bg-destructive/15 text-destructive" :
+          isPaused ? "bg-amber-500/15 text-amber-500" :
+          "bg-emerald-500/15 text-emerald-400"
+        }`}>
+          {isClosed ? <Lock className="w-3 h-3" /> :
+           isPaused ? <PauseCircle className="w-3 h-3" /> :
+           <CheckCircle className="w-3 h-3" />}
+          {isClosed ? "Terminée" : isPaused ? "En pause" : "Active"}
+        </div>
+        {!isOwner && (
+          <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <ShieldAlert className="w-3 h-3" /> Lecture seule
+          </div>
+        )}
+      </div>
+
+      {/* Owner-only status controls */}
+      {isOwner && !isClosed && (
+        <div className="flex gap-2 mb-3">
+          {isPaused ? (
+            <button onClick={resumeTontine}
+              className="flex-1 glass-card rounded-xl p-2.5 text-xs font-bold text-foreground border border-emerald-500/20 flex items-center justify-center gap-1.5">
+              <PlayCircle className="w-4 h-4" /> Reprendre
+            </button>
+          ) : (
+            <button onClick={pauseTontine}
+              className="flex-1 glass-card rounded-xl p-2.5 text-xs font-bold text-foreground border border-amber-500/20 flex items-center justify-center gap-1.5">
+              <PauseCircle className="w-4 h-4" /> Mettre en pause
+            </button>
+          )}
+          <button onClick={() => setShowCloture(true)}
+            className="flex-1 glass-card rounded-xl p-2.5 text-xs font-bold text-destructive border border-destructive/20 flex items-center justify-center gap-1.5">
+            <XCircle className="w-4 h-4" /> Clôturer
+          </button>
+        </div>
+      )}
+
+      {/* Paused banner */}
+      {isPaused && (
+        <div className="glass-card rounded-xl p-3 mb-3 border border-amber-500/30 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-200">
+            Tontine en pause — les cotisations sont temporairement suspendues.
+          </p>
+        </div>
+      )}
+
+      {/* Non-owner banner */}
+      {!isOwner && (
+        <div className="glass-card rounded-xl p-3 mb-3 border border-border flex items-start gap-2">
+          <ShieldAlert className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            Seul le créateur de cette tontine peut effectuer des actions.
+          </p>
+        </div>
+      )}
+
       {/* ─── CURRENT CYCLE SUMMARY ─── */}
       {openCycle ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 mb-4">
