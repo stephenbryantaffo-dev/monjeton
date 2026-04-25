@@ -68,7 +68,19 @@ const TontinePage = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [showReports, setShowReports] = useState(false);
 
+  // Detail tabs (members / calendar / notifications)
+  const [detailTab, setDetailTab] = useState<"membres" | "calendrier" | "notifs">("membres");
+
+  // Close confirmation dialog
+  const [showCloture, setShowCloture] = useState(false);
+
   const selected = tontines.find(t => t.id === selectedId);
+
+  // Owner check
+  const isOwner = useMemo(() => selected?.user_id === user?.id, [selected, user]);
+  const isActive = (selected?.status || "active") === "active";
+  const isPaused = (selected?.status || "") === "paused" || (selected?.status || "") === "pausee";
+  const isClosed = (selected?.status || "") === "closed" || (selected?.status || "") === "terminee";
 
   const loadTontines = useCallback(async () => {
     if (!user) return;
