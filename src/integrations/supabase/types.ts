@@ -485,38 +485,53 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          date_echeance: string | null
           due_date: string | null
           id: string
+          motif: string | null
           note: string | null
           paid_amount: number
           person_name: string
+          preuve_storage_path: string | null
+          preuve_url: string | null
           status: string
           type: string
           user_id: string
+          whatsapp: string | null
         }
         Insert: {
           amount: number
           created_at?: string
+          date_echeance?: string | null
           due_date?: string | null
           id?: string
+          motif?: string | null
           note?: string | null
           paid_amount?: number
           person_name: string
+          preuve_storage_path?: string | null
+          preuve_url?: string | null
           status?: string
           type: string
           user_id: string
+          whatsapp?: string | null
         }
         Update: {
           amount?: number
           created_at?: string
+          date_echeance?: string | null
           due_date?: string | null
           id?: string
+          motif?: string | null
           note?: string | null
           paid_amount?: number
           person_name?: string
+          preuve_storage_path?: string | null
+          preuve_url?: string | null
           status?: string
           type?: string
           user_id?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
