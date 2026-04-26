@@ -14,6 +14,7 @@ import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
+import { syncAllAutoBudgets } from "@/lib/autoBudget";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -111,6 +112,15 @@ const Budgets = () => {
     setLoading(true);
 
     try {
+      // Auto-ajuste les budgets sur le mois en cours uniquement
+      const curMonthCheck = now.getMonth() + 1;
+      const curYearCheck = now.getFullYear();
+      if (month === curMonthCheck && year === curYearCheck) {
+        await syncAllAutoBudgets(user.id, month, year).catch((e) =>
+          console.error("syncAllAutoBudgets error:", e)
+        );
+      }
+
       const [budgetRes, catRes, txRes, catBudgetRes] = await Promise.all([
         supabase.from("budgets").select("*").eq("user_id", user.id).eq("month", month).eq("year", year).maybeSingle(),
         supabase.from("categories").select("*").eq("user_id", user.id).eq("type", "expense"),
@@ -640,15 +650,6 @@ const Budgets = () => {
                                 </p>
                               )}
                             </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="glass border-primary/30 text-primary text-xs h-7 px-2 flex-shrink-0"
-                              onClick={() => applySuggestion(s)}
-                              title={noMatch ? `La catégorie "${s.categorie}" sera créée automatiquement` : ""}
-                            >
-                              {noMatch ? "Créer & appliquer" : "Appliquer"}
-                            </Button>
                           </div>
                           <p className="text-[10px] text-muted-foreground tabular-nums">
                             Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
@@ -659,6 +660,10 @@ const Budgets = () => {
                       );
                     })}
                   </div>
+
+                  <p className="text-[10px] text-muted-foreground italic px-1 text-center">
+                    💡 À titre indicatif. Tes budgets s'ajustent automatiquement à mesure que tu dépenses.
+                  </p>
 
                   <button
                     onClick={() => setShowSuggestions(false)}
@@ -789,7 +794,7 @@ const Budgets = () => {
               <div className="glass-card rounded-2xl p-8 text-center">
                 <p className="text-muted-foreground text-sm mb-2">Aucun budget par catégorie défini</p>
                 <p className="text-xs text-muted-foreground">
-                  Utilise le bouton "Suggestion IA" pour commencer
+                  Tes budgets se créent automatiquement dès que tu enregistres une dépense.
                 </p>
               </div>
             )}
