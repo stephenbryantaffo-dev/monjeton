@@ -645,10 +645,9 @@ const Budgets = () => {
                               variant="outline"
                               className="glass border-primary/30 text-primary text-xs h-7 px-2 flex-shrink-0"
                               onClick={() => applySuggestion(s)}
-                              disabled={noMatch}
-                              title={noMatch ? `Crée d'abord la catégorie "${s.categorie}"` : ""}
+                              title={noMatch ? `La catégorie "${s.categorie}" sera créée automatiquement` : ""}
                             >
-                              Appliquer
+                              {noMatch ? "Créer & appliquer" : "Appliquer"}
                             </Button>
                           </div>
                           <p className="text-[10px] text-muted-foreground tabular-nums">
