@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Layers, ScanLine, Shield, CreditCard, HelpCircle } from "lucide-react";
+import { Menu, X, Layers, ScanLine, Shield, CreditCard, HelpCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/ui/tubelight-navbar";
 import logoImg from "@/assets/logo-monjeton.png";
 
 const tubelightItems = [
   { name: "Fonctionnalités", url: "#features", icon: Layers, onClick: () => scrollToEl("#features") },
+  { name: "Pour qui ?", url: "#for-who", icon: Users, onClick: () => scrollToEl("#for-who") },
   { name: "Scan AI", url: "#ai-scan", icon: ScanLine, onClick: () => scrollToEl("#ai-scan") },
   { name: "Sécurité", url: "#enterprise", icon: Shield, onClick: () => scrollToEl("#enterprise") },
   { name: "Tarifs", url: "#pricing", icon: CreditCard, onClick: () => scrollToEl("#pricing") },
