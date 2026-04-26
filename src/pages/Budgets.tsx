@@ -255,7 +255,14 @@ const Budgets = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ month, year, totalBudget }),
+        body: JSON.stringify({
+          month,
+          year,
+          totalBudget,
+          userCategories: categories
+            .filter((c) => c.type === "expense")
+            .map((c) => c.name),
+        }),
       });
 
       if (!res.ok) {
@@ -278,17 +285,66 @@ const Budgets = () => {
         }));
       }
 
-      // Match each suggestion to a real category id (case-insensitive) + attach already_spent
+      // Match each suggestion to a real category id with robust fallbacks
+      const normalize = (s: string) =>
+        s
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[&/,()._-]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+      const SYNONYMS: Record<string, string[]> = {
+        epargne: ["autre", "freelance", "salaire"],
+        investissement: ["autre"],
+        business: ["freelance", "autre"],
+        entreprise: ["freelance", "autre"],
+        pro: ["freelance"],
+        imprevus: ["autre"],
+        famille: ["autre"],
+        soutien: ["autre"],
+        education: ["autre", "loisirs"],
+        scolarite: ["autre"],
+        logement: ["factures", "autre"],
+        loyer: ["factures", "autre"],
+      };
+
+      const normCats = categories.map((c) => ({ ...c, _norm: normalize(c.name) }));
+
+      const findCategoryId = (rawName: string): string | undefined => {
+        const norm = normalize(rawName);
+        // 1) exact normalized match
+        const exact = normCats.find((c) => c._norm === norm);
+        if (exact) return exact.id;
+        // 2) any meaningful word from suggestion matches a category name (or vice versa)
+        const words = norm.split(" ").filter((w) => w.length >= 4);
+        for (const w of words) {
+          const hit = normCats.find((c) => c._norm === w || c._norm.includes(w) || w.includes(c._norm));
+          if (hit) return hit.id;
+        }
+        // 3) synonym mapping
+        for (const w of words) {
+          const targets = SYNONYMS[w];
+          if (!targets) continue;
+          for (const t of targets) {
+            const hit = normCats.find((c) => c._norm === t);
+            if (hit) return hit.id;
+          }
+        }
+        return undefined;
+      };
+
       const enriched: AISuggestion[] = suggestions.map((s) => {
-        const norm = s.categorie.trim().toLowerCase();
-        const cat = categories.find((c) => c.name.trim().toLowerCase() === norm);
+        const norm = normalize(s.categorie);
+        const category_id = findCategoryId(s.categorie);
         const spent =
           Object.entries(expensesByCategory).find(
-            ([k]) => k.trim().toLowerCase() === norm
+            ([k]) => normalize(k) === norm
           )?.[1] ?? 0;
         return {
           ...s,
-          category_id: cat?.id,
+          category_id,
           already_spent: Number(spent) || 0,
         };
       });
@@ -318,18 +374,38 @@ const Budgets = () => {
 
   const applySuggestion = async (suggestion: AISuggestion) => {
     if (!user) return;
-    if (!suggestion.category_id) {
-      toast({
-        title: "Catégorie introuvable",
-        description: `Crée d'abord la catégorie "${suggestion.categorie}".`,
-        variant: "destructive",
-      });
-      return;
+
+    let categoryId = suggestion.category_id;
+
+    // Auto-create the category if no match was found
+    if (!categoryId) {
+      const { data: created, error: createErr } = await supabase
+        .from("categories")
+        .insert({
+          user_id: user.id,
+          name: suggestion.categorie,
+          type: "expense",
+          icon: "MoreHorizontal",
+          color: "hsl(0, 0%, 60%)",
+        })
+        .select("id")
+        .single();
+
+      if (createErr || !created) {
+        toast({
+          title: "Erreur",
+          description: createErr?.message || "Impossible de créer la catégorie.",
+          variant: "destructive",
+        });
+        return;
+      }
+      categoryId = created.id;
     }
+
     const { error } = await supabase.from("category_budgets").upsert(
       {
         user_id: user.id,
-        category_id: suggestion.category_id,
+        category_id: categoryId,
         month,
         year,
         budget_amount: suggestion.montant_suggere,
@@ -341,7 +417,11 @@ const Budgets = () => {
       return;
     }
     setAiSuggestions((prev) => prev.filter((s) => s.categorie !== suggestion.categorie));
-    toast({ title: `Budget ${suggestion.categorie} appliqué ✅` });
+    toast({
+      title: suggestion.category_id
+        ? `Budget ${suggestion.categorie} appliqué ✅`
+        : `Catégorie "${suggestion.categorie}" créée et budget appliqué ✅`,
+    });
     loadData();
   };
 
@@ -565,10 +645,9 @@ const Budgets = () => {
                               variant="outline"
                               className="glass border-primary/30 text-primary text-xs h-7 px-2 flex-shrink-0"
                               onClick={() => applySuggestion(s)}
-                              disabled={noMatch}
-                              title={noMatch ? `Crée d'abord la catégorie "${s.categorie}"` : ""}
+                              title={noMatch ? `La catégorie "${s.categorie}" sera créée automatiquement` : ""}
                             >
-                              Appliquer
+                              {noMatch ? "Créer & appliquer" : "Appliquer"}
                             </Button>
                           </div>
                           <p className="text-[10px] text-muted-foreground tabular-nums">

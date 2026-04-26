@@ -38,6 +38,9 @@ serve(async (req) => {
     const month: number = Number(body.month) || new Date().getMonth() + 1;
     const year: number = Number(body.year) || new Date().getFullYear();
     const totalBudget: number = Math.max(0, Number(body.totalBudget) || 0);
+    const userCategoriesInput: string[] = Array.isArray(body.userCategories)
+      ? body.userCategories.map((c: any) => String(c)).filter(Boolean).slice(0, 50)
+      : [];
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -119,6 +122,11 @@ serve(async (req) => {
         .map(([cat, amt]) => `- ${cat} : ~${fmt(amt)} F/mois`)
         .join("\n") || "- Pas d'historique";
 
+    const categoriesList =
+      userCategoriesInput.length > 0
+        ? userCategoriesInput.map((c) => `- ${c}`).join("\n")
+        : "- Alimentation\n- Transport\n- Téléphone\n- Shopping\n- Factures\n- Santé\n- Loisirs\n- Sport\n- Autre";
+
     const systemPrompt = `Tu es un conseiller financier pour Mon Jeton, une app fintech en Afrique de l'Ouest. L'utilisateur gère son argent en FCFA.
 
 DONNÉES RÉELLES DE L'UTILISATEUR :
@@ -133,11 +141,16 @@ ${expensesList}
 Moyenne historique 3 derniers mois :
 ${histList}
 
-RÈGLE ABSOLUE : La somme de TOUTES tes suggestions de budget par catégorie NE DOIT JAMAIS dépasser ${fmt(totalBudget)} F CFA. C'est le budget que l'utilisateur a fixé. Respecte-le strictement.
+CATÉGORIES DISPONIBLES DE L'UTILISATEUR (UTILISE EXACTEMENT CES NOMS, AUCUN AUTRE) :
+${categoriesList}
 
-RÈGLE CRITIQUE #2 : Pour CHAQUE catégorie, le montant suggéré DOIT être SUPÉRIEUR OU ÉGAL au montant déjà dépensé sur cette catégorie ce mois (voir liste ci-dessus). Il est INTERDIT de proposer un budget inférieur à ce qui a déjà été dépensé — sinon l'utilisateur serait déjà en dépassement. Si une catégorie a déjà dépensé X F, propose au minimum X F (idéalement avec une petite marge).
+RÈGLE ABSOLUE #1 : Le champ "categorie" de chaque suggestion DOIT être STRICTEMENT identique à l'un des noms de la liste ci-dessus (même orthographe, mêmes accents, même casse). N'invente JAMAIS de noms composés type "Business & Entreprise", "Épargne & Investissement", "Factures & Téléphone". Si tu veux regrouper une idée, choisis UNE SEULE catégorie existante de la liste.
 
-Génère 5 à 7 suggestions de répartition par catégorie (Alimentation, Transport, Téléphone, Shopping, Factures, Santé, Loisirs, Épargne, Autre) en tenant compte des dépenses déjà effectuées et de l'historique. Les montants suggérés doivent être RÉALISTES pour l'Afrique de l'Ouest et adaptés au budget de ${fmt(totalBudget)} F CFA. Utilise le tool "suggest_budget" pour répondre.`;
+RÈGLE ABSOLUE #2 : La somme de TOUTES tes suggestions de budget par catégorie NE DOIT JAMAIS dépasser ${fmt(totalBudget)} F CFA. C'est le budget que l'utilisateur a fixé. Respecte-le strictement.
+
+RÈGLE CRITIQUE #3 : Pour CHAQUE catégorie, le montant suggéré DOIT être SUPÉRIEUR OU ÉGAL au montant déjà dépensé sur cette catégorie ce mois (voir liste ci-dessus). Il est INTERDIT de proposer un budget inférieur à ce qui a déjà été dépensé — sinon l'utilisateur serait déjà en dépassement. Si une catégorie a déjà dépensé X F, propose au minimum X F (idéalement avec une petite marge).
+
+Génère 5 à 7 suggestions de répartition en utilisant UNIQUEMENT les catégories de la liste ci-dessus, en tenant compte des dépenses déjà effectuées et de l'historique. Les montants suggérés doivent être RÉALISTES pour l'Afrique de l'Ouest et adaptés au budget de ${fmt(totalBudget)} F CFA. Utilise le tool "suggest_budget" pour répondre.`;
 
     const aiBody = {
       model: "google/gemini-3-flash-preview",
