@@ -374,18 +374,38 @@ const Budgets = () => {
 
   const applySuggestion = async (suggestion: AISuggestion) => {
     if (!user) return;
-    if (!suggestion.category_id) {
-      toast({
-        title: "Catégorie introuvable",
-        description: `Crée d'abord la catégorie "${suggestion.categorie}".`,
-        variant: "destructive",
-      });
-      return;
+
+    let categoryId = suggestion.category_id;
+
+    // Auto-create the category if no match was found
+    if (!categoryId) {
+      const { data: created, error: createErr } = await supabase
+        .from("categories")
+        .insert({
+          user_id: user.id,
+          name: suggestion.categorie,
+          type: "expense",
+          icon: "MoreHorizontal",
+          color: "hsl(0, 0%, 60%)",
+        })
+        .select("id")
+        .single();
+
+      if (createErr || !created) {
+        toast({
+          title: "Erreur",
+          description: createErr?.message || "Impossible de créer la catégorie.",
+          variant: "destructive",
+        });
+        return;
+      }
+      categoryId = created.id;
     }
+
     const { error } = await supabase.from("category_budgets").upsert(
       {
         user_id: user.id,
-        category_id: suggestion.category_id,
+        category_id: categoryId,
         month,
         year,
         budget_amount: suggestion.montant_suggere,
@@ -397,7 +417,11 @@ const Budgets = () => {
       return;
     }
     setAiSuggestions((prev) => prev.filter((s) => s.categorie !== suggestion.categorie));
-    toast({ title: `Budget ${suggestion.categorie} appliqué ✅` });
+    toast({
+      title: suggestion.category_id
+        ? `Budget ${suggestion.categorie} appliqué ✅`
+        : `Catégorie "${suggestion.categorie}" créée et budget appliqué ✅`,
+    });
     loadData();
   };
 
