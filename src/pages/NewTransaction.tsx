@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES } from "@/lib/security";
 import { checkAndCreateNotifications } from "@/lib/notificationService";
+import { syncAutoBudget } from "@/lib/autoBudget";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
@@ -311,10 +312,19 @@ const NewTransaction = () => {
       }
 
       toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      const today2 = new Date();
+      const m2 = today2.getMonth() + 1;
+      const y2 = today2.getFullYear();
       for (const tx of transactions) {
         const catId = tx.categoryId || matchCategoryId(tx.category, tx.type);
         const walId = tx.walletId || matchWalletId(tx.wallet);
         checkAndCreateNotifications(user.id, tx.type, catId || null, walId || null);
+        // Auto-ajustement budget catégorie (fire-and-forget)
+        if (tx.type === "expense" && catId) {
+          syncAutoBudget(user.id, catId, m2, y2).catch((e) =>
+            console.error("auto-budget voice error:", e)
+          );
+        }
       }
       setVoiceTransactions(null);
       setTranscriptText(null);
@@ -363,6 +373,16 @@ const NewTransaction = () => {
     } else {
       toast({ title: "Transaction enregistrée ✅" });
       checkAndCreateNotifications(user.id, type, categoryId, walletId || null);
+      // Auto-ajustement budget catégorie (fire-and-forget)
+      if (type === "expense" && categoryId) {
+        const d = new Date(date);
+        syncAutoBudget(
+          user.id,
+          categoryId,
+          d.getMonth() + 1,
+          d.getFullYear()
+        ).catch((e) => console.error("auto-budget error:", e));
+      }
       navigate("/transactions");
     }
   };
