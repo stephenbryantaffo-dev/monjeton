@@ -154,9 +154,18 @@ const TontinePage = () => {
   };
 
   // Member statuses for current cycle
+  const visibleMembers = useMemo(
+    () => showRemovedMembers ? members : members.filter(m => m.status !== "removed"),
+    [members, showRemovedMembers]
+  );
+  const inactiveCount = useMemo(
+    () => members.filter(m => m.status === "removed" || m.status === "suspended").length,
+    [members]
+  );
+
   const getMemberStatuses = (): MemberStatus[] => {
     if (!openCycle || !selected) return [];
-    return members.map(m => {
+    return visibleMembers.map(m => {
       const mPayments = payments.filter(p => p.member_id === m.id);
       const totalPaid = mPayments.reduce((s, p) => s + Number(p.amount_paid), 0);
       const expected = selected.contribution_amount;
