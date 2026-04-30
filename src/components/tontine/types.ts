@@ -18,6 +18,7 @@ export interface TontineMember {
   phone: string | null;
   is_owner: boolean;
   created_at: string;
+  status?: "active" | "suspended" | "removed";
 }
 
 export interface TontineCycle {
