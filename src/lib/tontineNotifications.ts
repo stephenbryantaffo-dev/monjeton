@@ -46,7 +46,7 @@ const buildMessage = (
         ? `📅 Date limite : *${extra.dateProchaineEcheance}*\n\n`
         : "") +
       `Merci de procéder au paiement dès que possible. 🙏\n\n` +
-      `_Mon Jeton — jetonclair.com_`
+      `_Mon Jeton — monjeton.app_`
     );
   }
   if (type === "nouveau_cycle") {
@@ -59,7 +59,7 @@ const buildMessage = (
         ? `📅 Date limite : *${extra.dateProchaineEcheance}*\n\n`
         : "") +
       `Sois parmi les premiers à cotiser ! 💪\n\n` +
-      `_Mon Jeton — jetonclair.com_`
+      `_Mon Jeton — monjeton.app_`
     );
   }
   if (type === "bienvenue") {
@@ -68,7 +68,7 @@ const buildMessage = (
       `Tu as été ajouté(e) à la tontine *${tontineName}* sur Mon Jeton.\n\n` +
       `💰 Cotisation : *${fmtMoney(extra.montant || 0)} F CFA*\n\n` +
       `Tu recevras des notifications pour chaque nouveau cycle. 📲\n\n` +
-      `_Mon Jeton — jetonclair.com_`
+      `_Mon Jeton — monjeton.app_`
     );
   }
   if (type === "cloture") {
@@ -76,7 +76,7 @@ const buildMessage = (
       `Bonjour ${membre.name} 👋\n\n` +
       `La tontine *${tontineName}* a été clôturée par l'administrateur.\n\n` +
       `Merci pour ta participation ! 🙏\n\n` +
-      `_Mon Jeton — jetonclair.com_`
+      `_Mon Jeton — monjeton.app_`
     );
   }
   return "";
