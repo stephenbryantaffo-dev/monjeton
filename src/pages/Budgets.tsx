@@ -590,6 +590,39 @@ const Budgets = () => {
                 🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
               </p>
             )}
+            {/* Projection fin de mois */}
+            {(() => {
+              if (!totalBudget) return null;
+              const today = new Date();
+              const daysInMonth = new Date(year, month, 0).getDate();
+              const isCurrent = month === now.getMonth() + 1 && year === now.getFullYear();
+              const daysPassed = isCurrent ? today.getDate() : daysInMonth;
+              const daysLeft = daysInMonth - daysPassed;
+              if (daysPassed === 0) return null;
+              const avgPerDay = totalSpent / daysPassed;
+              const projectedTotal = Math.round(totalSpent + avgPerDay * daysLeft);
+              const isProjectedOver = projectedTotal > totalBudget;
+              return (
+                <div
+                  className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-xl text-xs ${
+                    isProjectedOver
+                      ? "bg-destructive/10 border border-destructive/20"
+                      : "bg-secondary/50"
+                  }`}
+                >
+                  <span className="text-base flex-shrink-0">{isProjectedOver ? "⚠️" : "📈"}</span>
+                  <p className={isProjectedOver ? "text-destructive" : "text-muted-foreground"}>
+                    À ce rythme, fin de mois :{" "}
+                    <span className="font-bold text-foreground tabular-nums">{fmt(projectedTotal)} F</span>
+                    {isProjectedOver
+                      ? ` (+${fmt(projectedTotal - totalBudget)} F de dépassement prévu)`
+                      : isCurrent
+                        ? ` · Il te reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}`
+                        : ""}
+                  </p>
+                </div>
+              );
+            })()}
             <div className="flex gap-2 mt-3">
               <Input
                 type="number"
