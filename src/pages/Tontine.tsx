@@ -673,12 +673,19 @@ const TontinePage = () => {
         )}
 
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-semibold text-foreground">Membres ({members.length})</p>
+          <p className="text-sm font-semibold text-foreground">Membres ({visibleMembers.length})</p>
           <Button size="sm" variant="outline" className="glass" disabled={!isOwner || isClosed}
             onClick={() => setAddMemberOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1" /> Membre
           </Button>
         </div>
+        {inactiveCount > 0 && (
+          <button
+            onClick={() => setShowRemovedMembers(!showRemovedMembers)}
+            className="text-xs text-muted-foreground underline mb-3 block">
+            {showRemovedMembers ? "Masquer les membres inactifs" : `Voir les membres inactifs (${inactiveCount})`}
+          </button>
+        )}
         <div className="space-y-2 mb-4">
           {statuses.length > 0 ? statuses.map((s, i) => (
             <motion.div key={s.member.id}
@@ -689,16 +696,26 @@ const TontinePage = () => {
                   <p className="text-sm font-bold text-primary-foreground">{s.member.name.charAt(0).toUpperCase()}</p>
                 </div>
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {s.member.name}
-                    {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                  <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1.5 flex-wrap">
+                    <span className="truncate">{s.member.name}</span>
+                    {s.member.is_owner && <span className="text-xs text-primary">(Moi)</span>}
+                    {s.member.status === "suspended" && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/40 text-yellow-500">Suspendu</Badge>
+                    )}
+                    {s.member.status === "removed" && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-destructive/40 text-destructive">Retiré</Badge>
+                    )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
+                    {s.member.status === "removed"
+                      ? "Ne participe plus"
+                      : s.member.status === "suspended"
+                        ? "Suspendu temporairement"
+                        : s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {s.member.phone && s.status !== "paid" && isOwner && isActive && openCycle && (
+                  {s.member.phone && s.status !== "paid" && isOwner && isActive && openCycle && s.member.status !== "removed" && s.member.status !== "suspended" && (
                     <button
                       onClick={() => sendWhatsAppTontine(selected!.name, s.member, "rappel_cotisation", {
                         montant: selected!.contribution_amount,
@@ -711,30 +728,57 @@ const TontinePage = () => {
                       <MessageCircle className="w-4 h-4 text-primary" />
                     </button>
                   )}
-                  {s.status === "paid" ? (
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                  ) : (
+                  {s.member.status !== "removed" && s.member.status !== "suspended" && (
+                    s.status === "paid" ? (
+                      <CheckCircle className="w-5 h-5 text-primary" />
+                    ) : (
+                      <button
+                        onClick={() => openPayModal(s.member)}
+                        disabled={!isOwner || !isActive}
+                        className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Payer
+                      </button>
+                    )
+                  )}
+                  {isOwner && (
                     <button
-                      onClick={() => openPayModal(s.member)}
-                      disabled={!isOwner || !isActive}
-                      className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
-                      + Payer
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionMember(s.member);
+                        setMemberActionOpen(true);
+                      }}
+                      className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors"
+                      title="Actions">
+                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
                     </button>
                   )}
                 </div>
               </div>
             </motion.div>
-          )) : members.length > 0 ? members.map((m) => (
+          )) : visibleMembers.length > 0 ? visibleMembers.map((m) => (
             <div key={m.id} className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
                 <p className="text-sm font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</p>
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {m.name}
-                  {m.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1.5 flex-wrap">
+                  <span className="truncate">{m.name}</span>
+                  {m.is_owner && <span className="text-xs text-primary">(Moi)</span>}
+                  {m.status === "suspended" && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/40 text-yellow-500">Suspendu</Badge>
+                  )}
+                  {m.status === "removed" && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-destructive/40 text-destructive">Retiré</Badge>
+                  )}
                 </p>
               </div>
+              {isOwner && (
+                <button
+                  onClick={() => { setActionMember(m); setMemberActionOpen(true); }}
+                  className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors">
+                  <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
             </div>
           )) : (
             <p className="text-xs text-muted-foreground text-center py-4">Aucun membre</p>
