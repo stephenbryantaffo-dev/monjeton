@@ -819,13 +819,88 @@ const Budgets = () => {
                         <span className="font-medium text-foreground text-sm truncate">{cb.category?.name || "—"}</span>
                         {trendIcon}
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         <span className={`text-[10px] font-semibold ${status.color}`}>
                           {status.text}
                         </span>
+                        {editingId !== cb.id ? (
+                          <button
+                            onClick={() => {
+                              setEditingId(cb.id);
+                              setEditValue(String(cb.budget_amount));
+                            }}
+                            className="p-1 rounded-lg hover:bg-secondary transition-colors"
+                            title="Modifier le budget"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="p-1 rounded-lg hover:bg-secondary transition-colors"
+                            title="Annuler"
+                          >
+                            <X className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        )}
                         <ConfirmDeleteDialog onConfirm={() => deleteCategoryBudget(cb.id)} title="Supprimer ce budget catégorie ?" />
                       </div>
                     </div>
+                    {/* Champ d'édition inline */}
+                    <AnimatePresence>
+                      {editingId === cb.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex gap-2 mt-2 mb-2">
+                            <Input
+                              type="number"
+                              value={editValue}
+                              autoFocus
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={async (e) => {
+                                if (e.key === "Enter") {
+                                  const amount = Number(editValue);
+                                  if (amount > 0) {
+                                    await supabase
+                                      .from("category_budgets")
+                                      .update({ budget_amount: amount })
+                                      .eq("id", cb.id);
+                                    toast({ title: "Budget mis à jour ✅" });
+                                    setEditingId(null);
+                                    loadData();
+                                  }
+                                }
+                                if (e.key === "Escape") setEditingId(null);
+                              }}
+                              className="glass text-sm h-8 flex-1"
+                              placeholder="Nouveau montant"
+                            />
+                            <Button
+                              size="sm"
+                              className="h-8 gradient-primary text-primary-foreground"
+                              onClick={async () => {
+                                const amount = Number(editValue);
+                                if (amount > 0) {
+                                  await supabase
+                                    .from("category_budgets")
+                                    .update({ budget_amount: amount })
+                                    .eq("id", cb.id);
+                                  toast({ title: "Budget mis à jour ✅" });
+                                  setEditingId(null);
+                                  loadData();
+                                }
+                              }}
+                            >
+                              OK
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                     <div className="flex items-baseline justify-between mb-1.5">
                       <span className={`text-xs font-semibold tabular-nums ${over ? "text-destructive" : "text-foreground"}`}>
                         {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
