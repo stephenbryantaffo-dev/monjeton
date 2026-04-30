@@ -76,6 +76,11 @@ const TontinePage = () => {
   // Close confirmation dialog
   const [showCloture, setShowCloture] = useState(false);
 
+  // Member actions sheet
+  const [memberActionOpen, setMemberActionOpen] = useState(false);
+  const [actionMember, setActionMember] = useState<TontineMember | null>(null);
+  const [showRemovedMembers, setShowRemovedMembers] = useState(false);
+
   const selected = tontines.find(t => t.id === selectedId);
 
   // Owner check
