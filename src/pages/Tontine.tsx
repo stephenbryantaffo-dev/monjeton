@@ -7,7 +7,9 @@ import {
   Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
   Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
   PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert,
+  MoreVertical, UserX, RotateCcw, Ban,
 } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { sendWhatsAppTontine, notifyAllUnpaid, logNotification } from "@/lib/tontineNotifications";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +75,11 @@ const TontinePage = () => {
 
   // Close confirmation dialog
   const [showCloture, setShowCloture] = useState(false);
+
+  // Member actions sheet
+  const [memberActionOpen, setMemberActionOpen] = useState(false);
+  const [actionMember, setActionMember] = useState<TontineMember | null>(null);
+  const [showRemovedMembers, setShowRemovedMembers] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
@@ -147,9 +154,18 @@ const TontinePage = () => {
   };
 
   // Member statuses for current cycle
+  const visibleMembers = useMemo(
+    () => showRemovedMembers ? members : members.filter(m => m.status !== "removed"),
+    [members, showRemovedMembers]
+  );
+  const inactiveCount = useMemo(
+    () => members.filter(m => m.status === "removed" || m.status === "suspended").length,
+    [members]
+  );
+
   const getMemberStatuses = (): MemberStatus[] => {
     if (!openCycle || !selected) return [];
-    return members.map(m => {
+    return visibleMembers.map(m => {
       const mPayments = payments.filter(p => p.member_id === m.id);
       const totalPaid = mPayments.reduce((s, p) => s + Number(p.amount_paid), 0);
       const expected = selected.contribution_amount;
@@ -657,12 +673,19 @@ const TontinePage = () => {
         )}
 
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-semibold text-foreground">Membres ({members.length})</p>
+          <p className="text-sm font-semibold text-foreground">Membres ({visibleMembers.length})</p>
           <Button size="sm" variant="outline" className="glass" disabled={!isOwner || isClosed}
             onClick={() => setAddMemberOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1" /> Membre
           </Button>
         </div>
+        {inactiveCount > 0 && (
+          <button
+            onClick={() => setShowRemovedMembers(!showRemovedMembers)}
+            className="text-xs text-muted-foreground underline mb-3 block">
+            {showRemovedMembers ? "Masquer les membres inactifs" : `Voir les membres inactifs (${inactiveCount})`}
+          </button>
+        )}
         <div className="space-y-2 mb-4">
           {statuses.length > 0 ? statuses.map((s, i) => (
             <motion.div key={s.member.id}
@@ -673,16 +696,26 @@ const TontinePage = () => {
                   <p className="text-sm font-bold text-primary-foreground">{s.member.name.charAt(0).toUpperCase()}</p>
                 </div>
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {s.member.name}
-                    {s.member.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                  <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1.5 flex-wrap">
+                    <span className="truncate">{s.member.name}</span>
+                    {s.member.is_owner && <span className="text-xs text-primary">(Moi)</span>}
+                    {s.member.status === "suspended" && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/40 text-yellow-500">Suspendu</Badge>
+                    )}
+                    {s.member.status === "removed" && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-destructive/40 text-destructive">Retiré</Badge>
+                    )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
+                    {s.member.status === "removed"
+                      ? "Ne participe plus"
+                      : s.member.status === "suspended"
+                        ? "Suspendu temporairement"
+                        : s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {s.member.phone && s.status !== "paid" && isOwner && isActive && openCycle && (
+                  {s.member.phone && s.status !== "paid" && isOwner && isActive && openCycle && s.member.status !== "removed" && s.member.status !== "suspended" && (
                     <button
                       onClick={() => sendWhatsAppTontine(selected!.name, s.member, "rappel_cotisation", {
                         montant: selected!.contribution_amount,
@@ -695,30 +728,57 @@ const TontinePage = () => {
                       <MessageCircle className="w-4 h-4 text-primary" />
                     </button>
                   )}
-                  {s.status === "paid" ? (
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                  ) : (
+                  {s.member.status !== "removed" && s.member.status !== "suspended" && (
+                    s.status === "paid" ? (
+                      <CheckCircle className="w-5 h-5 text-primary" />
+                    ) : (
+                      <button
+                        onClick={() => openPayModal(s.member)}
+                        disabled={!isOwner || !isActive}
+                        className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Payer
+                      </button>
+                    )
+                  )}
+                  {isOwner && (
                     <button
-                      onClick={() => openPayModal(s.member)}
-                      disabled={!isOwner || !isActive}
-                      className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
-                      + Payer
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionMember(s.member);
+                        setMemberActionOpen(true);
+                      }}
+                      className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors"
+                      title="Actions">
+                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
                     </button>
                   )}
                 </div>
               </div>
             </motion.div>
-          )) : members.length > 0 ? members.map((m) => (
+          )) : visibleMembers.length > 0 ? visibleMembers.map((m) => (
             <div key={m.id} className="glass-card rounded-xl p-4 flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
                 <p className="text-sm font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</p>
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {m.name}
-                  {m.is_owner && <span className="ml-1 text-xs text-primary">(Moi)</span>}
+                <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1.5 flex-wrap">
+                  <span className="truncate">{m.name}</span>
+                  {m.is_owner && <span className="text-xs text-primary">(Moi)</span>}
+                  {m.status === "suspended" && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/40 text-yellow-500">Suspendu</Badge>
+                  )}
+                  {m.status === "removed" && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-destructive/40 text-destructive">Retiré</Badge>
+                  )}
                 </p>
               </div>
+              {isOwner && (
+                <button
+                  onClick={() => { setActionMember(m); setMemberActionOpen(true); }}
+                  className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors">
+                  <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
             </div>
           )) : (
             <p className="text-xs text-muted-foreground text-center py-4">Aucun membre</p>
@@ -888,6 +948,201 @@ const TontinePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ─── MEMBER ACTIONS SHEET ─── */}
+      <Sheet open={memberActionOpen} onOpenChange={setMemberActionOpen}>
+        <SheetContent side="bottom" className="glass-card border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          {actionMember && (
+            <>
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
+                <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                  <p className="text-lg font-bold text-primary-foreground">
+                    {actionMember.name.charAt(0).toUpperCase()}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-bold text-foreground truncate">{actionMember.name}</p>
+                  {actionMember.phone && (
+                    <p className="text-xs text-muted-foreground truncate">{actionMember.phone}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {/* Annuler la cotisation de ce cycle */}
+                {statuses.find(s => s.member.id === actionMember.id)?.status === "paid" && isOwner && openCycle && (
+                  <button
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from("tontine_payments")
+                        .delete()
+                        .eq("cycle_id", openCycle.id)
+                        .eq("member_id", actionMember.id);
+                      if (!error) {
+                        const { data: allP } = await supabase
+                          .from("tontine_payments")
+                          .select("amount_paid")
+                          .eq("cycle_id", openCycle.id);
+                        const newTotal = (allP || []).reduce((s: number, p: any) => s + Number(p.amount_paid), 0);
+                        await supabase.from("tontine_cycles").update({ total_collected: newTotal } as any).eq("id", openCycle.id);
+                        toast({
+                          title: "Cotisation annulée",
+                          description: `Paiement de ${actionMember.name} retiré du cycle ${openCycle.cycle_number}`,
+                        });
+                        setMemberActionOpen(false);
+                        await loadDetail(selected!.id);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-yellow-500/20 text-left">
+                    <div className="w-10 h-10 rounded-full bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
+                      <XCircle className="w-5 h-5 text-yellow-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Annuler sa cotisation</p>
+                      <p className="text-xs text-muted-foreground">Marquer comme non payé pour ce cycle</p>
+                    </div>
+                  </button>
+                )}
+
+                {/* Rappel WhatsApp */}
+                {actionMember.phone && isOwner && isActive && openCycle && actionMember.status !== "removed" && (
+                  <button
+                    onClick={async () => {
+                      await sendWhatsAppTontine(selected!.name, actionMember, "rappel_cotisation", {
+                        montant: selected!.contribution_amount,
+                        cycleNumero: openCycle.cycle_number,
+                        dateProchaineEcheance: openCycle.end_date,
+                        tontineId: selected!.id,
+                      });
+                      setMemberActionOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-primary/20 text-left">
+                    <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Rappeler sur WhatsApp</p>
+                      <p className="text-xs text-muted-foreground">Envoyer un rappel de cotisation</p>
+                    </div>
+                  </button>
+                )}
+
+                {/* Suspendre temporairement */}
+                {(actionMember.status === "active" || !actionMember.status) && isOwner && (
+                  <button
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from("tontine_members" as any)
+                        .update({ status: "suspended" } as any)
+                        .eq("id", actionMember.id);
+                      if (!error) {
+                        toast({ title: `${actionMember.name} suspendu temporairement` });
+                        setMemberActionOpen(false);
+                        await loadDetail(selected!.id);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-yellow-500/20 text-left">
+                    <div className="w-10 h-10 rounded-full bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
+                      <PauseCircle className="w-5 h-5 text-yellow-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Suspendre temporairement</p>
+                      <p className="text-xs text-muted-foreground">Ne compte plus dans le cycle actuel</p>
+                    </div>
+                  </button>
+                )}
+
+                {/* Réactiver */}
+                {actionMember.status === "suspended" && isOwner && (
+                  <button
+                    onClick={async () => {
+                      await supabase
+                        .from("tontine_members" as any)
+                        .update({ status: "active" } as any)
+                        .eq("id", actionMember.id);
+                      toast({ title: `${actionMember.name} réactivé ✅` });
+                      setMemberActionOpen(false);
+                      await loadDetail(selected!.id);
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-primary/20 text-left">
+                    <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <PlayCircle className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Réactiver le membre</p>
+                      <p className="text-xs text-muted-foreground">Reprend les cotisations normalement</p>
+                    </div>
+                  </button>
+                )}
+
+                {/* Réintégrer si retiré */}
+                {actionMember.status === "removed" && isOwner && (
+                  <button
+                    onClick={async () => {
+                      await supabase
+                        .from("tontine_members" as any)
+                        .update({ status: "active" } as any)
+                        .eq("id", actionMember.id);
+                      if (openCycle) {
+                        const remaining = members.filter(
+                          m => m.id === actionMember.id || m.status !== "removed"
+                        ).length;
+                        await supabase
+                          .from("tontine_cycles" as any)
+                          .update({ total_expected: remaining * selected!.contribution_amount } as any)
+                          .eq("id", openCycle.id);
+                      }
+                      toast({ title: `${actionMember.name} réintégré ✅` });
+                      setMemberActionOpen(false);
+                      await loadDetail(selected!.id);
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-primary/20 text-left">
+                    <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <RotateCcw className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Réintégrer le membre</p>
+                      <p className="text-xs text-muted-foreground">Le remettre dans la tontine</p>
+                    </div>
+                  </button>
+                )}
+
+                {/* Retirer définitivement */}
+                {actionMember.status !== "removed" && isOwner && (
+                  <button
+                    onClick={async () => {
+                      await supabase
+                        .from("tontine_members" as any)
+                        .update({ status: "removed" } as any)
+                        .eq("id", actionMember.id);
+                      if (openCycle) {
+                        const remaining = members.filter(
+                          m => m.id !== actionMember.id && m.status !== "removed"
+                        ).length;
+                        await supabase
+                          .from("tontine_cycles" as any)
+                          .update({ total_expected: remaining * selected!.contribution_amount } as any)
+                          .eq("id", openCycle.id);
+                      }
+                      toast({ title: `${actionMember.name} retiré de la tontine` });
+                      setMemberActionOpen(false);
+                      await loadDetail(selected!.id);
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-destructive/20 text-left">
+                    <div className="w-10 h-10 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
+                      <UserX className="w-5 h-5 text-destructive" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Retirer de la tontine</p>
+                      <p className="text-xs text-muted-foreground">Ne peut plus cotiser ni bénéficier</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* ─── PAYMENT MODAL ─── */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>
