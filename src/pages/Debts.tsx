@@ -354,7 +354,7 @@ const Debts = () => {
           ? `La date de remboursement prévue était le *${echeanceFormatted}*.\n\n`
           : "") +
         `Est-ce que tu peux me dire quand tu pourras procéder au remboursement ? 🙏\n\n` +
-        `_Message envoyé via Mon Jeton — jetonclair.com_`;
+        `_Message envoyé via Mon Jeton — monjeton.app_`;
     } else {
       message =
         `Bonjour ${debt.person_name} 👋\n\n` +
@@ -365,7 +365,7 @@ const Debts = () => {
           ? `Je prévois de te rembourser avant le *${echeanceFormatted}*.\n\n`
           : "") +
         `Je voulais juste confirmer que c'est bien noté de mon côté. 👍\n\n` +
-        `_Message envoyé via Mon Jeton — jetonclair.com_`;
+        `_Message envoyé via Mon Jeton — monjeton.app_`;
     }
 
     const messageEncoded = encodeURIComponent(message);
