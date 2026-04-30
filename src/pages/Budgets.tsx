@@ -97,6 +97,8 @@ const Budgets = () => {
   const [aiBudgetSnapshot, setAiBudgetSnapshot] = useState<number>(0);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
