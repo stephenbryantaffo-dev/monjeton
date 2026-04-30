@@ -549,6 +549,22 @@ const Budgets = () => {
                 </div>
               </div>
               <BudgetProgressBar percent={budgetUsedPercent} />
+              {/* Score de santé global */}
+              {(() => {
+                const score = Math.max(0, Math.min(100, Math.round(100 - budgetUsedPercent)));
+                const health =
+                  score >= 70
+                    ? { label: "🟢 Bonne santé", color: "text-primary", bg: "bg-primary/10" }
+                    : score >= 40
+                      ? { label: "🟡 Attention", color: "text-yellow-500", bg: "bg-yellow-500/10" }
+                      : { label: "🔴 Critique", color: "text-destructive", bg: "bg-destructive/10" };
+                return (
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-xl mt-2 ${health.bg}`}>
+                    <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
+                    <span className={`text-lg font-black tabular-nums ${health.color}`}>{score}/100</span>
+                  </div>
+                );
+              })()}
               <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums">
                 {Math.round(budgetUsedPercent)}% utilisé
                 {totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}
