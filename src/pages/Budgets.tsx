@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -97,6 +97,8 @@ const Budgets = () => {
   const [aiBudgetSnapshot, setAiBudgetSnapshot] = useState<number>(0);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -547,6 +549,22 @@ const Budgets = () => {
                 </div>
               </div>
               <BudgetProgressBar percent={budgetUsedPercent} />
+              {/* Score de santé global */}
+              {(() => {
+                const score = Math.max(0, Math.min(100, Math.round(100 - budgetUsedPercent)));
+                const health =
+                  score >= 70
+                    ? { label: "🟢 Bonne santé", color: "text-primary", bg: "bg-primary/10" }
+                    : score >= 40
+                      ? { label: "🟡 Attention", color: "text-yellow-500", bg: "bg-yellow-500/10" }
+                      : { label: "🔴 Critique", color: "text-destructive", bg: "bg-destructive/10" };
+                return (
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-xl mt-2 ${health.bg}`}>
+                    <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
+                    <span className={`text-lg font-black tabular-nums ${health.color}`}>{score}/100</span>
+                  </div>
+                );
+              })()}
               <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums">
                 {Math.round(budgetUsedPercent)}% utilisé
                 {totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}
@@ -572,6 +590,39 @@ const Budgets = () => {
                 🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
               </p>
             )}
+            {/* Projection fin de mois */}
+            {(() => {
+              if (!totalBudget) return null;
+              const today = new Date();
+              const daysInMonth = new Date(year, month, 0).getDate();
+              const isCurrent = month === now.getMonth() + 1 && year === now.getFullYear();
+              const daysPassed = isCurrent ? today.getDate() : daysInMonth;
+              const daysLeft = daysInMonth - daysPassed;
+              if (daysPassed === 0) return null;
+              const avgPerDay = totalSpent / daysPassed;
+              const projectedTotal = Math.round(totalSpent + avgPerDay * daysLeft);
+              const isProjectedOver = projectedTotal > totalBudget;
+              return (
+                <div
+                  className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-xl text-xs ${
+                    isProjectedOver
+                      ? "bg-destructive/10 border border-destructive/20"
+                      : "bg-secondary/50"
+                  }`}
+                >
+                  <span className="text-base flex-shrink-0">{isProjectedOver ? "⚠️" : "📈"}</span>
+                  <p className={isProjectedOver ? "text-destructive" : "text-muted-foreground"}>
+                    À ce rythme, fin de mois :{" "}
+                    <span className="font-bold text-foreground tabular-nums">{fmt(projectedTotal)} F</span>
+                    {isProjectedOver
+                      ? ` (+${fmt(projectedTotal - totalBudget)} F de dépassement prévu)`
+                      : isCurrent
+                        ? ` · Il te reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}`
+                        : ""}
+                  </p>
+                </div>
+              );
+            })()}
             <div className="flex gap-2 mt-3">
               <Input
                 type="number"
@@ -651,11 +702,19 @@ const Budgets = () => {
                               )}
                             </div>
                           </div>
-                          <p className="text-[10px] text-muted-foreground tabular-nums">
-                            Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
-                            {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
-                            {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
-                          </p>
+                          <div className="flex items-center justify-between mt-2 gap-2">
+                            <p className="text-[10px] text-muted-foreground tabular-nums flex-1 min-w-0">
+                              Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
+                              {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
+                              {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
+                            </p>
+                            <button
+                              onClick={() => applySuggestion(s)}
+                              className="flex-shrink-0 gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-bold hover:scale-105 transition-transform active:scale-95"
+                            >
+                              {noMatch ? "Créer & appliquer" : "Appliquer"}
+                            </button>
+                          </div>
                         </motion.div>
                       );
                     })}
@@ -760,13 +819,88 @@ const Budgets = () => {
                         <span className="font-medium text-foreground text-sm truncate">{cb.category?.name || "—"}</span>
                         {trendIcon}
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         <span className={`text-[10px] font-semibold ${status.color}`}>
                           {status.text}
                         </span>
+                        {editingId !== cb.id ? (
+                          <button
+                            onClick={() => {
+                              setEditingId(cb.id);
+                              setEditValue(String(cb.budget_amount));
+                            }}
+                            className="p-1 rounded-lg hover:bg-secondary transition-colors"
+                            title="Modifier le budget"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="p-1 rounded-lg hover:bg-secondary transition-colors"
+                            title="Annuler"
+                          >
+                            <X className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        )}
                         <ConfirmDeleteDialog onConfirm={() => deleteCategoryBudget(cb.id)} title="Supprimer ce budget catégorie ?" />
                       </div>
                     </div>
+                    {/* Champ d'édition inline */}
+                    <AnimatePresence>
+                      {editingId === cb.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex gap-2 mt-2 mb-2">
+                            <Input
+                              type="number"
+                              value={editValue}
+                              autoFocus
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={async (e) => {
+                                if (e.key === "Enter") {
+                                  const amount = Number(editValue);
+                                  if (amount > 0) {
+                                    await supabase
+                                      .from("category_budgets")
+                                      .update({ budget_amount: amount })
+                                      .eq("id", cb.id);
+                                    toast({ title: "Budget mis à jour ✅" });
+                                    setEditingId(null);
+                                    loadData();
+                                  }
+                                }
+                                if (e.key === "Escape") setEditingId(null);
+                              }}
+                              className="glass text-sm h-8 flex-1"
+                              placeholder="Nouveau montant"
+                            />
+                            <Button
+                              size="sm"
+                              className="h-8 gradient-primary text-primary-foreground"
+                              onClick={async () => {
+                                const amount = Number(editValue);
+                                if (amount > 0) {
+                                  await supabase
+                                    .from("category_budgets")
+                                    .update({ budget_amount: amount })
+                                    .eq("id", cb.id);
+                                  toast({ title: "Budget mis à jour ✅" });
+                                  setEditingId(null);
+                                  loadData();
+                                }
+                              }}
+                            >
+                              OK
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                     <div className="flex items-baseline justify-between mb-1.5">
                       <span className={`text-xs font-semibold tabular-nums ${over ? "text-destructive" : "text-foreground"}`}>
                         {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
