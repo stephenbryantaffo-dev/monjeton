@@ -702,11 +702,19 @@ const Budgets = () => {
                               )}
                             </div>
                           </div>
-                          <p className="text-[10px] text-muted-foreground tabular-nums">
-                            Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
-                            {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
-                            {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
-                          </p>
+                          <div className="flex items-center justify-between mt-2 gap-2">
+                            <p className="text-[10px] text-muted-foreground tabular-nums flex-1 min-w-0">
+                              Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
+                              {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
+                              {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
+                            </p>
+                            <button
+                              onClick={() => applySuggestion(s)}
+                              className="flex-shrink-0 gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-bold hover:scale-105 transition-transform active:scale-95"
+                            >
+                              {noMatch ? "Créer & appliquer" : "Appliquer"}
+                            </button>
+                          </div>
                         </motion.div>
                       );
                     })}
