@@ -760,6 +760,51 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_duplicates: {
+        Row: {
+          created_at: string
+          dismissed: boolean | null
+          id: string
+          scan_id_1: string | null
+          scan_id_2: string | null
+          similarity_score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dismissed?: boolean | null
+          id?: string
+          scan_id_1?: string | null
+          scan_id_2?: string | null
+          similarity_score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dismissed?: boolean | null
+          id?: string
+          scan_id_1?: string | null
+          scan_id_2?: string | null
+          similarity_score?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_duplicates_scan_id_1_fkey"
+            columns: ["scan_id_1"]
+            isOneToOne: false
+            referencedRelation: "receipt_scans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_duplicates_scan_id_2_fkey"
+            columns: ["scan_id_2"]
+            isOneToOne: false
+            referencedRelation: "receipt_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receipt_scan_history: {
         Row: {
           change_reason: string | null
@@ -1093,6 +1138,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tontine_cycles_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tontine_member_history: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          member_id: string | null
+          note: string | null
+          performed_by: string | null
+          tontine_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          note?: string | null
+          performed_by?: string | null
+          tontine_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          note?: string | null
+          performed_by?: string | null
+          tontine_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_member_history_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "tontine_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tontine_member_history_tontine_id_fkey"
             columns: ["tontine_id"]
             isOneToOne: false
             referencedRelation: "tontines"
@@ -1761,6 +1851,14 @@ export type Database = {
       is_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
+      }
+      recalculate_cycle_collected: {
+        Args: { p_cycle_id: string }
+        Returns: undefined
+      }
+      recalculate_cycle_expected: {
+        Args: { p_contribution: number; p_cycle_id: string }
+        Returns: undefined
       }
     }
     Enums: {
