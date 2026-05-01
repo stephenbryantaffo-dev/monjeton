@@ -838,6 +838,7 @@ const TontinePage = () => {
                         e.stopPropagation();
                         setActionMember(s.member);
                         setMemberActionOpen(true);
+                        loadMemberHistory(s.member.id);
                       }}
                       className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors"
                       title="Actions">
