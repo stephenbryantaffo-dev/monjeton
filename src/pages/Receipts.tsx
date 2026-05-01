@@ -119,6 +119,14 @@ const Receipts = () => {
     );
     setScans(scansWithUrls);
     setLoading(false);
+    if (user && scansWithUrls.length > 1) {
+      try {
+        const dups = await detectDuplicates(user.id);
+        setDuplicates(dups);
+      } catch {
+        /* ignore */
+      }
+    }
   };
 
   const loadScanHistory = async (scanId: string) => {
