@@ -80,6 +80,9 @@ const TontinePage = () => {
   const [memberActionOpen, setMemberActionOpen] = useState(false);
   const [actionMember, setActionMember] = useState<TontineMember | null>(null);
   const [showRemovedMembers, setShowRemovedMembers] = useState(false);
+  const [memberHistory, setMemberHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
@@ -164,24 +167,113 @@ const TontinePage = () => {
   );
 
   const getMemberStatuses = (): MemberStatus[] => {
-    if (!openCycle || !selected) return [];
+    if (!selected) return [];
     return visibleMembers.map(m => {
-      const mPayments = payments.filter(p => p.member_id === m.id);
+      const isSuspended = m.status === "suspended";
+      const isRemoved = m.status === "removed";
+      const mPayments = openCycle ? payments.filter(p => p.member_id === m.id) : [];
       const totalPaid = mPayments.reduce((s, p) => s + Number(p.amount_paid), 0);
+      const lastDate = mPayments.length > 0 ? mPayments[mPayments.length - 1].payment_date : undefined;
+
+      if (isSuspended || isRemoved) {
+        return {
+          member: m,
+          totalPaid,
+          expected: 0,
+          status: (totalPaid > 0 ? "paid" : "pending") as "paid" | "pending",
+          lastDate,
+        };
+      }
       const expected = selected.contribution_amount;
       let status: "paid" | "partial" | "pending" = "pending";
       if (totalPaid >= expected) status = "paid";
       else if (totalPaid > 0) status = "partial";
-      const lastDate = mPayments.length > 0 ? mPayments[mPayments.length - 1].payment_date : undefined;
       return { member: m, totalPaid, expected, status, lastDate };
     });
   };
 
   const statuses = getMemberStatuses();
-  const paidCount = statuses.filter(s => s.status === "paid").length;
-  const allPaid = statuses.length > 0 && paidCount === statuses.length;
+  const activeStatuses = statuses.filter(s => s.member.status === "active" || !s.member.status);
+  const paidCount = activeStatuses.filter(s => s.status === "paid").length;
+  const allPaid = activeStatuses.length > 0 && paidCount === activeStatuses.length;
   const cyclePct = openCycle && openCycle.total_expected > 0
     ? Math.round((openCycle.total_collected / openCycle.total_expected) * 100) : 0;
+
+  const loadMemberHistory = async (memberId: string) => {
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from("tontine_member_history" as any)
+      .select("*")
+      .eq("member_id", memberId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setMemberHistory((data as any[]) || []);
+    setHistoryLoading(false);
+  };
+
+  const performMemberAction = async (
+    newStatus: "active" | "suspended" | "removed",
+    member: TontineMember,
+    historyAction: string
+  ) => {
+    if (!selected || !isOwner) return false;
+    const { error } = await supabase
+      .from("tontine_members" as any)
+      .update({ status: newStatus } as any)
+      .eq("id", member.id);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      return false;
+    }
+    await supabase.from("tontine_member_history" as any).insert({
+      tontine_id: selected.id,
+      member_id: member.id,
+      action: historyAction,
+      performed_by: user?.id,
+    } as any);
+    if (openCycle) {
+      await supabase.rpc("recalculate_cycle_expected" as any, {
+        p_cycle_id: openCycle.id,
+        p_contribution: selected.contribution_amount,
+      } as any);
+    }
+    await loadDetail(selected.id);
+    return true;
+  };
+
+  const cancelMemberPayment = async (member: TontineMember) => {
+    if (!openCycle || !selected || !user) return;
+    try {
+      const { error: delError } = await supabase
+        .from("tontine_payments")
+        .delete()
+        .eq("cycle_id", openCycle.id)
+        .eq("member_id", member.id);
+      if (delError) throw delError;
+
+      await supabase.rpc("recalculate_cycle_collected" as any, {
+        p_cycle_id: openCycle.id,
+      } as any);
+
+      await supabase.from("tontine_member_history" as any).insert({
+        tontine_id: selected.id,
+        member_id: member.id,
+        action: "payment_cancelled",
+        performed_by: user.id,
+        note: `Cycle ${openCycle.cycle_number}`,
+      } as any);
+
+      toast({
+        title: "Cotisation annulée ✅",
+        description: `Paiement de ${member.name} retiré du cycle ${openCycle.cycle_number}`,
+      });
+      setMemberActionOpen(false);
+      await loadDetail(selected.id);
+    } catch (e: any) {
+      toast({ title: "Erreur annulation", description: e?.message, variant: "destructive" });
+    }
+  };
+
 
   // Beneficiary = member at index (cycle_number - 1) % members.length
   const getBeneficiary = () => {
@@ -746,6 +838,7 @@ const TontinePage = () => {
                         e.stopPropagation();
                         setActionMember(s.member);
                         setMemberActionOpen(true);
+                        loadMemberHistory(s.member.id);
                       }}
                       className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors"
                       title="Actions">
@@ -774,7 +867,7 @@ const TontinePage = () => {
               </div>
               {isOwner && (
                 <button
-                  onClick={() => { setActionMember(m); setMemberActionOpen(true); }}
+                  onClick={() => { setActionMember(m); setMemberActionOpen(true); loadMemberHistory(m.id); }}
                   className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors">
                   <MoreVertical className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -972,27 +1065,7 @@ const TontinePage = () => {
                 {/* Annuler la cotisation de ce cycle */}
                 {statuses.find(s => s.member.id === actionMember.id)?.status === "paid" && isOwner && openCycle && (
                   <button
-                    onClick={async () => {
-                      const { error } = await supabase
-                        .from("tontine_payments")
-                        .delete()
-                        .eq("cycle_id", openCycle.id)
-                        .eq("member_id", actionMember.id);
-                      if (!error) {
-                        const { data: allP } = await supabase
-                          .from("tontine_payments")
-                          .select("amount_paid")
-                          .eq("cycle_id", openCycle.id);
-                        const newTotal = (allP || []).reduce((s: number, p: any) => s + Number(p.amount_paid), 0);
-                        await supabase.from("tontine_cycles").update({ total_collected: newTotal } as any).eq("id", openCycle.id);
-                        toast({
-                          title: "Cotisation annulée",
-                          description: `Paiement de ${actionMember.name} retiré du cycle ${openCycle.cycle_number}`,
-                        });
-                        setMemberActionOpen(false);
-                        await loadDetail(selected!.id);
-                      }
-                    }}
+                    onClick={() => cancelMemberPayment(actionMember)}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-yellow-500/20 text-left">
                     <div className="w-10 h-10 rounded-full bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
                       <XCircle className="w-5 h-5 text-yellow-500" />
@@ -1031,14 +1104,10 @@ const TontinePage = () => {
                 {(actionMember.status === "active" || !actionMember.status) && isOwner && (
                   <button
                     onClick={async () => {
-                      const { error } = await supabase
-                        .from("tontine_members" as any)
-                        .update({ status: "suspended" } as any)
-                        .eq("id", actionMember.id);
-                      if (!error) {
+                      const ok = await performMemberAction("suspended", actionMember, "suspended");
+                      if (ok) {
                         toast({ title: `${actionMember.name} suspendu temporairement` });
                         setMemberActionOpen(false);
-                        await loadDetail(selected!.id);
                       }
                     }}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-yellow-500/20 text-left">
@@ -1056,13 +1125,11 @@ const TontinePage = () => {
                 {actionMember.status === "suspended" && isOwner && (
                   <button
                     onClick={async () => {
-                      await supabase
-                        .from("tontine_members" as any)
-                        .update({ status: "active" } as any)
-                        .eq("id", actionMember.id);
-                      toast({ title: `${actionMember.name} réactivé ✅` });
-                      setMemberActionOpen(false);
-                      await loadDetail(selected!.id);
+                      const ok = await performMemberAction("active", actionMember, "reactivated");
+                      if (ok) {
+                        toast({ title: `${actionMember.name} réactivé ✅` });
+                        setMemberActionOpen(false);
+                      }
                     }}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-primary/20 text-left">
                     <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
@@ -1079,22 +1146,11 @@ const TontinePage = () => {
                 {actionMember.status === "removed" && isOwner && (
                   <button
                     onClick={async () => {
-                      await supabase
-                        .from("tontine_members" as any)
-                        .update({ status: "active" } as any)
-                        .eq("id", actionMember.id);
-                      if (openCycle) {
-                        const remaining = members.filter(
-                          m => m.id === actionMember.id || m.status !== "removed"
-                        ).length;
-                        await supabase
-                          .from("tontine_cycles" as any)
-                          .update({ total_expected: remaining * selected!.contribution_amount } as any)
-                          .eq("id", openCycle.id);
+                      const ok = await performMemberAction("active", actionMember, "reinstated");
+                      if (ok) {
+                        toast({ title: `${actionMember.name} réintégré ✅` });
+                        setMemberActionOpen(false);
                       }
-                      toast({ title: `${actionMember.name} réintégré ✅` });
-                      setMemberActionOpen(false);
-                      await loadDetail(selected!.id);
                     }}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-primary/20 text-left">
                     <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
@@ -1107,27 +1163,10 @@ const TontinePage = () => {
                   </button>
                 )}
 
-                {/* Retirer définitivement */}
+                {/* Retirer définitivement (avec confirmation) */}
                 {actionMember.status !== "removed" && isOwner && (
                   <button
-                    onClick={async () => {
-                      await supabase
-                        .from("tontine_members" as any)
-                        .update({ status: "removed" } as any)
-                        .eq("id", actionMember.id);
-                      if (openCycle) {
-                        const remaining = members.filter(
-                          m => m.id !== actionMember.id && m.status !== "removed"
-                        ).length;
-                        await supabase
-                          .from("tontine_cycles" as any)
-                          .update({ total_expected: remaining * selected!.contribution_amount } as any)
-                          .eq("id", openCycle.id);
-                      }
-                      toast({ title: `${actionMember.name} retiré de la tontine` });
-                      setMemberActionOpen(false);
-                      await loadDetail(selected!.id);
-                    }}
+                    onClick={() => setShowRemoveConfirm(true)}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-destructive/20 text-left">
                     <div className="w-10 h-10 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
                       <UserX className="w-5 h-5 text-destructive" />
@@ -1139,10 +1178,92 @@ const TontinePage = () => {
                   </button>
                 )}
               </div>
+
+              {/* Historique des actions */}
+              {historyLoading ? (
+                <p className="mt-6 text-xs text-muted-foreground text-center">Chargement de l'historique...</p>
+              ) : memberHistory.length > 0 ? (
+                <div className="mt-6 pt-4 border-t border-border">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Historique</p>
+                  <div className="space-y-2">
+                    {memberHistory.map((h) => {
+                      const icons: Record<string, string> = {
+                        suspended: "⏸️", reactivated: "▶️", removed: "🚫",
+                        reinstated: "✅", paid: "💰", payment_cancelled: "↩️",
+                      };
+                      const labels: Record<string, string> = {
+                        suspended: "Suspendu", reactivated: "Réactivé",
+                        removed: "Retiré", reinstated: "Réintégré",
+                        paid: "Cotisation enregistrée", payment_cancelled: "Cotisation annulée",
+                      };
+                      return (
+                        <div key={h.id} className="flex items-start gap-2 text-xs">
+                          <span className="flex-shrink-0">{icons[h.action] || "📝"}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-foreground font-medium">{labels[h.action] || h.action}</p>
+                            <p className="text-muted-foreground">
+                              {new Date(h.created_at).toLocaleDateString("fr-FR", {
+                                day: "2-digit", month: "short", year: "numeric",
+                                hour: "2-digit", minute: "2-digit",
+                              })}
+                              {h.note && ` · ${h.note}`}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* ─── CONFIRMATION RETRAIT ─── */}
+      <Dialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader>
+            <DialogTitle>Retirer {actionMember?.name} ?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Ce membre ne pourra plus cotiser ni bénéficier du pot. Son historique de paiements est conservé.
+            Cette action peut être annulée en le réintégrant.
+          </p>
+          {(() => {
+            const ms = statuses.find(s => s.member.id === actionMember?.id);
+            if (!ms?.totalPaid) return null;
+            return (
+              <div className="rounded-lg p-3 bg-secondary/50 border border-border">
+                <p className="text-xs text-muted-foreground">
+                  Total cotisé par ce membre :{" "}
+                  <span className="text-foreground font-semibold">{fmt(ms.totalPaid)} F</span>
+                </p>
+              </div>
+            );
+          })()}
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowRemoveConfirm(false)} className="flex-1 glass">
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={async () => {
+                if (!actionMember) return;
+                const ok = await performMemberAction("removed", actionMember, "removed");
+                setShowRemoveConfirm(false);
+                if (ok) {
+                  toast({ title: `${actionMember.name} retiré de la tontine` });
+                  setMemberActionOpen(false);
+                }
+              }}>
+              Retirer définitivement
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* ─── PAYMENT MODAL ─── */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>

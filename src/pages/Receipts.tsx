@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown, ZoomIn, X,
+  Printer, Download, FileDown, ZoomIn, X, AlertTriangle,
 } from "lucide-react";
+import { detectDuplicates, type DuplicatePair } from "@/lib/receiptDuplicates";
 import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +77,7 @@ const Receipts = () => {
   // Fullscreen image viewer
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenScan, setFullscreenScan] = useState<ScanItem | null>(null);
+  const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
 
   useEffect(() => {
     if (user && isUnlocked) fetchScans();
@@ -117,6 +119,14 @@ const Receipts = () => {
     );
     setScans(scansWithUrls);
     setLoading(false);
+    if (user && scansWithUrls.length > 1) {
+      try {
+        const dups = await detectDuplicates(user.id);
+        setDuplicates(dups);
+      } catch {
+        /* ignore */
+      }
+    }
   };
 
   const loadScanHistory = async (scanId: string) => {
@@ -779,6 +789,26 @@ const Receipts = () => {
     <DashboardLayout title="Mes Reçus">
       <div className="space-y-4">
         <DiscreetBanner />
+
+        {duplicates.length > 0 && (
+          <div className="glass-card rounded-xl p-3 flex items-start gap-3 border border-yellow-500/30 bg-yellow-500/5">
+            <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} détecté{duplicates.length > 1 ? "s" : ""}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Même montant, date et marchand sur plusieurs reçus.
+              </p>
+            </div>
+            <button
+              onClick={() => setDuplicates([])}
+              className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Fermer">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Global export button */}
         {stats.totalConfirmed > 0 && (
