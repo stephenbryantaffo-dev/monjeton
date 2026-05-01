@@ -867,7 +867,7 @@ const TontinePage = () => {
               </div>
               {isOwner && (
                 <button
-                  onClick={() => { setActionMember(m); setMemberActionOpen(true); }}
+                  onClick={() => { setActionMember(m); setMemberActionOpen(true); loadMemberHistory(m.id); }}
                   className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors">
                   <MoreVertical className="w-4 h-4 text-muted-foreground" />
                 </button>
