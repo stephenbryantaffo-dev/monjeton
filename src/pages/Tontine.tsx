@@ -167,24 +167,113 @@ const TontinePage = () => {
   );
 
   const getMemberStatuses = (): MemberStatus[] => {
-    if (!openCycle || !selected) return [];
+    if (!selected) return [];
     return visibleMembers.map(m => {
-      const mPayments = payments.filter(p => p.member_id === m.id);
+      const isSuspended = m.status === "suspended";
+      const isRemoved = m.status === "removed";
+      const mPayments = openCycle ? payments.filter(p => p.member_id === m.id) : [];
       const totalPaid = mPayments.reduce((s, p) => s + Number(p.amount_paid), 0);
+      const lastDate = mPayments.length > 0 ? mPayments[mPayments.length - 1].payment_date : undefined;
+
+      if (isSuspended || isRemoved) {
+        return {
+          member: m,
+          totalPaid,
+          expected: 0,
+          status: (totalPaid > 0 ? "paid" : "pending") as "paid" | "pending",
+          lastDate,
+        };
+      }
       const expected = selected.contribution_amount;
       let status: "paid" | "partial" | "pending" = "pending";
       if (totalPaid >= expected) status = "paid";
       else if (totalPaid > 0) status = "partial";
-      const lastDate = mPayments.length > 0 ? mPayments[mPayments.length - 1].payment_date : undefined;
       return { member: m, totalPaid, expected, status, lastDate };
     });
   };
 
   const statuses = getMemberStatuses();
-  const paidCount = statuses.filter(s => s.status === "paid").length;
-  const allPaid = statuses.length > 0 && paidCount === statuses.length;
+  const activeStatuses = statuses.filter(s => s.member.status === "active" || !s.member.status);
+  const paidCount = activeStatuses.filter(s => s.status === "paid").length;
+  const allPaid = activeStatuses.length > 0 && paidCount === activeStatuses.length;
   const cyclePct = openCycle && openCycle.total_expected > 0
     ? Math.round((openCycle.total_collected / openCycle.total_expected) * 100) : 0;
+
+  const loadMemberHistory = async (memberId: string) => {
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from("tontine_member_history" as any)
+      .select("*")
+      .eq("member_id", memberId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setMemberHistory((data as any[]) || []);
+    setHistoryLoading(false);
+  };
+
+  const performMemberAction = async (
+    newStatus: "active" | "suspended" | "removed",
+    member: TontineMember,
+    historyAction: string
+  ) => {
+    if (!selected || !isOwner) return false;
+    const { error } = await supabase
+      .from("tontine_members" as any)
+      .update({ status: newStatus } as any)
+      .eq("id", member.id);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      return false;
+    }
+    await supabase.from("tontine_member_history" as any).insert({
+      tontine_id: selected.id,
+      member_id: member.id,
+      action: historyAction,
+      performed_by: user?.id,
+    } as any);
+    if (openCycle) {
+      await supabase.rpc("recalculate_cycle_expected" as any, {
+        p_cycle_id: openCycle.id,
+        p_contribution: selected.contribution_amount,
+      } as any);
+    }
+    await loadDetail(selected.id);
+    return true;
+  };
+
+  const cancelMemberPayment = async (member: TontineMember) => {
+    if (!openCycle || !selected || !user) return;
+    try {
+      const { error: delError } = await supabase
+        .from("tontine_payments")
+        .delete()
+        .eq("cycle_id", openCycle.id)
+        .eq("member_id", member.id);
+      if (delError) throw delError;
+
+      await supabase.rpc("recalculate_cycle_collected" as any, {
+        p_cycle_id: openCycle.id,
+      } as any);
+
+      await supabase.from("tontine_member_history" as any).insert({
+        tontine_id: selected.id,
+        member_id: member.id,
+        action: "payment_cancelled",
+        performed_by: user.id,
+        note: `Cycle ${openCycle.cycle_number}`,
+      } as any);
+
+      toast({
+        title: "Cotisation annulée ✅",
+        description: `Paiement de ${member.name} retiré du cycle ${openCycle.cycle_number}`,
+      });
+      setMemberActionOpen(false);
+      await loadDetail(selected.id);
+    } catch (e: any) {
+      toast({ title: "Erreur annulation", description: e?.message, variant: "destructive" });
+    }
+  };
+
 
   // Beneficiary = member at index (cycle_number - 1) % members.length
   const getBeneficiary = () => {
