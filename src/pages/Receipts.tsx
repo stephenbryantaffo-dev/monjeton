@@ -77,6 +77,7 @@ const Receipts = () => {
   // Fullscreen image viewer
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenScan, setFullscreenScan] = useState<ScanItem | null>(null);
+  const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
 
   useEffect(() => {
     if (user && isUnlocked) fetchScans();
