@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown, ZoomIn, X,
+  Printer, Download, FileDown, ZoomIn, X, AlertTriangle,
 } from "lucide-react";
+import { detectDuplicates, type DuplicatePair } from "@/lib/receiptDuplicates";
 import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
