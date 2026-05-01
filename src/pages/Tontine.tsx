@@ -80,6 +80,9 @@ const TontinePage = () => {
   const [memberActionOpen, setMemberActionOpen] = useState(false);
   const [actionMember, setActionMember] = useState<TontineMember | null>(null);
   const [showRemovedMembers, setShowRemovedMembers] = useState(false);
+  const [memberHistory, setMemberHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
