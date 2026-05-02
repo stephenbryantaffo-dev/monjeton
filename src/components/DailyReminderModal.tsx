@@ -104,22 +104,41 @@ const DailyReminderModal = ({ open, onClose, txCount, firstName, profileType, us
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          style={{ background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(8px)" }}
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full max-w-sm glass-card rounded-2xl p-6 space-y-4"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-sm rounded-3xl p-6 border border-primary/25 shadow-2xl"
+            style={{
+              background:
+                "linear-gradient(160deg, rgba(13, 26, 8, 0.98) 0%, rgba(5, 16, 10, 0.98) 100%)",
+              boxShadow:
+                "0 0 60px rgba(126, 200, 69, 0.15), 0 25px 60px rgba(0, 0, 0, 0.5)",
+            }}
           >
-            <h3 className="text-lg font-bold text-foreground text-center">{title}</h3>
-            <p className="text-sm text-muted-foreground text-center leading-relaxed">{message}</p>
+            <button
+              onClick={onClose}
+              aria-label="Fermer"
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-secondary hover:bg-muted flex items-center justify-center transition-all active:scale-90 z-10"
+            >
+              <X className="w-5 h-5 text-foreground" />
+            </button>
+
+            <h3 className="text-2xl font-black text-foreground text-center mb-3 tracking-tight pr-10">
+              {title}
+            </h3>
+            <p className="text-sm text-muted-foreground text-center leading-relaxed mb-5">
+              {message}
+            </p>
 
             {tontineReminder && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-center space-y-2">
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-center space-y-2 mb-4">
                 <p className="text-sm text-foreground font-medium">
                   ⚠️ Ta tontine <span className="font-bold">{tontineReminder.name}</span> se termine dans{" "}
                   <span className="text-amber-400 font-bold">
@@ -141,22 +160,32 @@ const DailyReminderModal = ({ open, onClose, txCount, firstName, profileType, us
               </div>
             )}
 
-            <div className="flex flex-col gap-2 pt-2">
-              {txCount < 3 && (
-                <Button
-                  variant="hero"
-                  className="w-full gap-2"
-                  onClick={() => {
-                    onClose();
-                    navigate("/transactions/new");
-                  }}
+            <div className="flex flex-col gap-2">
+              {txCount < 3 ? (
+                <>
+                  <Button
+                    variant="hero"
+                    className="w-full gap-2"
+                    onClick={() => {
+                      onClose();
+                      navigate("/transactions/new");
+                    }}
+                  >
+                    <Plus className="w-4 h-4" /> Ajouter une dépense
+                  </Button>
+                  <Button variant="ghost" className="w-full gap-2 text-muted-foreground" onClick={onClose}>
+                    <Check className="w-4 h-4" /> C'est bon pour aujourd'hui
+                  </Button>
+                </>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-2xl text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                  style={{ boxShadow: "0 0 20px rgba(126, 200, 69, 0.3)" }}
                 >
-                  <Plus className="w-4 h-4" /> Ajouter une dépense
-                </Button>
+                  Super, continuer →
+                </button>
               )}
-              <Button variant="ghost" className="w-full gap-2 text-muted-foreground" onClick={onClose}>
-                <Check className="w-4 h-4" /> C'est bon pour aujourd'hui
-              </Button>
             </div>
           </motion.div>
         </motion.div>
