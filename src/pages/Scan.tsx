@@ -217,10 +217,7 @@ const Scan = () => {
         setResult(parsed);
       }, 1200);
 
-      const { data: scanData } = await supabase.from("receipt_scans").insert({
-        user_id: user.id,
-        scan_type: scanType,
-        image_url: urlData.publicUrl,
+      await supabase.from("receipt_scans").update({
         extracted_text: resp.data?.raw || null,
         parsed_amount: parsed.amount || null,
         parsed_date: parsed.date || null,
@@ -233,10 +230,9 @@ const Scan = () => {
         parsed_converted_amount_xof: parsed.converted_amount_xof || null,
         parsed_exchange_rate_used: parsed.exchange_rate_used || null,
         parsed_exchange_rate_source: parsed.exchange_rate_source || null,
-        status: "pending",
-      } as any).select().single();
+      } as any).eq("id", preScan.id);
 
-      if (scanData) setScanId(scanData.id);
+      setScanId(preScan.id);
     } catch (err: any) {
       toast({ title: "Erreur d'analyse", description: err.message, variant: "destructive" });
     } finally {
@@ -263,25 +259,78 @@ const Scan = () => {
     });
   };
 
-  const uploadReceiptImage = async (f: File, sid: string): Promise<string | null> => {
+  const uploadReceiptImage = async (
+    fileOrBlob: File | Blob,
+    sid: string
+  ): Promise<{ path: string | null; url: string | null; error?: string }> => {
+    if (!user) return { path: null, url: null, error: "Non authentifié" };
+    if (!fileOrBlob || (fileOrBlob instanceof Blob && fileOrBlob.size === 0)) {
+      return { path: null, url: null, error: "Fichier vide ou invalide" };
+    }
+    if (fileOrBlob.size > 20 * 1024 * 1024) {
+      return { path: null, url: null, error: "Image trop lourde (max 20 MB)" };
+    }
     try {
-      const compressed = await compressImage(f);
+      // Compress images (>1MB) to JPEG Blob, keep PDFs as-is
+      let toUpload: File | Blob = fileOrBlob;
+      let ext = "jpg";
+      const isPdfFile =
+        (fileOrBlob as File).type === "application/pdf" ||
+        ((fileOrBlob as File).name || "").toLowerCase().endsWith(".pdf");
+
+      if (isPdfFile) {
+        ext = "pdf";
+      } else {
+        if (fileOrBlob instanceof File && fileOrBlob.size > 1024 * 1024) {
+          try {
+            toUpload = await compressImage(fileOrBlob);
+            ext = "jpg";
+          } catch {
+            toUpload = fileOrBlob;
+          }
+        }
+        if (fileOrBlob instanceof File && fileOrBlob.name) {
+          const parts = fileOrBlob.name.split(".");
+          if (parts.length > 1 && toUpload === fileOrBlob) {
+            ext = parts.pop()!.toLowerCase();
+          }
+        } else {
+          const t = fileOrBlob.type || "image/jpeg";
+          if (t.includes("png")) ext = "png";
+          else if (t.includes("webp")) ext = "webp";
+        }
+      }
+
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
-      const path = `${user!.id}/${year}/${month}/${sid}.jpg`;
-      const { error } = await supabase.storage.from("receipts").upload(path, compressed, {
-        contentType: "image/jpeg",
-        upsert: true,
-      });
-      if (error) {
-        console.error("Storage upload error:", error);
-        return null;
+      const path = `${user.id}/${year}/${month}/${sid}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("receipts")
+        .upload(path, toUpload, {
+          contentType: toUpload.type || (isPdfFile ? "application/pdf" : "image/jpeg"),
+          upsert: true,
+          cacheControl: "3600",
+        });
+
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        return { path: null, url: null, error: uploadError.message };
       }
-      return path;
-    } catch (err) {
-      console.error("Compress/upload error:", err);
-      return null;
+
+      const { data: signed, error: signError } = await supabase.storage
+        .from("receipts")
+        .createSignedUrl(path, 86400);
+
+      if (signError || !signed?.signedUrl) {
+        console.error("Sign URL error:", signError);
+        return { path, url: null };
+      }
+      return { path, url: signed.signedUrl };
+    } catch (e: any) {
+      console.error("uploadReceiptImage error:", e);
+      return { path: null, url: null, error: e?.message || "Erreur upload" };
     }
   };
 
