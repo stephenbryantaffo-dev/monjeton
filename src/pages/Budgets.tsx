@@ -728,86 +728,170 @@ const Budgets = () => {
             </Button>
 
             <AnimatePresence>
-              {showSuggestions && aiSuggestions.length > 0 && (
+              {showSuggestions && editableSuggestions.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 space-y-3"
+                  className="mt-3 space-y-3 overflow-hidden"
                 >
-                  {/* Total budget header */}
-                  <div className="glass-card rounded-xl p-3 border border-primary/20">
-                    <p className="text-sm font-bold text-foreground tabular-nums">
-                      Budget total : {fmt(aiBudgetSnapshot || totalBudget)} F
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Les suggestions ci-dessous respectent strictement ton enveloppe budgétaire.
-                    </p>
+                  {/* Récap total temps réel */}
+                  <div className={`glass-card rounded-2xl p-4 border ${isOverAllocated ? "border-destructive/40" : "border-primary/25"}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Budget total du mois</p>
+                        <p className="text-xl font-black text-foreground tabular-nums">{fmt(totalBudget)} F</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Suggéré</p>
+                        <p className={`text-xl font-black tabular-nums ${isOverAllocated ? "text-destructive" : "text-primary"}`}>
+                          {fmt(suggestionsTotal)} F
+                        </p>
+                      </div>
+                    </div>
+                    <div className="relative h-2.5 bg-secondary rounded-full overflow-hidden mb-2">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(allocationPercent, 100)}%` }}
+                        transition={{ duration: 0.3 }}
+                        className={`h-full rounded-full ${
+                          isOverAllocated ? "bg-destructive" : allocationPercent > 90 ? "bg-yellow-500" : "gradient-primary"
+                        }`}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{allocationPercent}% alloué</span>
+                      <span className={isOverAllocated ? "text-destructive font-bold" : "text-muted-foreground"}>
+                        {isOverAllocated
+                          ? `Dépassement de ${fmt(suggestionsTotal - totalBudget)} F`
+                          : `Reste ${fmt(suggestionsRestant)} F à allouer`}
+                      </span>
+                    </div>
+                    {isOverAllocated && (
+                      <div className="mt-3 flex items-start gap-2 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20">
+                        <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-destructive">
+                          Réduis les montants pour rester dans ton budget avant d'approuver.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {aiGlobalAdvice && (
-                    <p className="text-xs text-muted-foreground italic px-1">
-                      💡 {aiGlobalAdvice}
-                    </p>
+                    <div className="glass-card rounded-xl p-3 border border-primary/15 flex gap-2 items-start">
+                      <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-foreground italic leading-relaxed">{aiGlobalAdvice}</p>
+                    </div>
                   )}
 
-                  <div className="space-y-2">
-                    {aiSuggestions.map((s) => {
+                  <div className="space-y-2.5">
+                    {editableSuggestions.map((s) => {
                       const restant = Math.max(0, s.montant_suggere - (s.already_spent || 0));
                       const noMatch = !s.category_id;
+                      const isApproving = approvingId === s.categorie;
                       return (
                         <motion.div
                           key={s.categorie}
                           initial={{ scale: 0.97, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="glass-card rounded-xl p-3 border border-primary/15"
+                          className="glass-card rounded-xl p-3.5 border border-primary/15"
                         >
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">
-                                {s.categorie}{" "}
-                                <span className="text-[10px] text-muted-foreground font-normal">
-                                  · {s.pourcentage}%
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <p className="text-sm font-bold text-foreground truncate">{s.categorie}</p>
+                              <span className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-medium flex-shrink-0 tabular-nums">
+                                {s.pourcentage}%
+                              </span>
+                              {noMatch && (
+                                <span className="text-[10px] bg-yellow-500/15 text-yellow-500 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                                  Nouvelle
                                 </span>
-                              </p>
-                              {s.conseil && (
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
-                                  {s.conseil}
-                                </p>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center justify-between mt-2 gap-2">
-                            <p className="text-[10px] text-muted-foreground tabular-nums flex-1 min-w-0">
-                              Suggéré : <span className="text-foreground font-semibold">{fmt(s.montant_suggere)} F</span>
-                              {" · "}Déjà dépensé : {fmt(s.already_spent || 0)} F
-                              {" · "}Restant : <span className={restant > 0 ? "text-primary" : "text-destructive"}>{fmt(restant)} F</span>
-                            </p>
-                            <button
-                              onClick={() => applySuggestion(s)}
-                              className="flex-shrink-0 gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-bold hover:scale-105 transition-transform active:scale-95"
-                            >
-                              {noMatch ? "Créer & appliquer" : "Appliquer"}
-                            </button>
+                          {s.conseil && (
+                            <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{s.conseil}</p>
+                          )}
+                          <div className="flex items-center gap-2 mb-2">
+                            <label className="text-[11px] text-muted-foreground flex-shrink-0">Montant :</label>
+                            <Input
+                              type="number"
+                              value={s.montant_suggere}
+                              onChange={(e) => updateSuggestionAmount(s.categorie, Number(e.target.value))}
+                              onBlur={(e) => updateSuggestionAmount(s.categorie, clampAmount(Number(e.target.value)))}
+                              min={0}
+                              step={500}
+                              className="bg-secondary border-border text-sm h-8 flex-1 tabular-nums"
+                            />
+                            <span className="text-xs text-muted-foreground flex-shrink-0">F</span>
                           </div>
+                          <p className="text-[10px] text-muted-foreground tabular-nums mb-2.5">
+                            Déjà dépensé : {fmt(s.already_spent || 0)} F
+                            {" · "}Restant à dépenser :{" "}
+                            <span className={restant > 0 ? "text-primary font-semibold" : "text-destructive"}>
+                              {fmt(restant)} F
+                            </span>
+                          </p>
+                          <button
+                            onClick={() => approveSuggestion(s)}
+                            disabled={isOverAllocated || isApproving || s.montant_suggere <= 0}
+                            className="w-full gradient-primary text-primary-foreground rounded-lg py-2 text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          >
+                            {isApproving ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Approbation...
+                              </span>
+                            ) : noMatch ? (
+                              `Créer "${s.categorie}" et appliquer`
+                            ) : (
+                              `Approuver ${fmt(s.montant_suggere)} F`
+                            )}
+                          </button>
                         </motion.div>
                       );
                     })}
                   </div>
 
-                  <p className="text-[10px] text-muted-foreground italic px-1 text-center">
-                    💡 À titre indicatif. Tes budgets s'ajustent automatiquement à mesure que tu dépenses.
-                  </p>
+                  <div className="flex gap-2 mt-4 sticky bottom-0 bg-background pt-3 pb-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 glass"
+                      onClick={() => {
+                        setShowSuggestions(false);
+                        setEditableSuggestions([]);
+                      }}
+                      disabled={approvingAll}
+                    >
+                      Fermer
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 gradient-primary text-primary-foreground font-bold"
+                      onClick={approveAllSuggestions}
+                      disabled={isOverAllocated || approvingAll || editableSuggestions.length === 0}
+                    >
+                      {approvingAll ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          Approbation...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                          Approuver tout ({editableSuggestions.length})
+                        </>
+                      )}
+                    </Button>
+                  </div>
 
-                  <button
-                    onClick={() => setShowSuggestions(false)}
-                    className="text-[10px] text-muted-foreground"
-                  >
-                    Fermer
-                  </button>
+                  <p className="text-[10px] text-muted-foreground italic px-1 text-center">
+                    💡 Modifie chaque montant pour ajuster ta répartition. Les budgets s'ajustent automatiquement à mesure que tu dépenses.
+                  </p>
                 </motion.div>
               )}
-              {showSuggestions && !suggestionsLoading && aiSuggestions.length === 0 && (
+              {showSuggestions && !suggestionsLoading && editableSuggestions.length === 0 && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
