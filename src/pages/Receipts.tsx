@@ -90,15 +90,26 @@ const Receipts = () => {
   }
 
   const getSignedUrl = async (storagePath: string): Promise<string | null> => {
-    if (!storagePath) return null;
-    try {
-      const { data, error } = await supabase.storage
-        .from("receipts")
-        .createSignedUrl(storagePath, 3600);
-      return error ? null : data.signedUrl;
-    } catch {
-      return null;
+    return getReceiptImageUrl(storagePath, null);
+  };
+
+  const openFullscreen = async (scan: ScanItem) => {
+    const url =
+      (scan.signedImageUrl && isValidImageUrl(scan.signedImageUrl)
+        ? scan.signedImageUrl
+        : null) || (await getReceiptImageUrl(scan.storage_path, scan.image_url));
+
+    if (!url || !isValidImageUrl(url)) {
+      toast({
+        title: "Image indisponible",
+        description:
+          "Le fichier a peut-être été supprimé ou n'a jamais été uploadé.",
+        variant: "destructive",
+      });
+      return;
     }
+    setFullscreenImage(url);
+    setFullscreenScan(scan);
   };
 
   const fetchScans = async () => {
