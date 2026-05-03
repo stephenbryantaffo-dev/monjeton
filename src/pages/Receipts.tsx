@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ReceiptsPinLock from "@/components/ReceiptsPinLock";
+import { getReceiptImageUrl, isValidImageUrl } from "@/lib/receiptImageManager";
 
 interface ScanItem {
   id: string;
