@@ -3,8 +3,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown, ZoomIn, X, AlertTriangle,
+  Printer, Download, FileDown, ZoomIn, X, AlertTriangle, Loader2,
 } from "lucide-react";
+
+/**
+ * Sanitize the legacy `image_url` field. Some old receipts have JSON,
+ * "undefined", or oversized base64 stored there. Returns null if unusable.
+ */
+const sanitizeImageUrl = (rawUrl: any): string | null => {
+  if (typeof rawUrl !== "string") return null;
+  const v = rawUrl.trim();
+  if (!v) return null;
+  if (v === "undefined" || v === "null") return null;
+
+  if (v.startsWith("{") || v.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(v);
+      if (parsed?.signedUrl && typeof parsed.signedUrl === "string") return parsed.signedUrl;
+      if (parsed?.data?.signedUrl && typeof parsed.data.signedUrl === "string") return parsed.data.signedUrl;
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  if (v.startsWith("http://") || v.startsWith("https://") || v.startsWith("blob:")) return v;
+  if (v.startsWith("data:image/")) {
+    if (v.length > 5 * 1024 * 1024) return null;
+    return v;
+  }
+  return null;
+};
 import { detectDuplicates, type DuplicatePair } from "@/lib/receiptDuplicates";
 import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -93,23 +121,39 @@ const Receipts = () => {
     return getReceiptImageUrl(storagePath, null);
   };
 
-  const openFullscreen = async (scan: ScanItem) => {
-    const url =
-      (scan.signedImageUrl && isValidImageUrl(scan.signedImageUrl)
-        ? scan.signedImageUrl
-        : null) || (await getReceiptImageUrl(scan.storage_path, scan.image_url));
+  const [loadingViewer, setLoadingViewer] = useState(false);
 
-    if (!url || !isValidImageUrl(url)) {
+  const openFullscreen = async (scan: ScanItem) => {
+    setFullscreenScan(scan);
+    setFullscreenImage(null);
+    setLoadingViewer(true);
+
+    try {
+      if (scan.storage_path && typeof scan.storage_path === "string" && scan.storage_path.length > 5) {
+        const { data, error } = await supabase.storage
+          .from("receipts")
+          .createSignedUrl(scan.storage_path, 86400);
+        if (!error && data?.signedUrl && typeof data.signedUrl === "string") {
+          setFullscreenImage(data.signedUrl);
+          setLoadingViewer(false);
+          return;
+        }
+      }
+      const cleaned = sanitizeImageUrl(scan.image_url);
+      if (cleaned) {
+        setFullscreenImage(cleaned);
+        setLoadingViewer(false);
+        return;
+      }
+      setLoadingViewer(false);
+    } catch (e: any) {
+      setLoadingViewer(false);
       toast({
-        title: "Image indisponible",
-        description:
-          "Le fichier a peut-être été supprimé ou n'a jamais été uploadé.",
+        title: "Erreur chargement",
+        description: e?.message || "Impossible d'afficher l'image.",
         variant: "destructive",
       });
-      return;
     }
-    setFullscreenImage(url);
-    setFullscreenScan(scan);
   };
 
   const fetchScans = async () => {
@@ -122,12 +166,12 @@ const Receipts = () => {
       .order("created_at", { ascending: false });
     const rows = (data as unknown as ScanItem[]) || [];
     const scansWithUrls = await Promise.all(
-      rows.map(async (scan) => ({
-        ...scan,
-        signedImageUrl: scan.storage_path
-          ? await getSignedUrl(scan.storage_path)
-          : scan.image_url || null,
-      }))
+      rows.map(async (scan) => {
+        let signed: string | null = null;
+        if (scan.storage_path) signed = await getSignedUrl(scan.storage_path);
+        if (!signed) signed = sanitizeImageUrl(scan.image_url);
+        return { ...scan, signedImageUrl: signed };
+      })
     );
     setScans(scansWithUrls);
     setLoading(false);
@@ -1064,9 +1108,9 @@ const Receipts = () => {
                       ? "❌ Rejeté"
                       : "⏳ En attente"}
                   </span>
-                  {!scan.signedImageUrl && scan.status === "confirmed" && (
-                    <span className="text-xs text-muted-foreground/50 italic mt-0.5 block">
-                      Pas d'image disponible
+                  {!scan.signedImageUrl && (
+                    <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium inline-block mt-1">
+                      Sans image
                     </span>
                   )}
                 </div>
@@ -1095,7 +1139,7 @@ const Receipts = () => {
 
       {/* Fullscreen image viewer */}
       <AnimatePresence>
-        {fullscreenImage && (
+        {fullscreenScan && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1170,17 +1214,57 @@ const Receipts = () => {
               </div>
             </div>
 
-            {/* Image */}
+            {/* Image / states */}
             <div
-              className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden"
+              className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden min-h-0"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={fullscreenImage}
-                alt="Reçu plein écran"
-                className="max-w-full max-h-full object-contain rounded-xl"
-                style={{ touchAction: "pinch-zoom" }}
-              />
+              {loadingViewer && (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <p className="text-sm text-white/60">Chargement de l'image...</p>
+                </div>
+              )}
+              {!loadingViewer && isValidImageUrl(fullscreenImage) && (
+                <img
+                  src={fullscreenImage as string}
+                  alt="Reçu plein écran"
+                  className="max-w-full max-h-full object-contain rounded-xl"
+                  style={{ touchAction: "pinch-zoom" }}
+                  onError={() => {
+                    setFullscreenImage(null);
+                    toast({
+                      title: "Image cassée",
+                      description: "Le fichier ne peut pas être affiché.",
+                      variant: "destructive",
+                    });
+                  }}
+                />
+              )}
+              {!loadingViewer && !isValidImageUrl(fullscreenImage) && (
+                <div className="flex flex-col items-center gap-4 text-center max-w-xs">
+                  <span className="text-7xl">📷</span>
+                  <p className="text-base font-bold text-white">Image non disponible</p>
+                  <p className="text-sm text-white/50">
+                    Ce reçu a été créé avant la mise à jour du système d'images.
+                    Tu peux le supprimer et rescanner.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!fullscreenScan) return;
+                      await supabase.from("receipt_scans").delete().eq("id", fullscreenScan.id);
+                      toast({ title: "Reçu supprimé" });
+                      setFullscreenScan(null);
+                      setFullscreenImage(null);
+                      fetchScans();
+                    }}
+                    className="mt-2 px-4 py-2 rounded-xl bg-destructive/20 text-destructive text-sm font-bold border border-destructive/30"
+                  >
+                    Supprimer ce reçu
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Footer infos */}
