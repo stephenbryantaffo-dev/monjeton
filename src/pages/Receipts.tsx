@@ -988,12 +988,11 @@ const Receipts = () => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (scan.signedImageUrl && !isDiscreetMode) {
-                      setFullscreenImage(scan.signedImageUrl);
-                      setFullscreenScan(scan);
-                    } else {
+                    if (isDiscreetMode) {
                       openDetail(scan);
+                      return;
                     }
+                    openFullscreen(scan);
                   }}
                   className={`flex-shrink-0 ${
                     scan.signedImageUrl && !isDiscreetMode ? "cursor-pointer" : "cursor-default"
