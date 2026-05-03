@@ -99,6 +99,9 @@ const Budgets = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const [editableSuggestions, setEditableSuggestions] = useState<AISuggestion[]>([]);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [approvingAll, setApprovingAll] = useState(false);
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
