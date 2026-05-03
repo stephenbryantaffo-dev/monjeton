@@ -119,11 +119,45 @@ const Scan = () => {
 
     setLoading(true);
     try {
-      const path = `${user.id}/${Date.now()}_${file.name}`;
-      const { error: uploadErr } = await supabase.storage.from("receipts").upload(path, file);
-      if (uploadErr) throw uploadErr;
+      // Step 1: create scan row first so we have a stable id for storage path
+      const { data: preScan, error: preScanError } = await supabase
+        .from("receipt_scans")
+        .insert({
+          user_id: user.id,
+          scan_type: scanType,
+          status: "pending",
+        } as any)
+        .select()
+        .single();
 
-      const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(path);
+      if (preScanError || !preScan) {
+        throw preScanError || new Error("Impossible de créer le scan");
+      }
+
+      // Step 2: upload the raw File immediately (NEVER an objectURL/dataURL)
+      const uploadResult = await uploadReceiptImage(file, preScan.id);
+      if (!uploadResult.path) {
+        await supabase.from("receipt_scans").delete().eq("id", preScan.id);
+        toast({
+          title: "Erreur upload image",
+          description: uploadResult.error || "Impossible d'envoyer l'image",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: persist storage path + signed url on the scan row
+      await supabase
+        .from("receipt_scans")
+        .update({
+          storage_path: uploadResult.path,
+          image_url: uploadResult.url,
+        } as any)
+        .eq("id", preScan.id);
+
+      const path = uploadResult.path;
+      const urlData = { publicUrl: uploadResult.url || "" };
       const base64 = preview.split(",")[1];
 
       const resp = await supabase.functions.invoke("scan-receipt", {
