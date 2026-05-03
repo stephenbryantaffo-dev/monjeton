@@ -1108,9 +1108,9 @@ const Receipts = () => {
                       ? "❌ Rejeté"
                       : "⏳ En attente"}
                   </span>
-                  {!scan.signedImageUrl && scan.status === "confirmed" && (
-                    <span className="text-xs text-muted-foreground/50 italic mt-0.5 block">
-                      Pas d'image disponible
+                  {!scan.signedImageUrl && (
+                    <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium inline-block mt-1">
+                      Sans image
                     </span>
                   )}
                 </div>
