@@ -378,8 +378,8 @@ const Scan = () => {
     await refreshReceiptStats();
     await fetchHistory();
     toast({
-      title: storagePath ? "✅ Reçu confirmé et sauvegardé" : "✅ Transaction créée",
-      description: storagePath ? "Photo stockée en sécurité dans le cloud" : undefined,
+      title: "✅ Reçu confirmé et sauvegardé",
+      description: "Photo stockée en sécurité dans le cloud",
     });
     reset();
   };
