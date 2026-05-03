@@ -54,7 +54,7 @@ const Scan = () => {
     if (!user) return;
     const { data } = await supabase
       .from("receipt_scans")
-      .select("id,scan_type,parsed_amount,parsed_merchant,parsed_category,parsed_date,parsed_currency,image_url,status,created_at")
+      .select("id,scan_type,parsed_amount,parsed_merchant,parsed_category,parsed_date,parsed_currency,image_url,status,created_at,storage_path")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
