@@ -504,6 +504,15 @@ const Budgets = () => {
   };
 
   const budgetUsedPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const suggestionsTotal = useMemo(
+    () => editableSuggestions.reduce((s, item) => s + (Number(item.montant_suggere) || 0), 0),
+    [editableSuggestions]
+  );
+  const suggestionsRestant = totalBudget - suggestionsTotal;
+  const isOverAllocated = suggestionsTotal > totalBudget;
+  const allocationPercent = totalBudget > 0
+    ? Math.round((suggestionsTotal / totalBudget) * 100)
+    : 0;
   const isOverBudget = totalSpent > totalBudget && totalBudget > 0;
   const fmt = (n: number) => formatAmount(n);
 
