@@ -1,5 +1,18 @@
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Clock, RefreshCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ScanHistoryItem {
   id: string;
@@ -12,6 +25,7 @@ interface ScanHistoryItem {
   image_url: string | null;
   status: string;
   created_at: string;
+  storage_path?: string | null;
 }
 
 interface ScanHistoryProps {
@@ -26,6 +40,35 @@ const statusConfig: Record<string, { icon: typeof Clock; color: string; label: s
 };
 
 const ScanHistory = ({ scans, onRefresh }: ScanHistoryProps) => {
+  const [toDelete, setToDelete] = useState<ScanHistoryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      // Delete storage file first (best effort)
+      if (toDelete.storage_path) {
+        const { error: storageErr } = await supabase.storage
+          .from("receipts")
+          .remove([toDelete.storage_path]);
+        if (storageErr) console.warn("Storage delete error:", storageErr);
+      }
+      const { error } = await supabase
+        .from("receipt_scans")
+        .delete()
+        .eq("id", toDelete.id);
+      if (error) throw error;
+      toast({ title: "🗑️ Scan supprimé", description: "Reçu et image supprimés" });
+      setToDelete(null);
+      onRefresh?.();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (scans.length === 0) return (
     <div className="mt-6 glass-card rounded-2xl p-8 text-center">
       <span className="text-4xl">🧾</span>
@@ -65,7 +108,6 @@ const ScanHistory = ({ scans, onRefresh }: ScanHistoryProps) => {
               transition={{ delay: 0.03 * i }}
               className="glass-card rounded-xl p-3 flex items-center gap-3"
             >
-              {/* Miniature */}
               {scan.image_url ? (
                 <img
                   src={scan.image_url}
@@ -81,7 +123,6 @@ const ScanHistory = ({ scans, onRefresh }: ScanHistoryProps) => {
                 </div>
               )}
 
-              {/* Infos */}
               <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="text-sm font-medium text-foreground truncate">
                   {scan.parsed_merchant ||
@@ -98,7 +139,6 @@ const ScanHistory = ({ scans, onRefresh }: ScanHistoryProps) => {
                 </div>
               </div>
 
-              {/* Montant */}
               {scan.parsed_amount != null && (
                 <div className="flex-shrink-0 text-right">
                   <p className="text-sm font-semibold text-foreground tabular-nums">
@@ -111,10 +151,39 @@ const ScanHistory = ({ scans, onRefresh }: ScanHistoryProps) => {
                   )}
                 </div>
               )}
+
+              <button
+                onClick={() => setToDelete(scan)}
+                className="flex-shrink-0 w-8 h-8 rounded-lg hover:bg-destructive/10 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                aria-label="Supprimer le scan"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </motion.div>
           );
         })}
       </div>
+
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce scan ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le reçu et son image seront définitivement supprimés. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
