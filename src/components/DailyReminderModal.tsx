@@ -59,6 +59,15 @@ const DailyReminderModal = ({ open, onClose, txCount, firstName, profileType, us
     if (open && userId) checkTontineReminders();
   }, [open, userId]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   const checkTontineReminders = async () => {
     if (!userId) return;
     try {
