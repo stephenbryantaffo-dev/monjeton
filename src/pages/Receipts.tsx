@@ -121,23 +121,39 @@ const Receipts = () => {
     return getReceiptImageUrl(storagePath, null);
   };
 
-  const openFullscreen = async (scan: ScanItem) => {
-    const url =
-      (scan.signedImageUrl && isValidImageUrl(scan.signedImageUrl)
-        ? scan.signedImageUrl
-        : null) || (await getReceiptImageUrl(scan.storage_path, scan.image_url));
+  const [loadingViewer, setLoadingViewer] = useState(false);
 
-    if (!url || !isValidImageUrl(url)) {
+  const openFullscreen = async (scan: ScanItem) => {
+    setFullscreenScan(scan);
+    setFullscreenImage(null);
+    setLoadingViewer(true);
+
+    try {
+      if (scan.storage_path && typeof scan.storage_path === "string" && scan.storage_path.length > 5) {
+        const { data, error } = await supabase.storage
+          .from("receipts")
+          .createSignedUrl(scan.storage_path, 86400);
+        if (!error && data?.signedUrl && typeof data.signedUrl === "string") {
+          setFullscreenImage(data.signedUrl);
+          setLoadingViewer(false);
+          return;
+        }
+      }
+      const cleaned = sanitizeImageUrl(scan.image_url);
+      if (cleaned) {
+        setFullscreenImage(cleaned);
+        setLoadingViewer(false);
+        return;
+      }
+      setLoadingViewer(false);
+    } catch (e: any) {
+      setLoadingViewer(false);
       toast({
-        title: "Image indisponible",
-        description:
-          "Le fichier a peut-être été supprimé ou n'a jamais été uploadé.",
+        title: "Erreur chargement",
+        description: e?.message || "Impossible d'afficher l'image.",
         variant: "destructive",
       });
-      return;
     }
-    setFullscreenImage(url);
-    setFullscreenScan(scan);
   };
 
   const fetchScans = async () => {
@@ -150,12 +166,12 @@ const Receipts = () => {
       .order("created_at", { ascending: false });
     const rows = (data as unknown as ScanItem[]) || [];
     const scansWithUrls = await Promise.all(
-      rows.map(async (scan) => ({
-        ...scan,
-        signedImageUrl: scan.storage_path
-          ? await getSignedUrl(scan.storage_path)
-          : scan.image_url || null,
-      }))
+      rows.map(async (scan) => {
+        let signed: string | null = null;
+        if (scan.storage_path) signed = await getSignedUrl(scan.storage_path);
+        if (!signed) signed = sanitizeImageUrl(scan.image_url);
+        return { ...scan, signedImageUrl: signed };
+      })
     );
     setScans(scansWithUrls);
     setLoading(false);
