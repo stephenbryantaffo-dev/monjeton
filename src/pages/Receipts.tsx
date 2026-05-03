@@ -1139,7 +1139,7 @@ const Receipts = () => {
 
       {/* Fullscreen image viewer */}
       <AnimatePresence>
-        {fullscreenImage && (
+        {fullscreenScan && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
