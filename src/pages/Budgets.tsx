@@ -365,6 +365,7 @@ const Budgets = () => {
       });
 
       setAiSuggestions(enriched);
+      setEditableSuggestions(enriched);
       setAiGlobalAdvice(String(data.conseil_global || ""));
       setAiBudgetSnapshot(Number(data.totalBudget) || totalBudget);
 
