@@ -1214,17 +1214,57 @@ const Receipts = () => {
               </div>
             </div>
 
-            {/* Image */}
+            {/* Image / states */}
             <div
-              className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden"
+              className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden min-h-0"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={fullscreenImage}
-                alt="Reçu plein écran"
-                className="max-w-full max-h-full object-contain rounded-xl"
-                style={{ touchAction: "pinch-zoom" }}
-              />
+              {loadingViewer && (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <p className="text-sm text-white/60">Chargement de l'image...</p>
+                </div>
+              )}
+              {!loadingViewer && isValidImageUrl(fullscreenImage) && (
+                <img
+                  src={fullscreenImage as string}
+                  alt="Reçu plein écran"
+                  className="max-w-full max-h-full object-contain rounded-xl"
+                  style={{ touchAction: "pinch-zoom" }}
+                  onError={() => {
+                    setFullscreenImage(null);
+                    toast({
+                      title: "Image cassée",
+                      description: "Le fichier ne peut pas être affiché.",
+                      variant: "destructive",
+                    });
+                  }}
+                />
+              )}
+              {!loadingViewer && !isValidImageUrl(fullscreenImage) && (
+                <div className="flex flex-col items-center gap-4 text-center max-w-xs">
+                  <span className="text-7xl">📷</span>
+                  <p className="text-base font-bold text-white">Image non disponible</p>
+                  <p className="text-sm text-white/50">
+                    Ce reçu a été créé avant la mise à jour du système d'images.
+                    Tu peux le supprimer et rescanner.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!fullscreenScan) return;
+                      await supabase.from("receipt_scans").delete().eq("id", fullscreenScan.id);
+                      toast({ title: "Reçu supprimé" });
+                      setFullscreenScan(null);
+                      setFullscreenImage(null);
+                      fetchScans();
+                    }}
+                    className="mt-2 px-4 py-2 rounded-xl bg-destructive/20 text-destructive text-sm font-bold border border-destructive/30"
+                  >
+                    Supprimer ce reçu
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Footer infos */}
