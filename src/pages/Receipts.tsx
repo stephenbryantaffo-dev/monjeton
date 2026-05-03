@@ -3,8 +3,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown, ZoomIn, X, AlertTriangle,
+  Printer, Download, FileDown, ZoomIn, X, AlertTriangle, Loader2,
 } from "lucide-react";
+
+/**
+ * Sanitize the legacy `image_url` field. Some old receipts have JSON,
+ * "undefined", or oversized base64 stored there. Returns null if unusable.
+ */
+const sanitizeImageUrl = (rawUrl: any): string | null => {
+  if (typeof rawUrl !== "string") return null;
+  const v = rawUrl.trim();
+  if (!v) return null;
+  if (v === "undefined" || v === "null") return null;
+
+  if (v.startsWith("{") || v.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(v);
+      if (parsed?.signedUrl && typeof parsed.signedUrl === "string") return parsed.signedUrl;
+      if (parsed?.data?.signedUrl && typeof parsed.data.signedUrl === "string") return parsed.data.signedUrl;
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  if (v.startsWith("http://") || v.startsWith("https://") || v.startsWith("blob:")) return v;
+  if (v.startsWith("data:image/")) {
+    if (v.length > 5 * 1024 * 1024) return null;
+    return v;
+  }
+  return null;
+};
 import { detectDuplicates, type DuplicatePair } from "@/lib/receiptDuplicates";
 import jsPDF from "jspdf";
 import DashboardLayout from "@/components/DashboardLayout";
