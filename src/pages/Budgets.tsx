@@ -388,57 +388,119 @@ const Budgets = () => {
     }
   };
 
-  const applySuggestion = async (suggestion: AISuggestion) => {
-    if (!user) return;
+  const SAFE_MAX = 999999999;
+  const clampAmount = (n: number) =>
+    Math.min(SAFE_MAX, Math.max(0, Math.floor(Number(n) || 0)));
 
-    let categoryId = suggestion.category_id;
+  const updateSuggestionAmount = (categorie: string, newAmount: number) => {
+    const safe = clampAmount(newAmount);
+    setEditableSuggestions((prev) =>
+      prev.map((s) => {
+        if (s.categorie !== categorie) return s;
+        const newPercent = totalBudget > 0
+          ? Math.round((safe / totalBudget) * 100)
+          : 0;
+        return { ...s, montant_suggere: safe, pourcentage: newPercent };
+      })
+    );
+  };
 
-    // Auto-create the category if no match was found
+  const upsertCategoryBudgetFromSuggestion = async (s: AISuggestion) => {
+    if (!user) return false;
+    let categoryId = s.category_id;
     if (!categoryId) {
-      const { data: created, error: createErr } = await supabase
+      const { data: newCat, error: createErr } = await supabase
         .from("categories")
         .insert({
           user_id: user.id,
-          name: suggestion.categorie,
+          name: s.categorie,
           type: "expense",
           icon: "MoreHorizontal",
           color: "hsl(0, 0%, 60%)",
         })
         .select("id")
         .single();
-
-      if (createErr || !created) {
-        toast({
-          title: "Erreur",
-          description: createErr?.message || "Impossible de créer la catégorie.",
-          variant: "destructive",
-        });
-        return;
+      if (createErr || !newCat) {
+        throw new Error(createErr?.message || "Impossible de créer la catégorie");
       }
-      categoryId = created.id;
+      categoryId = newCat.id;
     }
-
     const { error } = await supabase.from("category_budgets").upsert(
       {
         user_id: user.id,
         category_id: categoryId,
         month,
         year,
-        budget_amount: suggestion.montant_suggere,
+        budget_amount: clampAmount(s.montant_suggere),
       },
       { onConflict: "user_id,category_id,month,year" }
     );
-    if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    if (error) throw error;
+    return true;
+  };
+
+  const approveSuggestion = async (s: AISuggestion) => {
+    if (!user) return;
+    if (suggestionsTotal > totalBudget) {
+      toast({
+        title: "Total dépasse ton budget",
+        description: `Réduis d'abord d'au moins ${fmt(suggestionsTotal - totalBudget)} F`,
+        variant: "destructive",
+      });
       return;
     }
-    setAiSuggestions((prev) => prev.filter((s) => s.categorie !== suggestion.categorie));
-    toast({
-      title: suggestion.category_id
-        ? `Budget ${suggestion.categorie} appliqué ✅`
-        : `Catégorie "${suggestion.categorie}" créée et budget appliqué ✅`,
-    });
-    loadData();
+    setApprovingId(s.categorie);
+    try {
+      await upsertCategoryBudgetFromSuggestion(s);
+      setEditableSuggestions((prev) => prev.filter((item) => item.categorie !== s.categorie));
+      toast({
+        title: `Budget ${s.categorie} approuvé ✅`,
+        description: `${fmt(s.montant_suggere)} F alloués`,
+      });
+      await loadData();
+    } catch (e: any) {
+      toast({ title: "Erreur approbation", description: e?.message, variant: "destructive" });
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const approveAllSuggestions = async () => {
+    if (!user || editableSuggestions.length === 0) return;
+    if (suggestionsTotal > totalBudget) {
+      toast({
+        title: "Total dépasse ton budget",
+        description: `Ajuste d'abord les montants pour rester sous ${fmt(totalBudget)} F`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setApprovingAll(true);
+    try {
+      let successCount = 0;
+      const failed: AISuggestion[] = [];
+      for (const s of editableSuggestions) {
+        try {
+          await upsertCategoryBudgetFromSuggestion(s);
+          successCount++;
+        } catch {
+          failed.push(s);
+        }
+      }
+      setEditableSuggestions(failed);
+      if (failed.length === 0) setShowSuggestions(false);
+      toast({
+        title: `${successCount} budget(s) approuvé(s) ✅`,
+        description: failed.length > 0
+          ? `${failed.length} échec(s) — réessaie`
+          : "Ta répartition est maintenant active",
+      });
+      await loadData();
+    } catch (e: any) {
+      toast({ title: "Erreur approbation globale", description: e?.message, variant: "destructive" });
+    } finally {
+      setApprovingAll(false);
+    }
   };
 
   const budgetUsedPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
