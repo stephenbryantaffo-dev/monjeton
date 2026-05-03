@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ReceiptsPinLock from "@/components/ReceiptsPinLock";
+import { getReceiptImageUrl, isValidImageUrl } from "@/lib/receiptImageManager";
 
 interface ScanItem {
   id: string;
@@ -89,15 +90,26 @@ const Receipts = () => {
   }
 
   const getSignedUrl = async (storagePath: string): Promise<string | null> => {
-    if (!storagePath) return null;
-    try {
-      const { data, error } = await supabase.storage
-        .from("receipts")
-        .createSignedUrl(storagePath, 3600);
-      return error ? null : data.signedUrl;
-    } catch {
-      return null;
+    return getReceiptImageUrl(storagePath, null);
+  };
+
+  const openFullscreen = async (scan: ScanItem) => {
+    const url =
+      (scan.signedImageUrl && isValidImageUrl(scan.signedImageUrl)
+        ? scan.signedImageUrl
+        : null) || (await getReceiptImageUrl(scan.storage_path, scan.image_url));
+
+    if (!url || !isValidImageUrl(url)) {
+      toast({
+        title: "Image indisponible",
+        description:
+          "Le fichier a peut-être été supprimé ou n'a jamais été uploadé.",
+        variant: "destructive",
+      });
+      return;
     }
+    setFullscreenImage(url);
+    setFullscreenScan(scan);
   };
 
   const fetchScans = async () => {
@@ -976,12 +988,11 @@ const Receipts = () => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (scan.signedImageUrl && !isDiscreetMode) {
-                      setFullscreenImage(scan.signedImageUrl);
-                      setFullscreenScan(scan);
-                    } else {
+                    if (isDiscreetMode) {
                       openDetail(scan);
+                      return;
                     }
+                    openFullscreen(scan);
                   }}
                   className={`flex-shrink-0 ${
                     scan.signedImageUrl && !isDiscreetMode ? "cursor-pointer" : "cursor-default"
