@@ -370,16 +370,9 @@ const Scan = () => {
       return;
     }
 
-    // Upload image to permanent storage
-    let storagePath: string | null = null;
-    if (file) {
-      storagePath = await uploadReceiptImage(file, scanId);
-    }
-
-    // Update receipt_scans with storage_path and confirmed status
+    // Image was already uploaded during analyze(); just mark scan confirmed
     await supabase.from("receipt_scans").update({
       status: "confirmed",
-      ...(storagePath ? { storage_path: storagePath } : {}),
     } as any).eq("id", scanId);
 
     await refreshReceiptStats();
