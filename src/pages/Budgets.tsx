@@ -77,9 +77,8 @@ const BudgetProgressBar = ({ percent, className = "" }: { percent: number; class
 const Budgets = () => {
   const { user } = useAuth();
   const { formatAmount } = usePrivacy();
-  const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(() => new Date().getMonth() + 1);
+  const [year, setYear] = useState(() => new Date().getFullYear());
   const [totalBudget, setTotalBudget] = useState(0);
   const [budgetId, setBudgetId] = useState<string | null>(null);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudget[]>([]);
@@ -118,8 +117,9 @@ const Budgets = () => {
 
     try {
       // Auto-ajuste les budgets sur le mois en cours uniquement
-      const curMonthCheck = now.getMonth() + 1;
-      const curYearCheck = now.getFullYear();
+      const today = new Date();
+      const curMonthCheck = today.getMonth() + 1;
+      const curYearCheck = today.getFullYear();
       if (month === curMonthCheck && year === curYearCheck) {
         await syncAllAutoBudgets(user.id, month, year).catch((e) =>
           console.error("syncAllAutoBudgets error:", e)
@@ -165,8 +165,9 @@ const Budgets = () => {
       setCategoryBudgets(cBudgets);
 
       // Calculate predictions for current month
-      const curMonth = now.getMonth() + 1;
-      const curYear = now.getFullYear();
+      const todayPred = new Date();
+      const curMonth = todayPred.getMonth() + 1;
+      const curYear = todayPred.getFullYear();
       if (month === curMonth && year === curYear && cBudgets.length > 0) {
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -670,7 +671,8 @@ const Budgets = () => {
               if (!totalBudget) return null;
               const today = new Date();
               const daysInMonth = new Date(year, month, 0).getDate();
-              const isCurrent = month === now.getMonth() + 1 && year === now.getFullYear();
+              const todayCheck = new Date();
+              const isCurrent = month === todayCheck.getMonth() + 1 && year === todayCheck.getFullYear();
               const daysPassed = isCurrent ? today.getDate() : daysInMonth;
               const daysLeft = daysInMonth - daysPassed;
               if (daysPassed === 0) return null;
