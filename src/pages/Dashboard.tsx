@@ -36,7 +36,7 @@ const Dashboard = () => {
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
-  const [activePeriod, setActivePeriod] = useState(1);
+  const [activePeriod, setActivePeriod] = useState<"Jour" | "Semaine" | "Mois" | "Année" | "Custom">("Jour");
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [allTimeEmpty, setAllTimeEmpty] = useState(false);
