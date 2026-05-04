@@ -396,23 +396,30 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="flex gap-1 p-1 glass-card rounded-xl mb-4 sm:mb-6">
-        <button onClick={() => setActivePeriod(0)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activePeriod === 0 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-          Hier
-        </button>
-        <button onClick={() => setActivePeriod(1)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activePeriod === 1 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-          Aujourd'hui
-        </button>
+      <div className="flex gap-1 p-1 glass-card rounded-xl mb-2 sm:mb-3 overflow-x-auto">
+        {(["Jour", "Semaine", "Mois", "Année"] as const).map((p) => (
+          <button
+            key={p}
+            onClick={() => setActivePeriod(p)}
+            className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+              activePeriod === p
+                ? "gradient-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
-              activePeriod === 2 && customRange?.from
+            <button onClick={() => setActivePeriod("Custom")} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+              activePeriod === "Custom" && customRange?.from
                 ? "gradient-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-1 ring-offset-background font-semibold"
-                : activePeriod === 2
+                : activePeriod === "Custom"
                   ? "gradient-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
             }`}>
-              {activePeriod === 2 && customRange?.from
+              {activePeriod === "Custom" && customRange?.from
                 ? customRange.to
                   ? `${format(customRange.from, "d MMM", { locale: fr })} → ${format(customRange.to, "d MMM", { locale: fr })}`
                   : format(customRange.from, "d MMM", { locale: fr })
@@ -435,8 +442,12 @@ const Dashboard = () => {
         </Popover>
       </div>
 
+      <p className="text-xs text-muted-foreground mb-4 sm:mb-6 px-1">
+        Données : <span className="text-foreground font-medium">{dateRange.label}</span>
+      </p>
+
       {/* Message when custom range not selected */}
-      {activePeriod === 2 && !customRange?.from && (
+      {activePeriod === "Custom" && !customRange?.from && (
         <div className="glass-card rounded-2xl p-6 mb-6 text-center">
           <CalendarIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-muted-foreground text-sm">Sélectionnez une plage de dates dans le calendrier ci-dessus.</p>
