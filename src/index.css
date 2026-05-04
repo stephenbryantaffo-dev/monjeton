@@ -137,6 +137,17 @@
     box-shadow: 0 0 20px hsla(270, 70%, 60%, 0.3), 0 0 60px hsla(270, 70%, 60%, 0.1);
   }
 
+  /* iOS 18 / iPhone 16 SVG render fix — applied globally to all icon circles */
+  [class*="rounded-"][class*="items-center"][class*="justify-center"] {
+    isolation: isolate;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  [class*="rounded-"][class*="items-center"][class*="justify-center"] > svg,
+  [class*="rounded-"][class*="items-center"][class*="justify-center"] > span > svg {
+    display: block;
+  }
+
   .pb-safe {
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
