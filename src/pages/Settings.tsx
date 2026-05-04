@@ -92,8 +92,18 @@ const Settings = () => {
   return (
     <DashboardLayout title="Paramètres">
       <div className="glass-card rounded-2xl p-5 mb-4 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full gradient-primary flex items-center justify-center">
-          <User className="w-7 h-7 text-primary-foreground" />
+        <div
+          className="w-14 h-14 rounded-full gradient-primary flex items-center justify-center flex-shrink-0"
+          style={{
+            overflow: "visible",
+            isolation: "isolate",
+            WebkitTransform: "translateZ(0)",
+            transform: "translateZ(0)",
+          }}
+        >
+          <span style={{ display: "block", lineHeight: 0 }}>
+            <User className="w-7 h-7 text-primary-foreground" />
+          </span>
         </div>
         <div>
           <p className="text-lg font-bold text-foreground">{profile?.full_name || "Utilisateur"}</p>

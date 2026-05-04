@@ -81,8 +81,19 @@ const IconPicker = ({ value, onChange, color }: { value: string; onChange: (v: s
 const CatIcon = ({ iconName, color }: { iconName?: string | null; color: string }) => {
   const Icon = iconName && (icons as any)[iconName] ? (icons as any)[iconName] : Wallet;
   return (
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: color + "20" }}>
-      <Icon className="w-5 h-5" style={{ color }} />
+    <div
+      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+      style={{
+        backgroundColor: color + "20",
+        overflow: "visible",
+        isolation: "isolate",
+        WebkitTransform: "translateZ(0)",
+        transform: "translateZ(0)",
+      }}
+    >
+      <span style={{ display: "block", lineHeight: 0 }}>
+        <Icon className="w-5 h-5" style={{ color }} />
+      </span>
     </div>
   );
 };
