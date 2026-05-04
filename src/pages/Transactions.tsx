@@ -76,7 +76,10 @@ const Transactions = () => {
     try {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
-      setTransactions(prev => prev.filter(t => t.id !== id));
+      // Reset complet de la pagination pour garantir cohérence
+      setTransactions([]);
+      setPage(0);
+      await fetchData(0);
       toast({ title: "Transaction supprimée" });
     } catch {
       toast({
@@ -125,11 +128,15 @@ const Transactions = () => {
       const now = new Date();
       let startDate: Date;
       if (filterPeriod === "week") {
-        startDate = new Date(now); startDate.setDate(now.getDate() - 7);
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
       } else if (filterPeriod === "month") {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       } else if (filterPeriod === "3months") {
-        startDate = new Date(now); startDate.setMonth(now.getMonth() - 3);
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 3);
+        startDate.setHours(0, 0, 0, 0);
       } else {
         startDate = new Date(now.getFullYear(), 0, 1);
       }
