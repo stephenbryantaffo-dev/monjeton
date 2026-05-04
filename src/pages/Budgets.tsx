@@ -91,9 +91,7 @@ const Budgets = () => {
   const [loading, setLoading] = useState(true);
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
   const [aiGlobalAdvice, setAiGlobalAdvice] = useState<string>("");
-  const [aiBudgetSnapshot, setAiBudgetSnapshot] = useState<number>(0);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -284,7 +282,6 @@ const Budgets = () => {
 
     setSuggestionsLoading(true);
     setShowSuggestions(true);
-    setAiSuggestions([]);
     setAiGlobalAdvice("");
 
     try {
@@ -393,10 +390,8 @@ const Budgets = () => {
         };
       });
 
-      setAiSuggestions(enriched);
       setEditableSuggestions(enriched);
       setAiGlobalAdvice(String(data.conseil_global || ""));
-      setAiBudgetSnapshot(Number(data.totalBudget) || totalBudget);
 
       if (enriched.length === 0) {
         toast({
