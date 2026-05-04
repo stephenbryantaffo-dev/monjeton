@@ -472,6 +472,7 @@ const Budgets = () => {
   };
 
   const approveSuggestion = async (s: AISuggestion) => {
+    if (approvingId === s.categorie) return;
     if (!user) return;
     if (suggestionsTotal > totalBudget) {
       toast({
@@ -498,6 +499,7 @@ const Budgets = () => {
   };
 
   const approveAllSuggestions = async () => {
+    if (approvingAll) return;
     if (!user || editableSuggestions.length === 0) return;
     if (suggestionsTotal > totalBudget) {
       toast({
@@ -508,14 +510,16 @@ const Budgets = () => {
       return;
     }
     setApprovingAll(true);
+    const snapshot = [...editableSuggestions];
     try {
       let successCount = 0;
       const failed: AISuggestion[] = [];
-      for (const s of editableSuggestions) {
+      for (const s of snapshot) {
         try {
           await upsertCategoryBudgetFromSuggestion(s);
           successCount++;
-        } catch {
+        } catch (err) {
+          console.error(`Approve failed for ${s.categorie}:`, err);
           failed.push(s);
         }
       }
