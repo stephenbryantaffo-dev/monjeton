@@ -1058,18 +1058,7 @@ const Budgets = () => {
                               autoFocus
                               onChange={(e) => setEditValue(e.target.value)}
                               onKeyDown={async (e) => {
-                                if (e.key === "Enter") {
-                                  const amount = Number(editValue);
-                                  if (amount > 0) {
-                                    await supabase
-                                      .from("category_budgets")
-                                      .update({ budget_amount: amount })
-                                      .eq("id", cb.id);
-                                    toast({ title: "Budget mis à jour ✅" });
-                                    setEditingId(null);
-                                    loadData();
-                                  }
-                                }
+                                if (e.key === "Enter") await saveInlineEdit(cb.id);
                                 if (e.key === "Escape") setEditingId(null);
                               }}
                               className="glass text-sm h-8 flex-1"
@@ -1078,18 +1067,7 @@ const Budgets = () => {
                             <Button
                               size="sm"
                               className="h-8 gradient-primary text-primary-foreground"
-                              onClick={async () => {
-                                const amount = Number(editValue);
-                                if (amount > 0) {
-                                  await supabase
-                                    .from("category_budgets")
-                                    .update({ budget_amount: amount })
-                                    .eq("id", cb.id);
-                                  toast({ title: "Budget mis à jour ✅" });
-                                  setEditingId(null);
-                                  loadData();
-                                }
-                              }}
+                              onClick={() => saveInlineEdit(cb.id)}
                             >
                               OK
                             </Button>
