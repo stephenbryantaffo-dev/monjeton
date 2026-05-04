@@ -51,6 +51,8 @@ const Settings = () => {
   const [newPin, setNewPin] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+  const [pwdError, setPwdError] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
 
   useEffect(() => {
