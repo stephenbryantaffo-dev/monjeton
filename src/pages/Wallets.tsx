@@ -226,8 +226,19 @@ const Wallets = () => {
               >
                 <BorderRotate className="p-4 space-y-2" animationSpeed={18}>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
-                    <Wallet className="w-6 h-6" style={{ color }} />
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${color}20`,
+                      overflow: "visible",
+                      isolation: "isolate",
+                      WebkitTransform: "translateZ(0)",
+                      transform: "translateZ(0)",
+                    }}
+                  >
+                    <span style={{ display: "block", lineHeight: 0 }}>
+                      <Wallet className="w-6 h-6" style={{ color }} />
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{w.wallet_name}</p>
