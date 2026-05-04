@@ -77,9 +77,8 @@ const BudgetProgressBar = ({ percent, className = "" }: { percent: number; class
 const Budgets = () => {
   const { user } = useAuth();
   const { formatAmount } = usePrivacy();
-  const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(() => new Date().getMonth() + 1);
+  const [year, setYear] = useState(() => new Date().getFullYear());
   const [totalBudget, setTotalBudget] = useState(0);
   const [budgetId, setBudgetId] = useState<string | null>(null);
   const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudget[]>([]);
@@ -118,8 +117,9 @@ const Budgets = () => {
 
     try {
       // Auto-ajuste les budgets sur le mois en cours uniquement
-      const curMonthCheck = now.getMonth() + 1;
-      const curYearCheck = now.getFullYear();
+      const today = new Date();
+      const curMonthCheck = today.getMonth() + 1;
+      const curYearCheck = today.getFullYear();
       if (month === curMonthCheck && year === curYearCheck) {
         await syncAllAutoBudgets(user.id, month, year).catch((e) =>
           console.error("syncAllAutoBudgets error:", e)
@@ -165,8 +165,9 @@ const Budgets = () => {
       setCategoryBudgets(cBudgets);
 
       // Calculate predictions for current month
-      const curMonth = now.getMonth() + 1;
-      const curYear = now.getFullYear();
+      const todayPred = new Date();
+      const curMonth = todayPred.getMonth() + 1;
+      const curYear = todayPred.getFullYear();
       if (month === curMonth && year === curYear && cBudgets.length > 0) {
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -195,23 +196,34 @@ const Budgets = () => {
 
   const saveTotalBudget = async () => {
     if (!user) return;
-    const amount = Number(newBudgetAmount);
-    if (!amount || amount <= 0) return;
-
-    if (budgetId) {
-      await supabase.from("budgets").update({ total_budget: amount }).eq("id", budgetId);
-    } else {
-      await supabase.from("budgets").insert({ user_id: user.id, month, year, total_budget: amount });
+    const amount = clampAmount(newBudgetAmount);
+    if (!amount || amount <= 0) {
+      toast({ title: "Montant invalide", description: "Entre un nombre supérieur à 0", variant: "destructive" });
+      return;
     }
-    setNewBudgetAmount("");
-    toast({ title: "Budget global mis à jour ✅" });
-    loadData();
+    try {
+      if (budgetId) {
+        const { error } = await supabase.from("budgets").update({ total_budget: amount }).eq("id", budgetId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("budgets").insert({ user_id: user.id, month, year, total_budget: amount });
+        if (error) throw error;
+      }
+      setNewBudgetAmount("");
+      toast({ title: "Budget global mis à jour ✅" });
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Erreur sauvegarde", description: e?.message, variant: "destructive" });
+    }
   };
 
   const addCategoryBudget = async () => {
-    if (!user || !selectedCategoryId || !newCatBudget) return;
-    const amount = Number(newCatBudget);
-    if (amount <= 0) return;
+    if (!user || !selectedCategoryId) return;
+    const amount = clampAmount(newCatBudget);
+    if (!amount || amount <= 0) {
+      toast({ title: "Montant invalide", variant: "destructive" });
+      return;
+    }
 
     const { error } = await supabase.from("category_budgets").upsert(
       { user_id: user.id, category_id: selectedCategoryId, month, year, budget_amount: amount },
@@ -227,6 +239,23 @@ const Budgets = () => {
     setSelectedCategoryId("");
     toast({ title: "Budget catégorie ajouté ✅" });
     loadData();
+  };
+
+  const saveInlineEdit = async (cbId: string) => {
+    const amount = clampAmount(editValue);
+    if (!amount || amount <= 0) {
+      toast({ title: "Montant invalide", variant: "destructive" });
+      return;
+    }
+    try {
+      const { error } = await supabase.from("category_budgets").update({ budget_amount: amount }).eq("id", cbId);
+      if (error) throw error;
+      toast({ title: "Budget mis à jour ✅" });
+      setEditingId(null);
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Erreur mise à jour", description: e?.message, variant: "destructive" });
+    }
   };
 
   const deleteCategoryBudget = async (id: string) => {
@@ -389,8 +418,11 @@ const Budgets = () => {
   };
 
   const SAFE_MAX = 999999999;
-  const clampAmount = (n: number) =>
-    Math.min(SAFE_MAX, Math.max(0, Math.floor(Number(n) || 0)));
+  const clampAmount = (n: number | string) => {
+    const num = typeof n === "string" ? Number(n.replace(/\s/g, "")) : Number(n);
+    if (isNaN(num)) return 0;
+    return Math.min(SAFE_MAX, Math.max(0, Math.floor(num)));
+  };
 
   const updateSuggestionAmount = (categorie: string, newAmount: number) => {
     const safe = clampAmount(newAmount);
@@ -440,6 +472,7 @@ const Budgets = () => {
   };
 
   const approveSuggestion = async (s: AISuggestion) => {
+    if (approvingId === s.categorie) return;
     if (!user) return;
     if (suggestionsTotal > totalBudget) {
       toast({
@@ -466,6 +499,7 @@ const Budgets = () => {
   };
 
   const approveAllSuggestions = async () => {
+    if (approvingAll) return;
     if (!user || editableSuggestions.length === 0) return;
     if (suggestionsTotal > totalBudget) {
       toast({
@@ -476,14 +510,16 @@ const Budgets = () => {
       return;
     }
     setApprovingAll(true);
+    const snapshot = [...editableSuggestions];
     try {
       let successCount = 0;
       const failed: AISuggestion[] = [];
-      for (const s of editableSuggestions) {
+      for (const s of snapshot) {
         try {
           await upsertCategoryBudgetFromSuggestion(s);
           successCount++;
-        } catch {
+        } catch (err) {
+          console.error(`Approve failed for ${s.categorie}:`, err);
           failed.push(s);
         }
       }
@@ -670,7 +706,8 @@ const Budgets = () => {
               if (!totalBudget) return null;
               const today = new Date();
               const daysInMonth = new Date(year, month, 0).getDate();
-              const isCurrent = month === now.getMonth() + 1 && year === now.getFullYear();
+              const todayCheck = new Date();
+              const isCurrent = month === todayCheck.getMonth() + 1 && year === todayCheck.getFullYear();
               const daysPassed = isCurrent ? today.getDate() : daysInMonth;
               const daysLeft = daysInMonth - daysPassed;
               if (daysPassed === 0) return null;
@@ -1021,18 +1058,7 @@ const Budgets = () => {
                               autoFocus
                               onChange={(e) => setEditValue(e.target.value)}
                               onKeyDown={async (e) => {
-                                if (e.key === "Enter") {
-                                  const amount = Number(editValue);
-                                  if (amount > 0) {
-                                    await supabase
-                                      .from("category_budgets")
-                                      .update({ budget_amount: amount })
-                                      .eq("id", cb.id);
-                                    toast({ title: "Budget mis à jour ✅" });
-                                    setEditingId(null);
-                                    loadData();
-                                  }
-                                }
+                                if (e.key === "Enter") await saveInlineEdit(cb.id);
                                 if (e.key === "Escape") setEditingId(null);
                               }}
                               className="glass text-sm h-8 flex-1"
@@ -1041,18 +1067,7 @@ const Budgets = () => {
                             <Button
                               size="sm"
                               className="h-8 gradient-primary text-primary-foreground"
-                              onClick={async () => {
-                                const amount = Number(editValue);
-                                if (amount > 0) {
-                                  await supabase
-                                    .from("category_budgets")
-                                    .update({ budget_amount: amount })
-                                    .eq("id", cb.id);
-                                  toast({ title: "Budget mis à jour ✅" });
-                                  setEditingId(null);
-                                  loadData();
-                                }
-                              }}
+                              onClick={() => saveInlineEdit(cb.id)}
                             >
                               OK
                             </Button>
