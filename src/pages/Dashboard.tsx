@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import OnboardingInline from "@/components/Onboarding";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -51,8 +51,6 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
 
-  // Long press for voice shortcut
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
 
 
@@ -69,10 +67,10 @@ const Dashboard = () => {
   useEffect(() => {
     const checkDailyReminder = async () => {
       if (!user) return;
+      const hour = new Date().getHours();
+      if (hour < 18 || hour > 22) return;
       try {
         const today = new Date().toISOString().split("T")[0];
-        const hour = new Date().getHours();
-        if (hour < 18 || hour > 22) return;
 
         const { data: reminder } = await supabase
           .from("daily_reminders")
@@ -400,7 +398,10 @@ const Dashboard = () => {
         {(["Jour", "Semaine", "Mois", "Année"] as const).map((p) => (
           <button
             key={p}
-            onClick={() => setActivePeriod(p)}
+            onClick={() => {
+              setActivePeriod(p);
+              setCustomRange(undefined);
+            }}
             className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
               activePeriod === p
                 ? "gradient-primary text-primary-foreground"
@@ -412,7 +413,7 @@ const Dashboard = () => {
         ))}
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button onClick={() => setActivePeriod("Custom")} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+            <button onClick={() => { setActivePeriod("Custom"); setCalendarOpen(true); }} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
               activePeriod === "Custom" && customRange?.from
                 ? "gradient-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-1 ring-offset-background font-semibold"
                 : activePeriod === "Custom"
@@ -607,55 +608,25 @@ const Dashboard = () => {
         {/* Quick voice button */}
         <button
           onClick={() => navigate("/transactions/new", { state: { autoVoice: true } })}
-          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30"
+          aria-label="Ajouter une transaction par la voix"
+          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30 hover:border-primary/60 hover:scale-110 active:scale-95 transition-all duration-200"
         >
           <Mic className="w-5 h-5 text-primary" />
         </button>
         <Link
           to="/scan"
-          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30"
+          aria-label="Scanner un reçu"
+          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30 hover:border-primary/60 hover:scale-110 active:scale-95 transition-all duration-200"
         >
           <Camera className="w-5 h-5 text-primary" />
         </Link>
-        <button
-          onMouseDown={() => {
-            longPressTimerRef.current = setTimeout(() => {
-              longPressTimerRef.current = null;
-              navigate("/transactions/new", { state: { autoVoice: true } });
-            }, 600);
-          }}
-          onMouseUp={() => {
-            if (longPressTimerRef.current) {
-              clearTimeout(longPressTimerRef.current);
-              longPressTimerRef.current = null;
-              navigate("/assistant");
-            }
-          }}
-          onMouseLeave={() => {
-            if (longPressTimerRef.current) {
-              clearTimeout(longPressTimerRef.current);
-              longPressTimerRef.current = null;
-            }
-          }}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            longPressTimerRef.current = setTimeout(() => {
-              longPressTimerRef.current = null;
-              navigate("/transactions/new", { state: { autoVoice: true } });
-            }, 600);
-          }}
-          onTouchEnd={(e) => {
-            e.preventDefault();
-            if (longPressTimerRef.current) {
-              clearTimeout(longPressTimerRef.current);
-              longPressTimerRef.current = null;
-              navigate("/assistant");
-            }
-          }}
+        <Link
+          to="/assistant"
+          aria-label="Ouvrir l'assistant IA"
           className="w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
         >
           <MessageCircle className="w-6 h-6 text-primary-foreground" />
-        </button>
+        </Link>
       </div>
 
       <DailyReminderModal
