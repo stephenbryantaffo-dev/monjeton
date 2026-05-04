@@ -1044,7 +1044,7 @@ const TontinePage = () => {
 
       {/* ─── MEMBER ACTIONS SHEET ─── */}
       <Sheet open={memberActionOpen} onOpenChange={setMemberActionOpen}>
-        <SheetContent side="bottom" className="glass-card border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
+        <SheetContent side="bottom" className="glass-card border-border !inset-auto !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100vw-2rem)] !max-w-md !rounded-3xl !border max-h-[85vh] overflow-y-auto data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
           {actionMember && (
             <>
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
