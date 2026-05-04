@@ -223,34 +223,48 @@ const Dashboard = () => {
     checkMonthlyBadge();
   }, [user, profile]);
 
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+
+    if (activePeriod === "Jour") {
+      return { start: today, end: today, label: "aujourd'hui" };
+    }
+    if (activePeriod === "Semaine") {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 6);
+      return { start: start.toISOString().split("T")[0], end: today, label: "7 derniers jours" };
+    }
+    if (activePeriod === "Mois") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { start: start.toISOString().split("T")[0], end: today, label: "ce mois-ci" };
+    }
+    if (activePeriod === "Année") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return { start: start.toISOString().split("T")[0], end: today, label: "cette année" };
+    }
+    if (activePeriod === "Custom" && customRange?.from) {
+      const start = customRange.from.toISOString().split("T")[0];
+      const end = (customRange.to || customRange.from).toISOString().split("T")[0];
+      return { start, end, label: "période personnalisée" };
+    }
+    return { start: today, end: today, label: "aujourd'hui" };
+  }, [activePeriod, customRange]);
+
   const fetchData = useCallback(async () => {
     if (!user) return;
-    if (activePeriod === 2 && !customRange?.from) return;
+    if (activePeriod === "Custom" && !customRange?.from) return;
 
     setLoading(true);
     setError(null);
-    const now = new Date();
-    let startDate: string;
-    let endDate: string;
-
-    if (activePeriod === 0) {
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      startDate = endDate = yesterday.toISOString().split("T")[0];
-    } else if (activePeriod === 1) {
-      startDate = endDate = now.toISOString().split("T")[0];
-    } else {
-      startDate = customRange!.from!.toISOString().split("T")[0];
-      endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
-    }
 
     try {
     const { data, error: fetchError } = await supabase
       .from("transactions")
       .select("*, categories(name, icon, color)")
       .eq("user_id", user.id)
-      .gte("date", startDate)
-      .lte("date", endDate)
+      .gte("date", dateRange.start)
+      .lte("date", dateRange.end)
       .order("date", { ascending: false })
       .limit(500);
 
@@ -258,8 +272,7 @@ const Dashboard = () => {
     const txs = data || [];
     setTransactions(txs);
 
-    // Check if user has zero transactions ever (for welcome state)
-    if (txs.length === 0 && activePeriod === 1) {
+    if (txs.length === 0 && activePeriod === "Jour") {
       const { count } = await supabase
         .from("transactions")
         .select("id", { count: "exact", head: true })
@@ -279,7 +292,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, activePeriod, customRange]);
+  }, [user, activePeriod, customRange, dateRange.start, dateRange.end]);
 
   useEffect(() => {
     fetchData();
