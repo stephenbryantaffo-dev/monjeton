@@ -196,23 +196,34 @@ const Budgets = () => {
 
   const saveTotalBudget = async () => {
     if (!user) return;
-    const amount = Number(newBudgetAmount);
-    if (!amount || amount <= 0) return;
-
-    if (budgetId) {
-      await supabase.from("budgets").update({ total_budget: amount }).eq("id", budgetId);
-    } else {
-      await supabase.from("budgets").insert({ user_id: user.id, month, year, total_budget: amount });
+    const amount = clampAmount(newBudgetAmount);
+    if (!amount || amount <= 0) {
+      toast({ title: "Montant invalide", description: "Entre un nombre supérieur à 0", variant: "destructive" });
+      return;
     }
-    setNewBudgetAmount("");
-    toast({ title: "Budget global mis à jour ✅" });
-    loadData();
+    try {
+      if (budgetId) {
+        const { error } = await supabase.from("budgets").update({ total_budget: amount }).eq("id", budgetId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("budgets").insert({ user_id: user.id, month, year, total_budget: amount });
+        if (error) throw error;
+      }
+      setNewBudgetAmount("");
+      toast({ title: "Budget global mis à jour ✅" });
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Erreur sauvegarde", description: e?.message, variant: "destructive" });
+    }
   };
 
   const addCategoryBudget = async () => {
-    if (!user || !selectedCategoryId || !newCatBudget) return;
-    const amount = Number(newCatBudget);
-    if (amount <= 0) return;
+    if (!user || !selectedCategoryId) return;
+    const amount = clampAmount(newCatBudget);
+    if (!amount || amount <= 0) {
+      toast({ title: "Montant invalide", variant: "destructive" });
+      return;
+    }
 
     const { error } = await supabase.from("category_budgets").upsert(
       { user_id: user.id, category_id: selectedCategoryId, month, year, budget_amount: amount },
@@ -228,6 +239,23 @@ const Budgets = () => {
     setSelectedCategoryId("");
     toast({ title: "Budget catégorie ajouté ✅" });
     loadData();
+  };
+
+  const saveInlineEdit = async (cbId: string) => {
+    const amount = clampAmount(editValue);
+    if (!amount || amount <= 0) {
+      toast({ title: "Montant invalide", variant: "destructive" });
+      return;
+    }
+    try {
+      const { error } = await supabase.from("category_budgets").update({ budget_amount: amount }).eq("id", cbId);
+      if (error) throw error;
+      toast({ title: "Budget mis à jour ✅" });
+      setEditingId(null);
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Erreur mise à jour", description: e?.message, variant: "destructive" });
+    }
   };
 
   const deleteCategoryBudget = async (id: string) => {
@@ -390,8 +418,11 @@ const Budgets = () => {
   };
 
   const SAFE_MAX = 999999999;
-  const clampAmount = (n: number) =>
-    Math.min(SAFE_MAX, Math.max(0, Math.floor(Number(n) || 0)));
+  const clampAmount = (n: number | string) => {
+    const num = typeof n === "string" ? Number(n.replace(/\s/g, "")) : Number(n);
+    if (isNaN(num)) return 0;
+    return Math.min(SAFE_MAX, Math.max(0, Math.floor(num)));
+  };
 
   const updateSuggestionAmount = (categorie: string, newAmount: number) => {
     const safe = clampAmount(newAmount);
