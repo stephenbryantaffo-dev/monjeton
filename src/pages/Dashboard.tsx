@@ -538,7 +538,7 @@ const Dashboard = () => {
                 <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                   <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={14}>
                     <div 
-                      className="transaction-icon"
+                      className="transaction-icon flex-shrink-0"
                       style={{ 
                         width: 44,
                         height: 44,
@@ -550,9 +550,14 @@ const Dashboard = () => {
                         backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20`,
                         color: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(150,5%,60%)"),
                         overflow: 'visible',
+                        isolation: 'isolate',
+                        WebkitTransform: 'translateZ(0)',
+                        transform: 'translateZ(0)',
                       }}
                     >
-                      {getCatIcon((t.categories as any)?.name || "", t.type)}
+                      <span style={{ display: 'block', minWidth: 20, minHeight: 20, lineHeight: 0 }}>
+                        {getCatIcon((t.categories as any)?.name || "", t.type)}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
