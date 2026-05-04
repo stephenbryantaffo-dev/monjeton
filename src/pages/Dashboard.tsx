@@ -36,7 +36,7 @@ const Dashboard = () => {
   const { user, profile } = useAuth();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
-  const [activePeriod, setActivePeriod] = useState(1);
+  const [activePeriod, setActivePeriod] = useState<"Jour" | "Semaine" | "Mois" | "Année" | "Custom">("Jour");
   const [trendMode, setTrendMode] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [allTimeEmpty, setAllTimeEmpty] = useState(false);
@@ -223,34 +223,48 @@ const Dashboard = () => {
     checkMonthlyBadge();
   }, [user, profile]);
 
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+
+    if (activePeriod === "Jour") {
+      return { start: today, end: today, label: "aujourd'hui" };
+    }
+    if (activePeriod === "Semaine") {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 6);
+      return { start: start.toISOString().split("T")[0], end: today, label: "7 derniers jours" };
+    }
+    if (activePeriod === "Mois") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { start: start.toISOString().split("T")[0], end: today, label: "ce mois-ci" };
+    }
+    if (activePeriod === "Année") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return { start: start.toISOString().split("T")[0], end: today, label: "cette année" };
+    }
+    if (activePeriod === "Custom" && customRange?.from) {
+      const start = customRange.from.toISOString().split("T")[0];
+      const end = (customRange.to || customRange.from).toISOString().split("T")[0];
+      return { start, end, label: "période personnalisée" };
+    }
+    return { start: today, end: today, label: "aujourd'hui" };
+  }, [activePeriod, customRange]);
+
   const fetchData = useCallback(async () => {
     if (!user) return;
-    if (activePeriod === 2 && !customRange?.from) return;
+    if (activePeriod === "Custom" && !customRange?.from) return;
 
     setLoading(true);
     setError(null);
-    const now = new Date();
-    let startDate: string;
-    let endDate: string;
-
-    if (activePeriod === 0) {
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      startDate = endDate = yesterday.toISOString().split("T")[0];
-    } else if (activePeriod === 1) {
-      startDate = endDate = now.toISOString().split("T")[0];
-    } else {
-      startDate = customRange!.from!.toISOString().split("T")[0];
-      endDate = (customRange!.to || customRange!.from!).toISOString().split("T")[0];
-    }
 
     try {
     const { data, error: fetchError } = await supabase
       .from("transactions")
       .select("*, categories(name, icon, color)")
       .eq("user_id", user.id)
-      .gte("date", startDate)
-      .lte("date", endDate)
+      .gte("date", dateRange.start)
+      .lte("date", dateRange.end)
       .order("date", { ascending: false })
       .limit(500);
 
@@ -258,8 +272,7 @@ const Dashboard = () => {
     const txs = data || [];
     setTransactions(txs);
 
-    // Check if user has zero transactions ever (for welcome state)
-    if (txs.length === 0 && activePeriod === 1) {
+    if (txs.length === 0 && activePeriod === "Jour") {
       const { count } = await supabase
         .from("transactions")
         .select("id", { count: "exact", head: true })
@@ -279,7 +292,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, activePeriod, customRange]);
+  }, [user, activePeriod, customRange, dateRange.start, dateRange.end]);
 
   useEffect(() => {
     fetchData();
@@ -383,23 +396,30 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="flex gap-1 p-1 glass-card rounded-xl mb-4 sm:mb-6">
-        <button onClick={() => setActivePeriod(0)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activePeriod === 0 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-          Hier
-        </button>
-        <button onClick={() => setActivePeriod(1)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activePeriod === 1 ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-          Aujourd'hui
-        </button>
+      <div className="flex gap-1 p-1 glass-card rounded-xl mb-2 sm:mb-3 overflow-x-auto">
+        {(["Jour", "Semaine", "Mois", "Année"] as const).map((p) => (
+          <button
+            key={p}
+            onClick={() => setActivePeriod(p)}
+            className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+              activePeriod === p
+                ? "gradient-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button onClick={() => setActivePeriod(2)} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
-              activePeriod === 2 && customRange?.from
+            <button onClick={() => setActivePeriod("Custom")} className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+              activePeriod === "Custom" && customRange?.from
                 ? "gradient-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-1 ring-offset-background font-semibold"
-                : activePeriod === 2
+                : activePeriod === "Custom"
                   ? "gradient-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
             }`}>
-              {activePeriod === 2 && customRange?.from
+              {activePeriod === "Custom" && customRange?.from
                 ? customRange.to
                   ? `${format(customRange.from, "d MMM", { locale: fr })} → ${format(customRange.to, "d MMM", { locale: fr })}`
                   : format(customRange.from, "d MMM", { locale: fr })
@@ -422,8 +442,12 @@ const Dashboard = () => {
         </Popover>
       </div>
 
+      <p className="text-xs text-muted-foreground mb-4 sm:mb-6 px-1">
+        Données : <span className="text-foreground font-medium">{dateRange.label}</span>
+      </p>
+
       {/* Message when custom range not selected */}
-      {activePeriod === 2 && !customRange?.from && (
+      {activePeriod === "Custom" && !customRange?.from && (
         <div className="glass-card rounded-2xl p-6 mb-6 text-center">
           <CalendarIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-muted-foreground text-sm">Sélectionnez une plage de dates dans le calendrier ci-dessus.</p>
@@ -538,7 +562,7 @@ const Dashboard = () => {
                 <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                   <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={14}>
                     <div 
-                      className="transaction-icon"
+                      className="transaction-icon flex-shrink-0"
                       style={{ 
                         width: 44,
                         height: 44,
@@ -550,9 +574,14 @@ const Dashboard = () => {
                         backgroundColor: `${(t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20`,
                         color: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(150,5%,60%)"),
                         overflow: 'visible',
+                        isolation: 'isolate',
+                        WebkitTransform: 'translateZ(0)',
+                        transform: 'translateZ(0)',
                       }}
                     >
-                      {getCatIcon((t.categories as any)?.name || "", t.type)}
+                      <span style={{ display: 'block', minWidth: 20, minHeight: 20, lineHeight: 0 }}>
+                        {getCatIcon((t.categories as any)?.name || "", t.type)}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>

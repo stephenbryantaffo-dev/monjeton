@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe, BarChart3 } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe, BarChart3, AlertTriangle, Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCountry } from "@/contexts/CountryContext";
 import { COUNTRIES } from "@/lib/i18n";
@@ -50,6 +51,8 @@ const Settings = () => {
   const [newPin, setNewPin] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+  const [pwdError, setPwdError] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
 
   useEffect(() => {
@@ -231,64 +234,102 @@ const Settings = () => {
       </button>
 
       {/* Delete account */}
-      <AlertDialog onOpenChange={(open) => { if (!open) setConfirmPassword(""); }}>
+      <AlertDialog onOpenChange={(open) => { if (!open) { setConfirmPassword(""); setConfirmText(""); setPwdError(false); } }}>
         <AlertDialogTrigger asChild>
           <button className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 text-destructive/70 hover:bg-destructive/10 transition-colors">
             <Trash2 className="w-5 h-5" />
             <span className="text-sm font-medium">Supprimer mon compte</span>
           </button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
-          <AlertDialogDescription>
-              Cette action est <strong>irréversible</strong>. Toutes vos données (transactions, portefeuilles, budgets, épargnes, etc.) seront définitivement supprimées.
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Supprimer définitivement mon compte ?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Cette action est <strong>irréversible</strong>. Toutes tes données seront supprimées :</p>
+                <ul className="text-xs space-y-1 pl-4 list-disc">
+                  <li>Toutes tes transactions</li>
+                  <li>Tes budgets et objectifs</li>
+                  <li>Tes reçus scannés</li>
+                  <li>Tes tontines et caisses</li>
+                  <li>Ton historique complet</li>
+                </ul>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="mt-4 space-y-2">
-            <p className="text-sm text-muted-foreground">Confirmez votre mot de passe :</p>
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Votre mot de passe actuel"
-              className="bg-secondary border-border"
-            />
+
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Confirme avec ton mot de passe</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setPwdError(false); }}
+                placeholder="Mot de passe actuel"
+                className={`bg-secondary ${pwdError ? "border-destructive" : "border-border"}`}
+              />
+              {pwdError && <p className="text-xs text-destructive">Mot de passe incorrect</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">
+                Tape <span className="font-bold text-destructive">SUPPRIMER</span> pour confirmer
+              </Label>
+              <Input
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="SUPPRIMER"
+                className="bg-secondary border-border"
+              />
+            </div>
           </div>
+
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              disabled={deleting || !confirmPassword}
+              disabled={deleting || !confirmPassword || confirmText !== "SUPPRIMER"}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!user?.email) {
+                  toast({ title: "Erreur compte", variant: "destructive" });
+                  return;
+                }
                 setDeleting(true);
+                const { error: authError } = await supabase.auth.signInWithPassword({
+                  email: user.email,
+                  password: confirmPassword,
+                });
+                if (authError) {
+                  setPwdError(true);
+                  setDeleting(false);
+                  toast({ title: "Mot de passe incorrect", variant: "destructive" });
+                  return;
+                }
                 try {
-                  // Re-authenticate before deletion
-                  const { error: authError } = await supabase.auth.signInWithPassword({
-                    email: user!.email!,
-                    password: confirmPassword,
-                  });
-                  if (authError) {
-                    toast({ title: "Mot de passe incorrect", variant: "destructive" });
-                    setDeleting(false);
-                    return;
-                  }
                   const { data: { session } } = await supabase.auth.getSession();
                   const res = await supabase.functions.invoke("delete-account", {
                     headers: { Authorization: `Bearer ${session?.access_token}` },
                   });
                   if (res.error) throw res.error;
-                  toast({ title: "Compte supprimé. Au revoir 👋" });
-                  await signOut();
-                  navigate("/");
-                } catch {
-                  toast({ title: "Erreur lors de la suppression", variant: "destructive" });
-                } finally {
+                  toast({ title: "Compte supprimé", description: "Toutes tes données ont été effacées. À bientôt 👋" });
+                  await supabase.auth.signOut();
+                  setTimeout(() => { window.location.href = "/"; }, 1200);
+                } catch (err: any) {
                   setDeleting(false);
+                  toast({ title: "Erreur de suppression", description: err?.message, variant: "destructive" });
                 }
               }}
             >
-              {deleting ? "Suppression…" : "Oui, supprimer"}
+              {deleting ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Suppression...</>
+              ) : (
+                "Supprimer définitivement"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
