@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -523,24 +524,13 @@ const NewTransaction = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label>Montant (FCFA)</Label>
-              <Input 
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                min="1"
-                step="1"
-                placeholder="0"
+              <MoneyInput
                 value={amount}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, "");
-                  setAmount(val);
-                }}
-                onKeyDown={(e) => {
-                  if (["e", "E", "+", "-", ".", ","].includes(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                className="bg-secondary border-border text-xl sm:text-2xl font-bold h-14"
+                onChange={(n) => setAmount(n ? String(n) : "")}
+                placeholder="0"
+                min={0}
+                showCurrency={false}
+                className="[&>input]:bg-secondary [&>input]:border-border [&>input]:text-xl [&>input]:sm:text-2xl [&>input]:font-bold [&>input]:h-14"
                 required
               />
             </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,7 +157,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Montant de cotisation (FCFA)</label>
-              <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="25000" className="glass" />
+              <MoneyInput value={amount} onChange={(n) => setAmount(n ? String(n) : "")} placeholder="25 000" showCurrency={false} className="[&>input]:glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de début</label>

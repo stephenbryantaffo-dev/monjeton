@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
@@ -731,12 +732,12 @@ const Budgets = () => {
               );
             })()}
             <div className="flex gap-2 mt-3">
-              <Input
-                type="number"
+              <MoneyInput
                 placeholder="Nouveau budget"
                 value={newBudgetAmount}
-                onChange={(e) => setNewBudgetAmount(e.target.value)}
-                className="glass"
+                onChange={(n) => setNewBudgetAmount(n ? String(n) : "")}
+                showCurrency={false}
+                className="flex-1 [&>input]:glass"
               />
               <Button onClick={saveTotalBudget} size="sm">OK</Button>
             </div>
@@ -846,14 +847,13 @@ const Budgets = () => {
                           )}
                           <div className="flex items-center gap-2 mb-2">
                             <label className="text-[11px] text-muted-foreground flex-shrink-0">Montant :</label>
-                            <Input
-                              type="number"
+                            <MoneyInput
                               value={s.montant_suggere}
-                              onChange={(e) => updateSuggestionAmount(s.categorie, Number(e.target.value))}
-                              onBlur={(e) => updateSuggestionAmount(s.categorie, clampAmount(Number(e.target.value)))}
+                              onChange={(n) => updateSuggestionAmount(s.categorie, n)}
+                              onBlur={(e) => updateSuggestionAmount(s.categorie, clampAmount(Number((e.target as HTMLInputElement).value.replace(/\D/g, ''))))}
                               min={0}
-                              step={500}
-                              className="bg-secondary border-border text-sm h-8 flex-1 tabular-nums"
+                              showCurrency={false}
+                              className="flex-1 [&>input]:bg-secondary [&>input]:border-border [&>input]:text-sm [&>input]:h-8 [&>input]:tabular-nums"
                             />
                             <span className="text-xs text-muted-foreground flex-shrink-0">F</span>
                           </div>
@@ -959,12 +959,12 @@ const Budgets = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input
-                    type="number"
+                  <MoneyInput
                     placeholder="Montant budget"
                     value={newCatBudget}
-                    onChange={(e) => setNewCatBudget(e.target.value)}
-                    className="glass"
+                    onChange={(n) => setNewCatBudget(n ? String(n) : "")}
+                    showCurrency={false}
+                    className="[&>input]:glass"
                   />
                   <Button onClick={addCategoryBudget} className="w-full">Enregistrer</Button>
                 </div>
@@ -1047,16 +1047,16 @@ const Budgets = () => {
                           className="overflow-hidden"
                         >
                           <div className="flex gap-2 mt-2 mb-2">
-                            <Input
-                              type="number"
+                            <MoneyInput
                               value={editValue}
                               autoFocus
-                              onChange={(e) => setEditValue(e.target.value)}
+                              onChange={(n) => setEditValue(n ? String(n) : "")}
                               onKeyDown={async (e) => {
                                 if (e.key === "Enter") await saveInlineEdit(cb.id);
                                 if (e.key === "Escape") setEditingId(null);
                               }}
-                              className="glass text-sm h-8 flex-1"
+                              showCurrency={false}
+                              className="flex-1 [&>input]:glass [&>input]:text-sm [&>input]:h-8"
                               placeholder="Nouveau montant"
                             />
                             <Button

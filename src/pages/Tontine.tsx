@@ -13,6 +13,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { sendWhatsAppTontine, notifyAllUnpaid, logNotification } from "@/lib/tontineNotifications";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1274,7 +1275,7 @@ const TontinePage = () => {
           <div className="space-y-3">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Montant (FCFA)</label>
-              <Input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="bg-secondary border-border" />
+              <MoneyInput value={payAmount} onChange={(n) => setPayAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:bg-secondary [&>input]:border-border" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date du paiement</label>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,7 +100,7 @@ const CreateCaisseModal = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <Label>Cotisation par membre (FCFA)</Label>
-              <Input type="number" value={contributionAmount} onChange={(e) => setContributionAmount(e.target.value)} placeholder="Ex: 5000" className="bg-secondary border-border mt-1" />
+              <MoneyInput value={contributionAmount} onChange={(n) => setContributionAmount(n ? String(n) : "")} placeholder="Ex: 5 000" showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
             </div>
             <div>
               <Label>Fréquence de cotisation</Label>

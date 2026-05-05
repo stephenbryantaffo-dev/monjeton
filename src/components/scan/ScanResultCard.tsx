@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check, X, Edit3, ArrowRightLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 
 export interface ParsedResult {
@@ -57,11 +58,11 @@ const ScanResultCard = ({ result, categories, wallets, onConfirm, onReject, isPr
           <div>
             <Label className="text-xs text-muted-foreground">Montant original</Label>
             <div className="flex gap-2">
-              <Input
-                type="number"
-                value={editResult.original_amount ?? editResult.amount ?? ""}
-                onChange={(e) => setEditResult({ ...editResult, original_amount: Number(e.target.value), amount: Number(e.target.value) })}
-                className="glass flex-1"
+              <MoneyInput
+                value={editResult.original_amount ?? editResult.amount ?? 0}
+                onChange={(n) => setEditResult({ ...editResult, original_amount: n, amount: n })}
+                showCurrency={false}
+                className="flex-1 [&>input]:glass"
               />
               <select
                 value={editResult.currency || "XOF"}

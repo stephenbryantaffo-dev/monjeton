@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, Clock, AlertTriangle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -255,7 +256,7 @@ const CyclesTab = ({ tontines }: Props) => {
           <div className="space-y-3">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Montant (FCFA)</label>
-              <Input type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} className="glass" />
+              <MoneyInput value={payAmount} onChange={(n) => setPayAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date du paiement</label>
