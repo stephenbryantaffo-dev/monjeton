@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES } from "@/lib/security";
 import { checkAndCreateNotifications } from "@/lib/notificationService";
 import { syncAutoBudget } from "@/lib/autoBudget";
+import { checkBudgetWhatsappAlerts } from "@/lib/budgetWhatsappAlerts";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
