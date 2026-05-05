@@ -227,7 +227,7 @@ const Settings = () => {
             <div className="min-w-0 flex-1">
               <p className="text-sm text-foreground">Numéro WhatsApp</p>
               <p className="text-xs text-muted-foreground">
-                Utilisé pour recevoir les alertes budget. Format : indicatif {country.flag} +{(require("@/lib/phoneValidation").DIAL_CODES as Record<string,string>)[country.code] || "?"}.
+                Utilisé pour recevoir les alertes budget. Format : indicatif {country.flag} +{DIAL_CODES[country.code] || "?"}.
               </p>
             </div>
           </div>
