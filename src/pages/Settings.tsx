@@ -54,6 +54,36 @@ const Settings = () => {
   const [confirmText, setConfirmText] = useState("");
   const [pwdError, setPwdError] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
+  const [whatsappAlerts, setWhatsappAlerts] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("whatsapp_alerts")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && typeof (data as any).whatsapp_alerts === "boolean") {
+          setWhatsappAlerts((data as any).whatsapp_alerts);
+        }
+      });
+  }, [user]);
+
+  const toggleWhatsappAlerts = async (checked: boolean) => {
+    if (!user) return;
+    setWhatsappAlerts(checked);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ whatsapp_alerts: checked } as any)
+      .eq("user_id", user.id);
+    if (error) {
+      setWhatsappAlerts(!checked);
+      toast({ title: "Erreur", description: "Préférence non sauvegardée", variant: "destructive" });
+      return;
+    }
+    toast({ title: checked ? "Alertes activées ✅" : "Alertes désactivées" });
+  };
 
   useEffect(() => {
     if (!user) return;
