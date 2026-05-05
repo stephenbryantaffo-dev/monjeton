@@ -5,6 +5,7 @@ import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Target, Plus, ChevronDown, ChevronUp, ArrowDownToLine, PartyPopper, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -378,12 +379,12 @@ const Savings = () => {
                         className="overflow-hidden"
                       >
                         <div className="mt-3 space-y-2 pt-3 border-t border-border">
-                          <Input
-                            type="number"
+                          <MoneyInput
                             placeholder="Montant à verser"
                             value={depositAmount}
-                            onChange={e => setDepositAmount(e.target.value)}
-                            className="bg-secondary border-border"
+                            onChange={(n) => setDepositAmount(n ? String(n) : "")}
+                            showCurrency={false}
+                            className="[&>input]:bg-secondary [&>input]:border-border"
                             autoFocus
                           />
                           <Select value={depositWalletId} onValueChange={setDepositWalletId}>
@@ -467,7 +468,7 @@ const Savings = () => {
       {showAdd ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 space-y-3">
           <Input placeholder="Nom de l'objectif" value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary border-border" />
-          <Input type="number" placeholder="Montant cible (FCFA)" value={target} onChange={(e) => setTarget(e.target.value)} className="bg-secondary border-border" />
+          <MoneyInput placeholder="Montant cible (FCFA)" value={target} onChange={(n) => setTarget(n ? String(n) : "")} showCurrency={false} className="[&>input]:bg-secondary [&>input]:border-border" />
           <div className="space-y-1">
             <Label className="text-xs">Échéance (optionnel)</Label>
             <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-secondary border-border" />

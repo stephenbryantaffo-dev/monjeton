@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -620,12 +621,12 @@ const Debts = () => {
                       className="overflow-hidden"
                     >
                       <div className="mt-3 space-y-2 pt-3 border-t border-border">
-                        <Input
-                          type="number"
+                        <MoneyInput
                           placeholder={`Montant (max ${formatMoneySmart(remaining)} F)`}
                           value={payAmount}
-                          onChange={(e) => setPayAmount(e.target.value)}
-                          className="bg-secondary border-border"
+                          onChange={(n) => setPayAmount(n ? String(n) : "")}
+                          showCurrency={false}
+                          className="[&>input]:bg-secondary [&>input]:border-border"
                           autoFocus
                         />
                         <Select value={payWalletId} onValueChange={setPayWalletId}>
@@ -791,12 +792,12 @@ const Debts = () => {
               <Label className="text-xs text-muted-foreground mb-1.5 block">
                 Montant (F CFA) *
               </Label>
-              <Input
-                type="number"
+              <MoneyInput
                 placeholder="Ex: 25 000"
                 value={debtForm.amount}
-                onChange={(e) => setDebtForm((f) => ({ ...f, amount: e.target.value }))}
-                className="bg-secondary border-border"
+                onChange={(n) => setDebtForm((f) => ({ ...f, amount: n ? String(n) : "" }))}
+                showCurrency={false}
+                className="[&>input]:bg-secondary [&>input]:border-border"
               />
             </div>
 

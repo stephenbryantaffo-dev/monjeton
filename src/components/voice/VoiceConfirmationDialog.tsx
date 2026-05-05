@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { formatMoneySmart } from "@/lib/formatMoney";
 
 export interface ParsedTransaction {
@@ -77,11 +78,11 @@ export default function VoiceConfirmationDialog({
               // Edit mode
               <div className="space-y-2">
                 <div className="flex gap-2">
-                  <Input
-                    type="number"
+                  <MoneyInput
                     value={tx.amount}
-                    onChange={e => updateTx(i, { amount: Number(e.target.value) })}
-                    className="bg-background border-border text-sm flex-1"
+                    onChange={(n) => updateTx(i, { amount: n })}
+                    showCurrency={false}
+                    className="flex-1 [&>input]:bg-background [&>input]:border-border [&>input]:text-sm"
                     placeholder="Montant"
                   />
                   <select

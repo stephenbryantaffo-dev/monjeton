@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -797,7 +798,7 @@ const CaisseView = () => {
             </div>
             <div>
               <Label>Montant (F CFA)</Label>
-              <Input type="number" value={cotisationAmount} onChange={(e) => setCotisationAmount(e.target.value)} className="bg-secondary border-border mt-1" />
+              <MoneyInput value={cotisationAmount} onChange={(n) => setCotisationAmount(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
             </div>
             <div>
               <Label>Cycle (période)</Label>
@@ -837,7 +838,7 @@ const CaisseView = () => {
             </div>
             <div>
               <Label>Montant (F CFA)</Label>
-              <Input type="number" value={depenseAmount} onChange={(e) => setDepenseAmount(e.target.value)} className="bg-secondary border-border mt-1" />
+              <MoneyInput value={depenseAmount} onChange={(n) => setDepenseAmount(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
               {Number(depenseAmount) > soldeDisponible && (
                 <p className="text-xs text-destructive mt-1">⚠️ Solde insuffisant — disponible : {fmt(soldeDisponible)} F</p>
               )}

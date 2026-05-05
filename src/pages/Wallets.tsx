@@ -6,6 +6,7 @@ import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Wallet, Plus, TrendingUp, TrendingDown, Pencil, Check, X, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -260,11 +261,11 @@ const Wallets = () => {
                   <span>Solde initial : {isEditing ? "" : `${formatAmount(initBal)} F`}</span>
                   {isEditing ? (
                     <div className="flex items-center gap-1.5">
-                      <Input
-                        type="number"
+                      <MoneyInput
                         value={editBalance}
-                        onChange={(e) => setEditBalance(e.target.value)}
-                        className="h-7 w-28 text-xs bg-secondary border-border"
+                        onChange={(n) => setEditBalance(n ? String(n) : "")}
+                        showCurrency={false}
+                        className="w-28 [&>input]:h-7 [&>input]:text-xs [&>input]:bg-secondary [&>input]:border-border"
                         autoFocus
                       />
                       <button onClick={() => handleUpdateBalance(w.id)} className="text-primary hover:text-primary/80"><Check className="w-4 h-4" /></button>
@@ -307,7 +308,7 @@ const Wallets = () => {
       {showAdd && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 space-y-3">
           <Input placeholder="Nom du portefeuille" value={newName} onChange={(e) => setNewName(e.target.value)} className="bg-secondary border-border" />
-          <Input placeholder="Solde initial (ex: 50000)" type="number" value={newInitialBalance} onChange={(e) => setNewInitialBalance(e.target.value)} className="bg-secondary border-border" />
+          <MoneyInput placeholder="Solde initial (ex: 50 000)" value={newInitialBalance} onChange={(n) => setNewInitialBalance(n ? String(n) : "")} showCurrency={false} className="[&>input]:bg-secondary [&>input]:border-border" />
           <div className="flex gap-2">
             <Button variant="glass" onClick={() => setShowAdd(false)} className="flex-1">Annuler</Button>
             <Button variant="hero" onClick={handleAdd} className="flex-1">Ajouter</Button>
@@ -359,12 +360,12 @@ const Wallets = () => {
 
             <div className="space-y-2">
               <label className="text-sm text-muted-foreground">Montant (F CFA)</label>
-              <Input
-                type="number"
-                placeholder="Ex: 5000"
+              <MoneyInput
+                placeholder="Ex: 5 000"
                 value={transferAmount}
-                onChange={(e) => setTransferAmount(e.target.value)}
-                className="bg-secondary border-border"
+                onChange={(n) => setTransferAmount(n ? String(n) : "")}
+                showCurrency={false}
+                className="[&>input]:bg-secondary [&>input]:border-border"
               />
             </div>
 
