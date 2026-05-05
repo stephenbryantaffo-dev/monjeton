@@ -1157,6 +1157,8 @@ const Budgets = () => {
           </div>
         </>
       )}
+        </>
+      )}
     </DashboardLayout>
   );
 };
