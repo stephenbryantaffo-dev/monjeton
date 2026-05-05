@@ -101,6 +101,10 @@ const Budgets = () => {
   const [editableSuggestions, setEditableSuggestions] = useState<AISuggestion[]>([]);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
+  const [coachingDone, setCoachingDone] = useState<boolean | null>(null);
+  const [showCoaching, setShowCoaching] = useState(false);
+  const [coachingPlan, setCoachingPlan] = useState<any>(null);
+  const [loadingCoaching, setLoadingCoaching] = useState(true);
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
