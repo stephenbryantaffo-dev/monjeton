@@ -115,6 +115,26 @@ const Budgets = () => {
     if (user) loadData();
   }, [user, month, year]);
 
+  useEffect(() => {
+    const checkCoaching = async () => {
+      if (!user) return;
+      setLoadingCoaching(true);
+      const { data } = await supabase
+        .from('budget_coaching')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('month', month)
+        .eq('year', year)
+        .maybeSingle();
+      const isApprouve = data?.statut === 'approuve';
+      setCoachingDone(isApprouve);
+      setShowCoaching(!isApprouve);
+      setCoachingPlan(data);
+      setLoadingCoaching(false);
+    };
+    checkCoaching();
+  }, [user, month, year]);
+
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
