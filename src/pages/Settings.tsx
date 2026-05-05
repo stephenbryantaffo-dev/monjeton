@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
+import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,20 +56,52 @@ const Settings = () => {
   const [pwdError, setPwdError] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
   const [whatsappAlerts, setWhatsappAlerts] = useState<boolean>(true);
+  const [phoneInput, setPhoneInput] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("whatsapp_alerts")
+      .select("whatsapp_alerts, phone")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data && typeof (data as any).whatsapp_alerts === "boolean") {
           setWhatsappAlerts((data as any).whatsapp_alerts);
         }
+        if (data && (data as any).phone) {
+          setPhoneInput((data as any).phone);
+          setPhoneSavedDisplay((data as any).phone);
+        }
       });
   }, [user]);
+
+  const savePhone = async () => {
+    if (!user) return;
+    
+    const result = parsePhone(phoneInput, country.code);
+    if (!result.valid) {
+      setPhoneError(result.error || "Numéro invalide");
+      return;
+    }
+    setPhoneError(null);
+    setPhoneSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ phone: result.e164 } as any)
+      .eq("user_id", user.id);
+    setPhoneSaving(false);
+    if (error) {
+      toast({ title: "Erreur", description: "Numéro non sauvegardé", variant: "destructive" });
+      return;
+    }
+    setPhoneInput(result.display || result.e164!);
+    setPhoneSavedDisplay(result.e164);
+    toast({ title: "Numéro WhatsApp enregistré ✅", description: result.display || "" });
+  };
 
   const toggleWhatsappAlerts = async (checked: boolean) => {
     if (!user) return;
@@ -187,6 +220,53 @@ const Settings = () => {
           <Switch checked={isDiscreetMode} onCheckedChange={toggleDiscreetMode} />
         </div>
 
+        {/* Numéro WhatsApp */}
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-foreground">Numéro WhatsApp</p>
+              <p className="text-xs text-muted-foreground">
+                Utilisé pour recevoir les alertes budget. Format : indicatif {country.flag} +{DIAL_CODES[country.code] || "?"}.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="Ex: 07 12 34 56 78"
+              value={phoneInput}
+              onChange={(e) => {
+                setPhoneError(null);
+                // light formatting: strip invalid chars, allow leading +
+                const v = e.target.value.replace(/[^\d+\s]/g, "").slice(0, 20);
+                setPhoneInput(v);
+              }}
+              onBlur={() => {
+                if (!phoneInput) return;
+                const r = parsePhone(phoneInput, country.code);
+                if (r.valid) setPhoneInput(r.display!);
+                else setPhoneError(r.error || "Numéro invalide");
+              }}
+              className={`bg-secondary flex-1 ${phoneError ? "border-destructive" : "border-border"}`}
+            />
+            <Button
+              variant="hero"
+              size="sm"
+              onClick={savePhone}
+              disabled={phoneSaving || !phoneInput || phoneInput === phoneSavedDisplay}
+            >
+              {phoneSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "OK"}
+            </Button>
+          </div>
+          {phoneError && <p className="text-xs text-destructive pl-6">{phoneError}</p>}
+          {!phoneError && phoneSavedDisplay && (
+            <p className="text-xs text-muted-foreground pl-6">Enregistré : {phoneSavedDisplay}</p>
+          )}
+        </div>
+
         {/* WhatsApp budget alerts */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2 min-w-0 flex-1">
@@ -200,6 +280,7 @@ const Settings = () => {
           </div>
           <Switch checked={whatsappAlerts} onCheckedChange={toggleWhatsappAlerts} />
         </div>
+
 
         {/* PIN lock */}
         <div className="flex items-center justify-between">
