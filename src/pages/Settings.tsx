@@ -219,6 +219,55 @@ const Settings = () => {
           <Switch checked={isDiscreetMode} onCheckedChange={toggleDiscreetMode} />
         </div>
 
+        {/* Numéro WhatsApp */}
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-foreground">Numéro WhatsApp</p>
+              <p className="text-xs text-muted-foreground">
+                Utilisé pour recevoir les alertes budget. Format : indicatif {country.flag} +{(require("@/lib/phoneValidation").DIAL_CODES as Record<string,string>)[country.code] || "?"}.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="Ex: 07 12 34 56 78"
+              value={phoneInput}
+              onChange={(e) => {
+                setPhoneError(null);
+                // light formatting: strip invalid chars, allow leading +
+                const v = e.target.value.replace(/[^\d+\s]/g, "").slice(0, 20);
+                setPhoneInput(v);
+              }}
+              onBlur={() => {
+                if (!phoneInput) return;
+                import("@/lib/phoneValidation").then(({ parsePhone }) => {
+                  const r = parsePhone(phoneInput, country.code);
+                  if (r.valid) setPhoneInput(r.display!);
+                  else setPhoneError(r.error || "Numéro invalide");
+                });
+              }}
+              className={`bg-secondary flex-1 ${phoneError ? "border-destructive" : "border-border"}`}
+            />
+            <Button
+              variant="hero"
+              size="sm"
+              onClick={savePhone}
+              disabled={phoneSaving || !phoneInput || phoneInput === phoneSavedDisplay}
+            >
+              {phoneSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "OK"}
+            </Button>
+          </div>
+          {phoneError && <p className="text-xs text-destructive pl-6">{phoneError}</p>}
+          {!phoneError && phoneSavedDisplay && (
+            <p className="text-xs text-muted-foreground pl-6">Enregistré : {phoneSavedDisplay}</p>
+          )}
+        </div>
+
         {/* WhatsApp budget alerts */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2 min-w-0 flex-1">
@@ -232,6 +281,7 @@ const Settings = () => {
           </div>
           <Switch checked={whatsappAlerts} onCheckedChange={toggleWhatsappAlerts} />
         </div>
+
 
         {/* PIN lock */}
         <div className="flex items-center justify-between">
