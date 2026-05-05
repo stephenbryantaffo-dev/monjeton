@@ -7,7 +7,8 @@ import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
-import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2 } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2, RefreshCw } from "lucide-react";
+import { BudgetCoachingFlow } from "@/components/budget/BudgetCoachingFlow";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -100,6 +101,10 @@ const Budgets = () => {
   const [editableSuggestions, setEditableSuggestions] = useState<AISuggestion[]>([]);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
+  const [coachingDone, setCoachingDone] = useState<boolean | null>(null);
+  const [showCoaching, setShowCoaching] = useState(false);
+  const [coachingPlan, setCoachingPlan] = useState<any>(null);
+  const [loadingCoaching, setLoadingCoaching] = useState(true);
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -108,6 +113,26 @@ const Budgets = () => {
 
   useEffect(() => {
     if (user) loadData();
+  }, [user, month, year]);
+
+  useEffect(() => {
+    const checkCoaching = async () => {
+      if (!user) return;
+      setLoadingCoaching(true);
+      const { data } = await supabase
+        .from('budget_coaching')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('month', month)
+        .eq('year', year)
+        .maybeSingle();
+      const isApprouve = data?.statut === 'approuve';
+      setCoachingDone(isApprouve);
+      setShowCoaching(!isApprouve);
+      setCoachingPlan(data);
+      setLoadingCoaching(false);
+    };
+    checkCoaching();
   }, [user, month, year]);
 
   const loadData = async () => {
@@ -604,6 +629,33 @@ const Budgets = () => {
         ))}
       </div>
 
+      {loadingCoaching ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : showCoaching ? (
+        <BudgetCoachingFlow
+          month={month}
+          year={year}
+          onComplete={() => {
+            setShowCoaching(false);
+            setCoachingDone(true);
+            // Recharger pour afficher les budgets générés
+            setTimeout(() => window.location.reload(), 300);
+          }}
+        />
+      ) : (
+        <>
+          {/* Bouton refaire le coaching */}
+          <Button
+            variant="outline"
+            onClick={() => setShowCoaching(true)}
+            className="w-full glass mb-4"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refaire le coaching budget
+          </Button>
+
       {/* Exceeded budgets banner */}
       <AnimatePresence>
         {exceededCount > 0 && !loading && (
@@ -630,6 +682,7 @@ const Budgets = () => {
         </div>
       ) : (
         <>
+
           {/* ── Monthly Summary Header ── */}
           {(totalBudget > 0 || categoryBudgets.length > 0) && (
             <motion.div
@@ -1089,6 +1142,15 @@ const Budgets = () => {
                         ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} F en fin de mois
                       </p>
                     )}
+                    {(() => {
+                      const tip = (coachingPlan?.conseils_par_categorie as any)?.[cb.category?.name || ""];
+                      return tip ? (
+                        <div className="mt-2 flex items-start gap-1.5 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/15">
+                          <Sparkles className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">{tip}</p>
+                        </div>
+                      ) : null;
+                    })()}
                   </BorderRotate>
                 </motion.div>
               );
@@ -1102,6 +1164,8 @@ const Budgets = () => {
               </div>
             )}
           </div>
+        </>
+      )}
         </>
       )}
     </DashboardLayout>
