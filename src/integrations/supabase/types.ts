@@ -826,6 +826,7 @@ export type Database = {
           subscriptions: string[] | null
           updated_at: string
           user_id: string
+          whatsapp_alerts: boolean
         }
         Insert: {
           beauty_budget_range?: string | null
@@ -847,6 +848,7 @@ export type Database = {
           subscriptions?: string[] | null
           updated_at?: string
           user_id: string
+          whatsapp_alerts?: boolean
         }
         Update: {
           beauty_budget_range?: string | null
@@ -868,6 +870,7 @@ export type Database = {
           subscriptions?: string[] | null
           updated_at?: string
           user_id?: string
+          whatsapp_alerts?: boolean
         }
         Relationships: []
       }
