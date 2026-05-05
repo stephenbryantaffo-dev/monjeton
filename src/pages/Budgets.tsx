@@ -1142,6 +1142,15 @@ const Budgets = () => {
                         ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} F en fin de mois
                       </p>
                     )}
+                    {(() => {
+                      const tip = (coachingPlan?.conseils_par_categorie as any)?.[cb.category?.name || ""];
+                      return tip ? (
+                        <div className="mt-2 flex items-start gap-1.5 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/15">
+                          <Sparkles className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">{tip}</p>
+                        </div>
+                      ) : null;
+                    })()}
                   </BorderRotate>
                 </motion.div>
               );
