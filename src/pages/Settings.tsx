@@ -187,6 +187,20 @@ const Settings = () => {
           <Switch checked={isDiscreetMode} onCheckedChange={toggleDiscreetMode} />
         </div>
 
+        {/* WhatsApp budget alerts */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm text-foreground">Alertes WhatsApp budget</p>
+              <p className="text-xs text-muted-foreground">
+                Recevoir un message quand un budget catégorie atteint 80% ou 100%
+              </p>
+            </div>
+          </div>
+          <Switch checked={whatsappAlerts} onCheckedChange={toggleWhatsappAlerts} />
+        </div>
+
         {/* PIN lock */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
