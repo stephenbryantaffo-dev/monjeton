@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
+import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
 import {
   AlertDialog,
   AlertDialogAction,
