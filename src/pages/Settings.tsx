@@ -54,6 +54,36 @@ const Settings = () => {
   const [confirmText, setConfirmText] = useState("");
   const [pwdError, setPwdError] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
+  const [whatsappAlerts, setWhatsappAlerts] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("whatsapp_alerts")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && typeof (data as any).whatsapp_alerts === "boolean") {
+          setWhatsappAlerts((data as any).whatsapp_alerts);
+        }
+      });
+  }, [user]);
+
+  const toggleWhatsappAlerts = async (checked: boolean) => {
+    if (!user) return;
+    setWhatsappAlerts(checked);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ whatsapp_alerts: checked } as any)
+      .eq("user_id", user.id);
+    if (error) {
+      setWhatsappAlerts(!checked);
+      toast({ title: "Erreur", description: "Préférence non sauvegardée", variant: "destructive" });
+      return;
+    }
+    toast({ title: checked ? "Alertes activées ✅" : "Alertes désactivées" });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -155,6 +185,20 @@ const Settings = () => {
             <span className="text-sm text-foreground">Mode discret</span>
           </div>
           <Switch checked={isDiscreetMode} onCheckedChange={toggleDiscreetMode} />
+        </div>
+
+        {/* WhatsApp budget alerts */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm text-foreground">Alertes WhatsApp budget</p>
+              <p className="text-xs text-muted-foreground">
+                Recevoir un message quand un budget catégorie atteint 80% ou 100%
+              </p>
+            </div>
+          </div>
+          <Switch checked={whatsappAlerts} onCheckedChange={toggleWhatsappAlerts} />
         </div>
 
         {/* PIN lock */}

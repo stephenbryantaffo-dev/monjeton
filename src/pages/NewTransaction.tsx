@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES } from "@/lib/security";
 import { checkAndCreateNotifications } from "@/lib/notificationService";
 import { syncAutoBudget } from "@/lib/autoBudget";
+import { checkBudgetWhatsappAlerts } from "@/lib/budgetWhatsappAlerts";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
@@ -383,6 +384,29 @@ const NewTransaction = () => {
           d.getMonth() + 1,
           d.getFullYear()
         ).catch((e) => console.error("auto-budget error:", e));
+      }
+      // Alertes WhatsApp budget (fire-and-forget, débouncé)
+      if (type === "expense") {
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("phone, whatsapp_alerts")
+              .eq("user_id", user.id)
+              .maybeSingle();
+            if (profile?.phone && profile.whatsapp_alerts !== false) {
+              const d = new Date(date);
+              await checkBudgetWhatsappAlerts({
+                userId: user.id,
+                userPhone: profile.phone,
+                month: d.getMonth() + 1,
+                year: d.getFullYear(),
+              });
+            }
+          } catch (e) {
+            console.error("WhatsApp alerts error:", e);
+          }
+        }, 1200);
       }
       navigate("/transactions");
     }
