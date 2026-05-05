@@ -60,6 +60,7 @@ const Settings = () => {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
+  const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
 
   useEffect(() => {
     if (!user) return;
@@ -73,8 +74,15 @@ const Settings = () => {
           setWhatsappAlerts((data as any).whatsapp_alerts);
         }
         if (data && (data as any).phone) {
-          setPhoneInput((data as any).phone);
-          setPhoneSavedDisplay((data as any).phone);
+          const savedPhone = (data as any).phone as string;
+          setPhoneInput(savedPhone);
+          setPhoneSavedDisplay(savedPhone);
+          // Détecter pays à partir de l'indicatif sauvegardé
+          if (savedPhone.startsWith("+")) {
+            const digits = savedPhone.slice(1);
+            const matched = Object.entries(DIAL_CODES).find(([, d]) => digits.startsWith(d));
+            if (matched) setPhoneCountry(matched[0]);
+          }
         }
       });
   }, [user]);
@@ -82,7 +90,7 @@ const Settings = () => {
   const savePhone = async () => {
     if (!user) return;
     
-    const result = parsePhone(phoneInput, country.code);
+    const result = parsePhone(phoneInput, phoneCountry);
     if (!result.valid) {
       setPhoneError(result.error || "Numéro invalide");
       return;
@@ -227,11 +235,33 @@ const Settings = () => {
             <div className="min-w-0 flex-1">
               <p className="text-sm text-foreground">Numéro WhatsApp</p>
               <p className="text-xs text-muted-foreground">
-                Utilisé pour recevoir les alertes budget. Format : indicatif {country.flag} +{DIAL_CODES[country.code] || "?"}.
+                Sélectionne le pays puis saisis ton numéro local. Le format international est calculé automatiquement.
               </p>
             </div>
           </div>
           <div className="flex gap-2">
+            <Select
+              value={phoneCountry}
+              onValueChange={(code) => {
+                setPhoneCountry(code);
+                setPhoneError(null);
+                if (phoneInput) {
+                  const r = parsePhone(phoneInput, code);
+                  if (r.valid) setPhoneInput(r.display!);
+                }
+              }}
+            >
+              <SelectTrigger className="w-[110px] bg-secondary border-border flex-shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRIES.filter(c => DIAL_CODES[c.code]).map(c => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.flag} +{DIAL_CODES[c.code]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Input
               type="tel"
               inputMode="tel"
@@ -240,23 +270,22 @@ const Settings = () => {
               value={phoneInput}
               onChange={(e) => {
                 setPhoneError(null);
-                // light formatting: strip invalid chars, allow leading +
                 const v = e.target.value.replace(/[^\d+\s]/g, "").slice(0, 20);
                 setPhoneInput(v);
               }}
               onBlur={() => {
                 if (!phoneInput) return;
-                const r = parsePhone(phoneInput, country.code);
+                const r = parsePhone(phoneInput, phoneCountry);
                 if (r.valid) setPhoneInput(r.display!);
                 else setPhoneError(r.error || "Numéro invalide");
               }}
-              className={`bg-secondary flex-1 ${phoneError ? "border-destructive" : "border-border"}`}
+              className={`bg-secondary flex-1 min-w-0 ${phoneError ? "border-destructive" : "border-border"}`}
             />
             <Button
               variant="hero"
               size="sm"
               onClick={savePhone}
-              disabled={phoneSaving || !phoneInput || phoneInput === phoneSavedDisplay}
+              disabled={phoneSaving || !phoneInput}
             >
               {phoneSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "OK"}
             </Button>
