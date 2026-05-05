@@ -60,6 +60,7 @@ const Settings = () => {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
+  const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
 
   useEffect(() => {
     if (!user) return;
@@ -73,8 +74,15 @@ const Settings = () => {
           setWhatsappAlerts((data as any).whatsapp_alerts);
         }
         if (data && (data as any).phone) {
-          setPhoneInput((data as any).phone);
-          setPhoneSavedDisplay((data as any).phone);
+          const savedPhone = (data as any).phone as string;
+          setPhoneInput(savedPhone);
+          setPhoneSavedDisplay(savedPhone);
+          // Détecter pays à partir de l'indicatif sauvegardé
+          if (savedPhone.startsWith("+")) {
+            const digits = savedPhone.slice(1);
+            const matched = Object.entries(DIAL_CODES).find(([, d]) => digits.startsWith(d));
+            if (matched) setPhoneCountry(matched[0]);
+          }
         }
       });
   }, [user]);
