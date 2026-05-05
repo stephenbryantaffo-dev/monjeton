@@ -83,6 +83,117 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_alerts_sent: {
+        Row: {
+          alert_type: string
+          category_id: string | null
+          id: string
+          month: number
+          sent_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          alert_type: string
+          category_id?: string | null
+          id?: string
+          month: number
+          sent_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          alert_type?: string
+          category_id?: string | null
+          id?: string
+          month?: number
+          sent_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      budget_coaching: {
+        Row: {
+          charges_fixes: Json | null
+          conseils_par_categorie: Json | null
+          created_at: string
+          current_step: number | null
+          dettes_details: Json | null
+          dettes_mois: number | null
+          habitude_depense: string | null
+          id: string
+          mois_special: string | null
+          mois_special_note: string | null
+          month: number
+          nb_personnes: number | null
+          objectifs: Json | null
+          plan_genere: Json | null
+          revenu_exceptionnel: number | null
+          revenu_exceptionnel_source: string | null
+          revenu_principal: number | null
+          revenu_type: string | null
+          situation_familiale: string | null
+          statut: string | null
+          updated_at: string
+          user_id: string
+          whatsapp_notifications: boolean | null
+          year: number
+        }
+        Insert: {
+          charges_fixes?: Json | null
+          conseils_par_categorie?: Json | null
+          created_at?: string
+          current_step?: number | null
+          dettes_details?: Json | null
+          dettes_mois?: number | null
+          habitude_depense?: string | null
+          id?: string
+          mois_special?: string | null
+          mois_special_note?: string | null
+          month: number
+          nb_personnes?: number | null
+          objectifs?: Json | null
+          plan_genere?: Json | null
+          revenu_exceptionnel?: number | null
+          revenu_exceptionnel_source?: string | null
+          revenu_principal?: number | null
+          revenu_type?: string | null
+          situation_familiale?: string | null
+          statut?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp_notifications?: boolean | null
+          year: number
+        }
+        Update: {
+          charges_fixes?: Json | null
+          conseils_par_categorie?: Json | null
+          created_at?: string
+          current_step?: number | null
+          dettes_details?: Json | null
+          dettes_mois?: number | null
+          habitude_depense?: string | null
+          id?: string
+          mois_special?: string | null
+          mois_special_note?: string | null
+          month?: number
+          nb_personnes?: number | null
+          objectifs?: Json | null
+          plan_genere?: Json | null
+          revenu_exceptionnel?: number | null
+          revenu_exceptionnel_source?: string | null
+          revenu_principal?: number | null
+          revenu_type?: string | null
+          situation_familiale?: string | null
+          statut?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp_notifications?: boolean | null
+          year?: number
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           created_at: string
