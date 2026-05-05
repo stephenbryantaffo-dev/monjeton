@@ -55,20 +55,52 @@ const Settings = () => {
   const [pwdError, setPwdError] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
   const [whatsappAlerts, setWhatsappAlerts] = useState<boolean>(true);
+  const [phoneInput, setPhoneInput] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("whatsapp_alerts")
+      .select("whatsapp_alerts, phone")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data && typeof (data as any).whatsapp_alerts === "boolean") {
           setWhatsappAlerts((data as any).whatsapp_alerts);
         }
+        if (data && (data as any).phone) {
+          setPhoneInput((data as any).phone);
+          setPhoneSavedDisplay((data as any).phone);
+        }
       });
   }, [user]);
+
+  const savePhone = async () => {
+    if (!user) return;
+    const { parsePhone } = await import("@/lib/phoneValidation");
+    const result = parsePhone(phoneInput, country.code);
+    if (!result.valid) {
+      setPhoneError(result.error || "Numéro invalide");
+      return;
+    }
+    setPhoneError(null);
+    setPhoneSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ phone: result.e164 } as any)
+      .eq("user_id", user.id);
+    setPhoneSaving(false);
+    if (error) {
+      toast({ title: "Erreur", description: "Numéro non sauvegardé", variant: "destructive" });
+      return;
+    }
+    setPhoneInput(result.display || result.e164!);
+    setPhoneSavedDisplay(result.e164);
+    toast({ title: "Numéro WhatsApp enregistré ✅", description: result.display || "" });
+  };
 
   const toggleWhatsappAlerts = async (checked: boolean) => {
     if (!user) return;
