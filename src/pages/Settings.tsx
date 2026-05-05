@@ -81,7 +81,7 @@ const Settings = () => {
 
   const savePhone = async () => {
     if (!user) return;
-    const { parsePhone } = await import("@/lib/phoneValidation");
+    
     const result = parsePhone(phoneInput, country.code);
     if (!result.valid) {
       setPhoneError(result.error || "Numéro invalide");
