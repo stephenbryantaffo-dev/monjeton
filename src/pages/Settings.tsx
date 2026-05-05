@@ -246,11 +246,9 @@ const Settings = () => {
               }}
               onBlur={() => {
                 if (!phoneInput) return;
-                import("@/lib/phoneValidation").then(({ parsePhone }) => {
-                  const r = parsePhone(phoneInput, country.code);
-                  if (r.valid) setPhoneInput(r.display!);
-                  else setPhoneError(r.error || "Numéro invalide");
-                });
+                const r = parsePhone(phoneInput, country.code);
+                if (r.valid) setPhoneInput(r.display!);
+                else setPhoneError(r.error || "Numéro invalide");
               }}
               className={`bg-secondary flex-1 ${phoneError ? "border-destructive" : "border-border"}`}
             />
