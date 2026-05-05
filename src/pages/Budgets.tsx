@@ -629,6 +629,33 @@ const Budgets = () => {
         ))}
       </div>
 
+      {loadingCoaching ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : showCoaching ? (
+        <BudgetCoachingFlow
+          month={month}
+          year={year}
+          onComplete={() => {
+            setShowCoaching(false);
+            setCoachingDone(true);
+            // Recharger pour afficher les budgets générés
+            setTimeout(() => window.location.reload(), 300);
+          }}
+        />
+      ) : (
+        <>
+          {/* Bouton refaire le coaching */}
+          <Button
+            variant="outline"
+            onClick={() => setShowCoaching(true)}
+            className="w-full glass mb-4"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refaire le coaching budget
+          </Button>
+
       {/* Exceeded budgets banner */}
       <AnimatePresence>
         {exceededCount > 0 && !loading && (
@@ -655,6 +682,7 @@ const Budgets = () => {
         </div>
       ) : (
         <>
+
           {/* ── Monthly Summary Header ── */}
           {(totalBudget > 0 || categoryBudgets.length > 0) && (
             <motion.div
