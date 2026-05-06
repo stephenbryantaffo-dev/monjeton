@@ -546,6 +546,18 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
     </div>
   );
 
+  const Step10 = generatedPlan && coachingId ? (
+    <PlanValidationStep
+      coachingId={coachingId}
+      initialPlan={generatedPlan.repartition || []}
+      totalBudget={Math.max(0, disponible)}
+      context={data}
+      month={month}
+      year={year}
+      onValidated={onComplete}
+    />
+  ) : null;
+
   const renderStep = () => {
     switch (step) {
       case 0: return Step0;
@@ -558,6 +570,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       case 7: return Step7;
       case 8: return Step8;
       case 9: return Step9;
+      case 10: return Step10;
       default: return null;
     }
   };
