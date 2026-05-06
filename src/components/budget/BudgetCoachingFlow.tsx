@@ -12,6 +12,7 @@ import {
   AlertTriangle, Plus, X, Wallet, TrendingUp, Heart,
   Users, ShoppingBag, Calendar,
 } from 'lucide-react';
+import { PlanValidationStep } from '@/components/budget/PlanValidationStep';
 
 interface CoachingState {
   current_step: number;
