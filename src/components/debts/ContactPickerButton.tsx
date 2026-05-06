@@ -50,9 +50,10 @@ export const ContactPickerButton = ({ countryCode, onPick }: Props) => {
           .Capacitor;
         if (cap?.isNativePlatform?.()) {
           // Module dynamique : pas d'erreur de build si non installé
-          const mod = await import(
-            /* @vite-ignore */ "@capacitor-community/contacts"
-          ).catch(() => null);
+          const dynImport = new Function("m", "return import(m)") as (
+            m: string
+          ) => Promise<{ Contacts?: { pickContact?: (o: unknown) => Promise<{ contact?: { name?: { display?: string; given?: string; family?: string }; phones?: Array<{ number?: string }> } }> } }>;
+          const mod = await dynImport("@capacitor-community/contacts").catch(() => null);
           if (mod?.Contacts?.pickContact) {
             const r = await mod.Contacts.pickContact({
               projection: { name: true, phones: true },
