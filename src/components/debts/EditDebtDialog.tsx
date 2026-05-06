@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,16 +30,15 @@ export const EditDebtDialog = ({ debt, userId, open, onClose, onSaved }: Props) 
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    amount: debt ? String(debt.amount) : "",
-    motif: debt?.motif || "",
-    note: debt?.note || "",
-    date_echeance: debt?.date_echeance || "",
-    whatsapp: debt?.whatsapp || "",
+    amount: "",
+    motif: "",
+    note: "",
+    date_echeance: "",
+    whatsapp: "",
   });
 
-  // Sync à l'ouverture
-  useState(() => {
-    if (debt) {
+  useEffect(() => {
+    if (debt && open) {
       setForm({
         amount: String(debt.amount),
         motif: debt.motif || "",
@@ -48,7 +47,7 @@ export const EditDebtDialog = ({ debt, userId, open, onClose, onSaved }: Props) 
         whatsapp: debt.whatsapp || "",
       });
     }
-  });
+  }, [debt, open]);
 
   if (!debt) return null;
 
