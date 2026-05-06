@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2, RefreshCw } from "lucide-react";
 import { BudgetCoachingFlow } from "@/components/budget/BudgetCoachingFlow";
+import { PlanHistoryView } from "@/components/budget/PlanHistoryView";
+import { History as HistoryIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -104,6 +106,7 @@ const Budgets = () => {
   const [coachingDone, setCoachingDone] = useState<boolean | null>(null);
   const [showCoaching, setShowCoaching] = useState(false);
   const [coachingPlan, setCoachingPlan] = useState<any>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [loadingCoaching, setLoadingCoaching] = useState(true);
 
   const monthNames = [
@@ -655,6 +658,25 @@ const Budgets = () => {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refaire le coaching budget
           </Button>
+
+          {coachingPlan?.id && (
+            <div className="mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+                className="w-full text-xs glass"
+              >
+                <HistoryIcon className="w-3.5 h-3.5 mr-1.5" />
+                {showHistory ? "Masquer l'historique" : "Voir mes modifications"}
+              </Button>
+              {showHistory && (
+                <div className="mt-3">
+                  <PlanHistoryView coachingId={coachingPlan.id} />
+                </div>
+              )}
+            </div>
+          )}
 
       {/* Exceeded budgets banner */}
       <AnimatePresence>

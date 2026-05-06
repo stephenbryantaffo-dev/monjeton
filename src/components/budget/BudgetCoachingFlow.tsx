@@ -12,6 +12,7 @@ import {
   AlertTriangle, Plus, X, Wallet, TrendingUp, Heart,
   Users, ShoppingBag, Calendar,
 } from 'lucide-react';
+import { PlanValidationStep } from '@/components/budget/PlanValidationStep';
 
 interface CoachingState {
   current_step: number;
@@ -63,6 +64,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
   const [coachingId, setCoachingId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState<any>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -92,8 +94,13 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
           mois_special: existing.mois_special || 'normal',
           mois_special_note: existing.mois_special_note || '',
         });
-        setStep(existing.current_step || 0);
         setCoachingId(existing.id);
+        if (existing.statut === 'complete' && existing.plan_genere) {
+          setGeneratedPlan(existing.plan_genere as any);
+          setStep(10);
+        } else {
+          setStep(existing.current_step || 0);
+        }
       } else if (!existing) {
         const { data: created } = await supabase
           .from('budget_coaching')
@@ -203,81 +210,8 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
         statut: 'complete',
       }).eq('id', coachingId);
 
-      for (const item of plan.repartition) {
-        let { data: cat } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('user_id', user.id)
-          .ilike('name', item.categorie)
-          .maybeSingle();
-
-        if (!cat) {
-          const { data: newCat } = await supabase
-            .from('categories')
-            .insert({
-              user_id: user.id,
-              name: item.categorie,
-              type: 'expense',
-              icon: 'MoreHorizontal',
-              color: 'hsl(0,0%,60%)',
-            })
-            .select('id').single();
-          cat = newCat;
-        }
-
-        if (cat) {
-          // Upsert manuel (pas de constraint unique garantie)
-          const { data: existingCb } = await supabase
-            .from('category_budgets')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('category_id', cat.id)
-            .eq('month', month)
-            .eq('year', year)
-            .maybeSingle();
-
-          if (existingCb) {
-            await supabase.from('category_budgets')
-              .update({ budget_amount: item.montant })
-              .eq('id', existingCb.id);
-          } else {
-            await supabase.from('category_budgets').insert({
-              user_id: user.id,
-              category_id: cat.id,
-              month, year,
-              budget_amount: item.montant,
-            });
-          }
-        }
-      }
-
-      const totalBudget = Math.max(0, disponible);
-      const { data: existingBudget } = await supabase
-        .from('budgets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('month', month)
-        .eq('year', year)
-        .maybeSingle();
-
-      if (existingBudget) {
-        await supabase.from('budgets')
-          .update({ total_budget: totalBudget })
-          .eq('id', existingBudget.id);
-      } else {
-        await supabase.from('budgets').insert({
-          user_id: user.id,
-          month, year,
-          total_budget: totalBudget,
-        });
-      }
-
-      await supabase.from('budget_coaching')
-        .update({ statut: 'approuve' })
-        .eq('id', coachingId);
-
-      toast({ title: 'Budget configuré ✅', description: 'Ton plan personnalisé est prêt' });
-      onComplete();
+      setGeneratedPlan(plan);
+      setStep(10);
     } catch (e: any) {
       toast({
         title: 'Erreur',
@@ -617,6 +551,18 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
     </div>
   );
 
+  const Step10 = generatedPlan && coachingId ? (
+    <PlanValidationStep
+      coachingId={coachingId}
+      initialPlan={generatedPlan.repartition || []}
+      totalBudget={Math.max(0, disponible)}
+      context={data}
+      month={month}
+      year={year}
+      onValidated={onComplete}
+    />
+  ) : null;
+
   const renderStep = () => {
     switch (step) {
       case 0: return Step0;
@@ -629,6 +575,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       case 7: return Step7;
       case 8: return Step8;
       case 9: return Step9;
+      case 10: return Step10;
       default: return null;
     }
   };

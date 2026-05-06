@@ -123,6 +123,7 @@ export type Database = {
           dettes_mois: number | null
           habitude_depense: string | null
           id: string
+          modified_categories: Json | null
           mois_special: string | null
           mois_special_note: string | null
           month: number
@@ -137,6 +138,7 @@ export type Database = {
           statut: string | null
           updated_at: string
           user_id: string
+          validated_categories: Json | null
           whatsapp_notifications: boolean | null
           year: number
         }
@@ -149,6 +151,7 @@ export type Database = {
           dettes_mois?: number | null
           habitude_depense?: string | null
           id?: string
+          modified_categories?: Json | null
           mois_special?: string | null
           mois_special_note?: string | null
           month: number
@@ -163,6 +166,7 @@ export type Database = {
           statut?: string | null
           updated_at?: string
           user_id: string
+          validated_categories?: Json | null
           whatsapp_notifications?: boolean | null
           year: number
         }
@@ -175,6 +179,7 @@ export type Database = {
           dettes_mois?: number | null
           habitude_depense?: string | null
           id?: string
+          modified_categories?: Json | null
           mois_special?: string | null
           mois_special_note?: string | null
           month?: number
@@ -189,10 +194,67 @@ export type Database = {
           statut?: string | null
           updated_at?: string
           user_id?: string
+          validated_categories?: Json | null
           whatsapp_notifications?: boolean | null
           year?: number
         }
         Relationships: []
+      }
+      budget_plan_history: {
+        Row: {
+          action: string
+          ai_suggestion: Json | null
+          amount_after: number | null
+          amount_before: number | null
+          applied: boolean | null
+          category_name: string | null
+          coaching_id: string
+          created_at: string
+          difference: number | null
+          id: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          action: string
+          ai_suggestion?: Json | null
+          amount_after?: number | null
+          amount_before?: number | null
+          applied?: boolean | null
+          category_name?: string | null
+          coaching_id: string
+          created_at?: string
+          difference?: number | null
+          id?: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          action?: string
+          ai_suggestion?: Json | null
+          amount_after?: number | null
+          amount_before?: number | null
+          applied?: boolean | null
+          category_name?: string | null
+          coaching_id?: string
+          created_at?: string
+          difference?: number | null
+          id?: string
+          month?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_plan_history_coaching_id_fkey"
+            columns: ["coaching_id"]
+            isOneToOne: false
+            referencedRelation: "budget_coaching"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       budgets: {
         Row: {
