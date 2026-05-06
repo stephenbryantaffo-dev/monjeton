@@ -62,6 +62,7 @@ const Reports = () => {
         .eq("user_id", user.id)
         .gte("date", sixMonthsAgo)
         .order("date", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(1000);
 
       if (error) throw error;
