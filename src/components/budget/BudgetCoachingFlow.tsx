@@ -64,6 +64,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
   const [coachingId, setCoachingId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState<any>(null);
 
   useEffect(() => {
     const init = async () => {
