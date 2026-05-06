@@ -264,6 +264,7 @@ const Dashboard = () => {
       .gte("date", dateRange.start)
       .lte("date", dateRange.end)
       .order("date", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(500);
 
     if (fetchError) throw fetchError;

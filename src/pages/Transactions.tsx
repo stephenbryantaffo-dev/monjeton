@@ -53,6 +53,7 @@ const Transactions = () => {
             .select("*, categories(name, icon, color)")
             .eq("user_id", user.id)
             .order("date", { ascending: false })
+            .order("created_at", { ascending: false })
             .range(from, from + PAGE_SIZE - 1),
           supabase.from("categories").select("id, name").eq("user_id", user.id),
           supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
