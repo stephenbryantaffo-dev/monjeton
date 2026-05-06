@@ -39,7 +39,8 @@ const Transactions = () => {
   const [filterPeriod, setFilterPeriod] = useState("all");
   const [filterMinAmount, setFilterMinAmount] = useState("");
   const [filterMaxAmount, setFilterMaxAmount] = useState("");
-  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  type SortOrder = "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
+  const [sortOrder, setSortOrder] = useState<SortOrder>("date_desc");
 
   const fetchData = async (pageNum = 0) => {
     if (!user) return;
@@ -97,10 +98,10 @@ const Transactions = () => {
     setFilterPeriod("all");
     setFilterMinAmount("");
     setFilterMaxAmount("");
-    setSortOrder("desc");
+    setSortOrder("date_desc");
   };
 
-  const hasActiveFilters = filterCategory !== "all" || filterWallet !== "all" || filterPeriod !== "all" || filterMinAmount || filterMaxAmount || sortOrder !== "desc";
+  const hasActiveFilters = filterCategory !== "all" || filterWallet !== "all" || filterPeriod !== "all" || filterMinAmount || filterMaxAmount || sortOrder !== "date_desc";
 
   const filtered = useMemo(() => {
     let result = transactions;
@@ -152,11 +153,16 @@ const Transactions = () => {
       result = result.filter(t => Number(t.amount) <= Number(filterMaxAmount));
     }
 
-    // Sort by amount
-    if (sortOrder === "asc") {
+    // Sort
+    const dateKey = (t: any) => `${t.date}T${(t.created_at || "").slice(11)}`;
+    if (sortOrder === "amount_asc") {
       result = [...result].sort((a, b) => Number(a.amount) - Number(b.amount));
-    } else if (sortOrder === "desc") {
+    } else if (sortOrder === "amount_desc") {
       result = [...result].sort((a, b) => Number(b.amount) - Number(a.amount));
+    } else if (sortOrder === "date_asc") {
+      result = [...result].sort((a, b) => dateKey(a).localeCompare(dateKey(b)));
+    } else {
+      result = [...result].sort((a, b) => dateKey(b).localeCompare(dateKey(a)));
     }
 
     return result;
@@ -223,14 +229,16 @@ const Transactions = () => {
               <Input type="number" placeholder="Max" value={filterMaxAmount} onChange={e => setFilterMaxAmount(e.target.value)} className="bg-secondary border-border text-sm" />
             </div>
 
-            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "asc" | "desc")}>
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
               <SelectTrigger className="bg-secondary border-border text-sm">
                 <ArrowUpDown className="w-3.5 h-3.5 mr-1.5" />
-                <SelectValue placeholder="Tri montant" />
+                <SelectValue placeholder="Trier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="desc">Montant décroissant</SelectItem>
-                <SelectItem value="asc">Montant croissant</SelectItem>
+                <SelectItem value="date_desc">Date (récent → ancien)</SelectItem>
+                <SelectItem value="date_asc">Date (ancien → récent)</SelectItem>
+                <SelectItem value="amount_desc">Montant décroissant</SelectItem>
+                <SelectItem value="amount_asc">Montant croissant</SelectItem>
               </SelectContent>
             </Select>
           </div>
