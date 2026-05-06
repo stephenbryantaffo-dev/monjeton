@@ -659,6 +659,25 @@ const Budgets = () => {
             Refaire le coaching budget
           </Button>
 
+          {coachingPlan?.id && (
+            <div className="mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+                className="w-full text-xs glass"
+              >
+                <HistoryIcon className="w-3.5 h-3.5 mr-1.5" />
+                {showHistory ? "Masquer l'historique" : "Voir mes modifications"}
+              </Button>
+              {showHistory && (
+                <div className="mt-3">
+                  <PlanHistoryView coachingId={coachingPlan.id} />
+                </div>
+              )}
+            </div>
+          )}
+
       {/* Exceeded budgets banner */}
       <AnimatePresence>
         {exceededCount > 0 && !loading && (
