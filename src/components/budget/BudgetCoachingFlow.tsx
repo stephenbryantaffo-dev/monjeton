@@ -94,8 +94,13 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
           mois_special: existing.mois_special || 'normal',
           mois_special_note: existing.mois_special_note || '',
         });
-        setStep(existing.current_step || 0);
         setCoachingId(existing.id);
+        if (existing.statut === 'complete' && existing.plan_genere) {
+          setGeneratedPlan(existing.plan_genere as any);
+          setStep(10);
+        } else {
+          setStep(existing.current_step || 0);
+        }
       } else if (!existing) {
         const { data: created } = await supabase
           .from('budget_coaching')
