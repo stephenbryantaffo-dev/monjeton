@@ -11,6 +11,7 @@ import { logDebtChange } from "@/lib/debtHistory";
 interface DebtRow {
   id: string;
   user_id?: string;
+  person_name?: string;
   amount: number;
   motif: string | null;
   note: string | null;
@@ -225,7 +226,7 @@ export const ReloanDialog = ({ debt, userId, open, onClose, onSaved }: ReloanPro
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="glass-card border-border mx-4 rounded-2xl">
         <DialogTitle className="text-lg font-black">
-          Re-prêter à {debt && "person_name" in debt ? "" : ""}
+          Re-prêter à {debt.person_name || "ce contact"}
         </DialogTitle>
         <p className="text-xs text-muted-foreground -mt-1">
           Ajoute un montant supplémentaire à cette dette existante.
