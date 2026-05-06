@@ -106,6 +106,7 @@ const Budgets = () => {
   const [coachingDone, setCoachingDone] = useState<boolean | null>(null);
   const [showCoaching, setShowCoaching] = useState(false);
   const [coachingPlan, setCoachingPlan] = useState<any>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [loadingCoaching, setLoadingCoaching] = useState(true);
 
   const monthNames = [
