@@ -205,81 +205,8 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
         statut: 'complete',
       }).eq('id', coachingId);
 
-      for (const item of plan.repartition) {
-        let { data: cat } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('user_id', user.id)
-          .ilike('name', item.categorie)
-          .maybeSingle();
-
-        if (!cat) {
-          const { data: newCat } = await supabase
-            .from('categories')
-            .insert({
-              user_id: user.id,
-              name: item.categorie,
-              type: 'expense',
-              icon: 'MoreHorizontal',
-              color: 'hsl(0,0%,60%)',
-            })
-            .select('id').single();
-          cat = newCat;
-        }
-
-        if (cat) {
-          // Upsert manuel (pas de constraint unique garantie)
-          const { data: existingCb } = await supabase
-            .from('category_budgets')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('category_id', cat.id)
-            .eq('month', month)
-            .eq('year', year)
-            .maybeSingle();
-
-          if (existingCb) {
-            await supabase.from('category_budgets')
-              .update({ budget_amount: item.montant })
-              .eq('id', existingCb.id);
-          } else {
-            await supabase.from('category_budgets').insert({
-              user_id: user.id,
-              category_id: cat.id,
-              month, year,
-              budget_amount: item.montant,
-            });
-          }
-        }
-      }
-
-      const totalBudget = Math.max(0, disponible);
-      const { data: existingBudget } = await supabase
-        .from('budgets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('month', month)
-        .eq('year', year)
-        .maybeSingle();
-
-      if (existingBudget) {
-        await supabase.from('budgets')
-          .update({ total_budget: totalBudget })
-          .eq('id', existingBudget.id);
-      } else {
-        await supabase.from('budgets').insert({
-          user_id: user.id,
-          month, year,
-          total_budget: totalBudget,
-        });
-      }
-
-      await supabase.from('budget_coaching')
-        .update({ statut: 'approuve' })
-        .eq('id', coachingId);
-
-      toast({ title: 'Budget configuré ✅', description: 'Ton plan personnalisé est prêt' });
-      onComplete();
+      setGeneratedPlan(plan);
+      setStep(10);
     } catch (e: any) {
       toast({
         title: 'Erreur',
