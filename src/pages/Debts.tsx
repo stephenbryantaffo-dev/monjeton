@@ -512,7 +512,10 @@ const Debts = () => {
               <PersonDebtContainer
                 group={g}
                 onEdit={(d) => setEditing(d)}
-                onPay={(d) => setPaying(d)}
+                onPay={(d, inst) => {
+                  setTargetInstallment(inst || null);
+                  setPaying(d);
+                }}
               />
             </motion.div>
           ))}
