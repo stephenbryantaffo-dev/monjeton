@@ -622,7 +622,190 @@ const Debts = () => {
               />
             </div>
 
-            {/* Motif */}
+            {/* Payment type */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">
+                Mode de remboursement
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { val: "lump_sum", icon: "💵", label: "En une fois" },
+                    { val: "monthly", icon: "📅", label: "Mensuel" },
+                    { val: "custom", icon: "🗓️", label: "Dates fixes" },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.val}
+                    onClick={() => setPaymentType(opt.val)}
+                    className={`p-2.5 rounded-xl text-center transition-all ${
+                      paymentType === opt.val
+                        ? "gradient-primary text-primary-foreground"
+                        : "glass text-muted-foreground"
+                    }`}
+                  >
+                    <div className="text-lg leading-none mb-1">{opt.icon}</div>
+                    <div className="text-[10px] font-bold leading-tight">
+                      {opt.label}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {paymentType === "monthly" && (
+              <div className="space-y-3 p-3 rounded-xl bg-secondary/40 border border-border">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Montant mensuel (F CFA) *
+                  </Label>
+                  <MoneyInput
+                    value={monthlyAmount}
+                    onChange={setMonthlyAmount}
+                    showCurrency
+                    className="[&>input]:bg-secondary [&>input]:border-border"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Jour du mois pour le paiement
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={1}
+                      max={28}
+                      value={monthlyDay}
+                      onChange={(e) => setMonthlyDay(Number(e.target.value))}
+                      className="flex-1 accent-primary"
+                    />
+                    <span className="text-sm font-bold tabular-nums w-8 text-right">
+                      {monthlyDay}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Paiement attendu le {monthlyDay} de chaque mois
+                  </p>
+                </div>
+                {monthlyAmount > 0 && newAmount > 0 && (
+                  <div className="rounded-xl bg-primary/5 border border-primary/20 p-2.5">
+                    {(() => {
+                      const nbMonths = Math.ceil(newAmount / monthlyAmount);
+                      const lastDate = new Date();
+                      lastDate.setMonth(
+                        lastDate.getMonth() + nbMonths - 1,
+                      );
+                      lastDate.setDate(monthlyDay);
+                      const lastInst =
+                        newAmount - monthlyAmount * (nbMonths - 1);
+                      return (
+                        <>
+                          <p className="text-[11px] font-bold text-primary mb-1">
+                            📊 Aperçu du plan
+                          </p>
+                          <p className="text-xs text-foreground">
+                            {nbMonths} versement(s) de{" "}
+                            {formatThousands(monthlyAmount)} F
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Fin estimée :{" "}
+                            {lastDate.toLocaleDateString("fr-FR", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </p>
+                          {lastInst !== monthlyAmount && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Dernier versement : {formatThousands(lastInst)} F
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {paymentType === "custom" && (
+              <div className="space-y-2 p-3 rounded-xl bg-secondary/40 border border-border">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold text-foreground">
+                    Échéances personnalisées
+                  </Label>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {formatThousands(
+                      customInstallments.reduce((s, i) => s + i.amount, 0),
+                    )}{" "}
+                    / {formatThousands(newAmount)} F
+                  </span>
+                </div>
+                {customInstallments.map((inst, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold tabular-nums">
+                        {formatThousands(inst.amount)} F
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(inst.date).toLocaleDateString("fr-FR", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setCustomInstallments((prev) =>
+                          prev.filter((_, i) => i !== idx),
+                        )
+                      }
+                      className="p-1 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                      aria-label="Retirer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <AddInstallmentRow
+                  onAdd={(date, amount) =>
+                    setCustomInstallments((prev) => [
+                      ...prev,
+                      { date, amount },
+                    ])
+                  }
+                />
+                {(() => {
+                  const allocated = customInstallments.reduce(
+                    (s, i) => s + i.amount,
+                    0,
+                  );
+                  const remaining = newAmount - allocated;
+                  if (newAmount === 0) return null;
+                  if (remaining === 0)
+                    return (
+                      <p className="text-[11px] text-primary font-bold">
+                        ✓ Plan complet — 100% alloué
+                      </p>
+                    );
+                  if (remaining < 0)
+                    return (
+                      <p className="text-[11px] text-destructive font-bold">
+                        ⚠️ Dépasse de {formatThousands(-remaining)} F
+                      </p>
+                    );
+                  return (
+                    <p className="text-[11px] text-muted-foreground">
+                      Reste {formatThousands(remaining)} F à allouer
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
+
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">
                 Motif
