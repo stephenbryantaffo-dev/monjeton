@@ -898,4 +898,44 @@ const Debts = () => {
   );
 };
 
+const AddInstallmentRow = ({
+  onAdd,
+}: {
+  onAdd: (date: string, amount: number) => void;
+}) => {
+  const [date, setDate] = useState("");
+  const [amount, setAmount] = useState<number>(0);
+  return (
+    <div className="flex items-end gap-2">
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        className="flex-1 bg-secondary border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+      />
+      <div className="flex-1">
+        <MoneyInput
+          value={amount}
+          onChange={setAmount}
+          showCurrency
+          className="[&>input]:bg-secondary [&>input]:border-border"
+        />
+      </div>
+      <button
+        onClick={() => {
+          if (!date || amount <= 0) return;
+          onAdd(date, amount);
+          setDate("");
+          setAmount(0);
+        }}
+        disabled={!date || amount <= 0}
+        className="w-9 h-10 rounded-xl gradient-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 transition-all active:scale-95"
+        aria-label="Ajouter"
+      >
+        <Plus className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
 export default Debts;
