@@ -7,6 +7,7 @@ import {
   ContactRound,
   X,
   User,
+  Trash2,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
