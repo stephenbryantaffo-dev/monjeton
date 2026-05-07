@@ -894,7 +894,11 @@ const Debts = () => {
         debt={paying}
         userId={user?.id || ""}
         open={!!paying}
-        onClose={() => setPaying(null)}
+        targetInstallment={targetInstallment}
+        onClose={() => {
+          setPaying(null);
+          setTargetInstallment(null);
+        }}
         onSaved={loadDebts}
       />
     </DashboardLayout>
