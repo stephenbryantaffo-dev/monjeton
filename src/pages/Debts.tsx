@@ -33,6 +33,10 @@ import type { DebtCardData } from "@/components/debts/DebtCard";
 import { EditDebtModal } from "@/components/debts/EditDebtModal";
 import { PaymentModal } from "@/components/debts/PaymentModal";
 import { markOverdueInstallments } from "@/lib/debtHistory";
+import {
+  checkAndSendReminders,
+  checkOverdueDebts,
+} from "@/lib/debtReminders";
 
 type StatusFilter = "all" | "pending" | "overdue" | "paid";
 type DebtType = "owed_to_me" | "i_owe";
