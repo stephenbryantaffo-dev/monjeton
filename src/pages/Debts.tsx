@@ -104,12 +104,17 @@ const Debts = () => {
         debt_id: string;
         due_date: string;
         expected_amount: number;
+        paid_amount: number;
+        paid_date: string | null;
+        installment_number: number | null;
         status: string;
       }> = [];
       if (debtIds.length > 0) {
         const { data } = await supabase
           .from("debt_installments")
-          .select("id, debt_id, due_date, expected_amount, status")
+          .select(
+            "id, debt_id, due_date, expected_amount, paid_amount, paid_date, installment_number, status",
+          )
           .in("debt_id", debtIds)
           .order("due_date", { ascending: true });
         installmentsData = (data as typeof installmentsData) || [];
