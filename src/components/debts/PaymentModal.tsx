@@ -162,7 +162,10 @@ export const PaymentModal = ({
           Enregistrer un paiement
         </DialogTitle>
         <p className="text-xs text-muted-foreground -mt-1">
-          {debt.person_name} · Reste {formatThousands(remaining)} F
+          {debt.person_name} ·{" "}
+          {targetInstallment
+            ? `Échéance de ${formatThousands(targetInstallment.expected_amount)} F`
+            : `Reste ${formatThousands(remaining)} F`}
         </p>
 
         <div className="space-y-3 mt-2">
