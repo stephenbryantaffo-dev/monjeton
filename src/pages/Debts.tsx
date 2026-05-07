@@ -33,6 +33,10 @@ import type { DebtCardData } from "@/components/debts/DebtCard";
 import { EditDebtModal } from "@/components/debts/EditDebtModal";
 import { PaymentModal } from "@/components/debts/PaymentModal";
 import { markOverdueInstallments } from "@/lib/debtHistory";
+import {
+  checkAndSendReminders,
+  checkOverdueDebts,
+} from "@/lib/debtReminders";
 
 type StatusFilter = "all" | "pending" | "overdue" | "paid";
 type DebtType = "owed_to_me" | "i_owe";
@@ -164,6 +168,18 @@ const Debts = () => {
   useEffect(() => {
     loadDebts();
   }, [loadDebts]);
+
+  // Rappels automatiques (J-1) + retards
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      await checkOverdueDebts(user.id);
+      const hour = new Date().getHours();
+      if (hour >= 18 && hour <= 21) {
+        await checkAndSendReminders({ userId: user.id, silent: false });
+      }
+    })();
+  }, [user]);
 
   // Filter groups by status + type
   const filteredGroups = useMemo(() => {
@@ -394,6 +410,18 @@ const Debts = () => {
             .update({ installments_total: total, installments_paid: 0 })
             .eq("id", newDebt.id);
         }
+      }
+
+      if (newDebt) {
+        await supabase.from("debt_history").insert({
+          debt_id: newDebt.id,
+          user_id: user.id,
+          action: "created",
+          field: "amount",
+          new_value: String(newAmount),
+          amount: Number(newAmount),
+          note: `Dette créée — ${paymentType}`,
+        });
       }
 
       toast({ title: "Dette créée ✅" });

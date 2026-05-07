@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Banknote, Edit3, MessageCircle, Calendar } from "lucide-react";
+import { Banknote, Edit3, MessageCircle, Calendar, History } from "lucide-react";
 import { formatThousands } from "@/lib/formatAmount";
 import { useToast } from "@/hooks/use-toast";
 import {
   InstallmentCalendar,
   type InstallmentItem,
 } from "./InstallmentCalendar";
+import { DebtHistoryView } from "./DebtHistoryView";
 
 export interface DebtCardData {
   id: string;
@@ -48,6 +50,7 @@ const STATUS = {
 
 export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
   const { toast } = useToast();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const total = Number(debt.amount);
   const paid = Number(debt.paid_amount || 0);
   const remaining = Number(
@@ -172,8 +175,8 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
         )
       )}
 
-      {!isPaid && (
-        <div className="flex gap-2 pt-1">
+      <div className="flex gap-2 pt-1">
+        {!isPaid && (
           <button
             onClick={() => onPay()}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity"
@@ -181,6 +184,8 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
             <Banknote className="w-3.5 h-3.5" />
             Payer
           </button>
+        )}
+        {!isPaid && (
           <button
             onClick={onEdit}
             className="px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors"
@@ -188,6 +193,8 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
+        )}
+        {!isPaid && (
           <button
             onClick={sendWhatsApp}
             className="px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors text-[#25D366]"
@@ -195,8 +202,22 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
           >
             <MessageCircle className="w-3.5 h-3.5" />
           </button>
-        </div>
-      )}
+        )}
+        <button
+          onClick={() => setHistoryOpen(true)}
+          className={`${isPaid ? "flex-1" : "px-3"} py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors flex items-center justify-center gap-1.5 text-muted-foreground`}
+          aria-label="Historique"
+        >
+          <History className="w-3.5 h-3.5" />
+          {isPaid && <span className="text-xs font-bold">Historique</span>}
+        </button>
+      </div>
+
+      <DebtHistoryView
+        debtId={debt.id}
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </motion.div>
   );
 };
