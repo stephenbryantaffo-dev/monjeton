@@ -412,6 +412,18 @@ const Debts = () => {
         }
       }
 
+      if (newDebt) {
+        await supabase.from("debt_history").insert({
+          debt_id: newDebt.id,
+          user_id: user.id,
+          action: "created",
+          field: "amount",
+          new_value: String(newAmount),
+          amount: Number(newAmount),
+          note: `Dette créée — ${paymentType}`,
+        });
+      }
+
       toast({ title: "Dette créée ✅" });
       setShowNew(false);
       resetNew();
