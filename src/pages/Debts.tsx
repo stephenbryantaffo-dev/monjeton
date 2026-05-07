@@ -169,6 +169,18 @@ const Debts = () => {
     loadDebts();
   }, [loadDebts]);
 
+  // Rappels automatiques (J-1) + retards
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      await checkOverdueDebts(user.id);
+      const hour = new Date().getHours();
+      if (hour >= 18 && hour <= 21) {
+        await checkAndSendReminders({ userId: user.id, silent: false });
+      }
+    })();
+  }, [user]);
+
   // Filter groups by status + type
   const filteredGroups = useMemo(() => {
     return groups
