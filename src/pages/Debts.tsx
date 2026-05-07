@@ -222,12 +222,75 @@ const Debts = () => {
     setNewNote("");
     setNewDueDate("");
     setNewType(typeFilter);
+    setPaymentType("lump_sum");
+    setMonthlyAmount(0);
+    setMonthlyDay(1);
+    setCustomInstallments([]);
   };
 
   const openNew = () => {
     resetNew();
     setNewType(typeFilter);
     setShowNew(true);
+  };
+
+  const buildInstallments = (
+    debtId: string,
+    amount: number,
+  ): {
+    rows: Array<{
+      debt_id: string;
+      user_id: string;
+      installment_number: number;
+      expected_amount: number;
+      due_date: string;
+      order_index: number;
+      status: string;
+    }>;
+    total: number;
+  } => {
+    if (paymentType === "monthly" && monthlyAmount > 0) {
+      const nbMonths = Math.ceil(amount / monthlyAmount);
+      const rows = [];
+      for (let i = 0; i < nbMonths; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + i);
+        d.setDate(monthlyDay);
+        if (i === 0 && d < new Date()) {
+          d.setMonth(d.getMonth() + 1);
+        }
+        const isLast = i === nbMonths - 1;
+        const instAmount = isLast
+          ? amount - monthlyAmount * (nbMonths - 1)
+          : monthlyAmount;
+        rows.push({
+          debt_id: debtId,
+          user_id: user!.id,
+          installment_number: i + 1,
+          expected_amount: Math.max(0, instAmount),
+          due_date: d.toISOString().slice(0, 10),
+          order_index: i,
+          status: "pending",
+        });
+      }
+      return { rows, total: nbMonths };
+    }
+    if (paymentType === "custom") {
+      const sorted = [...customInstallments].sort((a, b) =>
+        a.date > b.date ? 1 : -1,
+      );
+      const rows = sorted.map((inst, i) => ({
+        debt_id: debtId,
+        user_id: user!.id,
+        installment_number: i + 1,
+        expected_amount: inst.amount,
+        due_date: inst.date,
+        order_index: i,
+        status: "pending",
+      }));
+      return { rows, total: rows.length };
+    }
+    return { rows: [], total: 0 };
   };
 
   const createDebt = async () => {
@@ -240,10 +303,25 @@ const Debts = () => {
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
+    if (paymentType === "monthly" && monthlyAmount <= 0) {
+      toast({ title: "Montant mensuel invalide", variant: "destructive" });
+      return;
+    }
+    if (paymentType === "custom") {
+      const allocated = customInstallments.reduce((s, i) => s + i.amount, 0);
+      if (customInstallments.length === 0 || allocated !== newAmount) {
+        toast({
+          title: "Plan incomplet",
+          description: "Le total des échéances doit égaler le montant",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setCreating(true);
 
     try {
-      // Upsert person (find existing by contact_id or name)
+      // Upsert person
       let personId: string | null = null;
       if (selectedContact.contactId) {
         const { data: existing } = await supabase
@@ -280,23 +358,43 @@ const Debts = () => {
         personId = created.id;
       }
 
-      const { error } = await supabase.from("debts").insert({
-        user_id: user.id,
-        person_id: personId,
-        person_name: selectedContact.name.trim(),
-        amount: newAmount,
-        amount_remaining: newAmount,
-        paid_amount: 0,
-        type: newType,
-        motif: newMotif.trim() || null,
-        note: newNote.trim() || null,
-        date_echeance: newDueDate || null,
-        due_date: newDueDate || null,
-        whatsapp: selectedContact.phone || null,
-        status: "pending",
-        payment_type: "lump_sum",
-      });
+      const { data: newDebt, error } = await supabase
+        .from("debts")
+        .insert({
+          user_id: user.id,
+          person_id: personId,
+          person_name: selectedContact.name.trim(),
+          amount: newAmount,
+          amount_remaining: newAmount,
+          paid_amount: 0,
+          type: newType,
+          motif: newMotif.trim() || null,
+          note: newNote.trim() || null,
+          date_echeance: newDueDate || null,
+          due_date: newDueDate || null,
+          whatsapp: selectedContact.phone || null,
+          status: "pending",
+          payment_type: paymentType,
+          monthly_amount: paymentType === "monthly" ? monthlyAmount : null,
+          monthly_day: paymentType === "monthly" ? monthlyDay : null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+
+      if (newDebt && paymentType !== "lump_sum") {
+        const { rows, total } = buildInstallments(newDebt.id, newAmount);
+        if (rows.length > 0) {
+          const { error: insErr } = await supabase
+            .from("debt_installments")
+            .insert(rows);
+          if (insErr) throw insErr;
+          await supabase
+            .from("debts")
+            .update({ installments_total: total, installments_paid: 0 })
+            .eq("id", newDebt.id);
+        }
+      }
 
       toast({ title: "Dette créée ✅" });
       setShowNew(false);
