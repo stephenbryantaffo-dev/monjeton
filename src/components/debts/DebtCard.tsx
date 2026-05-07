@@ -35,7 +35,7 @@ interface Props {
   debt: DebtCardData;
   index: number;
   onEdit: () => void;
-  onPay: () => void;
+  onPay: (installment?: InstallmentItem) => void;
 }
 
 const STATUS = {
