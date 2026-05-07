@@ -86,6 +86,7 @@ export const PaymentModal = ({
     const { error } = await supabase.from("debt_payments").insert({
       debt_id: debt.id,
       user_id: userId,
+      installment_id: targetInstallment?.id || null,
       amount,
       payment_date: date,
       payment_method: method,
@@ -101,8 +102,40 @@ export const PaymentModal = ({
       return;
     }
 
-    // Affecter aux échéances et logger
-    await applyPaymentToInstallments(debt.id, amount);
+    // Affecter le paiement à l'échéance cible OU FIFO
+    if (targetInstallment) {
+      const newPaid =
+        Number(targetInstallment.paid_amount || 0) + amount;
+      const newStatus =
+        newPaid >= Number(targetInstallment.expected_amount)
+          ? "paid"
+          : "partial";
+      await supabase
+        .from("debt_installments")
+        .update({
+          paid_amount: newPaid,
+          status: newStatus,
+          paid_date: newStatus === "paid" ? date : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", targetInstallment.id);
+    } else {
+      await applyPaymentToInstallments(debt.id, amount);
+    }
+
+    // Recompute installments_paid
+    const { data: allInst } = await supabase
+      .from("debt_installments")
+      .select("status")
+      .eq("debt_id", debt.id);
+    if (allInst) {
+      const paidCount = allInst.filter((i) => i.status === "paid").length;
+      await supabase
+        .from("debts")
+        .update({ installments_paid: paidCount })
+        .eq("id", debt.id);
+    }
+
     await supabase.from("debt_history").insert({
       debt_id: debt.id,
       user_id: userId,
