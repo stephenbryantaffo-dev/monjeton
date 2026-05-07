@@ -127,7 +127,7 @@ export const PersonDebtContainer = ({ group, onEdit, onPay }: Props) => {
                   debt={d}
                   index={i}
                   onEdit={() => onEdit(d)}
-                  onPay={() => onPay(d)}
+                  onPay={(inst) => onPay(d, inst)}
                 />
               ))}
             </div>
