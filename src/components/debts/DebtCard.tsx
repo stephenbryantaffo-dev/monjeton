@@ -2,6 +2,10 @@ import { motion } from "framer-motion";
 import { Banknote, Edit3, MessageCircle, Calendar } from "lucide-react";
 import { formatThousands } from "@/lib/formatAmount";
 import { useToast } from "@/hooks/use-toast";
+import {
+  InstallmentCalendar,
+  type InstallmentItem,
+} from "./InstallmentCalendar";
 
 export interface DebtCardData {
   id: string;
