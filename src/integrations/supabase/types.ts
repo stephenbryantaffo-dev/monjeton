@@ -609,6 +609,7 @@ export type Database = {
       debt_history: {
         Row: {
           action: string
+          amount: number | null
           created_at: string
           debt_id: string
           field: string | null
@@ -620,6 +621,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          amount?: number | null
           created_at?: string
           debt_id: string
           field?: string | null
@@ -631,6 +633,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          amount?: number | null
           created_at?: string
           debt_id?: string
           field?: string | null
@@ -649,9 +652,13 @@ export type Database = {
           due_date: string
           expected_amount: number
           id: string
+          installment_number: number | null
           note: string | null
           order_index: number
           paid_amount: number
+          paid_date: string | null
+          reminder_sent: boolean
+          reminder_sent_at: string | null
           status: string
           updated_at: string
           user_id: string
@@ -662,9 +669,13 @@ export type Database = {
           due_date: string
           expected_amount?: number
           id?: string
+          installment_number?: number | null
           note?: string | null
           order_index?: number
           paid_amount?: number
+          paid_date?: string | null
+          reminder_sent?: boolean
+          reminder_sent_at?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -675,9 +686,13 @@ export type Database = {
           due_date?: string
           expected_amount?: number
           id?: string
+          installment_number?: number | null
           note?: string | null
           order_index?: number
           paid_amount?: number
+          paid_date?: string | null
+          reminder_sent?: boolean
+          reminder_sent_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -690,8 +705,11 @@ export type Database = {
           created_at: string
           debt_id: string
           id: string
+          installment_id: string | null
           note: string | null
           payment_date: string
+          payment_method: string | null
+          proof_url: string | null
           transaction_id: string | null
           user_id: string
         }
@@ -700,8 +718,11 @@ export type Database = {
           created_at?: string
           debt_id: string
           id?: string
+          installment_id?: string | null
           note?: string | null
           payment_date?: string
+          payment_method?: string | null
+          proof_url?: string | null
           transaction_id?: string | null
           user_id: string
         }
@@ -710,8 +731,11 @@ export type Database = {
           created_at?: string
           debt_id?: string
           id?: string
+          installment_id?: string | null
           note?: string | null
           payment_date?: string
+          payment_method?: string | null
+          proof_url?: string | null
           transaction_id?: string | null
           user_id?: string
         }
@@ -724,6 +748,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "debt_payments_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "debt_installments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "debt_payments_transaction_id_fkey"
             columns: ["transaction_id"]
             isOneToOne: false
@@ -732,59 +763,130 @@ export type Database = {
           },
         ]
       }
+      debt_persons: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          photo_uri: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          photo_uri?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          photo_uri?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       debts: {
         Row: {
           amount: number
+          amount_remaining: number | null
           created_at: string
           date_echeance: string | null
           due_date: string | null
           id: string
+          installments_paid: number | null
+          installments_total: number | null
+          monthly_amount: number | null
+          monthly_day: number | null
           motif: string | null
           note: string | null
           paid_amount: number
+          payment_type: string | null
+          person_id: string | null
           person_name: string
           preuve_storage_path: string | null
           preuve_url: string | null
           status: string
           type: string
+          updated_at: string
           user_id: string
           whatsapp: string | null
         }
         Insert: {
           amount: number
+          amount_remaining?: number | null
           created_at?: string
           date_echeance?: string | null
           due_date?: string | null
           id?: string
+          installments_paid?: number | null
+          installments_total?: number | null
+          monthly_amount?: number | null
+          monthly_day?: number | null
           motif?: string | null
           note?: string | null
           paid_amount?: number
+          payment_type?: string | null
+          person_id?: string | null
           person_name: string
           preuve_storage_path?: string | null
           preuve_url?: string | null
           status?: string
           type: string
+          updated_at?: string
           user_id: string
           whatsapp?: string | null
         }
         Update: {
           amount?: number
+          amount_remaining?: number | null
           created_at?: string
           date_echeance?: string | null
           due_date?: string | null
           id?: string
+          installments_paid?: number | null
+          installments_total?: number | null
+          monthly_amount?: number | null
+          monthly_day?: number | null
           motif?: string | null
           note?: string | null
           paid_amount?: number
+          payment_type?: string | null
+          person_id?: string | null
           person_name?: string
           preuve_storage_path?: string | null
           preuve_url?: string | null
           status?: string
           type?: string
+          updated_at?: string
           user_id?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "debts_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "debt_persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       financial_scores: {
         Row: {
@@ -2106,6 +2208,7 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      mark_overdue_installments: { Args: never; Returns: undefined }
       recalculate_cycle_collected: {
         Args: { p_cycle_id: string }
         Returns: undefined
