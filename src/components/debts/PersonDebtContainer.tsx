@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { formatThousands } from "@/lib/formatAmount";
 import { DebtCard, type DebtCardData } from "./DebtCard";
+import type { InstallmentItem } from "./InstallmentCalendar";
 
 export interface PersonGroup {
   person: {
@@ -18,7 +19,7 @@ export interface PersonGroup {
 interface Props {
   group: PersonGroup;
   onEdit: (debt: DebtCardData) => void;
-  onPay: (debt: DebtCardData) => void;
+  onPay: (debt: DebtCardData, installment?: InstallmentItem) => void;
 }
 
 export const PersonDebtContainer = ({ group, onEdit, onPay }: Props) => {
@@ -126,7 +127,7 @@ export const PersonDebtContainer = ({ group, onEdit, onPay }: Props) => {
                   debt={d}
                   index={i}
                   onEdit={() => onEdit(d)}
-                  onPay={() => onPay(d)}
+                  onPay={(inst) => onPay(d, inst)}
                 />
               ))}
             </div>

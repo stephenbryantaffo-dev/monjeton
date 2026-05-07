@@ -2,6 +2,10 @@ import { motion } from "framer-motion";
 import { Banknote, Edit3, MessageCircle, Calendar } from "lucide-react";
 import { formatThousands } from "@/lib/formatAmount";
 import { useToast } from "@/hooks/use-toast";
+import {
+  InstallmentCalendar,
+  type InstallmentItem,
+} from "./InstallmentCalendar";
 
 export interface DebtCardData {
   id: string;
@@ -18,12 +22,7 @@ export interface DebtCardData {
   date_echeance?: string | null;
   due_date?: string | null;
   created_at: string;
-  installments?: Array<{
-    id: string;
-    due_date: string;
-    expected_amount: number;
-    status: string;
-  }>;
+  installments?: InstallmentItem[];
   debt_persons?: {
     id: string | null;
     name: string;
@@ -36,7 +35,7 @@ interface Props {
   debt: DebtCardData;
   index: number;
   onEdit: () => void;
-  onPay: () => void;
+  onPay: (installment?: InstallmentItem) => void;
 }
 
 const STATUS = {
@@ -154,22 +153,29 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
         </p>
       )}
 
-      {nextDue && (
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Calendar className="w-3 h-3" />
-          {nextDue.status === "overdue" ? "⚠️ En retard : " : "Prochain : "}
-          {formatThousands(nextDue.expected_amount)} F le{" "}
-          {new Date(nextDue.due_date).toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </div>
+      {debt.installments && debt.installments.length > 0 && debt.payment_type !== "lump_sum" ? (
+        <InstallmentCalendar
+          installments={debt.installments}
+          onPayInstallment={(inst) => onPay(inst)}
+        />
+      ) : (
+        nextDue && (
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Calendar className="w-3 h-3" />
+            {nextDue.status === "overdue" ? "⚠️ En retard : " : "Prochain : "}
+            {formatThousands(nextDue.expected_amount)} F le{" "}
+            {new Date(nextDue.due_date).toLocaleDateString("fr-FR", {
+              day: "2-digit",
+              month: "short",
+            })}
+          </div>
+        )
       )}
 
       {!isPaid && (
         <div className="flex gap-2 pt-1">
           <button
-            onClick={onPay}
+            onClick={() => onPay()}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity"
           >
             <Banknote className="w-3.5 h-3.5" />

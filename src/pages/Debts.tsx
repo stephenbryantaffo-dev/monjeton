@@ -7,6 +7,7 @@ import {
   ContactRound,
   X,
   User,
+  Trash2,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -63,11 +64,24 @@ const Debts = () => {
   const [newNote, setNewNote] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newType, setNewType] = useState<DebtType>("owed_to_me");
+  const [paymentType, setPaymentType] = useState<
+    "lump_sum" | "monthly" | "custom"
+  >("lump_sum");
+  const [monthlyAmount, setMonthlyAmount] = useState<number>(0);
+  const [monthlyDay, setMonthlyDay] = useState<number>(1);
+  const [customInstallments, setCustomInstallments] = useState<
+    Array<{ date: string; amount: number }>
+  >([]);
   const [creating, setCreating] = useState(false);
 
   // Edit / Pay
   const [editing, setEditing] = useState<DebtCardData | null>(null);
   const [paying, setPaying] = useState<DebtCardData | null>(null);
+  const [targetInstallment, setTargetInstallment] = useState<{
+    id: string;
+    expected_amount: number;
+    paid_amount?: number;
+  } | null>(null);
 
   const loadDebts = useCallback(async () => {
     if (!user) return;
@@ -90,12 +104,17 @@ const Debts = () => {
         debt_id: string;
         due_date: string;
         expected_amount: number;
+        paid_amount: number;
+        paid_date: string | null;
+        installment_number: number | null;
         status: string;
       }> = [];
       if (debtIds.length > 0) {
         const { data } = await supabase
           .from("debt_installments")
-          .select("id, debt_id, due_date, expected_amount, status")
+          .select(
+            "id, debt_id, due_date, expected_amount, paid_amount, paid_date, installment_number, status",
+          )
           .in("debt_id", debtIds)
           .order("due_date", { ascending: true });
         installmentsData = (data as typeof installmentsData) || [];
@@ -203,12 +222,75 @@ const Debts = () => {
     setNewNote("");
     setNewDueDate("");
     setNewType(typeFilter);
+    setPaymentType("lump_sum");
+    setMonthlyAmount(0);
+    setMonthlyDay(1);
+    setCustomInstallments([]);
   };
 
   const openNew = () => {
     resetNew();
     setNewType(typeFilter);
     setShowNew(true);
+  };
+
+  const buildInstallments = (
+    debtId: string,
+    amount: number,
+  ): {
+    rows: Array<{
+      debt_id: string;
+      user_id: string;
+      installment_number: number;
+      expected_amount: number;
+      due_date: string;
+      order_index: number;
+      status: string;
+    }>;
+    total: number;
+  } => {
+    if (paymentType === "monthly" && monthlyAmount > 0) {
+      const nbMonths = Math.ceil(amount / monthlyAmount);
+      const rows = [];
+      for (let i = 0; i < nbMonths; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + i);
+        d.setDate(monthlyDay);
+        if (i === 0 && d < new Date()) {
+          d.setMonth(d.getMonth() + 1);
+        }
+        const isLast = i === nbMonths - 1;
+        const instAmount = isLast
+          ? amount - monthlyAmount * (nbMonths - 1)
+          : monthlyAmount;
+        rows.push({
+          debt_id: debtId,
+          user_id: user!.id,
+          installment_number: i + 1,
+          expected_amount: Math.max(0, instAmount),
+          due_date: d.toISOString().slice(0, 10),
+          order_index: i,
+          status: "pending",
+        });
+      }
+      return { rows, total: nbMonths };
+    }
+    if (paymentType === "custom") {
+      const sorted = [...customInstallments].sort((a, b) =>
+        a.date > b.date ? 1 : -1,
+      );
+      const rows = sorted.map((inst, i) => ({
+        debt_id: debtId,
+        user_id: user!.id,
+        installment_number: i + 1,
+        expected_amount: inst.amount,
+        due_date: inst.date,
+        order_index: i,
+        status: "pending",
+      }));
+      return { rows, total: rows.length };
+    }
+    return { rows: [], total: 0 };
   };
 
   const createDebt = async () => {
@@ -221,10 +303,25 @@ const Debts = () => {
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
+    if (paymentType === "monthly" && monthlyAmount <= 0) {
+      toast({ title: "Montant mensuel invalide", variant: "destructive" });
+      return;
+    }
+    if (paymentType === "custom") {
+      const allocated = customInstallments.reduce((s, i) => s + i.amount, 0);
+      if (customInstallments.length === 0 || allocated !== newAmount) {
+        toast({
+          title: "Plan incomplet",
+          description: "Le total des échéances doit égaler le montant",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setCreating(true);
 
     try {
-      // Upsert person (find existing by contact_id or name)
+      // Upsert person
       let personId: string | null = null;
       if (selectedContact.contactId) {
         const { data: existing } = await supabase
@@ -261,23 +358,43 @@ const Debts = () => {
         personId = created.id;
       }
 
-      const { error } = await supabase.from("debts").insert({
-        user_id: user.id,
-        person_id: personId,
-        person_name: selectedContact.name.trim(),
-        amount: newAmount,
-        amount_remaining: newAmount,
-        paid_amount: 0,
-        type: newType,
-        motif: newMotif.trim() || null,
-        note: newNote.trim() || null,
-        date_echeance: newDueDate || null,
-        due_date: newDueDate || null,
-        whatsapp: selectedContact.phone || null,
-        status: "pending",
-        payment_type: "lump_sum",
-      });
+      const { data: newDebt, error } = await supabase
+        .from("debts")
+        .insert({
+          user_id: user.id,
+          person_id: personId,
+          person_name: selectedContact.name.trim(),
+          amount: newAmount,
+          amount_remaining: newAmount,
+          paid_amount: 0,
+          type: newType,
+          motif: newMotif.trim() || null,
+          note: newNote.trim() || null,
+          date_echeance: newDueDate || null,
+          due_date: newDueDate || null,
+          whatsapp: selectedContact.phone || null,
+          status: "pending",
+          payment_type: paymentType,
+          monthly_amount: paymentType === "monthly" ? monthlyAmount : null,
+          monthly_day: paymentType === "monthly" ? monthlyDay : null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+
+      if (newDebt && paymentType !== "lump_sum") {
+        const { rows, total } = buildInstallments(newDebt.id, newAmount);
+        if (rows.length > 0) {
+          const { error: insErr } = await supabase
+            .from("debt_installments")
+            .insert(rows);
+          if (insErr) throw insErr;
+          await supabase
+            .from("debts")
+            .update({ installments_total: total, installments_paid: 0 })
+            .eq("id", newDebt.id);
+        }
+      }
 
       toast({ title: "Dette créée ✅" });
       setShowNew(false);
@@ -395,7 +512,10 @@ const Debts = () => {
               <PersonDebtContainer
                 group={g}
                 onEdit={(d) => setEditing(d)}
-                onPay={(d) => setPaying(d)}
+                onPay={(d, inst) => {
+                  setTargetInstallment(inst || null);
+                  setPaying(d);
+                }}
               />
             </motion.div>
           ))}
@@ -505,7 +625,190 @@ const Debts = () => {
               />
             </div>
 
-            {/* Motif */}
+            {/* Payment type */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">
+                Mode de remboursement
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { val: "lump_sum", icon: "💵", label: "En une fois" },
+                    { val: "monthly", icon: "📅", label: "Mensuel" },
+                    { val: "custom", icon: "🗓️", label: "Dates fixes" },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.val}
+                    onClick={() => setPaymentType(opt.val)}
+                    className={`p-2.5 rounded-xl text-center transition-all ${
+                      paymentType === opt.val
+                        ? "gradient-primary text-primary-foreground"
+                        : "glass text-muted-foreground"
+                    }`}
+                  >
+                    <div className="text-lg leading-none mb-1">{opt.icon}</div>
+                    <div className="text-[10px] font-bold leading-tight">
+                      {opt.label}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {paymentType === "monthly" && (
+              <div className="space-y-3 p-3 rounded-xl bg-secondary/40 border border-border">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Montant mensuel (F CFA) *
+                  </Label>
+                  <MoneyInput
+                    value={monthlyAmount}
+                    onChange={setMonthlyAmount}
+                    showCurrency
+                    className="[&>input]:bg-secondary [&>input]:border-border"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Jour du mois pour le paiement
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={1}
+                      max={28}
+                      value={monthlyDay}
+                      onChange={(e) => setMonthlyDay(Number(e.target.value))}
+                      className="flex-1 accent-primary"
+                    />
+                    <span className="text-sm font-bold tabular-nums w-8 text-right">
+                      {monthlyDay}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Paiement attendu le {monthlyDay} de chaque mois
+                  </p>
+                </div>
+                {monthlyAmount > 0 && newAmount > 0 && (
+                  <div className="rounded-xl bg-primary/5 border border-primary/20 p-2.5">
+                    {(() => {
+                      const nbMonths = Math.ceil(newAmount / monthlyAmount);
+                      const lastDate = new Date();
+                      lastDate.setMonth(
+                        lastDate.getMonth() + nbMonths - 1,
+                      );
+                      lastDate.setDate(monthlyDay);
+                      const lastInst =
+                        newAmount - monthlyAmount * (nbMonths - 1);
+                      return (
+                        <>
+                          <p className="text-[11px] font-bold text-primary mb-1">
+                            📊 Aperçu du plan
+                          </p>
+                          <p className="text-xs text-foreground">
+                            {nbMonths} versement(s) de{" "}
+                            {formatThousands(monthlyAmount)} F
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Fin estimée :{" "}
+                            {lastDate.toLocaleDateString("fr-FR", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </p>
+                          {lastInst !== monthlyAmount && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Dernier versement : {formatThousands(lastInst)} F
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {paymentType === "custom" && (
+              <div className="space-y-2 p-3 rounded-xl bg-secondary/40 border border-border">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold text-foreground">
+                    Échéances personnalisées
+                  </Label>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {formatThousands(
+                      customInstallments.reduce((s, i) => s + i.amount, 0),
+                    )}{" "}
+                    / {formatThousands(newAmount)} F
+                  </span>
+                </div>
+                {customInstallments.map((inst, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold tabular-nums">
+                        {formatThousands(inst.amount)} F
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(inst.date).toLocaleDateString("fr-FR", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setCustomInstallments((prev) =>
+                          prev.filter((_, i) => i !== idx),
+                        )
+                      }
+                      className="p-1 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                      aria-label="Retirer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <AddInstallmentRow
+                  onAdd={(date, amount) =>
+                    setCustomInstallments((prev) => [
+                      ...prev,
+                      { date, amount },
+                    ])
+                  }
+                />
+                {(() => {
+                  const allocated = customInstallments.reduce(
+                    (s, i) => s + i.amount,
+                    0,
+                  );
+                  const remaining = newAmount - allocated;
+                  if (newAmount === 0) return null;
+                  if (remaining === 0)
+                    return (
+                      <p className="text-[11px] text-primary font-bold">
+                        ✓ Plan complet — 100% alloué
+                      </p>
+                    );
+                  if (remaining < 0)
+                    return (
+                      <p className="text-[11px] text-destructive font-bold">
+                        ⚠️ Dépasse de {formatThousands(-remaining)} F
+                      </p>
+                    );
+                  return (
+                    <p className="text-[11px] text-muted-foreground">
+                      Reste {formatThousands(remaining)} F à allouer
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
+
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">
                 Motif
@@ -591,10 +894,54 @@ const Debts = () => {
         debt={paying}
         userId={user?.id || ""}
         open={!!paying}
-        onClose={() => setPaying(null)}
+        targetInstallment={targetInstallment}
+        onClose={() => {
+          setPaying(null);
+          setTargetInstallment(null);
+        }}
         onSaved={loadDebts}
       />
     </DashboardLayout>
+  );
+};
+
+const AddInstallmentRow = ({
+  onAdd,
+}: {
+  onAdd: (date: string, amount: number) => void;
+}) => {
+  const [date, setDate] = useState("");
+  const [amount, setAmount] = useState<number>(0);
+  return (
+    <div className="flex items-end gap-2">
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        className="flex-1 bg-secondary border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+      />
+      <div className="flex-1">
+        <MoneyInput
+          value={amount}
+          onChange={setAmount}
+          showCurrency
+          className="[&>input]:bg-secondary [&>input]:border-border"
+        />
+      </div>
+      <button
+        onClick={() => {
+          if (!date || amount <= 0) return;
+          onAdd(date, amount);
+          setDate("");
+          setAmount(0);
+        }}
+        disabled={!date || amount <= 0}
+        className="w-9 h-10 rounded-xl gradient-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 transition-all active:scale-95"
+        aria-label="Ajouter"
+      >
+        <Plus className="w-4 h-4" />
+      </button>
+    </div>
   );
 };
 
