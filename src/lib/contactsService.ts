@@ -1,4 +1,4 @@
-import { Contacts, type ProjectionInput } from "@capacitor-community/contacts";
+import { Contacts, type Projection } from "@capacitor-community/contacts";
 import { Capacitor } from "@capacitor/core";
 
 export interface AppContact {
@@ -74,7 +74,7 @@ export const requestContactsPermission = async (): Promise<boolean> => {
 export const fetchAllContacts = async (): Promise<AppContact[]> => {
   if (!isNativeContactsAvailable()) return [];
   try {
-    const projection: ProjectionInput = {
+    const projection: Projection = {
       name: true,
       phones: true,
       image: true,
