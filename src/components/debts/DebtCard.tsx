@@ -22,12 +22,7 @@ export interface DebtCardData {
   date_echeance?: string | null;
   due_date?: string | null;
   created_at: string;
-  installments?: Array<{
-    id: string;
-    due_date: string;
-    expected_amount: number;
-    status: string;
-  }>;
+  installments?: InstallmentItem[];
   debt_persons?: {
     id: string | null;
     name: string;
