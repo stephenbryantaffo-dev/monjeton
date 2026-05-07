@@ -34,6 +34,7 @@ export const PaymentModal = ({
   debt,
   userId,
   open,
+  targetInstallment,
   onClose,
   onSaved,
 }: Props) => {
@@ -46,12 +47,19 @@ export const PaymentModal = ({
 
   useEffect(() => {
     if (open && debt) {
-      setAmount(0);
+      const presetAmount = targetInstallment
+        ? Math.max(
+            0,
+            Number(targetInstallment.expected_amount) -
+              Number(targetInstallment.paid_amount || 0),
+          )
+        : 0;
+      setAmount(presetAmount);
       setDate(new Date().toISOString().slice(0, 10));
       setMethod("cash");
       setNote("");
     }
-  }, [open, debt]);
+  }, [open, debt, targetInstallment]);
 
   if (!debt) return null;
   const remaining = Number(
