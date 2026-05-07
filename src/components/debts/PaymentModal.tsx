@@ -14,6 +14,11 @@ interface Props {
   debt: DebtCardData | null;
   userId: string;
   open: boolean;
+  targetInstallment?: {
+    id: string;
+    expected_amount: number;
+    paid_amount?: number;
+  } | null;
   onClose: () => void;
   onSaved: () => void;
 }
