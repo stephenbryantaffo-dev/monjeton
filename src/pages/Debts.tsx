@@ -64,11 +64,24 @@ const Debts = () => {
   const [newNote, setNewNote] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newType, setNewType] = useState<DebtType>("owed_to_me");
+  const [paymentType, setPaymentType] = useState<
+    "lump_sum" | "monthly" | "custom"
+  >("lump_sum");
+  const [monthlyAmount, setMonthlyAmount] = useState<number>(0);
+  const [monthlyDay, setMonthlyDay] = useState<number>(1);
+  const [customInstallments, setCustomInstallments] = useState<
+    Array<{ date: string; amount: number }>
+  >([]);
   const [creating, setCreating] = useState(false);
 
   // Edit / Pay
   const [editing, setEditing] = useState<DebtCardData | null>(null);
   const [paying, setPaying] = useState<DebtCardData | null>(null);
+  const [targetInstallment, setTargetInstallment] = useState<{
+    id: string;
+    expected_amount: number;
+    paid_amount?: number;
+  } | null>(null);
 
   const loadDebts = useCallback(async () => {
     if (!user) return;
