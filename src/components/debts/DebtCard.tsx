@@ -50,6 +50,7 @@ const STATUS = {
 
 export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
   const { toast } = useToast();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const total = Number(debt.amount);
   const paid = Number(debt.paid_amount || 0);
   const remaining = Number(
