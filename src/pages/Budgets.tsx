@@ -1183,15 +1183,21 @@ const Budgets = () => {
                       )}
                     </AnimatePresence>
                     <div className="flex items-baseline justify-between mb-1.5">
-                      <span className={`text-xs font-semibold tabular-nums ${over ? "text-destructive" : "text-foreground"}`}>
-                        {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
+                      <span className={`text-xs font-semibold tabular-nums ${!amountsHidden && over ? "text-destructive" : "text-foreground"}`}>
+                        {amountsHidden ? MASK : `${fmt(cb.spent || 0)} / ${fmt(cb.budget_amount)} F`}
                       </span>
-                      <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {Math.round(pct)}%
-                      </span>
+                      {!amountsHidden && (
+                        <span className="text-[10px] text-muted-foreground tabular-nums">
+                          {Math.round(pct)}%
+                        </span>
+                      )}
                     </div>
-                    <BudgetProgressBar percent={pct} />
-                    {over && (
+                    {amountsHidden ? (
+                      <div className="h-2 w-full rounded-full bg-secondary" />
+                    ) : (
+                      <BudgetProgressBar percent={pct} />
+                    )}
+                    {!amountsHidden && over && (
                       <p className="text-[10px] text-destructive mt-1 font-medium animate-pulse">
                         🔴 Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} F !
                       </p>
