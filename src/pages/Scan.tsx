@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ChevronRight, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
 import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import ScanHistory from "@/components/scan/ScanHistory";
+import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 
 const FREE_SCAN_LIMIT = 5;
 
@@ -49,6 +50,92 @@ const Scan = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
   const [history, setHistory] = useState<any[]>([]);
+  const [scanMode, setScanMode] = useState<'single' | 'multi'>('single');
+  const [multiScanResult, setMultiScanResult] = useState<any>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+
+  const scanMultiReceipts = async (file: File) => {
+    if (!user) return;
+    setScanning(true);
+    setMultiScanResult(null);
+
+    try {
+      let processedFile: File = file;
+      if (file.size > 4 * 1024 * 1024) {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height));
+        canvas.width = bitmap.width * ratio;
+        canvas.height = bitmap.height * ratio;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise<Blob>(resolve =>
+          canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.85)
+        );
+        processedFile = new File([blob], 'compressed.jpg', { type: 'image/jpeg' });
+      }
+
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(processedFile);
+      });
+
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mediaType: processedFile.type,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erreur scan');
+      }
+
+      const result = await res.json();
+
+      if (result.total_detected === 0) {
+        toast({
+          title: 'Aucune transaction détectée',
+          description: result.warnings?.[0] || 'Essaie avec une image plus nette',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setMultiScanResult(result);
+      toast({
+        title: `${result.total_detected} transaction(s) détectée(s) 🎯`,
+        description: 'Vérifie et valide celles que tu veux garder',
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Erreur scan',
+        description: e?.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const fetchHistory = useCallback(async () => {
     if (!user) return;
@@ -433,11 +520,105 @@ const Scan = () => {
         </div>
       )}
 
-      <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
+      {/* Mode toggle: single vs multi */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setScanMode('single')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            scanMode === 'single'
+              ? 'gradient-primary text-primary-foreground'
+              : 'glass text-muted-foreground'
+          }`}
+        >
+          🧾 Reçu unique
+        </button>
+        <button
+          onClick={() => setScanMode('multi')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
+            scanMode === 'multi'
+              ? 'gradient-primary text-primary-foreground'
+              : 'glass text-muted-foreground'
+          }`}
+        >
+          📸 Multi-scan
+          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+            IA
+          </span>
+        </button>
+      </div>
 
-      {!preview ? (
-        <ScanUploadArea scanType={scanType} onFileSelected={handleFileSelected} />
+      {scanMode === 'multi' ? (
+        <>
+          {multiScanResult ? (
+            <MultiReceiptValidator
+              scanResult={multiScanResult}
+              imagePreview={imagePreview}
+              onClose={() => {
+                setMultiScanResult(null);
+                setImagePreview(null);
+              }}
+              onValidated={(count) => {
+                setMultiScanResult(null);
+                setImagePreview(null);
+                fetchHistory();
+                toast({ title: `${count} transaction(s) ajoutée(s) ✅` });
+              }}
+            />
+          ) : (
+            <div className="space-y-4">
+              <div className="glass-card rounded-2xl p-5 text-center space-y-2">
+                <Sparkles className="w-8 h-8 text-primary mx-auto" />
+                <h3 className="text-base font-bold text-foreground">Scan multi-reçus IA</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Prends en photo 2-3 reçus côte à côte, un historique Wave/Orange Money,
+                  ou un relevé bancaire. L'IA détecte toutes les transactions automatiquement.
+                </p>
+              </div>
+
+              <label className="block glass-card rounded-2xl p-6 border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={scanning}
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (f) await scanMultiReceipts(f);
+                    e.target.value = '';
+                  }}
+                />
+                {scanning ? (
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm font-medium text-foreground">L'IA analyse l'image...</p>
+                    <p className="text-xs text-muted-foreground">Détection en cours, patiente quelques secondes</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <span className="text-4xl">📷</span>
+                    <p className="text-sm font-medium text-foreground">Appuie pour prendre/choisir une photo</p>
+                    <p className="text-xs text-muted-foreground">JPG, PNG · Max 10 MB</p>
+                  </div>
+                )}
+              </label>
+
+              <div className="glass-card rounded-xl p-4 space-y-1.5">
+                <p className="text-xs font-semibold text-foreground">💡 Conseils pour un bon scan</p>
+                <p className="text-xs text-muted-foreground">• Bonne lumière, pas de reflets</p>
+                <p className="text-xs text-muted-foreground">• Reçus bien étalés, pas froissés</p>
+                <p className="text-xs text-muted-foreground">• Texte lisible et net</p>
+                <p className="text-xs text-muted-foreground">• Cadre tous les reçus dans la photo</p>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
+        <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
+      )}
+
+      {scanMode === 'single' && !preview ? (
+        <ScanUploadArea scanType={scanType} onFileSelected={handleFileSelected} />
+      ) : scanMode === 'single' && preview ? (
         <div className="space-y-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl overflow-hidden">
             {isPdf ? (
@@ -529,7 +710,7 @@ const Scan = () => {
             </Button>
           )}
         </div>
-      )}
+      ) : null}
 
       <ScanHistory scans={history} onRefresh={fetchHistory} />
 
