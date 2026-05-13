@@ -710,7 +710,7 @@ const Scan = () => {
             </Button>
           )}
         </div>
-      )}
+      ) : null}
 
       <ScanHistory scans={history} onRefresh={fetchHistory} />
 
