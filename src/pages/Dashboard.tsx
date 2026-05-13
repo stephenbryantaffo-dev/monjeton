@@ -53,6 +53,23 @@ const Dashboard = () => {
   const [monthlyBadge, setMonthlyBadge] = useState<{ show: boolean; badge: Badge | null; month: string; savingsRate: number }>({ show: false, badge: null, month: "", savingsRate: 0 });
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [showPredictions, setShowPredictions] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_predictions") !== "false";
+  });
+  const [showFinancialPlan, setShowFinancialPlan] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_financial_plan") !== "false";
+  });
+  const togglePredictions = (v: boolean) => {
+    setShowPredictions(v);
+    try { localStorage.setItem("dashboard_show_predictions", String(v)); } catch {}
+  };
+  const toggleFinancialPlan = (v: boolean) => {
+    setShowFinancialPlan(v);
+    try { localStorage.setItem("dashboard_show_financial_plan", String(v)); } catch {}
+  };
 
   
 
