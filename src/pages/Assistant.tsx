@@ -1011,6 +1011,29 @@ const Assistant = () => {
           } catch { /* normal text response */ }
         }
 
+        // Process memory_action blocks (silent persistence)
+        const memActions = extractMemoryActions(assistantSoFar);
+        if (memActions.length > 0 && user?.id) {
+          for (const ma of memActions) {
+            try {
+              if (ma.action === "remember" && ma.value) {
+                await supabase.from("assistant_memory").upsert({
+                  user_id: user.id,
+                  key: ma.key.slice(0, 100),
+                  value: String(ma.value).slice(0, 500),
+                }, { onConflict: "user_id,key" });
+              } else if (ma.action === "forget") {
+                await supabase.from("assistant_memory")
+                  .delete()
+                  .eq("user_id", user.id)
+                  .eq("key", ma.key);
+              }
+            } catch (err) {
+              console.error("memory action failed:", err);
+            }
+          }
+        }
+
         if (continuousModeRef.current) {
           setMessages(prev => {
             const lastIdx = prev.length - 1;
