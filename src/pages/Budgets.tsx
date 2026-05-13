@@ -799,8 +799,12 @@ const Budgets = () => {
             <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums">
               {amountsHidden ? MASK : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
             </p>
-            <BudgetProgressBar percent={budgetUsedPercent} className="mb-3" />
-            {isOverBudget && (
+            {amountsHidden ? (
+              <div className="h-2 w-full rounded-full bg-secondary mb-3" />
+            ) : (
+              <BudgetProgressBar percent={budgetUsedPercent} className="mb-3" />
+            )}
+            {!amountsHidden && isOverBudget && (
               <p className="text-xs text-destructive font-medium animate-pulse">
                 🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
               </p>
