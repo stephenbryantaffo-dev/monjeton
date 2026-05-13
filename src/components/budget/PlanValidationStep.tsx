@@ -259,54 +259,84 @@ export const PlanValidationStep = ({
   const removeCategory = (category: string) => {
     const removed = plan.find(p => p.categorie === category);
     if (!removed) return;
+
+    // Snapshot pour undo (1 seul à la fois — annule le précédent toast)
+    const snapshot = plan;
+    sonnerToast.dismiss('plan-remove-undo');
+
     const remaining = plan.filter(p => p.categorie !== category);
+    let nextPlan: PlanItem[];
+
     if (remaining.length === 0) {
-      setPlan([]);
-      toast({ title: 'Catégorie supprimée — montants ajustés' });
-      return;
-    }
-    const removedAmount = removed.montant;
-    const remainingSum = remaining.reduce((s, p) => s + p.montant, 0);
-
-    let redistributed: PlanItem[];
-    if (remainingSum > 0) {
-      redistributed = remaining.map(p => {
-        const share = p.montant / remainingSum;
-        const newMontant = Math.round(p.montant + removedAmount * share);
-        return {
-          ...p,
-          montant: newMontant,
-          pourcentage: budgetTotal > 0 ? Math.round((newMontant / budgetTotal) * 100) : 0,
-          modified: newMontant !== p.original,
-        };
-      });
+      nextPlan = [];
     } else {
-      const equal = Math.round(removedAmount / remaining.length);
-      redistributed = remaining.map(p => ({
-        ...p,
-        montant: equal,
-        pourcentage: budgetTotal > 0 ? Math.round((equal / budgetTotal) * 100) : 0,
-        modified: equal !== p.original,
-      }));
+      const removedAmount = removed.montant;
+      const remainingSum = remaining.reduce((s, p) => s + p.montant, 0);
+
+      let redistributed: PlanItem[];
+      if (remainingSum > 0) {
+        redistributed = remaining.map(p => {
+          const share = p.montant / remainingSum;
+          const newMontant = Math.round(p.montant + removedAmount * share);
+          return {
+            ...p,
+            montant: newMontant,
+            pourcentage: budgetTotal > 0 ? Math.round((newMontant / budgetTotal) * 100) : 0,
+            modified: newMontant !== p.original,
+          };
+        });
+      } else {
+        const equal = Math.round(removedAmount / remaining.length);
+        redistributed = remaining.map(p => ({
+          ...p,
+          montant: equal,
+          pourcentage: budgetTotal > 0 ? Math.round((equal / budgetTotal) * 100) : 0,
+          modified: equal !== p.original,
+        }));
+      }
+
+      // Correction d'arrondi : ajuster la première catégorie pour conserver le total
+      const targetTotal = remainingSum + removedAmount;
+      const newSum = redistributed.reduce((s, p) => s + p.montant, 0);
+      const diff = targetTotal - newSum;
+      if (diff !== 0 && redistributed.length > 0) {
+        redistributed[0] = {
+          ...redistributed[0],
+          montant: Math.max(0, redistributed[0].montant + diff),
+        };
+        redistributed[0].pourcentage = budgetTotal > 0
+          ? Math.round((redistributed[0].montant / budgetTotal) * 100)
+          : 0;
+      }
+      nextPlan = redistributed;
     }
 
-    // Correction d'arrondi : ajuster la première catégorie pour conserver le total
-    const targetTotal = remainingSum + removedAmount;
-    const newSum = redistributed.reduce((s, p) => s + p.montant, 0);
-    const diff = targetTotal - newSum;
-    if (diff !== 0 && redistributed.length > 0) {
-      redistributed[0] = {
-        ...redistributed[0],
-        montant: Math.max(0, redistributed[0].montant + diff),
-      };
-      redistributed[0].pourcentage = budgetTotal > 0
-        ? Math.round((redistributed[0].montant / budgetTotal) * 100)
-        : 0;
-    }
+    setPlan(nextPlan);
 
-    setPlan(redistributed);
-    logHistory('removed', { category, before: removedAmount, after: 0, diff: -removedAmount });
-    toast({ title: 'Catégorie supprimée — montants ajustés' });
+    let undone = false;
+    sonnerToast(`${category} supprimée`, {
+      id: 'plan-remove-undo',
+      description: 'Montants redistribués sur les autres catégories.',
+      duration: 5000,
+      action: {
+        label: 'Annuler',
+        onClick: () => {
+          undone = true;
+          setPlan(snapshot);
+          sonnerToast.success(`${category} restaurée`);
+        },
+      },
+      onAutoClose: () => {
+        if (!undone) {
+          logHistory('removed', { category, before: removed.montant, after: 0, diff: -removed.montant });
+        }
+      },
+      onDismiss: () => {
+        if (!undone) {
+          logHistory('removed', { category, before: removed.montant, after: 0, diff: -removed.montant });
+        }
+      },
+    });
   };
 
   const finalizeAll = async () => {
