@@ -40,6 +40,7 @@ const Scan = () => {
   const [scanType, setScanType] = useState<"receipt" | "screenshot">("receipt");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ParsedResult | null>(null);
+  const [allReceipts, setAllReceipts] = useState<ParsedResult[]>([]);
   const [scanId, setScanId] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
