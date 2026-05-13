@@ -7,7 +7,7 @@ import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
-import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2, RefreshCw } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { BudgetCoachingFlow } from "@/components/budget/BudgetCoachingFlow";
 import { PlanHistoryView } from "@/components/budget/PlanHistoryView";
 import { History as HistoryIcon } from "lucide-react";
