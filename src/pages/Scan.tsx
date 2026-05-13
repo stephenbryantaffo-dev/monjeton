@@ -40,6 +40,7 @@ const Scan = () => {
   const [scanType, setScanType] = useState<"receipt" | "screenshot">("receipt");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ParsedResult | null>(null);
+  const [allReceipts, setAllReceipts] = useState<ParsedResult[]>([]);
   const [scanId, setScanId] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
@@ -228,6 +229,7 @@ const Scan = () => {
       setTimeout(() => {
         setShowSuccess(false);
         setResult(parsed);
+        setAllReceipts(allReceipts);
       }, 1200);
 
       await supabase.from("receipt_scans").update({
@@ -413,6 +415,7 @@ const Scan = () => {
     setPreview(null);
     setFile(null);
     setResult(null);
+    setAllReceipts([]);
     setScanId(null);
     setIsPdf(false);
     setShowSuccess(false);
@@ -522,14 +525,85 @@ const Scan = () => {
                 </motion.div>
               ) : (
                 <>
-                  {/* Quick summary banner */}
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-sm text-foreground">
-                      Détecté : <span className="font-bold">{result.amount?.toLocaleString("fr-FR")} {result.currency || "FCFA"}</span>
-                      {result.merchant && <> chez <span className="font-bold">{result.merchant}</span></>}
-                    </span>
-                  </motion.div>
+                  {/* Multi-receipt prominent badge + recap */}
+                  {allReceipts.length > 1 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 240, damping: 18 }}
+                      className="rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/15 via-primary/10 to-accent/10 p-4 space-y-3 shadow-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-xl shrink-0">
+                            🧾
+                          </div>
+                          <div>
+                            <p className="text-base font-bold text-foreground leading-tight">
+                              {allReceipts.length} reçus détectés
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Récapitulatif avant enregistrement
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold animate-pulse">
+                          NEW
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        {allReceipts.map((r, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-background/60 border border-border/50"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center shrink-0">
+                                {i + 1}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                  {r.merchant || "Marchand inconnu"}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground truncate">
+                                  {r.category || "—"} {r.date && `• ${new Date(r.date).toLocaleDateString("fr-FR")}`}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-sm font-bold text-primary shrink-0 tabular-nums">
+                              {(r.amount || 0).toLocaleString("fr-FR")} {r.currency || "F"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                        <span className="text-muted-foreground">Total détecté</span>
+                        <span className="font-bold text-foreground tabular-nums">
+                          {allReceipts.reduce((s, r) => s + (r.amount || 0), 0).toLocaleString("fr-FR")} F
+                        </span>
+                      </div>
+
+                      <Button
+                        onClick={() => navigate("/receipts")}
+                        className="w-full gradient-primary text-primary-foreground font-bold"
+                      >
+                        Confirmer un par un dans Mes Reçus →
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {/* Single receipt quick summary banner */}
+                  {allReceipts.length <= 1 && (
+                    <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-sm text-foreground">
+                        Détecté : <span className="font-bold">{result.amount?.toLocaleString("fr-FR")} {result.currency || "FCFA"}</span>
+                        {result.merchant && <> chez <span className="font-bold">{result.merchant}</span></>}
+                      </span>
+                    </motion.div>
+                  )}
                   <ScanResultCard result={result} categories={categories} wallets={wallets} onConfirm={handleConfirm} onReject={handleReject} isPremium={isPremium} />
                 </>
               )}
