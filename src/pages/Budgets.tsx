@@ -108,6 +108,18 @@ const Budgets = () => {
   const [coachingPlan, setCoachingPlan] = useState<any>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [loadingCoaching, setLoadingCoaching] = useState(true);
+  const [amountsHidden, setAmountsHidden] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("budgets_amounts_hidden") === "true";
+  });
+  const toggleAmountsHidden = () => {
+    setAmountsHidden((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("budgets_amounts_hidden", String(next)); } catch {}
+      return next;
+    });
+  };
+  const MASK = "••••••";
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
