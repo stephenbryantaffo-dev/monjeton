@@ -11,7 +11,7 @@ import { MoneyInput } from '@/components/ui/MoneyInput';
 import {
   ChevronLeft, ChevronRight, Check, Loader2, Sparkles,
   AlertTriangle, Plus, X, Wallet, TrendingUp, Heart,
-  Users, ShoppingBag, Calendar,
+  Users, ShoppingBag, Calendar, RefreshCw,
 } from 'lucide-react';
 import { PlanValidationStep } from '@/components/budget/PlanValidationStep';
 
