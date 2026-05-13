@@ -74,7 +74,8 @@ export const PlanValidationStep = ({
 
   const sumPlan = useMemo(() => plan.reduce((s, p) => s + p.montant, 0), [plan]);
   const difference = sumPlan - budgetTotal;
-  const isBalanced = Math.abs(difference) < 100;
+  const tolerance = Math.max(100, Math.round(budgetTotal * 0.01));
+  const isBalanced = Math.abs(difference) <= tolerance;
   const isOverBudget = difference > 0;
   const validatedCount = plan.filter(p => p.validated).length;
 
