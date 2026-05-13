@@ -793,6 +793,15 @@ const Budgets = () => {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold text-foreground">Budget global</h2>
+                <button
+                  type="button"
+                  onClick={toggleAmountsHidden}
+                  className="p-1 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                  title={amountsHidden ? "Afficher les montants" : "Masquer les montants"}
+                  aria-label={amountsHidden ? "Afficher les montants" : "Masquer les montants"}
+                >
+                  {amountsHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
               {!amountsHidden && isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
             </div>
