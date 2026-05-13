@@ -229,6 +229,7 @@ const Scan = () => {
       setTimeout(() => {
         setShowSuccess(false);
         setResult(parsed);
+        setAllReceipts(allReceipts);
       }, 1200);
 
       await supabase.from("receipt_scans").update({
