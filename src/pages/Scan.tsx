@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ChevronRight, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
 import ScanUploadArea from "@/components/scan/ScanUploadArea";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import ScanHistory from "@/components/scan/ScanHistory";
+import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 
 const FREE_SCAN_LIMIT = 5;
 
