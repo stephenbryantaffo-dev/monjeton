@@ -415,6 +415,7 @@ const Scan = () => {
     setPreview(null);
     setFile(null);
     setResult(null);
+    setAllReceipts([]);
     setScanId(null);
     setIsPdf(false);
     setShowSuccess(false);
