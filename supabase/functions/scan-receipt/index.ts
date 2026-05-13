@@ -83,18 +83,28 @@ ENGLISH KEYWORDS: "sent"=expense, "received"=income, "balance"=balance, "fee"=fe
 Return ONLY the JSON, no other text.`;
 
     const promptReceipt = `You are an expert OCR system for receipts and invoices in any language (French, English, Arabic, etc.).
-Extract the following information as JSON:
+
+IMPORTANT: A single image may contain MULTIPLE receipts (side by side, stacked, or in a collage). Detect EVERY distinct receipt and return them as an array.
+
+Return JSON in this EXACT format:
 {
-  "amount": number (TOTAL amount only, not subtotal),
-  "currency": "ISO currency code",
-  "date": "YYYY-MM-DD",
-  "merchant": "store or merchant name",
-  "type": "expense",
-  "category": "most likely category",
-  "items": [
-    { "name": "item name", "quantity": number, "price": number (unit price × quantity) }
+  "receipts": [
+    {
+      "amount": number (TOTAL only, not subtotal),
+      "currency": "ISO currency code",
+      "date": "YYYY-MM-DD",
+      "merchant": "store or merchant name",
+      "type": "expense",
+      "category": "most likely category",
+      "items": [
+        { "name": "item name", "quantity": number, "price": number }
+      ]
+    }
   ]
 }
+
+If only ONE receipt is visible, return an array with a single entry.
+Maximum 10 receipts per image.
 
 ITEMS EXTRACTION RULES:
 - Extract EVERY individual line item visible on the receipt
