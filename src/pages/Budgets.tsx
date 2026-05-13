@@ -811,7 +811,7 @@ const Budgets = () => {
             )}
             {/* Projection fin de mois */}
             {(() => {
-              if (!totalBudget) return null;
+              if (!totalBudget || amountsHidden) return null;
               const today = new Date();
               const daysInMonth = new Date(year, month, 0).getDate();
               const todayCheck = new Date();
