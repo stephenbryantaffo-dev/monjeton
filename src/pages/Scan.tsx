@@ -50,6 +50,92 @@ const Scan = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
   const [history, setHistory] = useState<any[]>([]);
+  const [scanMode, setScanMode] = useState<'single' | 'multi'>('single');
+  const [multiScanResult, setMultiScanResult] = useState<any>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+
+  const scanMultiReceipts = async (file: File) => {
+    if (!user) return;
+    setScanning(true);
+    setMultiScanResult(null);
+
+    try {
+      let processedFile: File = file;
+      if (file.size > 4 * 1024 * 1024) {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height));
+        canvas.width = bitmap.width * ratio;
+        canvas.height = bitmap.height * ratio;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise<Blob>(resolve =>
+          canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.85)
+        );
+        processedFile = new File([blob], 'compressed.jpg', { type: 'image/jpeg' });
+      }
+
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(processedFile);
+      });
+
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mediaType: processedFile.type,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erreur scan');
+      }
+
+      const result = await res.json();
+
+      if (result.total_detected === 0) {
+        toast({
+          title: 'Aucune transaction détectée',
+          description: result.warnings?.[0] || 'Essaie avec une image plus nette',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setMultiScanResult(result);
+      toast({
+        title: `${result.total_detected} transaction(s) détectée(s) 🎯`,
+        description: 'Vérifie et valide celles que tu veux garder',
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Erreur scan',
+        description: e?.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const fetchHistory = useCallback(async () => {
     if (!user) return;
