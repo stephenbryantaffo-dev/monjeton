@@ -634,6 +634,18 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
 
   return (
     <div className="max-w-md mx-auto pb-8">
+      {step === 10 && (
+        <div className="flex justify-end mb-3">
+          <button
+            type="button"
+            onClick={confirmReset}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Recommencer
+          </button>
+        </div>
+      )}
       {step > 0 && step < 9 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
