@@ -8,7 +8,7 @@ import { MoneyInput } from '@/components/ui/MoneyInput';
 import { formatThousands } from '@/lib/formatAmount';
 import {
   Check, CheckCircle2, Edit3, Sparkles, Loader2,
-  AlertTriangle, RotateCcw,
+  AlertTriangle, RotateCcw, X,
 } from 'lucide-react';
 
 interface PlanItem {
@@ -254,6 +254,59 @@ export const PlanValidationStep = ({
     toast({ title: `${category} restauré à ${formatThousands(item.original)} F` });
   };
 
+  const removeCategory = (category: string) => {
+    const removed = plan.find(p => p.categorie === category);
+    if (!removed) return;
+    const remaining = plan.filter(p => p.categorie !== category);
+    if (remaining.length === 0) {
+      setPlan([]);
+      toast({ title: 'Catégorie supprimée — montants ajustés' });
+      return;
+    }
+    const removedAmount = removed.montant;
+    const remainingSum = remaining.reduce((s, p) => s + p.montant, 0);
+
+    let redistributed: PlanItem[];
+    if (remainingSum > 0) {
+      redistributed = remaining.map(p => {
+        const share = p.montant / remainingSum;
+        const newMontant = Math.round(p.montant + removedAmount * share);
+        return {
+          ...p,
+          montant: newMontant,
+          pourcentage: budgetTotal > 0 ? Math.round((newMontant / budgetTotal) * 100) : 0,
+          modified: newMontant !== p.original,
+        };
+      });
+    } else {
+      const equal = Math.round(removedAmount / remaining.length);
+      redistributed = remaining.map(p => ({
+        ...p,
+        montant: equal,
+        pourcentage: budgetTotal > 0 ? Math.round((equal / budgetTotal) * 100) : 0,
+        modified: equal !== p.original,
+      }));
+    }
+
+    // Correction d'arrondi : ajuster la première catégorie pour conserver le total
+    const targetTotal = remainingSum + removedAmount;
+    const newSum = redistributed.reduce((s, p) => s + p.montant, 0);
+    const diff = targetTotal - newSum;
+    if (diff !== 0 && redistributed.length > 0) {
+      redistributed[0] = {
+        ...redistributed[0],
+        montant: Math.max(0, redistributed[0].montant + diff),
+      };
+      redistributed[0].pourcentage = budgetTotal > 0
+        ? Math.round((redistributed[0].montant / budgetTotal) * 100)
+        : 0;
+    }
+
+    setPlan(redistributed);
+    logHistory('removed', { category, before: removedAmount, after: 0, diff: -removedAmount });
+    toast({ title: 'Catégorie supprimée — montants ajustés' });
+  };
+
   const finalizeAll = async () => {
     if (!isBalanced) {
       toast({
@@ -412,6 +465,16 @@ export const PlanValidationStep = ({
                   )}
                   {item.validated && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
                 </div>
+                {!item.validated && (
+                  <button
+                    onClick={() => removeCategory(item.categorie)}
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive shrink-0"
+                    title="Supprimer et redistribuer"
+                    aria-label="Supprimer cette catégorie"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               {isEditing ? (
