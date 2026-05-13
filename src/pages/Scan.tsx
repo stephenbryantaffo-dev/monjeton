@@ -618,7 +618,7 @@ const Scan = () => {
 
       {scanMode === 'single' && !preview ? (
         <ScanUploadArea scanType={scanType} onFileSelected={handleFileSelected} />
-      ) : (
+      ) : scanMode === 'single' && preview ? (
         <div className="space-y-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl overflow-hidden">
             {isPdf ? (
