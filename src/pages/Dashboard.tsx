@@ -601,7 +601,9 @@ const Dashboard = () => {
 
           <DashboardTontineWidget />
 
-          <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
+          {showPredictions && (
+            <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
+          )}
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
