@@ -459,8 +459,7 @@ const Dashboard = () => {
             </SheetContent>
           </Sheet>
         </div>
-
-      <div className="flex gap-1 p-1 glass-card rounded-xl mb-2 sm:mb-3 overflow-x-auto">
+      </div>
         {(["Jour", "Semaine", "Mois", "Année"] as const).map((p) => (
           <button
             key={p}
