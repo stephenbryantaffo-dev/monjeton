@@ -133,7 +133,7 @@ FORMAT JSON OBLIGATOIRE (sans markdown) :
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
         system: systemPrompt,
         messages: [{
