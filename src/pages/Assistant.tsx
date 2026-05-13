@@ -1150,33 +1150,38 @@ const Assistant = () => {
             {debt.remaining != null && <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()} FCFA</strong></p>}
             {debt.due_date && <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (confirmedCards.has(messageIndex + 1000)) return;
-                setConfirmedCards(prev => new Set(prev).add(messageIndex + 1000));
-                handleQuickDebt(debt);
-              }}
-              disabled={confirmedCards.has(messageIndex + 1000)}
-              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
-                confirmedCards.has(messageIndex + 1000)
-                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }`}
-            >
-              {confirmedCards.has(messageIndex + 1000) ? "✅ Confirmé" : "✅ Confirmer"}
-            </button>
-            <button
-              onClick={() => {
-                setMessages(prev => prev.map((msg, idx) =>
-                  idx === messageIndex ? { ...msg, content: extractDebt(extractTransaction(msg.content).cleanContent).cleanContent } : msg
-                ));
-              }}
-              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
-            >
-              ❌ Annuler
-            </button>
-          </div>
+          {confirmedCards.has(messageIndex + 1000) ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/debts")}
+                className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+              >
+                Voir mes dettes →
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setConfirmedCards(prev => new Set(prev).add(messageIndex + 1000));
+                  handleQuickDebt(debt);
+                }}
+                className="flex-1 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                ✅ Confirmer
+              </button>
+              <button
+                onClick={() => {
+                  setMessages(prev => prev.map((msg, idx) =>
+                    idx === messageIndex ? { ...msg, content: extractDebt(extractTransaction(msg.content).cleanContent).cleanContent } : msg
+                  ));
+                }}
+                className="px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+              >
+                ❌
+              </button>
+            </div>
+          )}
         </div>
       );
     }
