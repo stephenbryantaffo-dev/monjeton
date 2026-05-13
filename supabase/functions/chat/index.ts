@@ -74,6 +74,18 @@ serve(async (req) => {
 
       if (profile?.full_name) userName = profile.full_name;
 
+      // Load long-term memory
+      const { data: memoryRows } = await supabaseAuth
+        .from("assistant_memory")
+        .select("key, value")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(30);
+      const memoryEntries = (memoryRows || []).map((m: any) => `- ${m.key}: ${String(m.value).slice(0, 200)}`).join("\n");
+      const memoryBlock = memoryEntries
+        ? `\n=== MÉMOIRE LONG TERME (à utiliser activement) ===\n${memoryEntries.slice(0, 1500)}\n`
+        : "";
+
       // Load tontine members and open cycles for each active tontine
       let tontineContext = "";
       if (tontines.length > 0) {
