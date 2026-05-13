@@ -564,6 +564,57 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
     />
   ) : null;
 
+  const resetPlan = async () => {
+    if (!user) return;
+    try {
+      // Supprimer les category_budgets du mois (catégories validées éventuelles)
+      await supabase
+        .from('category_budgets')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('month', month)
+        .eq('year', year);
+
+      // Supprimer la ligne coaching du mois
+      if (coachingId) {
+        await supabase.from('budget_coaching').delete().eq('id', coachingId);
+      }
+
+      // Reset état local
+      setGeneratedPlan(null);
+      setData(INITIAL_STATE);
+      setStep(0);
+      setCoachingId(null);
+
+      // Recréer une ligne coaching vierge
+      const { data: created } = await supabase
+        .from('budget_coaching')
+        .insert({ user_id: user.id, month, year, current_step: 0, statut: 'en_cours' })
+        .select()
+        .single();
+      if (created) setCoachingId(created.id);
+
+      sonnerToast.success('Plan annulé. Tu peux en générer un nouveau quand tu veux.');
+    } catch (e: any) {
+      sonnerToast.error("Impossible d'annuler le plan", { description: e?.message });
+    }
+  };
+
+  const confirmReset = () => {
+    sonnerToast('Abandonner ce plan ?', {
+      description: 'Toutes les catégories non validées seront perdues.',
+      duration: 10000,
+      action: {
+        label: 'Oui, annuler',
+        onClick: () => resetPlan(),
+      },
+      cancel: {
+        label: 'Non, continuer',
+        onClick: () => {},
+      },
+    });
+  };
+
   const renderStep = () => {
     switch (step) {
       case 0: return Step0;
