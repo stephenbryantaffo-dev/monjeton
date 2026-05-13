@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { MoneyInput } from '@/components/ui/MoneyInput';
 import { formatThousands } from '@/lib/formatAmount';
