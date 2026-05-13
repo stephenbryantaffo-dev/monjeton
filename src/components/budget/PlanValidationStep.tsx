@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { MoneyInput } from '@/components/ui/MoneyInput';
 import { formatThousands } from '@/lib/formatAmount';
@@ -74,7 +75,8 @@ export const PlanValidationStep = ({
 
   const sumPlan = useMemo(() => plan.reduce((s, p) => s + p.montant, 0), [plan]);
   const difference = sumPlan - budgetTotal;
-  const isBalanced = Math.abs(difference) < 100;
+  const tolerance = Math.max(100, Math.round(budgetTotal * 0.01));
+  const isBalanced = Math.abs(difference) <= tolerance;
   const isOverBudget = difference > 0;
   const validatedCount = plan.filter(p => p.validated).length;
 
@@ -257,54 +259,84 @@ export const PlanValidationStep = ({
   const removeCategory = (category: string) => {
     const removed = plan.find(p => p.categorie === category);
     if (!removed) return;
+
+    // Snapshot pour undo (1 seul à la fois — annule le précédent toast)
+    const snapshot = plan;
+    sonnerToast.dismiss('plan-remove-undo');
+
     const remaining = plan.filter(p => p.categorie !== category);
+    let nextPlan: PlanItem[];
+
     if (remaining.length === 0) {
-      setPlan([]);
-      toast({ title: 'Catégorie supprimée — montants ajustés' });
-      return;
-    }
-    const removedAmount = removed.montant;
-    const remainingSum = remaining.reduce((s, p) => s + p.montant, 0);
-
-    let redistributed: PlanItem[];
-    if (remainingSum > 0) {
-      redistributed = remaining.map(p => {
-        const share = p.montant / remainingSum;
-        const newMontant = Math.round(p.montant + removedAmount * share);
-        return {
-          ...p,
-          montant: newMontant,
-          pourcentage: budgetTotal > 0 ? Math.round((newMontant / budgetTotal) * 100) : 0,
-          modified: newMontant !== p.original,
-        };
-      });
+      nextPlan = [];
     } else {
-      const equal = Math.round(removedAmount / remaining.length);
-      redistributed = remaining.map(p => ({
-        ...p,
-        montant: equal,
-        pourcentage: budgetTotal > 0 ? Math.round((equal / budgetTotal) * 100) : 0,
-        modified: equal !== p.original,
-      }));
+      const removedAmount = removed.montant;
+      const remainingSum = remaining.reduce((s, p) => s + p.montant, 0);
+
+      let redistributed: PlanItem[];
+      if (remainingSum > 0) {
+        redistributed = remaining.map(p => {
+          const share = p.montant / remainingSum;
+          const newMontant = Math.round(p.montant + removedAmount * share);
+          return {
+            ...p,
+            montant: newMontant,
+            pourcentage: budgetTotal > 0 ? Math.round((newMontant / budgetTotal) * 100) : 0,
+            modified: newMontant !== p.original,
+          };
+        });
+      } else {
+        const equal = Math.round(removedAmount / remaining.length);
+        redistributed = remaining.map(p => ({
+          ...p,
+          montant: equal,
+          pourcentage: budgetTotal > 0 ? Math.round((equal / budgetTotal) * 100) : 0,
+          modified: equal !== p.original,
+        }));
+      }
+
+      // Correction d'arrondi : ajuster la première catégorie pour conserver le total
+      const targetTotal = remainingSum + removedAmount;
+      const newSum = redistributed.reduce((s, p) => s + p.montant, 0);
+      const diff = targetTotal - newSum;
+      if (diff !== 0 && redistributed.length > 0) {
+        redistributed[0] = {
+          ...redistributed[0],
+          montant: Math.max(0, redistributed[0].montant + diff),
+        };
+        redistributed[0].pourcentage = budgetTotal > 0
+          ? Math.round((redistributed[0].montant / budgetTotal) * 100)
+          : 0;
+      }
+      nextPlan = redistributed;
     }
 
-    // Correction d'arrondi : ajuster la première catégorie pour conserver le total
-    const targetTotal = remainingSum + removedAmount;
-    const newSum = redistributed.reduce((s, p) => s + p.montant, 0);
-    const diff = targetTotal - newSum;
-    if (diff !== 0 && redistributed.length > 0) {
-      redistributed[0] = {
-        ...redistributed[0],
-        montant: Math.max(0, redistributed[0].montant + diff),
-      };
-      redistributed[0].pourcentage = budgetTotal > 0
-        ? Math.round((redistributed[0].montant / budgetTotal) * 100)
-        : 0;
-    }
+    setPlan(nextPlan);
 
-    setPlan(redistributed);
-    logHistory('removed', { category, before: removedAmount, after: 0, diff: -removedAmount });
-    toast({ title: 'Catégorie supprimée — montants ajustés' });
+    let undone = false;
+    sonnerToast(`${category} supprimée`, {
+      id: 'plan-remove-undo',
+      description: 'Montants redistribués sur les autres catégories.',
+      duration: 5000,
+      action: {
+        label: 'Annuler',
+        onClick: () => {
+          undone = true;
+          setPlan(snapshot);
+          sonnerToast.success(`${category} restaurée`);
+        },
+      },
+      onAutoClose: () => {
+        if (!undone) {
+          logHistory('removed', { category, before: removed.montant, after: 0, diff: -removed.montant });
+        }
+      },
+      onDismiss: () => {
+        if (!undone) {
+          logHistory('removed', { category, before: removed.montant, after: 0, diff: -removed.montant });
+        }
+      },
+    });
   };
 
   const finalizeAll = async () => {
@@ -408,11 +440,22 @@ export const PlanValidationStep = ({
     <div className="space-y-4 pb-8">
       {/* Header récap */}
       <div className="glass-card rounded-2xl p-4 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-xs text-muted-foreground">Budget total</p>
             <p className="text-lg font-bold text-foreground tabular-nums">{formatThousands(budgetTotal)} F</p>
           </div>
+          <span
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+              isBalanced
+                ? 'bg-primary/15 text-primary border-primary/30'
+                : 'bg-destructive/15 text-destructive border-destructive/30 animate-pulse'
+            }`}
+          >
+            {isBalanced
+              ? 'Équilibré ✓'
+              : `Déséquilibré ${isOverBudget ? '+' : '−'}${formatThousands(Math.abs(difference))} F`}
+          </span>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Alloué</p>
             <p className={`text-lg font-bold tabular-nums ${
@@ -437,7 +480,7 @@ export const PlanValidationStep = ({
           <span className={isBalanced ? 'text-primary font-medium' : isOverBudget ? 'text-destructive font-medium' : 'text-muted-foreground'}>
             {isOverBudget
               ? `Dépassement ${formatThousands(difference)} F`
-              : isBalanced ? '✓ Équilibré' : `Reste ${formatThousands(-difference)} F`}
+              : isBalanced ? '✓ Équilibré' : `Reste ${formatThousands(-difference)} F à allouer`}
           </span>
         </div>
       </div>
