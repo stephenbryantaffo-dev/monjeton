@@ -69,10 +69,27 @@ const cleanMessageContent = (content: string): string => {
     .replace(/```tontine_action[\s\S]*?```/g, "")
     .replace(/```savings_action[\s\S]*?```/g, "")
     .replace(/```update_action[\s\S]*?```/g, "")
+    .replace(/```memory_action[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
-    .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt|record_tontine_payment|create_savings_goal)"[^}]*\}/g, "")
+    .replace(/\{"action"\s*:\s*"(?:create_transaction|update_transaction|create_debt|update_debt|record_tontine_payment|create_savings_goal|remember|forget)"[^}]*\}/g, "")
     .replace(/\{"action"\s*:\s*\{[^}]*"type"\s*:\s*"update_transaction"[^}]*\}[^}]*\}/g, "")
     .trim();
+};
+
+type MemoryAction = { action: "remember" | "forget"; key: string; value?: string };
+const extractMemoryActions = (content: string): MemoryAction[] => {
+  const actions: MemoryAction[] = [];
+  const regex = /```memory_action\s*\n?(\{[\s\S]*?\})\s*\n?```/g;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(content)) !== null) {
+    try {
+      const parsed = JSON.parse(m[1]);
+      if ((parsed.action === "remember" || parsed.action === "forget") && typeof parsed.key === "string") {
+        actions.push(parsed as MemoryAction);
+      }
+    } catch { /* ignore */ }
+  }
+  return actions;
 };
 
 const extractTransaction = (content: string): { cleanContent: string; transaction: TransactionData | null } => {
@@ -992,6 +1009,29 @@ const Assistant = () => {
               }
             }
           } catch { /* normal text response */ }
+        }
+
+        // Process memory_action blocks (silent persistence)
+        const memActions = extractMemoryActions(assistantSoFar);
+        if (memActions.length > 0 && user?.id) {
+          for (const ma of memActions) {
+            try {
+              if (ma.action === "remember" && ma.value) {
+                await supabase.from("assistant_memory").upsert({
+                  user_id: user.id,
+                  key: ma.key.slice(0, 100),
+                  value: String(ma.value).slice(0, 500),
+                }, { onConflict: "user_id,key" });
+              } else if (ma.action === "forget") {
+                await supabase.from("assistant_memory")
+                  .delete()
+                  .eq("user_id", user.id)
+                  .eq("key", ma.key);
+              }
+            } catch (err) {
+              console.error("memory action failed:", err);
+            }
+          }
         }
 
         if (continuousModeRef.current) {

@@ -165,6 +165,9 @@ const Scan = () => {
       });
       if (resp.error) throw resp.error;
       const parsed: ParsedResult = resp.data?.parsed || {};
+      const allReceipts: ParsedResult[] = Array.isArray(resp.data?.receipts) && resp.data.receipts.length > 0
+        ? resp.data.receipts
+        : [parsed];
 
       const detectedCurrency = (parsed.currency || "XOF").toUpperCase();
       parsed.currency = detectedCurrency;
@@ -187,25 +190,35 @@ const Scan = () => {
         setScansRemaining((prev) => prev - 1);
       }
 
-      // Save receipt to receipts table
+      // Save all detected receipts to receipts table
       try {
         const base64Data = preview.split(",")[1] || "";
-        await supabase.from("receipts" as any).insert({
-          user_id: user.id,
-          image_base64: base64Data.length > 500000 ? base64Data.slice(0, 500000) : base64Data,
-          image_path: path,
-          total_amount: parsed.amount || null,
-          currency: parsed.currency || "XOF",
-          merchant_name: parsed.merchant || null,
-          receipt_date: parsed.date || new Date().toISOString().split("T")[0],
-          category: parsed.category || null,
-          type: parsed.type || "expense",
-          wallet: parsed.wallet || null,
-          raw_data: parsed,
-          items: null,
-          status: "pending",
-        });
-        toast({ title: "🧾 Reçu sauvegardé", description: "Disponible dans Mes Reçus pour audit" });
+        const safeImage = base64Data.length > 500000 ? base64Data.slice(0, 500000) : base64Data;
+        for (const r of allReceipts) {
+          await supabase.from("receipts" as any).insert({
+            user_id: user.id,
+            image_base64: safeImage,
+            image_path: path,
+            total_amount: r.amount || null,
+            currency: (r.currency || "XOF").toUpperCase(),
+            merchant_name: r.merchant || null,
+            receipt_date: r.date || new Date().toISOString().split("T")[0],
+            category: r.category || null,
+            type: r.type || "expense",
+            wallet: r.wallet || null,
+            raw_data: r,
+            items: null,
+            status: "pending",
+          });
+        }
+        if (allReceipts.length > 1) {
+          toast({
+            title: `🧾 ${allReceipts.length} reçus détectés`,
+            description: "Tous sauvegardés dans Mes Reçus, à confirmer un par un.",
+          });
+        } else {
+          toast({ title: "🧾 Reçu sauvegardé", description: "Disponible dans Mes Reçus pour audit" });
+        }
       } catch (e) {
         console.error("saveReceiptToDatabase error:", e);
       }
