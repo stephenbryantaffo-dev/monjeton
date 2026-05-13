@@ -7,7 +7,7 @@ import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
-import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2, RefreshCw } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, Minus as MinusIcon, Sparkles, AlertTriangle, Loader2, Pencil, X, CheckCircle2, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { BudgetCoachingFlow } from "@/components/budget/BudgetCoachingFlow";
 import { PlanHistoryView } from "@/components/budget/PlanHistoryView";
 import { History as HistoryIcon } from "lucide-react";
@@ -108,6 +108,18 @@ const Budgets = () => {
   const [coachingPlan, setCoachingPlan] = useState<any>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [loadingCoaching, setLoadingCoaching] = useState(true);
+  const [amountsHidden, setAmountsHidden] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("budgets_amounts_hidden") === "true";
+  });
+  const toggleAmountsHidden = () => {
+    setAmountsHidden((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("budgets_amounts_hidden", String(next)); } catch {}
+      return next;
+    });
+  };
+  const MASK = "••••••";
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -713,26 +725,45 @@ const Budgets = () => {
               className="glass-card rounded-2xl p-4 mb-4"
             >
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-muted-foreground font-medium">Résumé du mois</p>
-                <p className={`text-xs font-semibold ${getStatusLabel(budgetUsedPercent).color}`}>
-                  {getStatusLabel(budgetUsedPercent).text}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground font-medium">Résumé du mois</p>
+                  <button
+                    type="button"
+                    onClick={toggleAmountsHidden}
+                    className="p-1 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                    title={amountsHidden ? "Afficher les montants" : "Masquer les montants"}
+                    aria-label={amountsHidden ? "Afficher les montants" : "Masquer les montants"}
+                  >
+                    {amountsHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                {!amountsHidden && (
+                  <p className={`text-xs font-semibold ${getStatusLabel(budgetUsedPercent).color}`}>
+                    {getStatusLabel(budgetUsedPercent).text}
+                  </p>
+                )}
               </div>
               <div className="flex items-baseline justify-between mb-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Budgété</p>
-                  <p className="text-lg font-bold text-foreground tabular-nums">{fmt(totalBudget || totalCategoryBudgeted)} F</p>
+                  <p className="text-lg font-bold text-foreground tabular-nums">
+                    {amountsHidden ? MASK : `${fmt(totalBudget || totalCategoryBudgeted)} F`}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Dépensé</p>
-                  <p className={`text-lg font-bold tabular-nums ${isOverBudget ? "text-destructive" : "text-foreground"}`}>
-                    {fmt(totalSpent)} F
+                  <p className={`text-lg font-bold tabular-nums ${!amountsHidden && isOverBudget ? "text-destructive" : "text-foreground"}`}>
+                    {amountsHidden ? MASK : `${fmt(totalSpent)} F`}
                   </p>
                 </div>
               </div>
-              <BudgetProgressBar percent={budgetUsedPercent} />
+              {amountsHidden ? (
+                <div className="h-2 w-full rounded-full bg-secondary" />
+              ) : (
+                <BudgetProgressBar percent={budgetUsedPercent} />
+              )}
               {/* Score de santé global */}
-              {(() => {
+              {!amountsHidden && (() => {
                 const score = Math.max(0, Math.min(100, Math.round(100 - budgetUsedPercent)));
                 const health =
                   score >= 70
@@ -747,34 +778,49 @@ const Budgets = () => {
                   </div>
                 );
               })()}
-              <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums">
-                {Math.round(budgetUsedPercent)}% utilisé
-                {totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}
-              </p>
+              {!amountsHidden && (
+                <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums">
+                  {Math.round(budgetUsedPercent)}% utilisé
+                  {totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}
+                </p>
+              )}
             </motion.div>
           )}
 
           {/* Global budget card */}
-          <BorderRotate className={`p-5 mb-4 ${isOverBudget ? "border border-destructive/50" : ""}`} animationSpeed={10}>
+          <BorderRotate className={`p-5 mb-4 ${!amountsHidden && isOverBudget ? "border border-destructive/50" : ""}`} animationSpeed={10}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold text-foreground">Budget global</h2>
+                <button
+                  type="button"
+                  onClick={toggleAmountsHidden}
+                  className="p-1 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                  title={amountsHidden ? "Afficher les montants" : "Masquer les montants"}
+                  aria-label={amountsHidden ? "Afficher les montants" : "Masquer les montants"}
+                >
+                  {amountsHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-              {isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
+              {!amountsHidden && isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
             </div>
             <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums">
-              {fmt(totalSpent)} / {fmt(totalBudget)} F
+              {amountsHidden ? MASK : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
             </p>
-            <BudgetProgressBar percent={budgetUsedPercent} className="mb-3" />
-            {isOverBudget && (
+            {amountsHidden ? (
+              <div className="h-2 w-full rounded-full bg-secondary mb-3" />
+            ) : (
+              <BudgetProgressBar percent={budgetUsedPercent} className="mb-3" />
+            )}
+            {!amountsHidden && isOverBudget && (
               <p className="text-xs text-destructive font-medium animate-pulse">
                 🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
               </p>
             )}
             {/* Projection fin de mois */}
             {(() => {
-              if (!totalBudget) return null;
+              if (!totalBudget || amountsHidden) return null;
               const today = new Date();
               const daysInMonth = new Date(year, month, 0).getDate();
               const todayCheck = new Date();
@@ -1050,8 +1096,8 @@ const Budgets = () => {
           {/* Category budget summary */}
           {categoryBudgets.length > 0 && (
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-1">
-              <span>Total catégories : {fmt(totalCategoryBudgeted)} F</span>
-              <span>Dépensé : {fmt(totalCategorySpent)} F</span>
+              <span>Total catégories : {amountsHidden ? MASK : `${fmt(totalCategoryBudgeted)} F`}</span>
+              <span>Dépensé : {amountsHidden ? MASK : `${fmt(totalCategorySpent)} F`}</span>
             </div>
           )}
 
@@ -1146,15 +1192,21 @@ const Budgets = () => {
                       )}
                     </AnimatePresence>
                     <div className="flex items-baseline justify-between mb-1.5">
-                      <span className={`text-xs font-semibold tabular-nums ${over ? "text-destructive" : "text-foreground"}`}>
-                        {fmt(cb.spent || 0)} / {fmt(cb.budget_amount)} F
+                      <span className={`text-xs font-semibold tabular-nums ${!amountsHidden && over ? "text-destructive" : "text-foreground"}`}>
+                        {amountsHidden ? MASK : `${fmt(cb.spent || 0)} / ${fmt(cb.budget_amount)} F`}
                       </span>
-                      <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {Math.round(pct)}%
-                      </span>
+                      {!amountsHidden && (
+                        <span className="text-[10px] text-muted-foreground tabular-nums">
+                          {Math.round(pct)}%
+                        </span>
+                      )}
                     </div>
-                    <BudgetProgressBar percent={pct} />
-                    {over && (
+                    {amountsHidden ? (
+                      <div className="h-2 w-full rounded-full bg-secondary" />
+                    ) : (
+                      <BudgetProgressBar percent={pct} />
+                    )}
+                    {!amountsHidden && over && (
                       <p className="text-[10px] text-destructive mt-1 font-medium animate-pulse">
                         🔴 Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} F !
                       </p>
