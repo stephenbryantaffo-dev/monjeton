@@ -1075,43 +1075,61 @@ const Assistant = () => {
     // Transaction card
     const { transaction } = extractTransaction(content);
     if (transaction) {
+      const isConfirmed = confirmedCards.has(messageIndex);
+      const isIncome = transaction.type === "income";
       cards.push(
-        <div key="tx" className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-          <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-            ✅ Transaction détectée
-          </p>
+        <div key="tx" className="mt-2 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 p-3.5 space-y-2.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+              {isIncome ? "💰 Revenu détecté" : "💸 Dépense détectée"}
+            </p>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium">
+              {transaction.wallet || "Espèces"}
+            </span>
+          </div>
           <div className="text-sm text-foreground space-y-0.5">
-            <p>💰 <strong>{transaction.amount.toLocaleString()} FCFA</strong></p>
-            <p>📁 {transaction.category}</p>
-            {transaction.note && <p>📝 {transaction.note}</p>}
+            <p className="text-lg font-bold text-primary">{transaction.amount.toLocaleString()} FCFA</p>
+            <p className="text-xs text-muted-foreground">📁 {transaction.category} {transaction.date && `• ${new Date(transaction.date).toLocaleDateString("fr-FR")}`}</p>
+            {transaction.note && <p className="text-xs text-muted-foreground">📝 {transaction.note}</p>}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (confirmedCards.has(messageIndex)) return;
-                setConfirmedCards(prev => new Set(prev).add(messageIndex));
-                handleQuickSave(transaction);
-              }}
-              disabled={confirmedCards.has(messageIndex)}
-              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
-                confirmedCards.has(messageIndex)
-                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }`}
-            >
-              {confirmedCards.has(messageIndex) ? "✅ Enregistré" : "✅ Oui, enregistrer"}
-            </button>
-            <button
-              onClick={() => {
-                setMessages(prev => prev.map((msg, idx) =>
-                  idx === messageIndex ? { ...msg, content: extractTransaction(msg.content).cleanContent } : msg
-                ));
-              }}
-              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
-            >
-              ❌ Non
-            </button>
-          </div>
+          {isConfirmed ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/transactions")}
+                className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
+              >
+                Voir mes transactions →
+              </button>
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-3 py-2 rounded-xl bg-secondary text-foreground text-sm hover:bg-secondary/80 transition-colors"
+              >
+                📊
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setConfirmedCards(prev => new Set(prev).add(messageIndex));
+                  handleQuickSave(transaction);
+                }}
+                className="flex-1 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                ✅ Enregistrer
+              </button>
+              <button
+                onClick={() => {
+                  setMessages(prev => prev.map((msg, idx) =>
+                    idx === messageIndex ? { ...msg, content: extractTransaction(msg.content).cleanContent } : msg
+                  ));
+                }}
+                className="px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+              >
+                ❌
+              </button>
+            </div>
+          )}
         </div>
       );
     }
