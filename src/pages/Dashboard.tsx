@@ -580,9 +580,11 @@ const Dashboard = () => {
             </motion.div>
           </div>
 
-          <Suspense fallback={<FinancialScoreSkeleton />}>
-            <FinancialScore />
-          </Suspense>
+          {showFinancialPlan && (
+            <Suspense fallback={<FinancialScoreSkeleton />}>
+              <FinancialScore />
+            </Suspense>
+          )}
 
           <Suspense fallback={<ChartSkeleton />}>
             <DashboardCharts
