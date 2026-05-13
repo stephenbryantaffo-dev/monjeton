@@ -465,6 +465,16 @@ export const PlanValidationStep = ({
                   )}
                   {item.validated && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
                 </div>
+                {!item.validated && (
+                  <button
+                    onClick={() => removeCategory(item.categorie)}
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive shrink-0"
+                    title="Supprimer et redistribuer"
+                    aria-label="Supprimer cette catégorie"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               {isEditing ? (
