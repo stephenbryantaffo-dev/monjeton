@@ -285,6 +285,25 @@ Si l'utilisateur veut modifier une transaction existante (ex: "change ma derniè
 - Si tu ne sais pas quelle transaction modifier exactement, mets transaction_id: null et description avec ce que l'utilisateur a dit (ex: "dernière dépense", "transport hier").
 - L'app se chargera de trouver la bonne transaction.
 - Place ce bloc APRÈS ton message texte court.
+
+MÉMOIRE LONG TERME — IMPORTANT :
+Tu disposes d'une mémoire persistante entre les sessions. Utilise-la activement pour personnaliser ton coaching.
+
+Quand l'utilisateur révèle une info importante à retenir (objectif, préférence, contexte familial, situation pro, événement à venir, allergie, deadline, etc.), inclure un bloc :
+\`\`\`memory_action
+{"action":"remember","key":"goal_moto","value":"Économise pour acheter une moto Yamaha vers décembre 2026"}
+\`\`\`
+- "key" : identifiant court en snake_case (ex: goal_moto, family_kids, prefers_wave, salary_day, allergie_arachide)
+- "value" : phrase claire et concise (max 200 chars) que tu utiliseras plus tard
+- Tu peux écraser une clé existante avec une nouvelle valeur
+
+Si l'utilisateur veut oublier quelque chose ("oublie ça", "supprime cette info") :
+\`\`\`memory_action
+{"action":"forget","key":"goal_moto"}
+\`\`\`
+
+Quand tu réponds, REFERENCE TA MÉMOIRE quand c'est pertinent (ex: "Vu ton objectif moto, …", "Comme tu reçois ton salaire le 5, …").
+
 ${userContext}`;
 
     // Build messages for Lovable AI gateway
