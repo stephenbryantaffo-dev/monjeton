@@ -520,7 +520,101 @@ const Scan = () => {
         </div>
       )}
 
-      <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
+      {/* Mode toggle: single vs multi */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setScanMode('single')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            scanMode === 'single'
+              ? 'gradient-primary text-primary-foreground'
+              : 'glass text-muted-foreground'
+          }`}
+        >
+          🧾 Reçu unique
+        </button>
+        <button
+          onClick={() => setScanMode('multi')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
+            scanMode === 'multi'
+              ? 'gradient-primary text-primary-foreground'
+              : 'glass text-muted-foreground'
+          }`}
+        >
+          📸 Multi-scan
+          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+            IA
+          </span>
+        </button>
+      </div>
+
+      {scanMode === 'multi' ? (
+        <>
+          {multiScanResult ? (
+            <MultiReceiptValidator
+              scanResult={multiScanResult}
+              imagePreview={imagePreview}
+              onClose={() => {
+                setMultiScanResult(null);
+                setImagePreview(null);
+              }}
+              onValidated={(count) => {
+                setMultiScanResult(null);
+                setImagePreview(null);
+                fetchHistory();
+                toast({ title: `${count} transaction(s) ajoutée(s) ✅` });
+              }}
+            />
+          ) : (
+            <div className="space-y-4">
+              <div className="glass-card rounded-2xl p-5 text-center space-y-2">
+                <Sparkles className="w-8 h-8 text-primary mx-auto" />
+                <h3 className="text-base font-bold text-foreground">Scan multi-reçus IA</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Prends en photo 2-3 reçus côte à côte, un historique Wave/Orange Money,
+                  ou un relevé bancaire. L'IA détecte toutes les transactions automatiquement.
+                </p>
+              </div>
+
+              <label className="block glass-card rounded-2xl p-6 border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={scanning}
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (f) await scanMultiReceipts(f);
+                    e.target.value = '';
+                  }}
+                />
+                {scanning ? (
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm font-medium text-foreground">L'IA analyse l'image...</p>
+                    <p className="text-xs text-muted-foreground">Détection en cours, patiente quelques secondes</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <span className="text-4xl">📷</span>
+                    <p className="text-sm font-medium text-foreground">Appuie pour prendre/choisir une photo</p>
+                    <p className="text-xs text-muted-foreground">JPG, PNG · Max 10 MB</p>
+                  </div>
+                )}
+              </label>
+
+              <div className="glass-card rounded-xl p-4 space-y-1.5">
+                <p className="text-xs font-semibold text-foreground">💡 Conseils pour un bon scan</p>
+                <p className="text-xs text-muted-foreground">• Bonne lumière, pas de reflets</p>
+                <p className="text-xs text-muted-foreground">• Reçus bien étalés, pas froissés</p>
+                <p className="text-xs text-muted-foreground">• Texte lisible et net</p>
+                <p className="text-xs text-muted-foreground">• Cadre tous les reçus dans la photo</p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
+      )}
 
       {!preview ? (
         <ScanUploadArea scanType={scanType} onFileSelected={handleFileSelected} />
