@@ -1254,33 +1254,36 @@ const Assistant = () => {
               <p>📅 Avant le : <strong>{new Date(savingsGoal.deadline).toLocaleDateString("fr-FR")}</strong></p>
             )}
           </div>
-          <div className="flex gap-2">
+          {confirmedCards.has(messageIndex + 3000) ? (
             <button
-              onClick={() => {
-                if (confirmedCards.has(messageIndex + 3000)) return;
-                setConfirmedCards(prev => new Set(prev).add(messageIndex + 3000));
-                handleCreateSavingsGoal(savingsGoal);
-              }}
-              disabled={confirmedCards.has(messageIndex + 3000)}
-              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
-                confirmedCards.has(messageIndex + 3000)
-                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }`}
+              onClick={() => navigate("/savings")}
+              className="w-full py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
             >
-              {confirmedCards.has(messageIndex + 3000) ? "🎯 Créé" : "✅ Créer l'objectif"}
+              Voir mes objectifs →
             </button>
-            <button
-              onClick={() => {
-                setMessages(prev => prev.map((msg, idx) =>
-                  idx === messageIndex ? { ...msg, content: extractSavingsAction(msg.content).cleanContent } : msg
-                ));
-              }}
-              className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
-            >
-              ❌ Annuler
-            </button>
-          </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setConfirmedCards(prev => new Set(prev).add(messageIndex + 3000));
+                  handleCreateSavingsGoal(savingsGoal);
+                }}
+                className="flex-1 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                🎯 Créer l'objectif
+              </button>
+              <button
+                onClick={() => {
+                  setMessages(prev => prev.map((msg, idx) =>
+                    idx === messageIndex ? { ...msg, content: extractSavingsAction(msg.content).cleanContent } : msg
+                  ));
+                }}
+                className="px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
+              >
+                ❌
+              </button>
+            </div>
+          )}
         </div>
       );
     }
