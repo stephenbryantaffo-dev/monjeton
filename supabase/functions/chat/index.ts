@@ -150,7 +150,7 @@ ${debtOwedToMe || "Personne ne lui doit d'argent"}
 ${savingsList || "Aucun objectif d'épargne"}
 === 15 DERNIÈRES TRANSACTIONS ===
 ${txList || "Aucune transaction"}
-`;
+${memoryBlock}`;
     }
 
     const systemPrompt = `Tu es le coach financier personnel de ${userName}. Il utilise Mon Jeton pour gérer ses finances en Afrique de l'Ouest (FCFA).
