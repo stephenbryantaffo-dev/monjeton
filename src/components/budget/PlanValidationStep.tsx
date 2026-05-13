@@ -440,11 +440,22 @@ export const PlanValidationStep = ({
     <div className="space-y-4 pb-8">
       {/* Header récap */}
       <div className="glass-card rounded-2xl p-4 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-xs text-muted-foreground">Budget total</p>
             <p className="text-lg font-bold text-foreground tabular-nums">{formatThousands(budgetTotal)} F</p>
           </div>
+          <span
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+              isBalanced
+                ? 'bg-primary/15 text-primary border-primary/30'
+                : 'bg-destructive/15 text-destructive border-destructive/30 animate-pulse'
+            }`}
+          >
+            {isBalanced
+              ? 'Équilibré ✓'
+              : `Déséquilibré ${isOverBudget ? '+' : '−'}${formatThousands(Math.abs(difference))} F`}
+          </span>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Alloué</p>
             <p className={`text-lg font-bold tabular-nums ${
@@ -469,7 +480,7 @@ export const PlanValidationStep = ({
           <span className={isBalanced ? 'text-primary font-medium' : isOverBudget ? 'text-destructive font-medium' : 'text-muted-foreground'}>
             {isOverBudget
               ? `Dépassement ${formatThousands(difference)} F`
-              : isBalanced ? '✓ Équilibré' : `Reste ${formatThousands(-difference)} F`}
+              : isBalanced ? '✓ Équilibré' : `Reste ${formatThousands(-difference)} F à allouer`}
           </span>
         </div>
       </div>
