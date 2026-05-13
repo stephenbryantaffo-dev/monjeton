@@ -46,77 +46,43 @@ Deno.serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(context, disponible, month, year);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI configuration missing' }), {
-        status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
+        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY')!,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3.1-pro-preview',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Génère le plan complet pour ${disponible} F CFA disponibles ce mois.` },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'generate_budget_plan',
-            description: 'Renvoie un plan budgétaire structuré.',
-            parameters: {
-              type: 'object',
-              properties: {
-                repartition: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      categorie: { type: 'string' },
-                      montant: { type: 'number' },
-                      pourcentage: { type: 'number' },
-                    },
-                    required: ['categorie', 'montant', 'pourcentage'],
-                    additionalProperties: false,
-                  },
-                },
-                conseil_global: { type: 'string' },
-                conseils_par_categorie: { type: 'object', additionalProperties: { type: 'string' } },
-              },
-              required: ['repartition', 'conseil_global'],
-              additionalProperties: false,
-            },
-          },
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 2500,
+        system: systemPrompt,
+        messages: [{
+          role: 'user',
+          content: `Génère le plan complet pour ${disponible} F CFA disponibles ce mois.`,
         }],
-        tool_choice: { type: 'function', function: { name: 'generate_budget_plan' } },
       }),
     });
 
-    if (!aiRes.ok) {
-      const err = await aiRes.text();
-      console.error('AI gateway error:', aiRes.status, err);
-      if (aiRes.status === 429) {
-        return new Response(JSON.stringify({ error: 'Trop de requêtes, réessaie.' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-      if (aiRes.status === 402) {
-        return new Response(JSON.stringify({ error: 'Crédits IA épuisés.' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-      return new Response(JSON.stringify({ error: 'AI service unavailable' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!claudeRes.ok) {
+      const err = await claudeRes.text();
+      console.error('Claude API error:', err);
+      return new Response(JSON.stringify({ error: 'AI service unavailable' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const aiJson = await aiRes.json();
-    const toolCall = aiJson.choices?.[0]?.message?.tool_calls?.[0];
-    let plan: any;
+    const claudeData = await claudeRes.json();
+    const text = claudeData.content?.[0]?.text;
+    if (!text) throw new Error('Empty response from AI');
+
+    let plan;
     try {
-      plan = JSON.parse(toolCall?.function?.arguments || '{}');
+      const cleaned = text.replace(/```json|```/g, '').trim();
+      plan = JSON.parse(cleaned);
     } catch (parseErr) {
-      console.error('Parse error');
+      console.error('Parse error:', text);
       throw new Error('Invalid JSON from AI');
     }
 
