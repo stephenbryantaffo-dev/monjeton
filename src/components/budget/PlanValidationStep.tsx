@@ -306,6 +306,8 @@ export const PlanValidationStep = ({
     logHistory('removed', { category, before: removedAmount, after: 0, diff: -removedAmount });
     toast({ title: 'Catégorie supprimée — montants ajustés' });
   };
+
+  const finalizeAll = async () => {
     if (!isBalanced) {
       toast({
         title: 'Plan déséquilibré',
