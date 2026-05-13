@@ -12,7 +12,10 @@ import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic, SlidersHorizontal } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -50,6 +53,23 @@ const Dashboard = () => {
   const [monthlyBadge, setMonthlyBadge] = useState<{ show: boolean; badge: Badge | null; month: string; savingsRate: number }>({ show: false, badge: null, month: "", savingsRate: 0 });
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [showPredictions, setShowPredictions] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_predictions") !== "false";
+  });
+  const [showFinancialPlan, setShowFinancialPlan] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_financial_plan") !== "false";
+  });
+  const togglePredictions = (v: boolean) => {
+    setShowPredictions(v);
+    try { localStorage.setItem("dashboard_show_predictions", String(v)); } catch {}
+  };
+  const toggleFinancialPlan = (v: boolean) => {
+    setShowFinancialPlan(v);
+    try { localStorage.setItem("dashboard_show_financial_plan", String(v)); } catch {}
+  };
 
   
 
@@ -384,15 +404,61 @@ const Dashboard = () => {
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
           <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
-        {streak > 0 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-full font-semibold mt-1"
-          >
-            🔥 {streak} jour{streak > 1 ? "s" : ""} de suite
-          </motion.div>
-        )}
+        <div className="flex items-center gap-2 mt-1 shrink-0">
+          {streak > 0 && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-full font-semibold"
+            >
+              🔥 {streak} jour{streak > 1 ? "s" : ""} de suite
+            </motion.div>
+          )}
+          <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Personnaliser mon accueil"
+                title="Personnaliser"
+                className="p-2 rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="bg-background/95 backdrop-blur-xl border-t border-border rounded-t-2xl">
+              <SheetHeader className="text-left">
+                <SheetTitle className="text-foreground">Personnaliser mon accueil</SheetTitle>
+                <SheetDescription>Active ou masque les sections du tableau de bord.</SheetDescription>
+              </SheetHeader>
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between gap-3 glass-card rounded-xl p-3">
+                  <div className="min-w-0">
+                    <Label htmlFor="toggle-predictions" className="text-sm font-medium text-foreground">Prévisions IA</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">Tendances et projections de fin de mois</p>
+                  </div>
+                  <Switch
+                    id="toggle-predictions"
+                    checked={showPredictions}
+                    onCheckedChange={togglePredictions}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 glass-card rounded-xl p-3">
+                  <div className="min-w-0">
+                    <Label htmlFor="toggle-financial-plan" className="text-sm font-medium text-foreground">Plan financier du mois</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">Score et insights de santé financière</p>
+                  </div>
+                  <Switch
+                    id="toggle-financial-plan"
+                    checked={showFinancialPlan}
+                    onCheckedChange={toggleFinancialPlan}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="flex gap-1 p-1 glass-card rounded-xl mb-2 sm:mb-3 overflow-x-auto">
@@ -514,9 +580,11 @@ const Dashboard = () => {
             </motion.div>
           </div>
 
-          <Suspense fallback={<FinancialScoreSkeleton />}>
-            <FinancialScore />
-          </Suspense>
+          {showFinancialPlan && (
+            <Suspense fallback={<FinancialScoreSkeleton />}>
+              <FinancialScore />
+            </Suspense>
+          )}
 
           <Suspense fallback={<ChartSkeleton />}>
             <DashboardCharts
@@ -533,7 +601,9 @@ const Dashboard = () => {
 
           <DashboardTontineWidget />
 
-          <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
+          {showPredictions && (
+            <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
+          )}
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
