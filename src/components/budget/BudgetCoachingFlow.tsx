@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,7 @@ import { MoneyInput } from '@/components/ui/MoneyInput';
 import {
   ChevronLeft, ChevronRight, Check, Loader2, Sparkles,
   AlertTriangle, Plus, X, Wallet, TrendingUp, Heart,
-  Users, ShoppingBag, Calendar,
+  Users, ShoppingBag, Calendar, RefreshCw,
 } from 'lucide-react';
 import { PlanValidationStep } from '@/components/budget/PlanValidationStep';
 
@@ -563,6 +564,57 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
     />
   ) : null;
 
+  const resetPlan = async () => {
+    if (!user) return;
+    try {
+      // Supprimer les category_budgets du mois (catégories validées éventuelles)
+      await supabase
+        .from('category_budgets')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('month', month)
+        .eq('year', year);
+
+      // Supprimer la ligne coaching du mois
+      if (coachingId) {
+        await supabase.from('budget_coaching').delete().eq('id', coachingId);
+      }
+
+      // Reset état local
+      setGeneratedPlan(null);
+      setData(INITIAL_STATE);
+      setStep(0);
+      setCoachingId(null);
+
+      // Recréer une ligne coaching vierge
+      const { data: created } = await supabase
+        .from('budget_coaching')
+        .insert({ user_id: user.id, month, year, current_step: 0, statut: 'en_cours' })
+        .select()
+        .single();
+      if (created) setCoachingId(created.id);
+
+      sonnerToast.success('Plan annulé. Tu peux en générer un nouveau quand tu veux.');
+    } catch (e: any) {
+      sonnerToast.error("Impossible d'annuler le plan", { description: e?.message });
+    }
+  };
+
+  const confirmReset = () => {
+    sonnerToast('Abandonner ce plan ?', {
+      description: 'Toutes les catégories non validées seront perdues.',
+      duration: 10000,
+      action: {
+        label: 'Oui, annuler',
+        onClick: () => resetPlan(),
+      },
+      cancel: {
+        label: 'Non, continuer',
+        onClick: () => {},
+      },
+    });
+  };
+
   const renderStep = () => {
     switch (step) {
       case 0: return Step0;
@@ -582,6 +634,18 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
 
   return (
     <div className="max-w-md mx-auto pb-8">
+      {step === 10 && (
+        <div className="flex justify-end mb-3">
+          <button
+            type="button"
+            onClick={confirmReset}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Recommencer
+          </button>
+        </div>
+      )}
       {step > 0 && step < 9 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
