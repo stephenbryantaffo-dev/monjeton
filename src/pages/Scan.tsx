@@ -616,7 +616,7 @@ const Scan = () => {
         <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
       )}
 
-      {!preview ? (
+      {scanMode === 'single' && !preview ? (
         <ScanUploadArea scanType={scanType} onFileSelected={handleFileSelected} />
       ) : (
         <div className="space-y-4">
