@@ -173,38 +173,48 @@ Return ONLY the JSON, no other text.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
+    const sanitizeOne = (raw: any) => {
+      let items: any[] = [];
+      if (Array.isArray(raw.items)) {
+        items = raw.items
+          .filter((it: any) => it && typeof it === "object" && it.name)
+          .map((it: any) => ({
+            name: String(it.name).replace(/[<>]/g, "").slice(0, 200),
+            quantity: Math.max(1, Math.min(Number(it.quantity) || 1, 9999)),
+            price: Math.max(0, Math.min(Number(it.price) || 0, 999_999_999)),
+          }));
+      }
+      return {
+        amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
+        currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
+        date: String(raw.date || "").slice(0, 10),
+        merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
+        type: raw.type === "income" ? "income" : "expense",
+        wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
+        category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+        items,
+      };
+    };
+
     let parsed: Record<string, any> = {};
+    let receipts: Record<string, any>[] = [];
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const raw = JSON.parse(jsonMatch[0]);
-        // Sanitize items array
-        let items: any[] = [];
-        if (Array.isArray(raw.items)) {
-          items = raw.items
-            .filter((it: any) => it && typeof it === "object" && it.name)
-            .map((it: any) => ({
-              name: String(it.name).replace(/[<>]/g, "").slice(0, 200),
-              quantity: Math.max(1, Math.min(Number(it.quantity) || 1, 9999)),
-              price: Math.max(0, Math.min(Number(it.price) || 0, 999_999_999)),
-            }));
+        if (Array.isArray(raw.receipts) && raw.receipts.length > 0) {
+          receipts = raw.receipts.slice(0, 10).map(sanitizeOne).filter((r: any) => r.amount > 0 || r.merchant);
+          parsed = receipts[0] || {};
+        } else {
+          parsed = sanitizeOne(raw);
+          receipts = [parsed];
         }
-        parsed = {
-          amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
-          currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
-          date: String(raw.date || "").slice(0, 10),
-          merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
-          type: raw.type === "income" ? "income" : "expense",
-          wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
-          category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
-          items,
-        };
       }
     } catch {
       // Parse failure
     }
 
-    return new Response(JSON.stringify({ parsed, raw: content }), {
+    return new Response(JSON.stringify({ parsed, receipts, raw: content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
