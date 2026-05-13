@@ -8,7 +8,7 @@ import { MoneyInput } from '@/components/ui/MoneyInput';
 import { formatThousands } from '@/lib/formatAmount';
 import {
   Check, CheckCircle2, Edit3, Sparkles, Loader2,
-  AlertTriangle, RotateCcw,
+  AlertTriangle, RotateCcw, X,
 } from 'lucide-react';
 
 interface PlanItem {
