@@ -562,8 +562,9 @@ export const MultiReceiptValidator = ({
           ) : (
             <>
               <Sparkles className="w-4 h-4 mr-2" />
-              Enregistrer {selectedCount} transaction(s)
-              {selectedCount > 0 && ` · ${formatThousands(totalAmount)} F`}
+              {isSingle
+                ? 'Enregistrer cette transaction'
+                : <>Enregistrer {selectedCount} transaction(s){selectedCount > 0 && ` · ${formatThousands(totalAmount)} F`}</>}
             </>
           )}
         </Button>
