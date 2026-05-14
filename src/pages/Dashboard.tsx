@@ -450,7 +450,24 @@ const Dashboard = () => {
   }, [transactions, trendMode]);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      headerLeft={
+        <button
+          type="button"
+          aria-label="Personnaliser mon accueil"
+          title="Personnaliser"
+          onClick={() => setCustomizeOpen(true)}
+          className="relative p-2 rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          {hiddenCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center leading-none">
+              {hiddenCount}
+            </span>
+          )}
+        </button>
+      }
+    >
       <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
@@ -467,21 +484,6 @@ const Dashboard = () => {
             </motion.div>
           )}
           <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                aria-label="Personnaliser mon accueil"
-                title="Personnaliser"
-                className="relative p-2 rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                {hiddenCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center leading-none">
-                    {hiddenCount}
-                  </span>
-                )}
-              </button>
-            </SheetTrigger>
             <SheetContent side="bottom" className="bg-background/95 backdrop-blur-xl border-t border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
               <SheetHeader className="text-left">
                 <SheetTitle className="text-foreground">Personnaliser mon accueil</SheetTitle>

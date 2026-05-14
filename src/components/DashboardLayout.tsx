@@ -8,9 +8,10 @@ interface DashboardLayoutProps {
   children: ReactNode;
   title?: string;
   showBack?: boolean;
+  headerLeft?: ReactNode;
 }
 
-const DashboardLayout = ({ children, title, showBack }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, showBack, headerLeft }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
@@ -27,6 +28,7 @@ const DashboardLayout = ({ children, title, showBack }: DashboardLayoutProps) =>
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
         )}
+        {headerLeft && <div className="flex-shrink-0">{headerLeft}</div>}
         {title && <h1 className="text-xl sm:text-2xl font-bold text-foreground flex-1 min-w-0 truncate">{title}</h1>}
         <div className="ml-auto flex-shrink-0">
           <NotificationBell />
