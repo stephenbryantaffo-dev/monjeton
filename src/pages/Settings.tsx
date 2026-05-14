@@ -478,6 +478,7 @@ const Settings = () => {
                   const { data: { session } } = await supabase.auth.getSession();
                   const res = await supabase.functions.invoke("delete-account", {
                     headers: { Authorization: `Bearer ${session?.access_token}` },
+                    body: { confirmation: "SUPPRIMER MON COMPTE" },
                   });
                   if (res.error) throw res.error;
                   toast({ title: "Compte supprimé", description: "Toutes tes données ont été effacées. À bientôt 👋" });
