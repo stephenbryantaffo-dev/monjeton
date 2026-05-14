@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const FinancialScoreSchema = z.object({
   force: z.boolean().optional(),
@@ -25,6 +26,10 @@ serve(async (req) => {
     });
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (user) {
+      const rl = await checkRateLimit(user.id, 'financial-score', 30, 60);
+      if (!rl.allowed) return rateLimitResponse('financial-score', rl.retryAfter, corsHeaders);
+    }
     if (userError || !user) throw new Error("Unauthorized");
 
     const rawBody = await req.json().catch(() => ({}));

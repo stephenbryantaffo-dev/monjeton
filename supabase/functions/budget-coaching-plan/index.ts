@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 
 const BudgetCoachingSchema = z.object({
   context: z.record(z.string(), z.any()),
@@ -35,6 +36,10 @@ Deno.serve(async (req) => {
     );
 
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (user) {
+      const rl = await checkRateLimit(user.id, 'budget-coaching-plan', 10, 60);
+      if (!rl.allowed) return rateLimitResponse('budget-coaching-plan', rl.retryAfter, corsHeaders);
+    }
     if (userErr || !user) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
