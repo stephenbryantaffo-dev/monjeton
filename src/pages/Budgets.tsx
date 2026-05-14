@@ -808,14 +808,16 @@ const Budgets = () => {
               </div>
               {!amountsHidden && isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums">
-              {amountsHidden ? MASK : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
+            <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums transition-opacity duration-300">
+              {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
             </p>
-            {amountsHidden ? (
-              <div className="h-2 w-full rounded-full bg-secondary mb-3" />
-            ) : (
-              <BudgetProgressBar percent={budgetUsedPercent} className="mb-3" />
-            )}
+            <div className="transition-opacity duration-300 mb-3">
+              {amountsHidden ? (
+                <div className="h-2 w-full rounded-full bg-secondary" style={{ width: 0 }} />
+              ) : (
+                <BudgetProgressBar percent={budgetUsedPercent} />
+              )}
+            </div>
             {!amountsHidden && isOverBudget && (
               <p className="text-xs text-destructive font-medium animate-pulse">
                 🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
