@@ -645,35 +645,113 @@ const Dashboard = () => {
             }} />
           ) : (
           <>
-          <BudgetAlertBanner alerts={budgetAlerts} />
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
-                <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                  <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-xs text-muted-foreground">Revenus</span>
+          {(() => {
+            const walletsBlock = (
+              <div key="wallets" className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
+                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                      <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-xs text-muted-foreground">Revenus</span>
+                    </div>
+                    <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalIncome)}</p>
+                    <p className="text-xs text-muted-foreground">FCFA</p>
+                  </BorderRotate>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                  <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
+                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                      <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
+                      <span className="text-xs text-muted-foreground">Dépenses</span>
+                    </div>
+                    <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalExpense)}</p>
+                    <p className="text-xs text-muted-foreground">FCFA</p>
+                  </BorderRotate>
+                </motion.div>
+              </div>
+            );
+            const financialScoreBlock = showFinancialScore ? (
+              <Suspense key="financial_score" fallback={<FinancialScoreSkeleton />}>
+                <FinancialScore />
+              </Suspense>
+            ) : null;
+            const planBlock = showPlan ? (
+              <BudgetAlertBanner key="plan" alerts={budgetAlerts} />
+            ) : null;
+            const predictionsBlock = showPredictions ? (
+              <DashboardPredictions key="predictions" predictions={predictions} formatAmount={formatAmount} />
+            ) : null;
+            const transactionsBlock = showTransactions ? (
+              <div key="transactions" className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-foreground">Transactions récentes</h2>
+                    {newTxCount > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        +{newTxCount} nouvelle{newTxCount > 1 ? "s" : ""}
+                      </motion.span>
+                    )}
+                  </div>
+                  <Link to="/transactions" className="text-xs text-primary">Voir tout</Link>
                 </div>
-                <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalIncome)}</p>
-                <p className="text-xs text-muted-foreground">FCFA</p>
-              </BorderRotate>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
-                <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                  <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
-                  <span className="text-xs text-muted-foreground">Dépenses</span>
+                <div className="space-y-2">
+                  {recentTx.map((t, i) => (
+                    <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
+                      <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={14}>
+                        <div
+                          className="transaction-icon"
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            backgroundColor: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "#374151"),
+                            WebkitTransform: 'translateZ(0)',
+                            transform: 'translateZ(0)',
+                            WebkitBackfaceVisibility: 'hidden',
+                            backfaceVisibility: 'hidden',
+                            isolation: 'isolate',
+                            position: 'relative',
+                            overflow: 'visible',
+                          }}
+                        >
+                          <span style={{ display: 'block', minWidth: 22, minHeight: 22, lineHeight: 0, color: '#FFFFFF' }}>
+                            {getCatIcon((t.categories as any)?.name || "", t.type)}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
+                          <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
+                        </div>
+                        <span className={`text-sm font-semibold whitespace-nowrap tabular-nums flex-shrink-0 ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
+                          {t.type === "income" ? "+" : "-"}{formatAmount(Number(t.amount))}
+                        </span>
+                      </BorderRotate>
+                    </motion.div>
+                  ))}
+                  {recentTx.length === 0 && (
+                    <p className="text-center text-muted-foreground text-sm py-4">Aucune transaction</p>
+                  )}
                 </div>
-                <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalExpense)}</p>
-                <p className="text-xs text-muted-foreground">FCFA</p>
-              </BorderRotate>
-            </motion.div>
-          </div>
-
-          {showFinancialPlan && (
-            <Suspense fallback={<FinancialScoreSkeleton />}>
-              <FinancialScore />
-            </Suspense>
-          )}
+              </div>
+            ) : null;
+            const blockMap: Record<BlockKey, React.ReactNode> = {
+              wallets: walletsBlock,
+              financial_score: financialScoreBlock,
+              plan: planBlock,
+              predictions: predictionsBlock,
+              transactions: transactionsBlock,
+            };
+            return blocksOrder.map(k => blockMap[k]);
+          })()}
 
           <Suspense fallback={<ChartSkeleton />}>
             <DashboardCharts
@@ -690,77 +768,13 @@ const Dashboard = () => {
 
           <DashboardTontineWidget />
 
-          {showPredictions && (
-            <DashboardPredictions predictions={predictions} formatAmount={formatAmount} />
-          )}
-
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
               <p className="text-muted-foreground text-sm">Aucune transaction pour cette période.</p>
               <Link to="/transactions/new" className="text-primary text-sm mt-2 inline-block">Ajouter une transaction →</Link>
             </div>
           )}
-
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-foreground">Transactions récentes</h2>
-                {newTxCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    +{newTxCount} nouvelle{newTxCount > 1 ? "s" : ""}
-                  </motion.span>
-                )}
-              </div>
-              <Link to="/transactions" className="text-xs text-primary">Voir tout</Link>
-            </div>
-            <div className="space-y-2">
-              {recentTx.map((t, i) => (
-                <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
-                  <BorderRotate className="rounded-xl p-3 flex items-center gap-3" animationSpeed={14}>
-                    <div 
-                      className="transaction-icon"
-                      style={{ 
-                        width: 44,
-                        height: 44,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        backgroundColor: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "#374151"),
-                        WebkitTransform: 'translateZ(0)',
-                        transform: 'translateZ(0)',
-                        WebkitBackfaceVisibility: 'hidden',
-                        backfaceVisibility: 'hidden',
-                        isolation: 'isolate',
-                        position: 'relative',
-                        overflow: 'visible',
-                      }}
-                    >
-                      <span style={{ display: 'block', minWidth: 22, minHeight: 22, lineHeight: 0, color: '#FFFFFF' }}>
-                        {getCatIcon((t.categories as any)?.name || "", t.type)}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
-                      <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
-                    </div>
-                    <span className={`text-sm font-semibold whitespace-nowrap tabular-nums flex-shrink-0 ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-                      {t.type === "income" ? "+" : "-"}{formatAmount(Number(t.amount))}
-                    </span>
-                  </BorderRotate>
-                </motion.div>
-              ))}
-              {recentTx.length === 0 && (
-                <p className="text-center text-muted-foreground text-sm py-4">Aucune transaction</p>
-              )}
-            </div>
-          </div>
+          </>
           </>
           )}
         </>
