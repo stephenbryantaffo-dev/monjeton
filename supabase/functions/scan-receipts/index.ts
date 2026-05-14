@@ -59,6 +59,64 @@ TYPES D'IMAGES SUPPORTÉS :
 - Reçus de restaurants, pharmacies, etc.
 - N'importe quel document montrant un montant
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DISTINCTION FONDAMENTALE : TRANSACTION vs ARTICLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Une TRANSACTION = un événement financier unique (un paiement, un achat global, une course, un transfert).
+Un ARTICLE = un produit listé À L'INTÉRIEUR d'une transaction.
+
+RÈGLE D'OR :
+Tu ne dois JAMAIS séparer les articles d'un même reçu en plusieurs transactions. Un reçu de supermarché avec 15 produits = 1 SEULE transaction (le total).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMMENT DIFFÉRENCIER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CAS A — UN SEUL REÇU/FACTURE (1 transaction) :
+Indicateurs :
+- Un seul en-tête de commerçant en haut
+- Une liste de produits avec prix unitaires
+- Un TOTAL global en bas
+- Une seule date/heure de paiement
+
+Exemple Carrefour :
+- Tomates 1500 F
+- Bonbons 2000 F
+- Jus 3500 F
+- TOTAL : 7000 F
+→ Tu retournes 1 transaction :
+   merchant: "Carrefour"
+   amount: 7000 (le TOTAL, pas les articles)
+   note: "Courses supermarché" (pas la liste des articles)
+
+CAS B — HISTORIQUE/LISTE D'ÉVÉNEMENTS (plusieurs transactions) :
+Indicateurs :
+- Chaque ligne a son PROPRE montant indépendant
+- Chaque ligne a sa PROPRE date/heure
+- Chaque ligne a son PROPRE marchand (différents commerces)
+- Aucun "total général" qui additionne toutes les lignes
+- Souvent un titre "Historique", "Mes courses", "My rides", "Activité"
+
+Exemple Yango :
+- Taxi Comfort, 15:35 → 6 100 F
+- Chicken Nation, 11:46 → 6 449 F
+- Delivery, 10:37 → 2 600 F
+→ Tu retournes 3 transactions séparées (chacune est un événement distinct).
+
+CAS C — RELEVÉ BANCAIRE / WAVE / ORANGE MONEY (plusieurs transactions) :
+Indicateurs :
+- Liste chronologique de mouvements
+- Chaque ligne = un débit ou crédit séparé
+- Chaque ligne a sa date et son montant
+→ Tu retournes une transaction par ligne.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SI HÉSITATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+En cas de doute (par exemple un reçu avec plusieurs sections de paiement), privilégier LA CONSOLIDATION : retourner 1 transaction avec le montant total. Mieux vaut 1 transaction correcte que 10 transactions inventées.
+La note peut mentionner brièvement le contenu ("Courses supermarché", "Repas + boissons") sans détailler chaque article.
+
 RÈGLES D'EXTRACTION :
 1. Détecter CHAQUE transaction séparément
 2. Ne JAMAIS mélanger deux transactions
