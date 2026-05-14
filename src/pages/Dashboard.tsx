@@ -54,22 +54,74 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const DEFAULT_BLOCKS_ORDER = ["wallets", "financial_score", "plan", "predictions", "transactions"] as const;
+  type BlockKey = typeof DEFAULT_BLOCKS_ORDER[number];
   const [showPredictions, setShowPredictions] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_predictions") !== "false";
   });
-  const [showFinancialPlan, setShowFinancialPlan] = useState<boolean>(() => {
+  // "financial_score" toggle (was previously labeled "Plan financier"); key kept for backward compat
+  const [showFinancialScore, setShowFinancialScore] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_financial_plan") !== "false";
   });
+  const [showPlan, setShowPlan] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_plan") !== "false";
+  });
+  const [showTransactions, setShowTransactions] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_transactions") !== "false";
+  });
+  const [blocksOrder, setBlocksOrder] = useState<BlockKey[]>(() => {
+    if (typeof window === "undefined") return [...DEFAULT_BLOCKS_ORDER];
+    try {
+      const raw = localStorage.getItem("dashboard_blocks_order");
+      if (!raw) return [...DEFAULT_BLOCKS_ORDER];
+      const parsed = JSON.parse(raw) as string[];
+      const valid = parsed.filter((k): k is BlockKey => (DEFAULT_BLOCKS_ORDER as readonly string[]).includes(k));
+      // Append any new keys not yet stored
+      DEFAULT_BLOCKS_ORDER.forEach(k => { if (!valid.includes(k)) valid.push(k); });
+      return valid;
+    } catch { return [...DEFAULT_BLOCKS_ORDER]; }
+  });
+  const persistOrder = (next: BlockKey[]) => {
+    setBlocksOrder(next);
+    try { localStorage.setItem("dashboard_blocks_order", JSON.stringify(next)); } catch {}
+  };
+  const moveBlock = (key: BlockKey, dir: -1 | 1) => {
+    const idx = blocksOrder.indexOf(key);
+    if (idx < 0) return;
+    const target = idx + dir;
+    if (target < 0 || target >= blocksOrder.length) return;
+    const next = [...blocksOrder];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    persistOrder(next);
+  };
   const togglePredictions = (v: boolean) => {
     setShowPredictions(v);
     try { localStorage.setItem("dashboard_show_predictions", String(v)); } catch {}
   };
-  const toggleFinancialPlan = (v: boolean) => {
-    setShowFinancialPlan(v);
+  const toggleFinancialScore = (v: boolean) => {
+    setShowFinancialScore(v);
     try { localStorage.setItem("dashboard_show_financial_plan", String(v)); } catch {}
   };
+  const togglePlan = (v: boolean) => {
+    setShowPlan(v);
+    try { localStorage.setItem("dashboard_show_plan", String(v)); } catch {}
+  };
+  const toggleTransactions = (v: boolean) => {
+    setShowTransactions(v);
+    try { localStorage.setItem("dashboard_show_transactions", String(v)); } catch {}
+  };
+  const resetCustomization = () => {
+    togglePredictions(true);
+    toggleFinancialScore(true);
+    togglePlan(true);
+    toggleTransactions(true);
+    persistOrder([...DEFAULT_BLOCKS_ORDER]);
+  };
+  const hiddenCount = [showPredictions, showFinancialScore, showPlan, showTransactions].filter(v => !v).length;
 
   
 
