@@ -1,4 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "npm:zod@3.25.76";
+
+const ScanReceiptSchema = z.object({
+  image: z.string().min(100, "Image trop petite").max(15_000_000, "Image trop volumineuse"),
+  scanType: z.enum(["receipt", "screenshot"]).optional(),
+  mimeType: z.string().max(50).optional(),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,16 +40,16 @@ serve(async (req) => {
       });
     }
 
-    const { image, scanType, mimeType } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
-
-    // Input validation
-    if (!image || typeof image !== "string") {
-      return new Response(JSON.stringify({ error: "Image manquante" }), {
+    const rawBody = await req.json().catch(() => null);
+    const parsed = ScanReceiptSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: parsed.error.flatten() }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { image, scanType, mimeType } = parsed.data;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("Server configuration error");
 
     if (image.length > MAX_BASE64_LENGTH) {
       return new Response(JSON.stringify({ error: "Image trop volumineuse (max 5 Mo)" }), {
@@ -50,7 +57,7 @@ serve(async (req) => {
       });
     }
 
-    const safeMimeType = ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : "image/jpeg";
+    const safeMimeType = mimeType && ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : "image/jpeg";
     const safeScanType = scanType === "screenshot" ? "screenshot" : "receipt";
 
     const promptScreenshot = `You are an expert at analyzing Mobile Money and payment screenshots.

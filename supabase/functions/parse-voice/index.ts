@@ -1,4 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "npm:zod@3.25.76";
+
+const ParseVoiceSchema = z.object({
+  transcript: z.string().trim().min(1).max(10_000),
+  categories: z.array(z.object({
+    name: z.string().max(100),
+    type: z.string().max(20).optional(),
+  }).passthrough()).max(100).optional(),
+  wallets: z.array(z.object({
+    wallet_name: z.string().max(100),
+  }).passthrough()).max(100).optional(),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,16 +54,16 @@ serve(async (req) => {
     const dayNames = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
     const todayName = dayNames[now.getUTCDay()];
 
-    const body = await req.json();
-    const transcript = typeof body.transcript === "string" ? body.transcript.slice(0, MAX_TRANSCRIPT_LENGTH) : "";
-    if (!transcript) {
-      return new Response(JSON.stringify({ error: "Transcription vide" }), {
+    const rawBody = await req.json().catch(() => null);
+    const parsedInput = ParseVoiceSchema.safeParse(rawBody);
+    if (!parsedInput.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: parsedInput.error.flatten() }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const categories = Array.isArray(body.categories) ? body.categories : [];
-    const wallets = Array.isArray(body.wallets) ? body.wallets : [];
+    const transcript = parsedInput.data.transcript.slice(0, MAX_TRANSCRIPT_LENGTH);
+    const categories = parsedInput.data.categories ?? [];
+    const wallets = parsedInput.data.wallets ?? [];
 
     const catList = categories.map((c: any) => `${String(c.name || "").slice(0, 50)} (${c.type === "income" ? "income" : "expense"})`).join(", ");
     const walletList = wallets.map((w: any) => String(w.wallet_name || "").slice(0, 50)).join(", ");

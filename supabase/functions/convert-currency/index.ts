@@ -32,10 +32,21 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const amount = Number(body.amount);
-    const from_currency = String(body.from_currency || "").toUpperCase().slice(0, 3);
-    const to_currency = String(body.to_currency || "XOF").toUpperCase().slice(0, 3);
+    const ConvertSchema = z.object({
+      amount: z.number().min(0).max(999_999_999),
+      from_currency: z.string().trim().length(3),
+      to_currency: z.string().trim().length(3).optional(),
+    });
+    const rawBody = await req.json().catch(() => null);
+    const parsed = ConvertSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: parsed.error.flatten() }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const amount = parsed.data.amount;
+    const from_currency = parsed.data.from_currency.toUpperCase();
+    const to_currency = (parsed.data.to_currency || "XOF").toUpperCase();
 
     // Validate inputs
     if (isNaN(amount) || amount <= 0 || amount > 999_999_999_999) {
