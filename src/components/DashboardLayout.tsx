@@ -8,9 +8,10 @@ interface DashboardLayoutProps {
   children: ReactNode;
   title?: string;
   showBack?: boolean;
+  headerLeft?: ReactNode;
 }
 
-const DashboardLayout = ({ children, title, showBack }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, showBack, headerLeft }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
