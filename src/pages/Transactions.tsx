@@ -261,29 +261,15 @@ const Transactions = () => {
           : filtered.map((t, i) => (
             <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}>
               <div className="glass-card rounded-xl p-3 flex items-center gap-3">
-              <div 
-                className="transaction-icon"
-                style={{ 
+              <div
+                className="category-icon-wrapper"
+                style={{
                   width: 44,
                   height: 44,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
                   backgroundColor: t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "#374151"),
-                  WebkitTransform: 'translateZ(0)',
-                  transform: 'translateZ(0)',
-                  WebkitBackfaceVisibility: 'hidden',
-                  backfaceVisibility: 'hidden',
-                  isolation: 'isolate',
-                  position: 'relative',
-                  overflow: 'visible',
                 }}
               >
-                <span style={{ display: 'block', minWidth: 22, minHeight: 22, lineHeight: 0, color: '#FFFFFF' }}>
-                  {getCatIcon(t.categories?.name || "", t.type)}
-                </span>
+                {getCatIcon(t.categories?.name || "", t.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
