@@ -120,6 +120,8 @@ const Budgets = () => {
     });
   };
   const MASK = "••••••";
+  const MASK_AMT = "••••• F";
+  const MASK_PCT = "••%";
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
