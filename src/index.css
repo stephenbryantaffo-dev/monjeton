@@ -173,6 +173,33 @@ svg {
   stroke: #FFFFFF !important;
 }
 
+/* Unified category/icon circle wrapper — iOS 18 SVG visibility fix.
+   Keep dynamic styles (size, background-color) inline; everything else here. */
+.category-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: visible !important;
+  isolation: isolate;
+  position: relative;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.category-icon-wrapper svg {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex-shrink: 0;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  color: #FFFFFF;
+  stroke: #FFFFFF;
+}
+
 /* Autofill fix for dark theme */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
