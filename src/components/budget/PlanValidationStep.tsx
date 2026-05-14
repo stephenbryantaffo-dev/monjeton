@@ -44,10 +44,11 @@ interface Props {
   month: number;
   year: number;
   onValidated: () => void;
+  onReset?: () => void;
 }
 
 export const PlanValidationStep = ({
-  coachingId, initialPlan, totalBudget, context, month, year, onValidated,
+  coachingId, initialPlan, totalBudget, context, month, year, onValidated, onReset,
 }: Props) => {
   const { user } = useAuth();
 
