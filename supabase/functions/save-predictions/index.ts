@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
+
+// save-predictions is cron-triggered; body must be empty/{}.
+const SavePredictionsSchema = z.object({}).passthrough().optional();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +13,15 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    if (req.method === "POST") {
+      const rawBody = await req.json().catch(() => ({}));
+      const parsed = SavePredictionsSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: "Invalid input", details: parsed.error.flatten() }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);

@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
+
+// brvm-data accepts an empty body; schema rejects unexpected payloads.
+const BrvmDataSchema = z.object({}).passthrough().optional();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +17,15 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
+    if (req.method === "POST") {
+      const rawBody = await req.json().catch(() => ({}));
+      const parsed = BrvmDataSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: "Invalid input", details: parsed.error.flatten() }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!

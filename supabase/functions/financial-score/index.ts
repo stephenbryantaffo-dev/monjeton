@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
+
+const FinancialScoreSchema = z.object({
+  force: z.boolean().optional(),
+}).partial();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +27,14 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw new Error("Unauthorized");
 
-    const { force } = await req.json().catch(() => ({ force: false }));
+    const rawBody = await req.json().catch(() => ({}));
+    const parsedFs = FinancialScoreSchema.safeParse(rawBody);
+    if (!parsedFs.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: parsedFs.error.flatten() }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const force = parsedFs.data.force ?? false;
 
     // Check cache (< 24h)
     if (!force) {
