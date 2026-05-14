@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import OnboardingInline from "@/components/Onboarding";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
