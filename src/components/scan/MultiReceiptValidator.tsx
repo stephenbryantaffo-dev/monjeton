@@ -258,6 +258,8 @@ export const MultiReceiptValidator = ({
     ? Array.from(new Set(categories.map(c => c.name)))
     : FALLBACK_CATEGORIES;
 
+  const isSingle = scanResult.total_detected === 1;
+
   return (
     <div className="space-y-4 pb-32">
       {/* Header résumé */}
