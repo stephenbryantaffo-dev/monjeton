@@ -488,7 +488,22 @@ export const PlanValidationStep = ({
 
       {/* Liste des catégories */}
       <div className="space-y-2">
-        {plan.map((item) => {
+        {plan.length === 0 ? (
+          <div className="glass-card rounded-2xl p-8 text-center border border-border space-y-3">
+            <p className="text-foreground font-semibold">Plus aucune catégorie</p>
+            <p className="text-sm text-muted-foreground">
+              Recommence ou génère un nouveau plan pour planifier ton mois.
+            </p>
+            <Button
+              onClick={() => onReset?.()}
+              disabled={!onReset}
+              className="gradient-primary text-primary-foreground"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Nouveau plan
+            </Button>
+          </div>
+        ) : plan.map((item) => {
           const isEditing = editingCategory === item.categorie;
           return (
             <motion.div
