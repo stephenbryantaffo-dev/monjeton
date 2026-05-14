@@ -748,22 +748,24 @@ const Budgets = () => {
               <div className="flex items-baseline justify-between mb-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Budgété</p>
-                  <p className="text-lg font-bold text-foreground tabular-nums">
-                    {amountsHidden ? MASK : `${fmt(totalBudget || totalCategoryBudgeted)} F`}
+                  <p className="text-lg font-bold text-foreground tabular-nums transition-opacity duration-300">
+                    {amountsHidden ? MASK_AMT : `${fmt(totalBudget || totalCategoryBudgeted)} F`}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Dépensé</p>
-                  <p className={`text-lg font-bold tabular-nums ${!amountsHidden && isOverBudget ? "text-destructive" : "text-foreground"}`}>
-                    {amountsHidden ? MASK : `${fmt(totalSpent)} F`}
+                  <p className={`text-lg font-bold tabular-nums transition-opacity duration-300 ${!amountsHidden && isOverBudget ? "text-destructive" : "text-foreground"}`}>
+                    {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} F`}
                   </p>
                 </div>
               </div>
-              {amountsHidden ? (
-                <div className="h-2 w-full rounded-full bg-secondary" />
-              ) : (
-                <BudgetProgressBar percent={budgetUsedPercent} />
-              )}
+              <div className="transition-opacity duration-300">
+                {amountsHidden ? (
+                  <div className="h-2 w-full rounded-full bg-secondary" style={{ width: 0 }} />
+                ) : (
+                  <BudgetProgressBar percent={budgetUsedPercent} />
+                )}
+              </div>
               {/* Score de santé global */}
               {!amountsHidden && (() => {
                 const score = Math.max(0, Math.min(100, Math.round(100 - budgetUsedPercent)));
@@ -780,12 +782,11 @@ const Budgets = () => {
                   </div>
                 );
               })()}
-              {!amountsHidden && (
-                <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums">
-                  {Math.round(budgetUsedPercent)}% utilisé
-                  {totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}
-                </p>
-              )}
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums transition-opacity duration-300">
+                {amountsHidden
+                  ? `${MASK_PCT} utilisé`
+                  : <>{Math.round(budgetUsedPercent)}% utilisé{totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}</>}
+              </p>
             </motion.div>
           )}
 
