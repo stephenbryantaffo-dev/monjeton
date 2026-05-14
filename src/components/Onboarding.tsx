@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import logoMonjeton from "@/assets/logo-monjeton.png";
+import logoMonjeton from "@/assets/logo-monjeton.webp";
 
 const WALLET_OPTIONS = [
   { name: "Wave", emoji: "🌊" },

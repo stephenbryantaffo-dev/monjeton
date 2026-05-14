@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import heroPlanet from "@/assets/hero-planet.png";
+import heroPlanet from "@/assets/hero-planet.webp";
 
 /* ── Particle canvas ── */
 const ParticleCanvas = () => {

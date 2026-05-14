@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator";
-import logoImg from "@/assets/logo-monjeton.png";
+import logoImg from "@/assets/logo-monjeton.webp";
 
 const Footer = () => (
   <footer className="py-12 px-5 border-t border-[rgba(255,255,255,0.08)]">

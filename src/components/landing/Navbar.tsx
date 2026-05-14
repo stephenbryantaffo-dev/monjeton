@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import logoImg from "@/assets/logo-monjeton.png";
+import logoImg from "@/assets/logo-monjeton.webp";
 
 const navItems = [
   { label: "Fonctionnalités", href: "#features" },
