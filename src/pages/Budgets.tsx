@@ -1100,9 +1100,9 @@ const Budgets = () => {
 
           {/* Category budget summary */}
           {categoryBudgets.length > 0 && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-1">
-              <span>Total catégories : {amountsHidden ? MASK : `${fmt(totalCategoryBudgeted)} F`}</span>
-              <span>Dépensé : {amountsHidden ? MASK : `${fmt(totalCategorySpent)} F`}</span>
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-1 transition-opacity duration-300">
+              <span>Total catégories : {amountsHidden ? MASK_AMT : `${fmt(totalCategoryBudgeted)} F`}</span>
+              <span>Dépensé : {amountsHidden ? MASK_AMT : `${fmt(totalCategorySpent)} F`}</span>
             </div>
           )}
 
