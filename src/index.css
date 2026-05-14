@@ -153,6 +153,26 @@
   }
 }
 
+/* iOS 18 SVG visibility fix for icon circles */
+svg {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  display: block;
+  overflow: visible;
+}
+
+.transaction-icon svg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px;
+  min-height: 22px;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
 /* Autofill fix for dark theme */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
