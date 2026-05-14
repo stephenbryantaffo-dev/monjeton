@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 
 const RebalanceSchema = z.object({
   modifiedCategory: z.string().trim().min(1).max(100),
@@ -47,6 +48,9 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const rl = await checkRateLimit(user.id, 'budget-rebalance-suggest', 20, 60);
+    if (!rl.allowed) return rateLimitResponse('budget-rebalance-suggest', rl.retryAfter, corsHeaders);
 
     const rawBody = await req.json().catch(() => null);
     const parsed = RebalanceSchema.safeParse(rawBody);

@@ -1,10 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Confirmation phrase obligatoire pour empêcher toute suppression accidentelle
+const DeleteAccountSchema = z.object({
+  confirmation: z.literal("SUPPRIMER MON COMPTE"),
+}).strict();
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -29,6 +36,20 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Rate limit anti-brute-force : 5 tentatives / heure
+    const rl = await checkRateLimit(user.id, 'delete-account', 5, 3600);
+    if (!rl.allowed) return rateLimitResponse('delete-account', rl.retryAfter, corsHeaders);
+
+    // Validation Zod stricte du body
+    const rawBody = await req.json().catch(() => null);
+    const parsed = DeleteAccountSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(
+        JSON.stringify({ error: "Confirmation requise : envoyer { confirmation: 'SUPPRIMER MON COMPTE' }" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 // brvm-data accepts an empty body; schema rejects unexpected payloads.
 const BrvmDataSchema = z.object({}).passthrough().optional();
@@ -17,6 +18,13 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
+    // IP-based rate limit (no auth on this endpoint)
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || "unknown";
+    const rl = await checkRateLimit(`ip:${ip}`, 'brvm-data', 60, 60);
+    if (!rl.allowed) return rateLimitResponse('brvm-data', rl.retryAfter, corsHeaders);
+
     if (req.method === "POST") {
       const rawBody = await req.json().catch(() => ({}));
       const parsed = BrvmDataSchema.safeParse(rawBody);

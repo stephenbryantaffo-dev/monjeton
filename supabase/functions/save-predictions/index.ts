@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 // save-predictions is cron-triggered; body must be empty/{}.
 const SavePredictionsSchema = z.object({}).passthrough().optional();
@@ -13,6 +14,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    // IP-based rate limit (cron-triggered endpoint, no user auth required)
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || "cron";
+    const rl = await checkRateLimit(`ip:${ip}`, 'save-predictions', 30, 60);
+    if (!rl.allowed) return rateLimitResponse('save-predictions', rl.retryAfter, corsHeaders);
+
     if (req.method === "POST") {
       const rawBody = await req.json().catch(() => ({}));
       const parsed = SavePredictionsSchema.safeParse(rawBody);

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,11 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Token invalide" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+  const userIdFromToken = (claimsData.claims as any)?.sub as string | undefined;
+  if (userIdFromToken) {
+    const rl = await checkRateLimit(userIdFromToken, 'convert-currency', 100, 60);
+    if (!rl.allowed) return rateLimitResponse('convert-currency', rl.retryAfter, corsHeaders);
   }
 
   try {

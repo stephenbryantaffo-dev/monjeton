@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const ScanReceiptSchema = z.object({
   image: z.string().min(100, "Image trop petite").max(15_000_000, "Image trop volumineuse"),
@@ -38,6 +39,12 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Token invalide" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const userIdFromToken = (claimsData.claims as any)?.sub as string | undefined;
+    if (userIdFromToken) {
+      const rl = await checkRateLimit(userIdFromToken, 'scan-receipt', 30, 300);
+      if (!rl.allowed) return rateLimitResponse('scan-receipt', rl.retryAfter, corsHeaders);
     }
 
     const rawBody = await req.json().catch(() => null);

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const ParseVoiceSchema = z.object({
   transcript: z.string().trim().min(1).max(10_000),
@@ -43,6 +44,12 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Token invalide" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const userIdFromToken = (claimsData.claims as any)?.sub as string | undefined;
+    if (userIdFromToken) {
+      const rl = await checkRateLimit(userIdFromToken, 'parse-voice', 30, 60);
+      if (!rl.allowed) return rateLimitResponse('parse-voice', rl.retryAfter, corsHeaders);
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
