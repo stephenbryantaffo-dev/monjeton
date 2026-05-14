@@ -561,6 +561,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       month={month}
       year={year}
       onValidated={onComplete}
+      onReset={() => resetPlan()}
     />
   ) : null;
 
