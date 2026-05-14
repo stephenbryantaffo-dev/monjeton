@@ -1,4 +1,18 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { z } from 'npm:zod@3.25.76';
+
+const RebalanceSchema = z.object({
+  modifiedCategory: z.string().trim().min(1).max(100),
+  newAmount: z.number().min(0).max(999_999_999),
+  originalAmount: z.number().min(0).max(999_999_999).optional(),
+  currentPlan: z.array(z.object({
+    categorie: z.string().max(100),
+    montant: z.number().min(0).max(999_999_999),
+  }).passthrough()).max(100),
+  totalBudget: z.number().min(0).max(999_999_999),
+  context: z.record(z.string(), z.any()).optional(),
+  validatedCategories: z.array(z.string().max(100)).max(100).optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,23 +48,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json();
-    const {
-      modifiedCategory,
-      newAmount,
-      originalAmount,
-      currentPlan,
-      totalBudget,
-      context,
-      validatedCategories,
-    } = body;
-
-    if (!modifiedCategory || newAmount === undefined || !currentPlan) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+    const rawBody = await req.json().catch(() => null);
+    const parsed = RebalanceSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: 'Invalid input', details: parsed.error.flatten() }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const {
+      modifiedCategory,
+      newAmount,
+      originalAmount = 0,
+      currentPlan,
+      totalBudget,
+      context,
+      validatedCategories,
+    } = parsed.data;
 
     const difference = Number(newAmount) - Number(originalAmount);
     const sumPlan = currentPlan.reduce((s: number, c: any) => s + Number(c.montant), 0);

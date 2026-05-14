@@ -1,4 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "npm:zod@3.25.76";
+
+const AudioMetaSchema = z.object({
+  size: z.number().int().min(1).max(10 * 1024 * 1024),
+  type: z.string().max(100).optional(),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,6 +63,13 @@ serve(async (req) => {
     const audioFile = formData.get("audio") as File;
     if (!audioFile) {
       return new Response(JSON.stringify({ error: "Fichier audio manquant" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const metaParsed = AudioMetaSchema.safeParse({ size: audioFile.size, type: audioFile.type });
+    if (!metaParsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: metaParsed.error.flatten() }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

@@ -1,5 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
+
+const ChatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.string().max(20),
+    content: z.string().max(5000),
+  }).passthrough()).max(50).optional(),
+  attachments: z.array(z.any()).max(3).optional(),
+}).passthrough();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +41,14 @@ serve(async (req) => {
       });
     }
 
-    const body = await req.json();
+    const rawBody = await req.json().catch(() => null);
+    const parsedBody = ChatSchema.safeParse(rawBody);
+    if (!parsedBody.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: parsedBody.error.flatten() }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const body = parsedBody.data;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(

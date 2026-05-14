@@ -1,5 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
+
+const BudgetSuggestSchema = z.object({
+  month: z.number().int().min(1).max(12).optional(),
+  year: z.number().int().min(2020).max(2100).optional(),
+  totalBudget: z.number().min(0).max(999_999_999).optional(),
+  userCategories: z.array(z.string().trim().max(100)).max(50).optional(),
+}).partial();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,13 +42,18 @@ serve(async (req) => {
     }
     const user = userData.user;
 
-    const body = await req.json().catch(() => ({}));
-    const month: number = Number(body.month) || new Date().getMonth() + 1;
-    const year: number = Number(body.year) || new Date().getFullYear();
-    const totalBudget: number = Math.max(0, Number(body.totalBudget) || 0);
-    const userCategoriesInput: string[] = Array.isArray(body.userCategories)
-      ? body.userCategories.map((c: any) => String(c)).filter(Boolean).slice(0, 50)
-      : [];
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = BudgetSuggestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid input", details: parsed.error.flatten() }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const month: number = parsed.data.month ?? new Date().getMonth() + 1;
+    const year: number = parsed.data.year ?? new Date().getFullYear();
+    const totalBudget: number = parsed.data.totalBudget ?? 0;
+    const userCategoriesInput: string[] = (parsed.data.userCategories ?? []).filter(Boolean);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

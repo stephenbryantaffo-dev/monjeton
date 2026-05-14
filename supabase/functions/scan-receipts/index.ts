@@ -1,4 +1,10 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { z } from 'npm:zod@3.25.76';
+
+const ScanReceiptsSchema = z.object({
+  imageBase64: z.string().min(100, 'Image trop petite').max(15_000_000, 'Image > 10 Mo refusée'),
+  mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/heic']).optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,16 +40,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const body = await req.json();
-    const { imageBase64, mediaType } = body;
-
-    if (!imageBase64) {
+    const rawBody = await req.json().catch(() => null);
+    const parsed = ScanReceiptsSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ error: 'imageBase64 is required' }),
+        JSON.stringify({ error: 'Invalid input', details: parsed.error.flatten() }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
+    const { imageBase64, mediaType } = parsed.data;
     const safeMediaType = mediaType || 'image/jpeg';
 
     const systemPrompt = `Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech en Afrique de l'Ouest (UEMOA, F CFA).

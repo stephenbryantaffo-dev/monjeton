@@ -1,4 +1,12 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { z } from 'npm:zod@3.25.76';
+
+const BudgetCoachingSchema = z.object({
+  context: z.record(z.string(), z.any()),
+  disponible: z.number().min(0).max(999_999_999),
+  month: z.number().int().min(1).max(12).optional(),
+  year: z.number().int().min(2020).max(2100).optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,15 +42,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json();
-    const { context, disponible, month, year } = body;
-
-    if (!context || disponible === undefined) {
-      return new Response(JSON.stringify({ error: 'Missing context or disponible' }), {
+    const rawBody = await req.json().catch(() => null);
+    const parsed = BudgetCoachingSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: 'Invalid input', details: parsed.error.flatten() }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const { context, disponible, month, year } = parsed.data;
 
     const systemPrompt = buildSystemPrompt(context, disponible, month, year);
 
