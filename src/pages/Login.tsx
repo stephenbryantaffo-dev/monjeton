@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { checkRateLimit, resetRateLimit } from "@/lib/security";
-import logoImg from "@/assets/logo-monjeton.png";
+import logoImg from "@/assets/logo-monjeton.webp";
 import {
   AnimatedInput,
   AnimatedForm,

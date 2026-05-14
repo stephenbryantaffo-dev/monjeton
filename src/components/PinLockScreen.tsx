@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import logoImg from "@/assets/logo-monjeton.png";
+import logoImg from "@/assets/logo-monjeton.webp";
 
 const MAX_ATTEMPTS_SOFT = 5;
 const MAX_ATTEMPTS_HARD = 10;

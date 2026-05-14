@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import logoImg from "@/assets/logo-monjeton.png";
+import logoImg from "@/assets/logo-monjeton.webp";
 
 const features = [
   "Transactions illimitées",
