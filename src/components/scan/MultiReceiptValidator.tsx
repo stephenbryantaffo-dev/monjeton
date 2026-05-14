@@ -10,7 +10,7 @@ import { formatThousands } from '@/lib/formatAmount';
 import {
   Check, Edit3, CheckCircle2, AlertTriangle,
   Loader2, Sparkles, ChevronDown,
-  Image as ImageIcon,
+  Image as ImageIcon, Wand2,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem,
@@ -42,12 +42,18 @@ interface ScanResult {
 interface ValidatorItem extends DetectedTransaction {
   selected: boolean;
   editing: boolean;
+  wallet_id: string | null;
 }
 
 interface CategoryRow {
   id: string;
   name: string;
   type: string;
+}
+
+interface WalletRow {
+  id: string;
+  wallet_name: string;
 }
 
 interface Props {
@@ -57,7 +63,7 @@ interface Props {
   onValidated: (count: number) => void;
 }
 
-const CATEGORIES = [
+const FALLBACK_CATEGORIES = [
   'Alimentation', 'Transport', 'Communication',
   'Santé', 'Loisirs', 'Éducation', 'Factures',
   'Shopping', 'Transfert', 'Autre',
@@ -83,21 +89,34 @@ export const MultiReceiptValidator = ({
       ...tx,
       selected: tx.confidence >= 0.5,
       editing: false,
+      wallet_id: null,
     }))
   );
 
   const [categories, setCategories] = useState<CategoryRow[]>([]);
+  const [wallets, setWallets] = useState<WalletRow[]>([]);
+  const [bulkCategory, setBulkCategory] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [showImage, setShowImage] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       if (!user) return;
-      const { data } = await supabase
-        .from('categories')
-        .select('id, name, type')
-        .eq('user_id', user.id);
-      setCategories((data as CategoryRow[]) || []);
+      const [catRes, walRes] = await Promise.all([
+        supabase.from('categories').select('id, name, type').eq('user_id', user.id),
+        supabase.from('wallets').select('id, wallet_name').eq('user_id', user.id),
+      ]);
+      const cats = (catRes.data as CategoryRow[]) || [];
+      const wals = (walRes.data as WalletRow[]) || [];
+      setCategories(cats);
+      setWallets(wals);
+      // Default wallet on each item
+      if (wals.length > 0) {
+        setItems(prev => prev.map(it => ({
+          ...it,
+          wallet_id: it.wallet_id ?? wals[0].id,
+        })));
+      }
     };
     load();
   }, [user]);
@@ -119,6 +138,23 @@ export const MultiReceiptValidator = ({
 
   const deselectAll = () => {
     setItems(prev => prev.map(item => ({ ...item, selected: false })));
+  };
+
+  const applyBulkCategory = () => {
+    if (!bulkCategory) return;
+    let count = 0;
+    setItems(prev => prev.map(item => {
+      if (item.selected) {
+        count++;
+        return { ...item, category_suggestion: bulkCategory };
+      }
+      return item;
+    }));
+    if (count > 0) {
+      toast({ title: `Catégorie appliquée à ${count} transaction(s)` });
+    } else {
+      toast({ title: 'Aucune transaction sélectionnée', variant: 'destructive' });
+    }
   };
 
   const findCategoryId = async (name: string, type: string): Promise<string | null> => {
@@ -163,6 +199,7 @@ export const MultiReceiptValidator = ({
           date: item.date,
           note: item.merchant + (item.note ? ` - ${item.note}` : ''),
           category_id: catId,
+          wallet_id: item.wallet_id,
         } as any);
 
         if (error) throw error;
@@ -208,6 +245,18 @@ export const MultiReceiptValidator = ({
     if (c >= 0.5) return 'Incertain';
     return 'Douteux';
   };
+
+  // Build category options for the per-item Select (filtered by item type when possible)
+  const categoryOptionsFor = (type: 'expense' | 'income') => {
+    const filtered = categories.filter(c => c.type === type);
+    if (filtered.length > 0) return filtered.map(c => c.name);
+    if (categories.length > 0) return categories.map(c => c.name);
+    return FALLBACK_CATEGORIES;
+  };
+
+  const allCategoryNames = categories.length > 0
+    ? Array.from(new Set(categories.map(c => c.name)))
+    : FALLBACK_CATEGORIES;
 
   return (
     <div className="space-y-4 pb-32">
@@ -292,6 +341,34 @@ export const MultiReceiptValidator = ({
         </button>
       </div>
 
+      {/* Action groupée — appliquer une catégorie */}
+      <div className="glass-card rounded-xl p-3 space-y-2">
+        <p className="text-[11px] text-muted-foreground">
+          Appliquer une catégorie à toutes les transactions sélectionnées
+        </p>
+        <div className="flex gap-2">
+          <Select value={bulkCategory} onValueChange={setBulkCategory}>
+            <SelectTrigger className="bg-secondary border-border h-9 text-xs flex-1">
+              <SelectValue placeholder="Choisir une catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              {allCategoryNames.map(cat => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={applyBulkCategory}
+            disabled={!bulkCategory || selectedCount === 0}
+            size="sm"
+            className="h-9 gradient-primary text-primary-foreground text-xs"
+          >
+            <Wand2 className="w-3 h-3 mr-1" />
+            Appliquer
+          </Button>
+        </div>
+      </div>
+
       {/* Liste des transactions */}
       <div className="space-y-3">
         {items.map((item, index) => (
@@ -369,7 +446,7 @@ export const MultiReceiptValidator = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map(cat => (
+                    {categoryOptionsFor(item.type).map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -377,8 +454,25 @@ export const MultiReceiptValidator = ({
               </div>
             </div>
 
-            {/* Date + Type */}
+            {/* Portefeuille + Date */}
             <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Portefeuille</p>
+                <Select
+                  value={item.wallet_id ?? ''}
+                  onValueChange={(v) => updateItem(item.id, { wallet_id: v })}
+                >
+                  <SelectTrigger className="bg-secondary border-border h-8 text-xs">
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wallets.map(w => (
+                      <SelectItem key={w.id} value={w.id}>{w.wallet_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Date</p>
                 {item.editing ? (
@@ -396,26 +490,27 @@ export const MultiReceiptValidator = ({
                   </div>
                 )}
               </div>
+            </div>
 
-              <div>
-                <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Type</p>
-                <div className="flex gap-1">
-                  {(['expense', 'income'] as const).map(t => (
-                    <button
-                      key={t}
-                      onClick={() => updateItem(item.id, { type: t })}
-                      className={`flex-1 h-8 rounded-lg text-xs font-medium transition-all ${
-                        item.type === t
-                          ? t === 'income'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary text-foreground'
-                          : 'glass text-muted-foreground'
-                      }`}
-                    >
-                      {t === 'expense' ? 'Dépense' : 'Revenu'}
-                    </button>
-                  ))}
-                </div>
+            {/* Type */}
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Type</p>
+              <div className="flex gap-1">
+                {(['expense', 'income'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => updateItem(item.id, { type: t })}
+                    className={`flex-1 h-8 rounded-lg text-xs font-medium transition-all ${
+                      item.type === t
+                        ? t === 'income'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-foreground'
+                        : 'glass text-muted-foreground'
+                    }`}
+                  >
+                    {t === 'expense' ? 'Dépense' : 'Revenu'}
+                  </button>
+                ))}
               </div>
             </div>
 
