@@ -472,41 +472,78 @@ const Dashboard = () => {
                 type="button"
                 aria-label="Personnaliser mon accueil"
                 title="Personnaliser"
-                className="p-2 rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors"
+                className="relative p-2 rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors"
               >
                 <SlidersHorizontal className="w-4 h-4" />
+                {hiddenCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center leading-none">
+                    {hiddenCount}
+                  </span>
+                )}
               </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="bg-background/95 backdrop-blur-xl border-t border-border rounded-t-2xl">
+            <SheetContent side="bottom" className="bg-background/95 backdrop-blur-xl border-t border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
               <SheetHeader className="text-left">
                 <SheetTitle className="text-foreground">Personnaliser mon accueil</SheetTitle>
-                <SheetDescription>Active ou masque les sections du tableau de bord.</SheetDescription>
+                <SheetDescription>Active, masque ou réorganise les sections du tableau de bord.</SheetDescription>
               </SheetHeader>
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between gap-3 glass-card rounded-xl p-3">
-                  <div className="min-w-0">
-                    <Label htmlFor="toggle-predictions" className="text-sm font-medium text-foreground">Prévisions IA</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">Tendances et projections de fin de mois</p>
-                  </div>
-                  <Switch
-                    id="toggle-predictions"
-                    checked={showPredictions}
-                    onCheckedChange={togglePredictions}
-                    className="data-[state=checked]:bg-primary"
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3 glass-card rounded-xl p-3">
-                  <div className="min-w-0">
-                    <Label htmlFor="toggle-financial-plan" className="text-sm font-medium text-foreground">Plan financier du mois</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">Score et insights de santé financière</p>
-                  </div>
-                  <Switch
-                    id="toggle-financial-plan"
-                    checked={showFinancialPlan}
-                    onCheckedChange={toggleFinancialPlan}
-                    className="data-[state=checked]:bg-primary"
-                  />
-                </div>
+              <div className="mt-4 space-y-2">
+                {blocksOrder.map((key, idx) => {
+                  const meta: Record<BlockKey, { label: string; desc: string; checked?: boolean; onChange?: (v: boolean) => void; toggleable: boolean }> = {
+                    wallets: { label: "Soldes (Revenus / Dépenses)", desc: "Toujours visible", toggleable: false },
+                    financial_score: { label: "Score financier IA", desc: "Score hebdomadaire et insights", checked: showFinancialScore, onChange: toggleFinancialScore, toggleable: true },
+                    plan: { label: "Plan financier du mois", desc: "Alertes de budget et plan en cours", checked: showPlan, onChange: togglePlan, toggleable: true },
+                    predictions: { label: "Prévisions IA", desc: "Tendances et projections de fin de mois", checked: showPredictions, onChange: togglePredictions, toggleable: true },
+                    transactions: { label: "Transactions récentes", desc: "Dernières opérations enregistrées", checked: showTransactions, onChange: toggleTransactions, toggleable: true },
+                  };
+                  const m = meta[key];
+                  return (
+                    <div key={key} className="flex items-center justify-between gap-3 glass-card rounded-xl p-3">
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          aria-label="Monter"
+                          disabled={idx === 0}
+                          onClick={() => moveBlock(key, -1)}
+                          className="w-7 h-7 rounded-md bg-muted/40 text-foreground disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted/60 flex items-center justify-center text-sm"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Descendre"
+                          disabled={idx === blocksOrder.length - 1}
+                          onClick={() => moveBlock(key, 1)}
+                          className="w-7 h-7 rounded-md bg-muted/40 text-foreground disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted/60 flex items-center justify-center text-sm"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Label className="text-sm font-medium text-foreground">{m.label}</Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">{m.desc}</p>
+                      </div>
+                      {m.toggleable ? (
+                        <Switch
+                          checked={!!m.checked}
+                          onCheckedChange={m.onChange}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      ) : (
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground px-2">Fixe</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex justify-center">
+                <button
+                  type="button"
+                  onClick={resetCustomization}
+                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+                >
+                  Restaurer l'affichage par défaut
+                </button>
               </div>
             </SheetContent>
           </Sheet>
