@@ -218,3 +218,9 @@ input:-webkit-autofill:active {
   from { --gradient-angle: 0deg; }
   to   { --gradient-angle: 360deg; }
 }
+
+/* Performance: skip rendering off-screen landing sections */
+.landing-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
