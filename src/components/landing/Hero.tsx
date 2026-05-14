@@ -1,12 +1,29 @@
-import { useEffect, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroPlanet from "@/assets/hero-planet.webp";
 
-/* ── Particle canvas ── */
-const ParticleCanvas = () => {
+// Tiny blurred placeholder (20px webp) — instantly visible while real image loads
+const HERO_PLACEHOLDER =
+  "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAABwBACdASoUAA4APxFysVAsJqSisAgBgCIJZACdMoLT9AuEZh8KxVuA4wm0AAD+ePcTTK9+gosaN/WHSR4nBhjODvceMglljSwfHlu4MKIZ3JHgcMqz+uqgZYXTAAAA";
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+};
+
+/* ── Particle canvas — count adapts to device ── */
+const ParticleCanvas = ({ isMobile }: { isMobile: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -15,6 +32,7 @@ const ParticleCanvas = () => {
     const ctx = canvas.getContext("2d")!;
     let animId: number;
     const particles: { x: number; y: number; vx: number; vy: number; r: number; a: number }[] = [];
+    const count = isMobile ? 20 : 60;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -23,7 +41,7 @@ const ParticleCanvas = () => {
     resize();
     window.addEventListener("resize", resize);
 
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < count; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -70,7 +88,7 @@ const ParticleCanvas = () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [isMobile]);
 
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
 };
@@ -102,24 +120,52 @@ const badges = [
 
 const Hero = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
+  const [heroLoaded, setHeroLoaded] = useState(false);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
 
-  // Parallax: image moves slower than scroll
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  // Parallax: image moves slower than scroll — disabled on mobile for smoother scrolling
+  const bgYRaw = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
+  const bgScaleRaw = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const contentYRaw = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const contentOpacityRaw = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const bgY: MotionValue<string> | string = isMobile ? "0%" : bgYRaw;
+  const bgScale: MotionValue<number> | number = isMobile ? 1 : bgScaleRaw;
+  const contentY: MotionValue<string> | string = isMobile ? "0%" : contentYRaw;
+  const contentOpacity: MotionValue<number> | number = isMobile ? 1 : contentOpacityRaw;
 
   return (
     <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* BG image with parallax — will-change: transform promotes to GPU layer */}
-      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale, willChange: "transform" }}>
-        {/* Explicit dimensions prevent CLS (Cumulative Layout Shift) */}
-        <img src={heroPlanet} alt="" className="w-full h-full object-cover" width={1920} height={1080} loading="eager" />
+      {/* BG image with parallax (desktop only). Blur-up: tiny base64 placeholder shown instantly, real image fades in. */}
+      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale, willChange: isMobile ? "auto" : "transform" }}>
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${HERO_PLACEHOLDER})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(20px)",
+            transform: "scale(1.1)",
+          }}
+        />
+        {/* Explicit dimensions prevent CLS */}
+        <img
+          src={heroPlanet}
+          alt=""
+          width={1536}
+          height={1024}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          onLoad={() => setHeroLoaded(true)}
+          className="relative w-full h-full object-cover"
+          style={{ opacity: heroLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-[#05070A]/80 via-[#05070A]/60 to-[#05070A]" />
       </motion.div>
 
@@ -132,14 +178,15 @@ const Hero = () => {
         />
       </div>
 
-      <ParticleCanvas />
-      <Scanline />
-      <FilmGrain />
+      <ParticleCanvas isMobile={isMobile} />
+      {/* Scanline + FilmGrain disabled on mobile — extra repaint cost, low visual value */}
+      {!isMobile && <Scanline />}
+      {!isMobile && <FilmGrain />}
 
-      {/* Content with parallax — GPU-promoted to avoid scroll jank */}
+      {/* Content with parallax (desktop only) */}
       <motion.div
         className="relative z-10 max-w-5xl mx-auto px-4 sm:px-5 pt-24 sm:pt-28 pb-16 sm:pb-20 text-center"
-        style={{ y: contentY, opacity: contentOpacity, willChange: "transform, opacity" }}
+        style={{ y: contentY, opacity: contentOpacity, willChange: isMobile ? "auto" : "transform, opacity" }}
       >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -160,7 +207,6 @@ const Hero = () => {
             Mon Jeton vous aide à suivre vos dépenses en Franc CFA, analyser vos transactions, et convertir automatiquement les devises.
           </p>
 
-          {/* Buttons — pointer-events restored on each button individually */}
           <div className="relative z-20 flex flex-col sm:flex-row gap-4 justify-center mb-12 pointer-events-auto">
             <Button
               onClick={() => navigate("/signup")}
@@ -202,7 +248,6 @@ const Hero = () => {
             ))}
           </div>
 
-          {/* Social proof */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
