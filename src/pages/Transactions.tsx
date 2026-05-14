@@ -262,24 +262,26 @@ const Transactions = () => {
             <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}>
               <div className="glass-card rounded-xl p-3 flex items-center gap-3">
               <div 
-                className="transaction-icon flex-shrink-0"
+                className="transaction-icon"
                 style={{ 
                   width: 44,
                   height: 44,
-                  borderRadius: 12,
+                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  backgroundColor: `${t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(0,0%,50%)")}20`,
-                  color: t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "hsl(150,5%,60%)"),
-                  overflow: 'visible',
-                  isolation: 'isolate',
+                  backgroundColor: t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "#374151"),
                   WebkitTransform: 'translateZ(0)',
                   transform: 'translateZ(0)',
+                  WebkitBackfaceVisibility: 'hidden',
+                  backfaceVisibility: 'hidden',
+                  isolation: 'isolate',
+                  position: 'relative',
+                  overflow: 'visible',
                 }}
               >
-                <span style={{ display: 'block', minWidth: 20, minHeight: 20, lineHeight: 0 }}>
+                <span style={{ display: 'block', minWidth: 22, minHeight: 22, lineHeight: 0, color: '#FFFFFF' }}>
                   {getCatIcon(t.categories?.name || "", t.type)}
                 </span>
               </div>
