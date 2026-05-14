@@ -43,6 +43,11 @@ serve(async (req) => {
     }
     const user = userData.user;
 
+    {
+      const rl = await checkRateLimit(user.id, 'budget-suggest', 20, 60);
+      if (!rl.allowed) return rateLimitResponse('budget-suggest', rl.retryAfter, corsHeaders);
+    }
+
     const rawBody = await req.json().catch(() => ({}));
     const parsed = BudgetSuggestSchema.safeParse(rawBody);
     if (!parsed.success) {
