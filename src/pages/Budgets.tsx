@@ -120,6 +120,8 @@ const Budgets = () => {
     });
   };
   const MASK = "••••••";
+  const MASK_AMT = "••••• F";
+  const MASK_PCT = "••%";
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -746,22 +748,24 @@ const Budgets = () => {
               <div className="flex items-baseline justify-between mb-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Budgété</p>
-                  <p className="text-lg font-bold text-foreground tabular-nums">
-                    {amountsHidden ? MASK : `${fmt(totalBudget || totalCategoryBudgeted)} F`}
+                  <p className="text-lg font-bold text-foreground tabular-nums transition-opacity duration-300">
+                    {amountsHidden ? MASK_AMT : `${fmt(totalBudget || totalCategoryBudgeted)} F`}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Dépensé</p>
-                  <p className={`text-lg font-bold tabular-nums ${!amountsHidden && isOverBudget ? "text-destructive" : "text-foreground"}`}>
-                    {amountsHidden ? MASK : `${fmt(totalSpent)} F`}
+                  <p className={`text-lg font-bold tabular-nums transition-opacity duration-300 ${!amountsHidden && isOverBudget ? "text-destructive" : "text-foreground"}`}>
+                    {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} F`}
                   </p>
                 </div>
               </div>
-              {amountsHidden ? (
-                <div className="h-2 w-full rounded-full bg-secondary" />
-              ) : (
-                <BudgetProgressBar percent={budgetUsedPercent} />
-              )}
+              <div className="transition-opacity duration-300">
+                {amountsHidden ? (
+                  <div className="h-2 w-full rounded-full bg-secondary" style={{ width: 0 }} />
+                ) : (
+                  <BudgetProgressBar percent={budgetUsedPercent} />
+                )}
+              </div>
               {/* Score de santé global */}
               {!amountsHidden && (() => {
                 const score = Math.max(0, Math.min(100, Math.round(100 - budgetUsedPercent)));
@@ -778,12 +782,11 @@ const Budgets = () => {
                   </div>
                 );
               })()}
-              {!amountsHidden && (
-                <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums">
-                  {Math.round(budgetUsedPercent)}% utilisé
-                  {totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}
-                </p>
-              )}
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums transition-opacity duration-300">
+                {amountsHidden
+                  ? `${MASK_PCT} utilisé`
+                  : <>{Math.round(budgetUsedPercent)}% utilisé{totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}</>}
+              </p>
             </motion.div>
           )}
 
@@ -805,14 +808,16 @@ const Budgets = () => {
               </div>
               {!amountsHidden && isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums">
-              {amountsHidden ? MASK : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
+            <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums transition-opacity duration-300">
+              {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
             </p>
-            {amountsHidden ? (
-              <div className="h-2 w-full rounded-full bg-secondary mb-3" />
-            ) : (
-              <BudgetProgressBar percent={budgetUsedPercent} className="mb-3" />
-            )}
+            <div className="transition-opacity duration-300 mb-3">
+              {amountsHidden ? (
+                <div className="h-2 w-full rounded-full bg-secondary" style={{ width: 0 }} />
+              ) : (
+                <BudgetProgressBar percent={budgetUsedPercent} />
+              )}
+            </div>
             {!amountsHidden && isOverBudget && (
               <p className="text-xs text-destructive font-medium animate-pulse">
                 🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
@@ -1095,9 +1100,9 @@ const Budgets = () => {
 
           {/* Category budget summary */}
           {categoryBudgets.length > 0 && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-1">
-              <span>Total catégories : {amountsHidden ? MASK : `${fmt(totalCategoryBudgeted)} F`}</span>
-              <span>Dépensé : {amountsHidden ? MASK : `${fmt(totalCategorySpent)} F`}</span>
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-1 transition-opacity duration-300">
+              <span>Total catégories : {amountsHidden ? MASK_AMT : `${fmt(totalCategoryBudgeted)} F`}</span>
+              <span>Dépensé : {amountsHidden ? MASK_AMT : `${fmt(totalCategorySpent)} F`}</span>
             </div>
           )}
 
@@ -1191,21 +1196,21 @@ const Budgets = () => {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    <div className="flex items-baseline justify-between mb-1.5">
+                    <div className="flex items-baseline justify-between mb-1.5 transition-opacity duration-300">
                       <span className={`text-xs font-semibold tabular-nums ${!amountsHidden && over ? "text-destructive" : "text-foreground"}`}>
-                        {amountsHidden ? MASK : `${fmt(cb.spent || 0)} / ${fmt(cb.budget_amount)} F`}
+                        {amountsHidden ? MASK_AMT : `${fmt(cb.spent || 0)} / ${fmt(cb.budget_amount)} F`}
                       </span>
-                      {!amountsHidden && (
-                        <span className="text-[10px] text-muted-foreground tabular-nums">
-                          {Math.round(pct)}%
-                        </span>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
+                        {amountsHidden ? MASK_PCT : `${Math.round(pct)}%`}
+                      </span>
+                    </div>
+                    <div className="transition-opacity duration-300">
+                      {amountsHidden ? (
+                        <div className="h-2 w-full rounded-full bg-secondary" style={{ width: 0 }} />
+                      ) : (
+                        <BudgetProgressBar percent={pct} />
                       )}
                     </div>
-                    {amountsHidden ? (
-                      <div className="h-2 w-full rounded-full bg-secondary" />
-                    ) : (
-                      <BudgetProgressBar percent={pct} />
-                    )}
                     {!amountsHidden && over && (
                       <p className="text-[10px] text-destructive mt-1 font-medium animate-pulse">
                         🔴 Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} F !
