@@ -1,15 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle2, AlertTriangle, ChevronRight, Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Loader2, ChevronRight, Camera, Upload, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import ScanTypeToggle from "@/components/scan/ScanTypeToggle";
-import ScanUploadArea from "@/components/scan/ScanUploadArea";
-import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import ScanHistory from "@/components/scan/ScanHistory";
 import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 
@@ -34,29 +31,72 @@ const incrementScanCount = () => {
 
 const Scan = () => {
   const { user, isAdmin } = useAuth();
-  const navigate = useNavigate();
-  const [preview, setPreview] = useState<string | null>(null);
-  const [isPdf, setIsPdf] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [scanType, setScanType] = useState<"receipt" | "screenshot">("receipt");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ParsedResult | null>(null);
-  const [scanId, setScanId] = useState<string | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [wallets, setWallets] = useState<any[]>([]);
   const [totalConfirmed, setTotalConfirmed] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
   const [history, setHistory] = useState<any[]>([]);
-  const [scanMode, setScanMode] = useState<'single' | 'multi'>('single');
   const [multiScanResult, setMultiScanResult] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
 
-  const scanMultiReceipts = async (file: File) => {
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+
+  const fetchHistory = useCallback(async () => {
     if (!user) return;
+    const { data } = await supabase
+      .from("receipt_scans")
+      .select("id,scan_type,parsed_amount,parsed_merchant,parsed_category,parsed_date,parsed_currency,image_url,status,created_at,storage_path")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setHistory(data || []);
+  }, [user]);
+
+  const refreshReceiptStats = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("receipt_scans")
+      .select("parsed_amount, status")
+      .eq("user_id", user.id)
+      .eq("status", "confirmed");
+    const confirmed = data || [];
+    setTotalConfirmed(confirmed.length);
+    setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed"),
+      supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+    ]).then(([histRes, subRes]) => {
+      const confirmed = histRes.data || [];
+      setTotalConfirmed(confirmed.length);
+      setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
+      setIsPremium(!!subRes.data || isAdmin);
+    });
+    fetchHistory();
+    const scanData = getScanCount();
+    setScansRemaining(FREE_SCAN_LIMIT - scanData.count);
+  }, [user, fetchHistory, isAdmin]);
+
+  const scanImage = async (file: File) => {
+    if (!user) return;
+
+    if (!isPremium) {
+      const scanData = getScanCount();
+      if (scanData.count >= FREE_SCAN_LIMIT) {
+        toast({
+          title: "Limite atteinte",
+          description: `Vous avez utilisé vos ${FREE_SCAN_LIMIT} scans gratuits ce mois. Passez à PRO pour un accès illimité.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setScanning(true);
     setMultiScanResult(null);
 
@@ -121,10 +161,15 @@ const Scan = () => {
         return;
       }
 
+      if (!isPremium) {
+        incrementScanCount();
+        setScansRemaining((prev) => prev - 1);
+      }
+
       setMultiScanResult(result);
       toast({
         title: `${result.total_detected} transaction(s) détectée(s) 🎯`,
-        description: 'Vérifie et valide celles que tu veux garder',
+        description: 'Vérifie et valide ce que tu veux garder',
       });
     } catch (e: any) {
       toast({
@@ -137,370 +182,11 @@ const Scan = () => {
     }
   };
 
-  const fetchHistory = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("receipt_scans")
-      .select("id,scan_type,parsed_amount,parsed_merchant,parsed_category,parsed_date,parsed_currency,image_url,status,created_at,storage_path")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    setHistory(data || []);
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      supabase.from("categories").select("*").eq("user_id", user.id),
-      supabase.from("wallets").select("*").eq("user_id", user.id),
-      supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed"),
-      supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
-    ]).then(([catRes, walRes, histRes, subRes]) => {
-      setCategories(catRes.data || []);
-      setWallets(walRes.data || []);
-      const confirmed = histRes.data || [];
-      setTotalConfirmed(confirmed.length);
-      setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
-      setIsPremium(!!subRes.data || isAdmin);
-    });
-    fetchHistory();
-
-    const scanData = getScanCount();
-    setScansRemaining(FREE_SCAN_LIMIT - scanData.count);
-  }, [user, fetchHistory]);
-
-  const handleFileSelected = (f: File) => {
-    setFile(f);
-    setResult(null);
-    setShowSuccess(false);
-    const pdf = f.type === "application/pdf";
-    setIsPdf(pdf);
-    const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result as string);
-    reader.readAsDataURL(f);
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) await scanImage(f);
+    e.target.value = "";
   };
-
-  const convertCurrency = async (amount: number, currency: string) => {
-    try {
-      const resp = await supabase.functions.invoke("convert-currency", {
-        body: { amount, from_currency: currency, to_currency: "XOF" },
-      });
-      if (resp.error) throw resp.error;
-      return resp.data;
-    } catch (err) {
-      console.error("Currency conversion failed:", err);
-      return null;
-    }
-  };
-
-  const analyze = async () => {
-    if (!user || !file || !preview) return;
-
-    if (!isPremium) {
-      const scanData = getScanCount();
-      if (scanData.count >= FREE_SCAN_LIMIT) {
-        toast({ title: "Limite atteinte", description: `Vous avez utilisé vos ${FREE_SCAN_LIMIT} scans gratuits ce mois. Passez à PRO pour un accès illimité.`, variant: "destructive" });
-        return;
-      }
-    }
-
-    setLoading(true);
-    try {
-      // Step 1: create scan row first so we have a stable id for storage path
-      const { data: preScan, error: preScanError } = await supabase
-        .from("receipt_scans")
-        .insert({
-          user_id: user.id,
-          scan_type: scanType,
-          status: "pending",
-        } as any)
-        .select()
-        .single();
-
-      if (preScanError || !preScan) {
-        throw preScanError || new Error("Impossible de créer le scan");
-      }
-
-      // Step 2: upload the raw File immediately (NEVER an objectURL/dataURL)
-      const uploadResult = await uploadReceiptImage(file, preScan.id);
-      if (!uploadResult.path) {
-        await supabase.from("receipt_scans").delete().eq("id", preScan.id);
-        toast({
-          title: "Erreur upload image",
-          description: uploadResult.error || "Impossible d'envoyer l'image",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Step 3: persist storage path + signed url on the scan row
-      await supabase
-        .from("receipt_scans")
-        .update({
-          storage_path: uploadResult.path,
-          image_url: uploadResult.url,
-        } as any)
-        .eq("id", preScan.id);
-
-      const path = uploadResult.path;
-      const urlData = { publicUrl: uploadResult.url || "" };
-      const base64 = preview.split(",")[1];
-
-      const resp = await supabase.functions.invoke("scan-receipt", {
-        body: { image: base64, scanType, mimeType: file.type },
-      });
-      if (resp.error) throw resp.error;
-      const parsed: ParsedResult = resp.data?.parsed || {};
-
-      const detectedCurrency = (parsed.currency || "XOF").toUpperCase();
-      parsed.currency = detectedCurrency;
-      parsed.original_amount = parsed.amount;
-
-      if (detectedCurrency !== "XOF" && parsed.amount) {
-        const conversion = await convertCurrency(parsed.amount, detectedCurrency);
-        if (conversion) {
-          parsed.converted_amount_xof = conversion.converted_amount;
-          parsed.exchange_rate_used = conversion.exchange_rate;
-          parsed.exchange_rate_source = conversion.source;
-        } else {
-          parsed.conversion_error = "Impossible de récupérer le taux de change.";
-        }
-      }
-
-      // Increment scan counter for free users
-      if (!isPremium) {
-        incrementScanCount();
-        setScansRemaining((prev) => prev - 1);
-      }
-
-      // Save receipt to receipts table
-      try {
-        const base64Data = preview.split(",")[1] || "";
-        await supabase.from("receipts" as any).insert({
-          user_id: user.id,
-          image_base64: base64Data.length > 500000 ? base64Data.slice(0, 500000) : base64Data,
-          image_path: path,
-          total_amount: parsed.amount || null,
-          currency: parsed.currency || "XOF",
-          merchant_name: parsed.merchant || null,
-          receipt_date: parsed.date || new Date().toISOString().split("T")[0],
-          category: parsed.category || null,
-          type: parsed.type || "expense",
-          wallet: parsed.wallet || null,
-          raw_data: parsed,
-          items: null,
-          status: "pending",
-        });
-        toast({ title: "🧾 Reçu sauvegardé", description: "Disponible dans Mes Reçus pour audit" });
-      } catch (e) {
-        console.error("saveReceiptToDatabase error:", e);
-      }
-
-      // Show success animation briefly
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        setResult(parsed);
-      }, 1200);
-
-      await supabase.from("receipt_scans").update({
-        extracted_text: resp.data?.raw || null,
-        parsed_amount: parsed.amount || null,
-        parsed_date: parsed.date || null,
-        parsed_merchant: parsed.merchant || null,
-        parsed_type: parsed.type || null,
-        parsed_category: parsed.category || null,
-        parsed_wallet: parsed.wallet || null,
-        parsed_currency: detectedCurrency,
-        parsed_original_amount: parsed.original_amount || null,
-        parsed_converted_amount_xof: parsed.converted_amount_xof || null,
-        parsed_exchange_rate_used: parsed.exchange_rate_used || null,
-        parsed_exchange_rate_source: parsed.exchange_rate_source || null,
-      } as any).eq("id", preScan.id);
-
-      setScanId(preScan.id);
-    } catch (err: any) {
-      toast({ title: "Erreur d'analyse", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const compressImage = (f: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement("canvas");
-      const img = new Image();
-      const url = URL.createObjectURL(f);
-      img.src = url;
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const MAX = 1024;
-        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg", 0.8);
-      };
-      img.onerror = reject;
-    });
-  };
-
-  const uploadReceiptImage = async (
-    fileOrBlob: File | Blob,
-    sid: string
-  ): Promise<{ path: string | null; url: string | null; error?: string }> => {
-    if (!user) return { path: null, url: null, error: "Non authentifié" };
-    if (!fileOrBlob || (fileOrBlob instanceof Blob && fileOrBlob.size === 0)) {
-      return { path: null, url: null, error: "Fichier vide ou invalide" };
-    }
-    if (fileOrBlob.size > 20 * 1024 * 1024) {
-      return { path: null, url: null, error: "Image trop lourde (max 20 MB)" };
-    }
-    try {
-      // Compress images (>1MB) to JPEG Blob, keep PDFs as-is
-      let toUpload: File | Blob = fileOrBlob;
-      let ext = "jpg";
-      const isPdfFile =
-        (fileOrBlob as File).type === "application/pdf" ||
-        ((fileOrBlob as File).name || "").toLowerCase().endsWith(".pdf");
-
-      if (isPdfFile) {
-        ext = "pdf";
-      } else {
-        if (fileOrBlob instanceof File && fileOrBlob.size > 1024 * 1024) {
-          try {
-            toUpload = await compressImage(fileOrBlob);
-            ext = "jpg";
-          } catch {
-            toUpload = fileOrBlob;
-          }
-        }
-        if (fileOrBlob instanceof File && fileOrBlob.name) {
-          const parts = fileOrBlob.name.split(".");
-          if (parts.length > 1 && toUpload === fileOrBlob) {
-            ext = parts.pop()!.toLowerCase();
-          }
-        } else {
-          const t = fileOrBlob.type || "image/jpeg";
-          if (t.includes("png")) ext = "png";
-          else if (t.includes("webp")) ext = "webp";
-        }
-      }
-
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const path = `${user.id}/${year}/${month}/${sid}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("receipts")
-        .upload(path, toUpload, {
-          contentType: toUpload.type || (isPdfFile ? "application/pdf" : "image/jpeg"),
-          upsert: true,
-          cacheControl: "3600",
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        return { path: null, url: null, error: uploadError.message };
-      }
-
-      const { data: signed, error: signError } = await supabase.storage
-        .from("receipts")
-        .createSignedUrl(path, 86400);
-
-      if (signError || !signed?.signedUrl) {
-        console.error("Sign URL error:", signError);
-        return { path, url: null };
-      }
-      return { path, url: signed.signedUrl };
-    } catch (e: any) {
-      console.error("uploadReceiptImage error:", e);
-      return { path: null, url: null, error: e?.message || "Erreur upload" };
-    }
-  };
-
-  const handleConfirm = async (data: ParsedResult) => {
-    if (!user || !scanId) return;
-    let categoryId: string | null = null;
-    if (data.category) {
-      const match = categories.find((c) => c.name.toLowerCase() === data.category!.toLowerCase());
-      if (match) categoryId = match.id;
-    }
-    let walletIdVal: string | null = null;
-    if (data.wallet) {
-      const match = wallets.find((w) => w.wallet_name.toLowerCase() === data.wallet!.toLowerCase());
-      if (match) walletIdVal = match.id;
-    }
-    const needsConversion = data.currency && data.currency !== "XOF";
-    const finalAmountXof = needsConversion && data.converted_amount_xof ? data.converted_amount_xof : data.amount || 0;
-
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id,
-      type: data.type || "expense",
-      amount: finalAmountXof,
-      date: data.date || new Date().toISOString().split("T")[0],
-      note: data.merchant ? `Scan: ${data.merchant}` : "Scan",
-      category_id: categoryId,
-      wallet_id: walletIdVal,
-      original_amount: data.original_amount || data.amount || 0,
-      original_currency: data.currency || "XOF",
-      converted_amount_xof: needsConversion ? finalAmountXof : null,
-      exchange_rate_used: data.exchange_rate_used || null,
-      exchange_rate_source: data.exchange_rate_source || null,
-      conversion_date: needsConversion ? new Date().toISOString().split("T")[0] : null,
-    } as any);
-
-    if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    // Image was already uploaded during analyze(); just mark scan confirmed
-    await supabase.from("receipt_scans").update({
-      status: "confirmed",
-    } as any).eq("id", scanId);
-
-    await refreshReceiptStats();
-    await fetchHistory();
-    toast({
-      title: "✅ Reçu confirmé et sauvegardé",
-      description: "Photo stockée en sécurité dans le cloud",
-    });
-    reset();
-  };
-
-  const handleReject = async () => {
-    if (scanId) await supabase.from("receipt_scans").update({ status: "rejected" }).eq("id", scanId);
-    toast({ title: "Scan rejeté" });
-    reset();
-    await refreshReceiptStats();
-    await fetchHistory();
-  };
-
-  const handleManualEntry = () => {
-    navigate("/transactions/new", { state: { date: result?.date || undefined } });
-  };
-
-  const reset = () => {
-    setPreview(null);
-    setFile(null);
-    setResult(null);
-    setScanId(null);
-    setIsPdf(false);
-    setShowSuccess(false);
-  };
-
-  const refreshReceiptStats = async () => {
-    if (!user) return;
-    const { data } = await supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed");
-    const confirmed = data || [];
-    setTotalConfirmed(confirmed.length);
-    setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
-  };
-
-  const resultIsEmpty = result && (!result.amount || result.amount === 0);
 
   return (
     <DashboardLayout title="Scan Intelligent">
@@ -520,197 +206,88 @@ const Scan = () => {
         </div>
       )}
 
-      {/* Mode toggle: single vs multi */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setScanMode('single')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            scanMode === 'single'
-              ? 'gradient-primary text-primary-foreground'
-              : 'glass text-muted-foreground'
-          }`}
+      {multiScanResult ? (
+        <MultiReceiptValidator
+          scanResult={multiScanResult}
+          imagePreview={imagePreview}
+          onClose={() => {
+            setMultiScanResult(null);
+            setImagePreview(null);
+          }}
+          onValidated={async (count) => {
+            setMultiScanResult(null);
+            setImagePreview(null);
+            await Promise.all([fetchHistory(), refreshReceiptStats()]);
+            toast({ title: `${count} transaction(s) ajoutée(s) ✅` });
+          }}
+        />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card rounded-2xl p-6 flex flex-col items-center gap-5"
         >
-          🧾 Reçu unique
-        </button>
-        <button
-          onClick={() => setScanMode('multi')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
-            scanMode === 'multi'
-              ? 'gradient-primary text-primary-foreground'
-              : 'glass text-muted-foreground'
-          }`}
-        >
-          📸 Multi-scan
-          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">
-            IA
-          </span>
-        </button>
-      </div>
+          <div className="w-16 h-16 rounded-full glass flex items-center justify-center">
+            <Sparkles className="w-7 h-7 text-primary" />
+          </div>
 
-      {scanMode === 'multi' ? (
-        <>
-          {multiScanResult ? (
-            <MultiReceiptValidator
-              scanResult={multiScanResult}
-              imagePreview={imagePreview}
-              onClose={() => {
-                setMultiScanResult(null);
-                setImagePreview(null);
-              }}
-              onValidated={(count) => {
-                setMultiScanResult(null);
-                setImagePreview(null);
-                fetchHistory();
-                toast({ title: `${count} transaction(s) ajoutée(s) ✅` });
-              }}
-            />
+          <div className="text-center space-y-1.5 max-w-md">
+            <h3 className="text-foreground font-semibold text-base">Scan Intelligent</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Prends ou importe une photo. L'IA détecte automatiquement reçus,
+              factures, historique Mobile Money ou commandes.
+            </p>
+          </div>
+
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFile}
+            className="hidden"
+            disabled={scanning || (!isPremium && scansRemaining <= 0)}
+          />
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFile}
+            className="hidden"
+            disabled={scanning || (!isPremium && scansRemaining <= 0)}
+          />
+
+          {scanning ? (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <Loader2 className="w-7 h-7 text-primary animate-spin" />
+              <p className="text-sm font-medium text-foreground">L'IA analyse l'image...</p>
+              <p className="text-xs text-muted-foreground">Détection en cours, patiente quelques secondes</p>
+            </div>
           ) : (
-            <div className="space-y-4">
-              <div className="glass-card rounded-2xl p-5 text-center space-y-2">
-                <Sparkles className="w-8 h-8 text-primary mx-auto" />
-                <h3 className="text-base font-bold text-foreground">Scan multi-reçus IA</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Prends en photo 2-3 reçus côte à côte, un historique Wave/Orange Money,
-                  ou un relevé bancaire. L'IA détecte toutes les transactions automatiquement.
-                </p>
-              </div>
-
-              <label className="block glass-card rounded-2xl p-6 border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={scanning}
-                  onChange={async (e) => {
-                    const f = e.target.files?.[0];
-                    if (f) await scanMultiReceipts(f);
-                    e.target.value = '';
-                  }}
-                />
-                {scanning ? (
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm font-medium text-foreground">L'IA analyse l'image...</p>
-                    <p className="text-xs text-muted-foreground">Détection en cours, patiente quelques secondes</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <span className="text-4xl">📷</span>
-                    <p className="text-sm font-medium text-foreground">Appuie pour prendre/choisir une photo</p>
-                    <p className="text-xs text-muted-foreground">JPG, PNG · Max 10 MB</p>
-                  </div>
-                )}
-              </label>
-
-              <div className="glass-card rounded-xl p-4 space-y-1.5">
-                <p className="text-xs font-semibold text-foreground">💡 Conseils pour un bon scan</p>
-                <p className="text-xs text-muted-foreground">• Bonne lumière, pas de reflets</p>
-                <p className="text-xs text-muted-foreground">• Reçus bien étalés, pas froissés</p>
-                <p className="text-xs text-muted-foreground">• Texte lisible et net</p>
-                <p className="text-xs text-muted-foreground">• Cadre tous les reçus dans la photo</p>
-              </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => cameraRef.current?.click()}
+                disabled={!isPremium && scansRemaining <= 0}
+                className="gradient-primary text-primary-foreground"
+              >
+                <Camera className="w-4 h-4 mr-2" /> Photo
+              </Button>
+              <Button
+                variant="outline"
+                className="glass"
+                onClick={() => galleryRef.current?.click()}
+                disabled={!isPremium && scansRemaining <= 0}
+              >
+                <Upload className="w-4 h-4 mr-2" /> Galerie
+              </Button>
             </div>
           )}
-        </>
-      ) : (
-        <ScanTypeToggle scanType={scanType} onChangeScanType={setScanType} />
+
+          <p className="text-xs text-muted-foreground text-center">
+            💡 Photo bien éclairée et à plat = meilleurs résultats
+          </p>
+        </motion.div>
       )}
-
-      {scanMode === 'single' && !preview ? (
-        <ScanUploadArea scanType={scanType} onFileSelected={handleFileSelected} />
-      ) : scanMode === 'single' && preview ? (
-        <div className="space-y-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl overflow-hidden">
-            {isPdf ? (
-              <div className="p-6 flex flex-col items-center gap-2">
-                <div className="w-16 h-16 rounded-xl bg-destructive/10 flex items-center justify-center">
-                  <span className="text-2xl">📄</span>
-                </div>
-                <p className="text-sm font-medium text-foreground">{file?.name}</p>
-                <p className="text-xs text-muted-foreground">Fichier PDF prêt pour l'analyse</p>
-              </div>
-            ) : (
-              <img src={preview} alt="Scan" className="w-full max-h-64 object-contain" />
-            )}
-          </motion.div>
-
-          {!result && !loading && !showSuccess && (
-            <Button onClick={analyze} className="w-full gradient-primary text-primary-foreground" disabled={!isPremium && scansRemaining <= 0}>
-              {isPdf ? "Analyser le PDF" : "Analyser l'image"}
-            </Button>
-          )}
-
-          {loading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl p-6 flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              <span className="text-sm text-muted-foreground">Analyse IA en cours...</span>
-              <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                <motion.div className="h-full bg-primary rounded-full" initial={{ width: "0%" }} animate={{ width: "90%" }} transition={{ duration: 8, ease: "easeOut" }} />
-              </div>
-            </motion.div>
-          )}
-
-          {/* Success animation */}
-          <AnimatePresence>
-            {showSuccess && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="glass-card rounded-2xl p-6 flex flex-col items-center gap-3"
-              >
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}>
-                  <CheckCircle2 className="w-12 h-12 text-primary" />
-                </motion.div>
-                <span className="text-sm font-medium text-foreground">Analyse terminée !</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Result: quick summary + card OR empty result fallback */}
-          {result && !showSuccess && (
-            <>
-              {resultIsEmpty ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-destructive" />
-                    <span className="font-semibold text-foreground">Détection incomplète</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    L'IA n'a pas pu détecter le montant. Veux-tu l'entrer manuellement ?
-                  </p>
-                  <div className="flex gap-3">
-                    <Button onClick={handleManualEntry} className="flex-1 gradient-primary text-primary-foreground">
-                      Entrer manuellement
-                    </Button>
-                    <Button variant="outline" onClick={reset} className="flex-1 glass">
-                      Recommencer
-                    </Button>
-                  </div>
-                </motion.div>
-              ) : (
-                <>
-                  {/* Quick summary banner */}
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-sm text-foreground">
-                      Détecté : <span className="font-bold">{result.amount?.toLocaleString("fr-FR")} {result.currency || "FCFA"}</span>
-                      {result.merchant && <> chez <span className="font-bold">{result.merchant}</span></>}
-                    </span>
-                  </motion.div>
-                  <ScanResultCard result={result} categories={categories} wallets={wallets} onConfirm={handleConfirm} onReject={handleReject} isPremium={isPremium} />
-                </>
-              )}
-            </>
-          )}
-
-          {!loading && !showSuccess && (
-            <Button variant="ghost" onClick={reset} className="w-full text-muted-foreground">
-              Recommencer
-            </Button>
-          )}
-        </div>
-      ) : null}
 
       <ScanHistory scans={history} onRefresh={fetchHistory} />
 

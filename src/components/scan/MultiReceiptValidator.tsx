@@ -258,6 +258,8 @@ export const MultiReceiptValidator = ({
     ? Array.from(new Set(categories.map(c => c.name)))
     : FALLBACK_CATEGORIES;
 
+  const isSingle = scanResult.total_detected === 1;
+
   return (
     <div className="space-y-4 pb-32">
       {/* Header résumé */}
@@ -325,49 +327,52 @@ export const MultiReceiptValidator = ({
         )}
       </AnimatePresence>
 
-      {/* Actions globales */}
-      <div className="flex gap-2">
-        <button
-          onClick={selectAll}
-          className="flex-1 glass-card rounded-xl py-2 text-xs text-muted-foreground hover:text-foreground"
-        >
-          ✓ Tout sélectionner
-        </button>
-        <button
-          onClick={deselectAll}
-          className="flex-1 glass-card rounded-xl py-2 text-xs text-muted-foreground hover:text-foreground"
-        >
-          ✗ Tout désélectionner
-        </button>
-      </div>
+      {/* Actions globales — masquées si une seule transaction */}
+      {!isSingle && (
+        <>
+          <div className="flex gap-2">
+            <button
+              onClick={selectAll}
+              className="flex-1 glass-card rounded-xl py-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              ✓ Tout sélectionner
+            </button>
+            <button
+              onClick={deselectAll}
+              className="flex-1 glass-card rounded-xl py-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              ✗ Tout désélectionner
+            </button>
+          </div>
 
-      {/* Action groupée — appliquer une catégorie */}
-      <div className="glass-card rounded-xl p-3 space-y-2">
-        <p className="text-[11px] text-muted-foreground">
-          Appliquer une catégorie à toutes les transactions sélectionnées
-        </p>
-        <div className="flex gap-2">
-          <Select value={bulkCategory} onValueChange={setBulkCategory}>
-            <SelectTrigger className="bg-secondary border-border h-9 text-xs flex-1">
-              <SelectValue placeholder="Choisir une catégorie" />
-            </SelectTrigger>
-            <SelectContent>
-              {allCategoryNames.map(cat => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={applyBulkCategory}
-            disabled={!bulkCategory || selectedCount === 0}
-            size="sm"
-            className="h-9 gradient-primary text-primary-foreground text-xs"
-          >
-            <Wand2 className="w-3 h-3 mr-1" />
-            Appliquer
-          </Button>
-        </div>
-      </div>
+          <div className="glass-card rounded-xl p-3 space-y-2">
+            <p className="text-[11px] text-muted-foreground">
+              Appliquer une catégorie à toutes les transactions sélectionnées
+            </p>
+            <div className="flex gap-2">
+              <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                <SelectTrigger className="bg-secondary border-border h-9 text-xs flex-1">
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allCategoryNames.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={applyBulkCategory}
+                disabled={!bulkCategory || selectedCount === 0}
+                size="sm"
+                className="h-9 gradient-primary text-primary-foreground text-xs"
+              >
+                <Wand2 className="w-3 h-3 mr-1" />
+                Appliquer
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Liste des transactions */}
       <div className="space-y-3">
@@ -557,8 +562,9 @@ export const MultiReceiptValidator = ({
           ) : (
             <>
               <Sparkles className="w-4 h-4 mr-2" />
-              Enregistrer {selectedCount} transaction(s)
-              {selectedCount > 0 && ` · ${formatThousands(totalAmount)} F`}
+              {isSingle
+                ? 'Enregistrer cette transaction'
+                : <>Enregistrer {selectedCount} transaction(s){selectedCount > 0 && ` · ${formatThousands(totalAmount)} F`}</>}
             </>
           )}
         </Button>
