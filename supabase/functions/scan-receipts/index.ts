@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 
 const ScanReceiptsSchema = z.object({
   imageBase64: z.string().min(100, 'Image trop petite').max(15_000_000, 'Image > 10 Mo refusée'),
@@ -33,6 +34,10 @@ Deno.serve(async (req) => {
     );
 
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (user) {
+      const rl = await checkRateLimit(user.id, 'scan-receipts', 30, 300);
+      if (!rl.allowed) return rateLimitResponse('scan-receipts', rl.retryAfter, corsHeaders);
+    }
     if (userErr || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),

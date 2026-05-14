@@ -1143,6 +1143,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          called_at: string
+          endpoint: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          called_at?: string
+          endpoint: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          called_at?: string
+          endpoint?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       receipt_duplicates: {
         Row: {
           created_at: string
@@ -2192,6 +2213,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       get_invite_by_token: {
         Args: { _token: string }
         Returns: {

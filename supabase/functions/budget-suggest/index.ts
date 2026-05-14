@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const BudgetSuggestSchema = z.object({
   month: z.number().int().min(1).max(12).optional(),
@@ -41,6 +42,11 @@ serve(async (req) => {
       });
     }
     const user = userData.user;
+
+    {
+      const rl = await checkRateLimit(user.id, 'budget-suggest', 20, 60);
+      if (!rl.allowed) return rateLimitResponse('budget-suggest', rl.retryAfter, corsHeaders);
+    }
 
     const rawBody = await req.json().catch(() => ({}));
     const parsed = BudgetSuggestSchema.safeParse(rawBody);
