@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
 import { PRIMARY_CURRENCIES, EXTRA_CURRENCIES, type CurrencyCode } from "@/lib/currency";
-import { setActiveCurrency } from "@/lib/currencyStore";
+import { setActiveCurrency, useActiveCurrency } from "@/lib/currencyStore";
 import {
   AlertDialog,
   AlertDialogAction,
