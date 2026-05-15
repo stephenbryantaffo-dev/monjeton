@@ -192,7 +192,7 @@ Return ONLY the JSON, no other text.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    let parsed: Record<string, any> = {};
+    let parsedResult: Record<string, any> = {};
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -208,7 +208,7 @@ Return ONLY the JSON, no other text.`;
               price: Math.max(0, Math.min(Number(it.price) || 0, 999_999_999)),
             }));
         }
-        parsed = {
+        parsedResult = {
           amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
           currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
           date: String(raw.date || "").slice(0, 10),
@@ -223,7 +223,7 @@ Return ONLY the JSON, no other text.`;
       // Parse failure
     }
 
-    return new Response(JSON.stringify({ parsed, raw: content }), {
+    return new Response(JSON.stringify({ parsed: parsedResult, raw: content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
