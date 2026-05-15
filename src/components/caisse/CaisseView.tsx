@@ -318,7 +318,7 @@ const CaisseView = () => {
         note: depenseNote || null,
       } as any);
       await supabase.from("caisses" as any).update({ total_spent: selected.total_spent + amount } as any).eq("id", selected.id);
-      toast({ title: "Dépense enregistrée", description: `${depenseLabel} — ${fmt(amount)} F` });
+      toast({ title: "Dépense enregistrée", description: `${depenseLabel} — ${fmt(amount)}` });
       setShowDepense(false);
       setDepenseLabel("");
       setDepenseAmount("");
@@ -443,15 +443,15 @@ const CaisseView = () => {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="glass rounded-xl p-2.5 text-center">
                     <p className="text-xs text-muted-foreground">Collecté</p>
-                    <p className="text-sm font-bold text-primary tabular-nums">{fmt(c.total_collected)} F</p>
+                    <p className="text-sm font-bold text-primary tabular-nums">{fmt(c.total_collected)}</p>
                   </div>
                   <div className="glass rounded-xl p-2.5 text-center">
                     <p className="text-xs text-muted-foreground">Dépensé</p>
-                    <p className="text-sm font-bold text-destructive tabular-nums">{fmt(c.total_spent)} F</p>
+                    <p className="text-sm font-bold text-destructive tabular-nums">{fmt(c.total_spent)}</p>
                   </div>
                   <div className="glass rounded-xl p-2.5 text-center border border-primary/30">
                     <p className="text-xs text-muted-foreground">Disponible</p>
-                    <p className="text-sm font-bold text-foreground tabular-nums">{fmt(c.total_collected - c.total_spent)} F</p>
+                    <p className="text-sm font-bold text-foreground tabular-nums">{fmt(c.total_collected - c.total_spent)}</p>
                   </div>
                 </div>
               </motion.div>
@@ -477,15 +477,15 @@ const CaisseView = () => {
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="glass rounded-xl p-3">
             <p className="text-xs text-muted-foreground">Total collecté</p>
-            <p className="text-base font-bold text-primary tabular-nums">{fmt(selected.total_collected)} F</p>
+            <p className="text-base font-bold text-primary tabular-nums">{fmt(selected.total_collected)}</p>
           </div>
           <div className="glass rounded-xl p-3">
             <p className="text-xs text-muted-foreground">Total dépensé</p>
-            <p className="text-base font-bold text-destructive tabular-nums">{fmt(selected.total_spent)} F</p>
+            <p className="text-base font-bold text-destructive tabular-nums">{fmt(selected.total_spent)}</p>
           </div>
           <div className="glass rounded-xl p-3 border border-primary/30">
             <p className="text-xs text-muted-foreground">Disponible</p>
-            <p className="text-base font-bold text-foreground tabular-nums">{fmt(soldeDisponible)} F</p>
+            <p className="text-base font-bold text-foreground tabular-nums">{fmt(soldeDisponible)}</p>
           </div>
         </div>
       </div>
@@ -538,7 +538,7 @@ const CaisseView = () => {
       {/* MEMBERS */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-foreground">
-          Membres ({members.filter(m => m.status !== 'removed').length}) · {fmt(selected.contribution_amount)} F/membre
+          Membres ({members.filter(m => m.status !== 'removed').length}) · {fmt(selected.contribution_amount)}/membre
         </h3>
       </div>
       {removedCount > 0 && (
@@ -576,7 +576,7 @@ const CaisseView = () => {
                       <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full flex-shrink-0">Retiré</span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">Total versé : {fmt(memberTotal)} F</p>
+                  <p className="text-xs text-muted-foreground">Total versé : {fmt(memberTotal)}</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-1">
                   {m.status === 'active' && (
@@ -632,7 +632,7 @@ const CaisseView = () => {
                       mvt.movement_type === "cancelled" ? "text-yellow-500 line-through" :
                       "text-destructive"
                     }`}>
-                      {mvt.movement_type === "cotisation" ? "+" : mvt.movement_type === "cancelled" ? "" : "-"}{fmt(mvt.amount)} F
+                      {mvt.movement_type === "cotisation" ? "+" : mvt.movement_type === "cancelled" ? "" : "-"}{fmt(mvt.amount)}
                     </span>
                   )}
                 </div>
@@ -656,7 +656,7 @@ const CaisseView = () => {
               </div>
               <div className="text-left">
                 <p className="text-base font-bold">{selectedMember?.name}</p>
-                <p className="text-xs text-muted-foreground">Total versé : {fmt(selectedMember?.total_paid || 0)} F</p>
+                <p className="text-xs text-muted-foreground">Total versé : {fmt(selectedMember?.total_paid || 0)}</p>
               </div>
             </SheetTitle>
           </SheetHeader>
@@ -732,7 +732,7 @@ const CaisseView = () => {
             <DialogTitle>Annuler la cotisation de {selectedMember?.name}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground mb-4">
-            Cette action marquera la cotisation comme annulée et déduira {fmt(selected.contribution_amount)} F du total collecté.
+            Cette action marquera la cotisation comme annulée et déduira {fmt(selected.contribution_amount)} du total collecté.
           </p>
           <div className="mb-4">
             <Label className="text-xs text-muted-foreground mb-2 block">Raison (optionnelle)</Label>
@@ -761,7 +761,7 @@ const CaisseView = () => {
           {(selectedMember?.total_paid || 0) > 0 && (
             <div className="glass-card rounded-xl p-3 mb-4 border border-yellow-500/20">
               <p className="text-xs text-yellow-500">
-                ⚠️ Ce membre a déjà versé {fmt(selectedMember?.total_paid || 0)} F. Ces fonds restent dans la caisse.
+                ⚠️ Ce membre a déjà versé {fmt(selectedMember?.total_paid || 0)}. Ces fonds restent dans la caisse.
               </p>
             </div>
           )}
@@ -840,7 +840,7 @@ const CaisseView = () => {
               <Label>Montant (F CFA)</Label>
               <MoneyInput value={depenseAmount} onChange={(n) => setDepenseAmount(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
               {Number(depenseAmount) > soldeDisponible && (
-                <p className="text-xs text-destructive mt-1">⚠️ Solde insuffisant — disponible : {fmt(soldeDisponible)} F</p>
+                <p className="text-xs text-destructive mt-1">⚠️ Solde insuffisant — disponible : {fmt(soldeDisponible)}</p>
               )}
             </div>
             <div>

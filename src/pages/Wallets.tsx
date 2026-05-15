@@ -135,7 +135,7 @@ const Wallets = () => {
 
     const fromSolde = getWalletSolde(fromWallet);
     if (amount > fromSolde) {
-      toast({ title: "Solde insuffisant", description: `Le solde de ${fromWallet.wallet_name} est de ${formatAmount(fromSolde)} F`, variant: "destructive" });
+      toast({ title: "Solde insuffisant", description: `Le solde de ${fromWallet.wallet_name} est de ${formatAmount(fromSolde)}`, variant: "destructive" });
       return;
     }
 
@@ -187,7 +187,7 @@ const Wallets = () => {
 
       if (error) throw error;
 
-      toast({ title: "Transfert effectué ✅", description: `${formatAmount(amount)} F de ${fromWallet.wallet_name} → ${toWallet.wallet_name}` });
+      toast({ title: "Transfert effectué ✅", description: `${formatAmount(amount)} de ${fromWallet.wallet_name} → ${toWallet.wallet_name}` });
       setShowTransfer(false);
       setTransferAmount("");
       setFromWalletId("");
@@ -238,7 +238,7 @@ const Wallets = () => {
                         <TrendingDown className="w-3 h-3 text-destructive" />
                       )}
                       <span className={`text-sm font-semibold whitespace-nowrap tabular-nums ${solde >= 0 ? "text-primary" : "text-destructive"}`}>
-                        {formatAmount(solde)} F
+                        {formatAmount(solde)}
                       </span>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ const Wallets = () => {
                 </div>
                 {/* Initial balance row */}
                 <div className="flex items-center justify-between pl-16 text-xs text-muted-foreground">
-                  <span>Solde initial : {isEditing ? "" : `${formatAmount(initBal)} F`}</span>
+                  <span>Solde initial : {isEditing ? "" : `${formatAmount(initBal)}`}</span>
                   {isEditing ? (
                     <div className="flex items-center gap-1.5">
                       <MoneyInput

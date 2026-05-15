@@ -235,7 +235,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
                 Tontine <span className="text-foreground font-medium">{name}</span> — {FREQ_LABELS[frequency]}
               </p>
               <p className="text-sm text-muted-foreground">
-                {members.length} membres × {fmt(Number(amount))} F = <span className="text-foreground font-bold">{fmt(totalPerCycle)} F/cycle</span>
+                {members.length} membres × {fmt(Number(amount))} F = <span className="text-foreground font-bold">{fmt(totalPerCycle)}/cycle</span>
               </p>
               <p className="text-sm text-muted-foreground">
                 Premier cycle : à partir du {new Date(startDate).toLocaleDateString("fr-FR")}

@@ -135,7 +135,7 @@ const TontineHistory = ({ tontine }: Props) => {
         return `<tr>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a">Cycle ${c.cycle_number} — ${c.period_label}</td>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a;color:#94a3b8;font-size:12px">${new Date(c.start_date).toLocaleDateString("fr-FR")} → ${new Date(c.end_date).toLocaleDateString("fr-FR")}</td>
-          <td style="padding:8px;border-bottom:1px solid #2a2f3a;text-align:right;font-weight:600">${fmt(c.total_collected)} / ${fmt(c.total_expected)} F</td>
+          <td style="padding:8px;border-bottom:1px solid #2a2f3a;text-align:right;font-weight:600">${fmt(c.total_collected)} / ${fmt(c.total_expected)}</td>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a;text-align:right;color:${pct >= 80 ? "#10b981" : pct > 0 ? "#f59e0b" : "#94a3b8"};font-weight:700">${pct}%</td>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a;text-align:right;color:${c.status === "open" ? "#10b981" : "#94a3b8"};text-transform:uppercase;font-size:11px">${c.status === "open" ? "En cours" : "Clôturé"}</td>
         </tr>`;
@@ -174,12 +174,12 @@ hr{border:0;border-top:1px solid #1f2937;margin:18px 0}
 footer{text-align:center;color:#475569;font-size:11px;margin-top:32px}
 </style></head><body>
 <h1>🪙 Historique — ${tontine.name}</h1>
-<p class="meta">${FREQ_LABELS[tontine.frequency] || tontine.frequency} · ${fmt(tontine.contribution_amount)} F / membre · Filtre : <strong>${periodLabel}</strong>${start ? ` (depuis le ${start.toLocaleDateString("fr-FR")})` : ""}</p>
+<p class="meta">${FREQ_LABELS[tontine.frequency] || tontine.frequency} · ${fmt(tontine.contribution_amount)} / membre · Filtre : <strong>${periodLabel}</strong>${start ? ` (depuis le ${start.toLocaleDateString("fr-FR")})` : ""}</p>
 <p class="meta">Généré le ${new Date().toLocaleString("fr-FR")}</p>
 <div class="cards">
   <div class="card"><p>Cycles</p><strong>${totals.cyclesCount}</strong></div>
   <div class="card"><p>Paiements</p><strong>${totals.paymentsCount}</strong></div>
-  <div class="card"><p>Total collecté</p><strong style="color:#10b981">${fmt(totals.collected)} F</strong></div>
+  <div class="card"><p>Total collecté</p><strong style="color:#10b981">${fmt(totals.collected)}</strong></div>
 </div>
 <hr>
 <h2>Cycles</h2>
@@ -279,7 +279,7 @@ ${filteredPayments.length > 0 ? `<table><thead><tr><th>Date</th><th>Membre</th><
             <div className="glass-card rounded-xl p-2.5 text-center">
               <p className="text-[10px] text-muted-foreground">Collecté</p>
               <p className="text-sm font-bold text-primary tabular-nums">
-                {fmt(totals.collected)} F
+                {fmt(totals.collected)}
               </p>
             </div>
           </div>
@@ -327,7 +327,7 @@ ${filteredPayments.length > 0 ? `<table><thead><tr><th>Date</th><th>Membre</th><
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-foreground tabular-nums">
-                          {fmt(c.total_collected)} F
+                          {fmt(c.total_collected)}
                         </p>
                         <p
                           className={`text-[11px] font-bold ${pct >= 80 ? "text-emerald-400" : pct > 0 ? "text-amber-400" : "text-muted-foreground"}`}

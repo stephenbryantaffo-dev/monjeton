@@ -89,9 +89,9 @@ const ReportsTab = ({ tontines }: Props) => {
     const report = getCycleReport(cycle);
     const lines = report.map((r) => {
       const icon = r.status === "paid" ? "✅" : r.status === "partial" ? "⚠️" : "⏳";
-      return `${icon} ${r.member.name} — ${fmt(r.total)} F`;
+      return `${icon} ${r.member.name} — ${fmt(r.total)}`;
     });
-    const msg = `📊 Rapport — ${selected.name}\n${cycle.period_label}\n\nTotal : ${fmt(cycle.total_collected)} / ${fmt(cycle.total_expected)} F\n\n${lines.join("\n")}`;
+    const msg = `📊 Rapport — ${selected.name}\n${cycle.period_label}\n\nTotal : ${fmt(cycle.total_collected)} / ${fmt(cycle.total_expected)}\n\n${lines.join("\n")}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -106,12 +106,12 @@ const ReportsTab = ({ tontines }: Props) => {
         const detail = r.status === "paid" && r.lastDate
           ? `Payé le ${new Date(r.lastDate).toLocaleDateString("fr-FR")}`
           : r.status === "partial"
-          ? `Partiel — Reste ${fmt(r.remaining)} F`
+          ? `Partiel — Reste ${fmt(r.remaining)}`
           : "N'a pas encore cotisé";
-        return `<tr><td style="padding:8px;border-bottom:1px solid #333">${icon} ${r.member.name}${r.member.is_owner ? " (Moi)" : ""}</td><td style="padding:8px;border-bottom:1px solid #333;text-align:right;font-weight:bold">${fmt(r.total)} F</td><td style="padding:8px;border-bottom:1px solid #333;color:#888;font-size:12px">${detail}</td></tr>`;
+        return `<tr><td style="padding:8px;border-bottom:1px solid #333">${icon} ${r.member.name}${r.member.is_owner ? " (Moi)" : ""}</td><td style="padding:8px;border-bottom:1px solid #333;text-align:right;font-weight:bold">${fmt(r.total)}</td><td style="padding:8px;border-bottom:1px solid #333;color:#888;font-size:12px">${detail}</td></tr>`;
       }).join("");
 
-      return `<div style="margin-bottom:40px;page-break-inside:avoid"><h2 style="color:#10b981;margin-bottom:4px">📊 Cycle ${cycle.cycle_number} — ${cycle.period_label}</h2><p style="color:#888;font-size:13px">Du ${new Date(cycle.start_date).toLocaleDateString("fr-FR")} au ${new Date(cycle.end_date).toLocaleDateString("fr-FR")}</p><div style="display:flex;gap:20px;margin:16px 0"><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total attendu</p><p style="font-size:20px;font-weight:bold">${fmt(cycle.total_expected)} F</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total collecté</p><p style="font-size:20px;font-weight:bold;color:#10b981">${fmt(cycle.total_collected)} F</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Taux</p><p style="font-size:20px;font-weight:bold;color:${pctCollected >= 80 ? "#10b981" : "#f59e0b"}">${pctCollected}%</p></div></div><table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
+      return `<div style="margin-bottom:40px;page-break-inside:avoid"><h2 style="color:#10b981;margin-bottom:4px">📊 Cycle ${cycle.cycle_number} — ${cycle.period_label}</h2><p style="color:#888;font-size:13px">Du ${new Date(cycle.start_date).toLocaleDateString("fr-FR")} au ${new Date(cycle.end_date).toLocaleDateString("fr-FR")}</p><div style="display:flex;gap:20px;margin:16px 0"><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total attendu</p><p style="font-size:20px;font-weight:bold">${fmt(cycle.total_expected)}</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total collecté</p><p style="font-size:20px;font-weight:bold;color:#10b981">${fmt(cycle.total_collected)}</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Taux</p><p style="font-size:20px;font-weight:bold;color:${pctCollected >= 80 ? "#10b981" : "#f59e0b"}">${pctCollected}%</p></div></div><table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
     }).join("");
 
     const cumulData = getCumulativeData();
@@ -174,11 +174,11 @@ const ReportsTab = ({ tontines }: Props) => {
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div className="bg-secondary rounded-xl p-2 text-center">
                 <p className="text-xs text-muted-foreground">Attendu</p>
-                <p className="font-bold text-sm text-foreground">{fmt(cycle.total_expected)} F</p>
+                <p className="font-bold text-sm text-foreground">{fmt(cycle.total_expected)}</p>
               </div>
               <div className="bg-secondary rounded-xl p-2 text-center">
                 <p className="text-xs text-muted-foreground">Collecté</p>
-                <p className="font-bold text-sm text-primary">{fmt(cycle.total_collected)} F</p>
+                <p className="font-bold text-sm text-primary">{fmt(cycle.total_collected)}</p>
               </div>
               <div className="bg-secondary rounded-xl p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taux</p>
@@ -196,12 +196,12 @@ const ReportsTab = ({ tontines }: Props) => {
                       <span className="text-sm font-medium text-foreground">{r.member.name}{r.member.is_owner ? " (Moi)" : ""}</span>
                       <p className="text-xs text-muted-foreground">
                         {r.status === "paid" && r.lastDate && `Payé le ${new Date(r.lastDate).toLocaleDateString("fr-FR")}`}
-                        {r.status === "partial" && `Partiel — Reste ${fmt(r.remaining)} F`}
+                        {r.status === "partial" && `Partiel — Reste ${fmt(r.remaining)}`}
                         {r.status === "pending" && "N'a pas encore cotisé"}
                       </p>
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-foreground">{fmt(r.total)} F</span>
+                  <span className="text-sm font-bold text-foreground">{fmt(r.total)}</span>
                 </div>
               ))}
             </div>

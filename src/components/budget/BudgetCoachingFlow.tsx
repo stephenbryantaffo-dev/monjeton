@@ -325,7 +325,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       </Button>
       {data.charges_fixes.length > 0 && (
         <p className="text-xs text-muted-foreground text-right">
-          Total : <span className="font-bold text-foreground">{fmt(totalCharges)} F</span>
+          Total : <span className="font-bold text-foreground">{fmt(totalCharges)}</span>
         </p>
       )}
     </div>
@@ -525,12 +525,12 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
         <p className="text-sm text-muted-foreground">Vérifie avant de générer ton plan</p>
       </div>
       <div className="glass-card rounded-2xl p-4 space-y-2.5 text-sm">
-        <div className="flex justify-between"><span className="text-muted-foreground">Revenu</span><span className="font-bold text-primary tabular-nums">{fmt(totalRevenu)} F</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Charges fixes</span><span className="font-medium text-foreground tabular-nums">- {fmt(totalCharges)} F</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Dettes</span><span className="font-medium text-foreground tabular-nums">- {fmt(data.dettes_mois)} F</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Revenu</span><span className="font-bold text-primary tabular-nums">{fmt(totalRevenu)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Charges fixes</span><span className="font-medium text-foreground tabular-nums">- {fmt(totalCharges)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Dettes</span><span className="font-medium text-foreground tabular-nums">- {fmt(data.dettes_mois)}</span></div>
         <div className="border-t border-border pt-2 flex justify-between">
           <span className="font-semibold text-foreground">Disponible</span>
-          <span className={`font-black text-lg tabular-nums ${disponible > 0 ? 'text-primary' : 'text-destructive'}`}>{fmt(disponible)} F</span>
+          <span className={`font-black text-lg tabular-nums ${disponible > 0 ? 'text-primary' : 'text-destructive'}`}>{fmt(disponible)}</span>
         </div>
       </div>
       {disponible <= 0 && (

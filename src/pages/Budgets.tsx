@@ -515,7 +515,7 @@ const Budgets = () => {
     if (suggestionsTotal > totalBudget) {
       toast({
         title: "Total dépasse ton budget",
-        description: `Réduis d'abord d'au moins ${fmt(suggestionsTotal - totalBudget)} F`,
+        description: `Réduis d'abord d'au moins ${fmt(suggestionsTotal - totalBudget)}`,
         variant: "destructive",
       });
       return;
@@ -526,7 +526,7 @@ const Budgets = () => {
       setEditableSuggestions((prev) => prev.filter((item) => item.categorie !== s.categorie));
       toast({
         title: `Budget ${s.categorie} approuvé ✅`,
-        description: `${fmt(s.montant_suggere)} F alloués`,
+        description: `${fmt(s.montant_suggere)} alloués`,
       });
       await loadData();
     } catch (e: any) {
@@ -542,7 +542,7 @@ const Budgets = () => {
     if (suggestionsTotal > totalBudget) {
       toast({
         title: "Total dépasse ton budget",
-        description: `Ajuste d'abord les montants pour rester sous ${fmt(totalBudget)} F`,
+        description: `Ajuste d'abord les montants pour rester sous ${fmt(totalBudget)}`,
         variant: "destructive",
       });
       return;
@@ -749,13 +749,13 @@ const Budgets = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">Budgété</p>
                   <p className="text-lg font-bold text-foreground tabular-nums transition-opacity duration-300">
-                    {amountsHidden ? MASK_AMT : `${fmt(totalBudget || totalCategoryBudgeted)} F`}
+                    {amountsHidden ? MASK_AMT : `${fmt(totalBudget || totalCategoryBudgeted)}`}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Dépensé</p>
                   <p className={`text-lg font-bold tabular-nums transition-opacity duration-300 ${!amountsHidden && isOverBudget ? "text-destructive" : "text-foreground"}`}>
-                    {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} F`}
+                    {amountsHidden ? MASK_AMT : `${fmt(totalSpent)}`}
                   </p>
                 </div>
               </div>
@@ -785,7 +785,7 @@ const Budgets = () => {
               <p className="text-[10px] text-muted-foreground mt-1.5 text-center tabular-nums transition-opacity duration-300">
                 {amountsHidden
                   ? `${MASK_PCT} utilisé`
-                  : <>{Math.round(budgetUsedPercent)}% utilisé{totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)} F`}</>}
+                  : <>{Math.round(budgetUsedPercent)}% utilisé{totalBudget > totalSpent && ` · Reste ${fmt(totalBudget - totalSpent)}`}</>}
               </p>
             </motion.div>
           )}
@@ -809,7 +809,7 @@ const Budgets = () => {
               {!amountsHidden && isOverBudget && <TrendingDown className="w-5 h-5 text-destructive animate-pulse" />}
             </div>
             <p className="text-xl sm:text-2xl font-bold text-foreground mb-1 truncate tabular-nums transition-opacity duration-300">
-              {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} / ${fmt(totalBudget)} F`}
+              {amountsHidden ? MASK_AMT : `${fmt(totalSpent)} / ${fmt(totalBudget)}`}
             </p>
             <div className="transition-opacity duration-300 mb-3">
               {amountsHidden ? (
@@ -820,7 +820,7 @@ const Budgets = () => {
             </div>
             {!amountsHidden && isOverBudget && (
               <p className="text-xs text-destructive font-medium animate-pulse">
-                🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} F !
+                🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} !
               </p>
             )}
             {/* Projection fin de mois */}
@@ -847,9 +847,9 @@ const Budgets = () => {
                   <span className="text-base flex-shrink-0">{isProjectedOver ? "⚠️" : "📈"}</span>
                   <p className={isProjectedOver ? "text-destructive" : "text-muted-foreground"}>
                     À ce rythme, fin de mois :{" "}
-                    <span className="font-bold text-foreground tabular-nums">{fmt(projectedTotal)} F</span>
+                    <span className="font-bold text-foreground tabular-nums">{fmt(projectedTotal)}</span>
                     {isProjectedOver
-                      ? ` (+${fmt(projectedTotal - totalBudget)} F de dépassement prévu)`
+                      ? ` (+${fmt(projectedTotal - totalBudget)} de dépassement prévu)`
                       : isCurrent
                         ? ` · Il te reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}`
                         : ""}
@@ -899,12 +899,12 @@ const Budgets = () => {
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-xs text-muted-foreground">Budget total du mois</p>
-                        <p className="text-xl font-black text-foreground tabular-nums">{fmt(totalBudget)} F</p>
+                        <p className="text-xl font-black text-foreground tabular-nums">{fmt(totalBudget)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Suggéré</p>
                         <p className={`text-xl font-black tabular-nums ${isOverAllocated ? "text-destructive" : "text-primary"}`}>
-                          {fmt(suggestionsTotal)} F
+                          {fmt(suggestionsTotal)}
                         </p>
                       </div>
                     </div>
@@ -922,8 +922,8 @@ const Budgets = () => {
                       <span className="text-muted-foreground">{allocationPercent}% alloué</span>
                       <span className={isOverAllocated ? "text-destructive font-bold" : "text-muted-foreground"}>
                         {isOverAllocated
-                          ? `Dépassement de ${fmt(suggestionsTotal - totalBudget)} F`
-                          : `Reste ${fmt(suggestionsRestant)} F à allouer`}
+                          ? `Dépassement de ${fmt(suggestionsTotal - totalBudget)}`
+                          : `Reste ${fmt(suggestionsRestant)} à allouer`}
                       </span>
                     </div>
                     {isOverAllocated && (
@@ -984,10 +984,10 @@ const Budgets = () => {
                             <span className="text-xs text-muted-foreground flex-shrink-0">F</span>
                           </div>
                           <p className="text-[10px] text-muted-foreground tabular-nums mb-2.5">
-                            Déjà dépensé : {fmt(s.already_spent || 0)} F
+                            Déjà dépensé : {fmt(s.already_spent || 0)}
                             {" · "}Restant à dépenser :{" "}
                             <span className={restant > 0 ? "text-primary font-semibold" : "text-destructive"}>
-                              {fmt(restant)} F
+                              {fmt(restant)}
                             </span>
                           </p>
                           <button
@@ -1003,7 +1003,7 @@ const Budgets = () => {
                             ) : noMatch ? (
                               `Créer "${s.categorie}" et appliquer`
                             ) : (
-                              `Approuver ${fmt(s.montant_suggere)} F`
+                              `Approuver ${fmt(s.montant_suggere)}`
                             )}
                           </button>
                         </motion.div>
@@ -1101,8 +1101,8 @@ const Budgets = () => {
           {/* Category budget summary */}
           {categoryBudgets.length > 0 && (
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-1 transition-opacity duration-300">
-              <span>Total catégories : {amountsHidden ? MASK_AMT : `${fmt(totalCategoryBudgeted)} F`}</span>
-              <span>Dépensé : {amountsHidden ? MASK_AMT : `${fmt(totalCategorySpent)} F`}</span>
+              <span>Total catégories : {amountsHidden ? MASK_AMT : `${fmt(totalCategoryBudgeted)}`}</span>
+              <span>Dépensé : {amountsHidden ? MASK_AMT : `${fmt(totalCategorySpent)}`}</span>
             </div>
           )}
 
@@ -1198,7 +1198,7 @@ const Budgets = () => {
                     </AnimatePresence>
                     <div className="flex items-baseline justify-between mb-1.5 transition-opacity duration-300">
                       <span className={`text-xs font-semibold tabular-nums ${!amountsHidden && over ? "text-destructive" : "text-foreground"}`}>
-                        {amountsHidden ? MASK_AMT : `${fmt(cb.spent || 0)} / ${fmt(cb.budget_amount)} F`}
+                        {amountsHidden ? MASK_AMT : `${fmt(cb.spent || 0)} / ${fmt(cb.budget_amount)}`}
                       </span>
                       <span className="text-[10px] text-muted-foreground tabular-nums">
                         {amountsHidden ? MASK_PCT : `${Math.round(pct)}%`}

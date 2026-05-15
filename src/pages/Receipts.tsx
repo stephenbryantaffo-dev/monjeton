@@ -888,7 +888,7 @@ const Receipts = () => {
           >
             <p className="text-xs text-muted-foreground mb-1">Total des reçus confirmés</p>
             <p className="text-2xl font-bold text-primary tabular-nums">
-              {formatAmount(stats.totalAmount)} F
+              {formatAmount(stats.totalAmount)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""}
@@ -902,7 +902,7 @@ const Receipts = () => {
           >
             <p className="text-xs text-muted-foreground mb-1">Ce mois-ci</p>
             <p className="text-2xl font-bold text-foreground tabular-nums">
-              {formatAmount(stats.thisMonthAmount)} F
+              {formatAmount(stats.thisMonthAmount)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}

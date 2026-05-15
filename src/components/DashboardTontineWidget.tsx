@@ -217,7 +217,7 @@ const DashboardTontineWidget = () => {
                 <>
                   <Progress value={pct} className="h-1.5 mb-2" />
                   <p className="text-xs text-muted-foreground mb-1">
-                    {fmt(t.total_collected || 0)} / {fmt(t.total_expected)} F
+                    {fmt(t.total_collected || 0)} / {fmt(t.total_expected)}
                   </p>
                 </>
               ) : (
