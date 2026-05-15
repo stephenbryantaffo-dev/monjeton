@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { loadUserCurrency } from "../_shared/currency-context.ts";
 
 const BudgetSuggestSchema = z.object({
   month: z.number().int().min(1).max(12).optional(),
@@ -129,16 +130,17 @@ serve(async (req) => {
       ? Math.max(1, lastDayDate - today.getDate())
       : lastDayDate;
 
-    const fmt = (n: number) => n.toLocaleString("fr-FR");
+    const ctx = await loadUserCurrency(supabaseAuth, user.id);
+    const fmt = (n: number) => n.toLocaleString(ctx.language === 'en' ? 'en-US' : 'fr-FR');
 
     const expensesList =
       Object.entries(expensesByCategory)
-        .map(([cat, amt]) => `- ${cat} : ${fmt(amt)} F`)
-        .join("\n") || "- Aucune dépense ce mois";
+        .map(([cat, amt]) => `- ${cat} : ${fmt(amt)} ${ctx.label}`)
+        .join("\n") || `- Aucune dépense ce mois`;
 
     const histList =
       Object.entries(avgByCat)
-        .map(([cat, amt]) => `- ${cat} : ~${fmt(amt)} F/mois`)
+        .map(([cat, amt]) => `- ${cat} : ~${fmt(amt)} ${ctx.label}/mois`)
         .join("\n") || "- Pas d'historique";
 
     const categoriesList =
@@ -146,12 +148,16 @@ serve(async (req) => {
         ? userCategoriesInput.map((c) => `- ${c}`).join("\n")
         : "- Alimentation\n- Transport\n- Téléphone\n- Shopping\n- Factures\n- Santé\n- Loisirs\n- Sport\n- Autre";
 
-    const systemPrompt = `Tu es un conseiller financier pour Mon Jeton, une app fintech en Afrique de l'Ouest. L'utilisateur gère son argent en FCFA.
+    const systemPrompt = `Tu es un conseiller financier pour Mon Jeton, app fintech utilisée en ${ctx.region}. L'utilisateur gère son argent en ${ctx.label}.
+
+Moyens de paiement courants : ${ctx.wallets}.
+Exemples de charges typiques : ${ctx.costExamples}.
+Taux d'épargne réaliste : ${ctx.savingsRate}.
 
 DONNÉES RÉELLES DE L'UTILISATEUR :
-- Budget total du mois : ${fmt(totalBudget)} F CFA
-- Total déjà dépensé : ${fmt(totalSpent)} F CFA
-- Budget restant disponible : ${fmt(budgetRestant)} F CFA
+- Budget total du mois : ${fmt(totalBudget)} ${ctx.label}
+- Total déjà dépensé : ${fmt(totalSpent)} ${ctx.label}
+- Budget restant disponible : ${fmt(budgetRestant)} ${ctx.label}
 - Jours restants dans le mois : ${joursRestants}
 
 Dépenses actuelles par catégorie ce mois :
@@ -165,11 +171,11 @@ ${categoriesList}
 
 RÈGLE ABSOLUE #1 : Le champ "categorie" de chaque suggestion DOIT être STRICTEMENT identique à l'un des noms de la liste ci-dessus (même orthographe, mêmes accents, même casse). N'invente JAMAIS de noms composés type "Business & Entreprise", "Épargne & Investissement", "Factures & Téléphone". Si tu veux regrouper une idée, choisis UNE SEULE catégorie existante de la liste.
 
-RÈGLE ABSOLUE #2 : La somme de TOUTES tes suggestions de budget par catégorie NE DOIT JAMAIS dépasser ${fmt(totalBudget)} F CFA. C'est le budget que l'utilisateur a fixé. Respecte-le strictement.
+RÈGLE ABSOLUE #2 : La somme de TOUTES tes suggestions de budget par catégorie NE DOIT JAMAIS dépasser ${fmt(totalBudget)} ${ctx.label}. C'est le budget que l'utilisateur a fixé. Respecte-le strictement.
 
-RÈGLE CRITIQUE #3 : Pour CHAQUE catégorie, le montant suggéré DOIT être SUPÉRIEUR OU ÉGAL au montant déjà dépensé sur cette catégorie ce mois (voir liste ci-dessus). Il est INTERDIT de proposer un budget inférieur à ce qui a déjà été dépensé — sinon l'utilisateur serait déjà en dépassement. Si une catégorie a déjà dépensé X F, propose au minimum X F (idéalement avec une petite marge).
+RÈGLE CRITIQUE #3 : Pour CHAQUE catégorie, le montant suggéré DOIT être SUPÉRIEUR OU ÉGAL au montant déjà dépensé sur cette catégorie ce mois (voir liste ci-dessus). Il est INTERDIT de proposer un budget inférieur à ce qui a déjà été dépensé — sinon l'utilisateur serait déjà en dépassement. Si une catégorie a déjà dépensé X ${ctx.label}, propose au minimum X ${ctx.label} (idéalement avec une petite marge).
 
-Génère 5 à 7 suggestions de répartition en utilisant UNIQUEMENT les catégories de la liste ci-dessus, en tenant compte des dépenses déjà effectuées et de l'historique. Les montants suggérés doivent être RÉALISTES pour l'Afrique de l'Ouest et adaptés au budget de ${fmt(totalBudget)} F CFA. Utilise le tool "suggest_budget" pour répondre.`;
+Génère 5 à 7 suggestions de répartition en utilisant UNIQUEMENT les catégories de la liste ci-dessus, en tenant compte des dépenses déjà effectuées et de l'historique. Les montants suggérés doivent être RÉALISTES pour ${ctx.region} et adaptés au budget de ${fmt(totalBudget)} ${ctx.label}. Utilise le tool "suggest_budget" pour répondre.`;
 
     const aiBody = {
       model: "google/gemini-3-flash-preview",

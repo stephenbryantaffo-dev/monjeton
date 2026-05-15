@@ -1,6 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
+import { loadUserCurrency } from '../_shared/currency-context.ts';
 
 const RebalanceSchema = z.object({
   modifiedCategory: z.string().trim().min(1).max(100),
@@ -70,40 +71,44 @@ Deno.serve(async (req) => {
       validatedCategories,
     } = parsed.data;
 
+    const ctx = await loadUserCurrency(supabase, user.id);
+
     const difference = Number(newAmount) - Number(originalAmount);
     const sumPlan = currentPlan.reduce((s: number, c: any) => s + Number(c.montant), 0);
     const newSum = sumPlan + Number(newAmount);
     const overshoot = newSum - Number(totalBudget);
 
-    const systemPrompt = `Tu es un conseiller financier pour Mon Jeton, app fintech UEMOA (F CFA). L'utilisateur vient de modifier le budget d'une catégorie. Tu dois proposer LA MEILLEURE stratégie pour rééquilibrer.
+    const systemPrompt = `Tu es un conseiller financier pour Mon Jeton, app fintech utilisée en ${ctx.region} (devise ${ctx.label}). L'utilisateur vient de modifier le budget d'une catégorie. Tu dois proposer LA MEILLEURE stratégie pour rééquilibrer.
+
+Moyens de paiement courants : ${ctx.wallets}.
 
 CONTEXTE UTILISATEUR :
-- Revenu : ${context?.revenu_principal || 0} F
+- Revenu : ${context?.revenu_principal || 0} ${ctx.label}
 - Situation : ${context?.situation_familiale || 'seul'} (${context?.nb_personnes || 1} personnes)
 - Objectifs : ${(context?.objectifs || []).join(', ')}
-- Budget total disponible : ${totalBudget} F
+- Budget total disponible : ${totalBudget} ${ctx.label}
 
 MODIFICATION FAITE PAR L'USER :
 - Catégorie modifiée : "${modifiedCategory}"
-- Avant : ${originalAmount} F
-- Après : ${newAmount} F
-- Différence : ${difference > 0 ? '+' : ''}${difference} F
+- Avant : ${originalAmount} ${ctx.label}
+- Après : ${newAmount} ${ctx.label}
+- Différence : ${difference > 0 ? '+' : ''}${difference} ${ctx.label}
 
 ÉTAT ACTUEL DU PLAN (sans la modification) :
-${currentPlan.map((c: any) => `- ${c.categorie} : ${c.montant} F`).join('\n')}
+${currentPlan.map((c: any) => `- ${c.categorie} : ${c.montant} ${ctx.label}`).join('\n')}
 
 CATÉGORIES DÉJÀ VALIDÉES (ne PAS toucher) :
 ${(validatedCategories || []).join(', ') || 'aucune'}
 
 DÉSÉQUILIBRE :
-- Nouvelle somme totale : ${newSum} F
-- Budget total : ${totalBudget} F
-- Dépassement : ${overshoot > 0 ? '+' : ''}${overshoot} F
+- Nouvelle somme totale : ${newSum} ${ctx.label}
+- Budget total : ${totalBudget} ${ctx.label}
+- Dépassement : ${overshoot > 0 ? '+' : ''}${overshoot} ${ctx.label}
 
 TA MISSION :
 ${overshoot > 0
-  ? `L'user a augmenté de ${difference} F. Trouver d'où retirer ${overshoot} F dans les autres catégories NON validées, de façon INTELLIGENTE (pas proportionnelle).`
-  : `L'user a diminué. Suggérer où réallouer ces ${Math.abs(overshoot)} F de surplus de façon utile pour ses objectifs.`}
+  ? `L'user a augmenté de ${difference} ${ctx.label}. Trouver d'où retirer ${overshoot} ${ctx.label} dans les autres catégories NON validées, de façon INTELLIGENTE (pas proportionnelle).`
+  : `L'user a diminué. Suggérer où réallouer ces ${Math.abs(overshoot)} ${ctx.label} de surplus de façon utile pour ses objectifs.`}
 
 RÈGLES STRICTES :
 1. Ne JAMAIS modifier les catégories validées
@@ -135,7 +140,7 @@ FORMAT JSON OBLIGATOIRE (sans markdown) :
     {
       "id": "C",
       "title": "Augmenter le budget total",
-      "description": "Passer le budget à ${totalBudget + Math.max(0, overshoot)} F",
+      "description": "Passer le budget à ${totalBudget + Math.max(0, overshoot)} ${ctx.label}",
       "changes": [],
       "result_total": ${totalBudget + Math.max(0, overshoot)},
       "new_total_budget": ${totalBudget + Math.max(0, overshoot)}

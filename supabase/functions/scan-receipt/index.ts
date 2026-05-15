@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { getCurrencyCtx } from "../_shared/currency-context.ts";
 
 const ScanReceiptSchema = z.object({
   image: z.string().min(100, "Image trop petite").max(15_000_000, "Image trop volumineuse"),
@@ -47,6 +48,20 @@ serve(async (req) => {
       if (!rl.allowed) return rateLimitResponse('scan-receipt', rl.retryAfter, corsHeaders);
     }
 
+    // Load user's preferred currency as fallback when receipt has no symbol
+    let userCurrency = 'XOF';
+    if (userIdFromToken) {
+      try {
+        const { data: prof } = await supabaseAuth
+          .from('profiles')
+          .select('currency_preference')
+          .eq('user_id', userIdFromToken)
+          .maybeSingle();
+        if (prof?.currency_preference) userCurrency = String(prof.currency_preference).toUpperCase();
+      } catch {}
+    }
+    const ctx = getCurrencyCtx(userCurrency);
+
     const rawBody = await req.json().catch(() => null);
     const parsed = ScanReceiptSchema.safeParse(rawBody);
     if (!parsed.success) {
@@ -89,7 +104,7 @@ CURRENCY DETECTION RULES:
 - ₦ or NGN → NGN
 - GH₵ or GHS → GHS
 - DH or MAD → MAD
-- No currency detected → XOF (default)
+- No currency detected →  (user's preferred)
 
 FRENCH KEYWORDS: "envoyé"=expense, "reçu"=income, "solde"=balance, "frais"=fees, "montant"=amount, "bénéficiaire"=recipient, "expéditeur"=sender
 ENGLISH KEYWORDS: "sent"=expense, "received"=income, "balance"=balance, "fee"=fees, "amount"=amount, "recipient"=recipient, "sender"=sender, "total"=amount, "paid"=expense
@@ -136,7 +151,7 @@ AMOUNT RULES:
 CURRENCY DETECTION:
 - $ → USD, € → EUR, £ → GBP
 - CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
-- DH → MAD, No currency → XOF
+- DH → MAD, No currency → ${userCurrency}
 
 DATE FORMATS ACCEPTED:
 - DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD
