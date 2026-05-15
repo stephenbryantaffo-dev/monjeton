@@ -623,50 +623,10 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
     }
   };
 
-  return (
-    <div className="max-w-md mx-auto pb-8">
-      {step === 10 && (
-        <div className="flex justify-end mb-3">
-          <button
-            type="button"
-            onClick={confirmReset}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Recommencer
-          </button>
-        </div>
-      )}
-      {step > 0 && step < 9 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Étape {step}/8</span>
-            <span className="text-xs text-muted-foreground">{Math.round((step / 8) * 100)}%</span>
-          </div>
-          <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${(step / 8) * 100}%` }}
-              className="h-full gradient-primary"
-            />
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          {renderStep()}
-        </motion.div>
-      </AnimatePresence>
-
-      {step > 0 && step < 9 && (
-        <div className="flex gap-2 mt-6">
+  const renderStickyAction = () => {
+    if (step > 0 && step < 9) {
+      return (
+        <div className="flex gap-2 max-w-md mx-auto">
           <Button onClick={goBack} variant="outline" className="flex-1 glass">
             <ChevronLeft className="w-4 h-4 mr-1" /> Retour
           </Button>
@@ -674,8 +634,77 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
             Suivant <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
-      )}
-    </div>
+      );
+    }
+    if (step === 9) {
+      return (
+        <div className="max-w-md mx-auto">
+          <Button
+            onClick={generatePlan}
+            disabled={generating}
+            className="w-full gradient-primary text-primary-foreground h-12"
+          >
+            {generating ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Génération en cours...</>
+            ) : (
+              <><Sparkles className="w-4 h-4 mr-2" /> Générer mon plan</>
+            )}
+          </Button>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const stickyAction = renderStickyAction();
+
+  return (
+    <Screen>
+      <Screen.Content>
+        <div className="max-w-md mx-auto pb-8">
+          {step === 10 && (
+            <div className="flex justify-end mb-3">
+              <button
+                type="button"
+                onClick={confirmReset}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Recommencer
+              </button>
+            </div>
+          )}
+          {step > 0 && step < 9 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-muted-foreground">Étape {step}/8</span>
+                <span className="text-xs text-muted-foreground">{Math.round((step / 8) * 100)}%</span>
+              </div>
+              <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(step / 8) * 100}%` }}
+                  className="h-full gradient-primary"
+                />
+              </div>
+            </div>
+          )}
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </Screen.Content>
+      {stickyAction && <Screen.StickyAction>{stickyAction}</Screen.StickyAction>}
+    </Screen>
   );
 };
 
