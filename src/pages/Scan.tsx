@@ -164,6 +164,27 @@ const Scan = () => {
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
 
+      // Upload image to private storage (best-effort, don't block the scan)
+      let storagePath: string | null = null;
+      try {
+        const now = new Date();
+        const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const ext = (processedFile.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const uuid = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const path = `${user.id}/${ym}/${uuid}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('receipts')
+          .upload(path, processedFile, { contentType: processedFile.type, upsert: false });
+        if (!upErr) {
+          storagePath = path;
+          setScanStoragePath(path);
+        } else {
+          console.warn('[Scan upload]', upErr);
+        }
+      } catch (e) {
+        console.warn('[Scan upload exception]', e);
+      }
+
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
