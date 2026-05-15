@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Screen } from '@/components/layout/Screen';
 
 interface DetectedTransaction {
   id: string;
@@ -262,10 +263,9 @@ export const MultiReceiptValidator = ({
   const isSingle = scanResult.total_detected === 1;
 
   return (
-    <div
-      className="space-y-4"
-      style={{ paddingBottom: "calc(72px + 96px + env(safe-area-inset-bottom, 0px))" }}
-    >
+    <Screen>
+      <Screen.Content className="space-y-4">
+        <div className="space-y-4">
       {/* Header résumé */}
       <div className="glass-card rounded-2xl p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
@@ -558,37 +558,37 @@ export const MultiReceiptValidator = ({
           </motion.div>
         ))}
       </div>
+        </div>
+      </Screen.Content>
 
-      {/* Boutons finaux — positionnés AU-DESSUS de la BottomNav (z-50) */}
-      <div
-        className="fixed left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border space-y-2 z-40"
-        style={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
-      >
-        <Button
-          onClick={handleValidate}
-          disabled={selectedCount === 0 || saving}
-          className="w-full gradient-primary text-primary-foreground font-bold h-12"
-        >
-          {saving ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enregistrement...</>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              {isSingle
-                ? 'Enregistrer cette transaction'
-                : <>Enregistrer {selectedCount} transaction(s){selectedCount > 0 && ` · ${formatMoneyDisplay(totalAmount)}`}</>}
-            </>
-          )}
-        </Button>
+      <Screen.StickyAction>
+        <div className="space-y-2">
+          <Button
+            onClick={handleValidate}
+            disabled={selectedCount === 0 || saving}
+            className="w-full gradient-primary text-primary-foreground font-bold h-12"
+          >
+            {saving ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enregistrement...</>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                {isSingle
+                  ? 'Enregistrer cette transaction'
+                  : <>Enregistrer {selectedCount} transaction(s){selectedCount > 0 && ` · ${formatMoneyDisplay(totalAmount)}`}</>}
+              </>
+            )}
+          </Button>
 
-        <button
-          onClick={onClose}
-          className="w-full text-xs text-muted-foreground py-2 hover:text-foreground"
-        >
-          Annuler et recommencer
-        </button>
-      </div>
-    </div>
+          <button
+            onClick={onClose}
+            className="w-full text-xs text-muted-foreground py-1 hover:text-foreground"
+          >
+            Annuler et recommencer
+          </button>
+        </div>
+      </Screen.StickyAction>
+    </Screen>
   );
 };
 
