@@ -263,10 +263,9 @@ export const MultiReceiptValidator = ({
   const isSingle = scanResult.total_detected === 1;
 
   return (
-    <div
-      className="space-y-4"
-      style={{ paddingBottom: "calc(72px + 96px + env(safe-area-inset-bottom, 0px))" }}
-    >
+    <Screen>
+      <Screen.Content className="space-y-4">
+        <div className="space-y-4">
       {/* Header résumé */}
       <div className="glass-card rounded-2xl p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
