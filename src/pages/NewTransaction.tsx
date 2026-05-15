@@ -8,6 +8,7 @@ import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Screen } from "@/components/layout/Screen";
 import VoiceConfirmationDialog, { type ParsedTransaction } from "@/components/voice/VoiceConfirmationDialog";
 import AudioLevelVisualizer from "@/components/voice/AudioLevelVisualizer";
 import { useAuth } from "@/contexts/AuthContext";
