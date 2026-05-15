@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Screen } from '@/components/layout/Screen';
 
 interface DetectedTransaction {
   id: string;
