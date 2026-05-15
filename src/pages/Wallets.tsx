@@ -268,6 +268,11 @@ const Wallets = () => {
                     </button>
                   )}
                 </div>
+                {(w.wallet_name === "Carte bancaire" || w.wallet_name === "Carte Bancaire") && (
+                  <p className="text-[11px] text-muted-foreground/80 italic pl-16">
+                    Solde manuel — sera pas mis à jour automatiquement
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground pl-16">
                   +{formatAmount(b.income)} / -{formatAmount(b.expense)}
                 </p>
@@ -297,6 +302,11 @@ const Wallets = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 space-y-3">
           <Input placeholder="Nom du portefeuille" value={newName} onChange={(e) => setNewName(e.target.value)} className="bg-secondary border-border" />
           <MoneyInput placeholder="Solde initial (ex: 50 000)" value={newInitialBalance} onChange={(n) => setNewInitialBalance(n ? String(n) : "")} showCurrency={false} className="[&>input]:bg-secondary [&>input]:border-border" />
+          {newName.trim().toLowerCase().includes("carte") && (
+            <p className="text-[11px] text-muted-foreground/80 italic">
+              Solde manuel — sera pas mis à jour automatiquement
+            </p>
+          )}
           <div className="flex gap-2">
             <Button variant="glass" onClick={() => setShowAdd(false)} className="flex-1">Annuler</Button>
             <Button variant="hero" onClick={handleAdd} className="flex-1">Ajouter</Button>

@@ -3,6 +3,7 @@ import orangeIcon from "@/assets/wallets/orange-money.svg";
 import mtnIcon from "@/assets/wallets/mtn-mobile-money.svg";
 import moovIcon from "@/assets/wallets/moov-money.svg";
 import cashIcon from "@/assets/wallets/cash.svg";
+import carteIcon from "@/assets/wallets/carte-bancaire.svg";
 
 /** Mapping name → asset URL (Vite-resolved). */
 export const WALLET_ICONS: Record<string, string> = {
@@ -11,6 +12,8 @@ export const WALLET_ICONS: Record<string, string> = {
   "MTN Mobile Money": mtnIcon,
   "MTN Money": mtnIcon,
   "Moov Money": moovIcon,
+  "Carte bancaire": carteIcon,
+  "Carte Bancaire": carteIcon,
   "Cash": cashIcon,
   "Espèces": cashIcon,
 };
