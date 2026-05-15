@@ -357,7 +357,7 @@ const Reports = () => {
                       <YAxis tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 10 }} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
                       <RTooltip
                         contentStyle={{ backgroundColor: "hsl(0,0%,10%)", border: "1px solid hsl(0,0%,20%)", borderRadius: 12, fontSize: 12 }}
-                        formatter={(value: number, name: string) => [`${value.toLocaleString("fr-FR")} F`, name === "depense" ? "Dépensé" : name === "prevu" ? "Prévu" : "Budget"]}
+                        formatter={(value: number, name: string) => [`${value.toLocaleString("fr-FR")}`, name === "depense" ? "Dépensé" : name === "prevu" ? "Prévu" : "Budget"]}
                       />
                       <Bar dataKey="depense" fill="hsl(84, 81%, 44%)" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="prevu" fill="hsl(45, 96%, 58%)" radius={[4, 4, 0, 0]} />
@@ -394,8 +394,8 @@ const Reports = () => {
                       </div>
                       <div className="text-xs text-muted-foreground space-y-0.5 mb-2">
                         <p>Dépensé : <span className="text-foreground font-medium">{formatAmount(p.currentMonth)}</span></p>
-                        <p>Prévu fin de mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.predictedEndOfMonth))} F</span></p>
-                        <p>Moy. 3 mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.avgMonthly))} F</span></p>
+                        <p>Prévu fin de mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.predictedEndOfMonth))}</span></p>
+                        <p>Moy. 3 mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.avgMonthly))}</span></p>
                       </div>
                       {p.budgetAmount ? (
                         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary">

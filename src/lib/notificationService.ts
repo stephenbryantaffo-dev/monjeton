@@ -63,7 +63,7 @@ export async function checkAndCreateNotifications(
               user_id: userId,
               type: "budget_exceeded",
               title: `🚨 Budget ${categoryName} dépassé`,
-              message: `Vous avez dépensé ${totalSpent.toLocaleString("fr-FR")} F sur un budget de ${Number(budget).toLocaleString("fr-FR")} F ce mois (${Math.round(pct)}%).`,
+              message: `Vous avez dépensé ${totalSpent.toLocaleString("fr-FR")} sur un budget de ${Number(budget).toLocaleString("fr-FR")} ce mois (${Math.round(pct)}%).`,
             });
           }
         } else if (pct >= 80) {
@@ -80,7 +80,7 @@ export async function checkAndCreateNotifications(
               user_id: userId,
               type: "budget_warning",
               title: `⚠️ Budget ${categoryName} à ${Math.round(pct)}%`,
-              message: `Il ne reste que ${(Number(budget) - totalSpent).toLocaleString("fr-FR")} F sur votre budget ${categoryName} de ${Number(budget).toLocaleString("fr-FR")} F.`,
+              message: `Il ne reste que ${(Number(budget) - totalSpent).toLocaleString("fr-FR")} sur votre budget ${categoryName} de ${Number(budget).toLocaleString("fr-FR")}.`,
             });
           }
         }
@@ -129,7 +129,7 @@ export async function checkAndCreateNotifications(
               user_id: userId,
               type: "low_balance",
               title: `💰 Solde ${walletRes.data.wallet_name} bas`,
-              message: `Il ne reste que ${balance.toLocaleString("fr-FR")} F sur ${walletRes.data.wallet_name}.`,
+              message: `Il ne reste que ${balance.toLocaleString("fr-FR")} sur ${walletRes.data.wallet_name}.`,
             });
           }
         }

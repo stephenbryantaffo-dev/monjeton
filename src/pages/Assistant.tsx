@@ -827,7 +827,7 @@ const Assistant = () => {
       if (error) throw error;
       const confirmMsg: Message = {
         role: 'assistant',
-        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} F → ${Number(action.new_value).toLocaleString('fr-FR')} F`,
+        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} → ${Number(action.new_value).toLocaleString('fr-FR')}`,
         type: 'text',
       };
       setMessages(prev => [...prev, confirmMsg]);
@@ -1428,11 +1428,11 @@ const Assistant = () => {
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Ancien montant</span>
-                              <span className="text-destructive font-bold tabular-nums line-through">{Number(pendingAction.action.old_value).toLocaleString('fr-FR')} F</span>
+                              <span className="text-destructive font-bold tabular-nums line-through">{Number(pendingAction.action.old_value).toLocaleString('fr-FR')}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Nouveau montant</span>
-                              <span className="text-primary font-bold tabular-nums">{Number(pendingAction.action.new_value).toLocaleString('fr-FR')} F</span>
+                              <span className="text-primary font-bold tabular-nums">{Number(pendingAction.action.new_value).toLocaleString('fr-FR')}</span>
                             </div>
                           </div>
                           <div className="flex gap-2">

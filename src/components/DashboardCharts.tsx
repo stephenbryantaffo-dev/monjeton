@@ -38,7 +38,7 @@ const DashboardCharts = ({
               <RTooltip
                 contentStyle={{ backgroundColor: "hsl(0,0%,10%)", border: "1px solid hsl(0,0%,20%)", borderRadius: 12, fontSize: 12 }}
                 labelStyle={{ color: "hsl(0,0%,70%)" }}
-                formatter={(value: number) => [`${value.toLocaleString("fr-FR")} F`, "Dépenses"]}
+                formatter={(value: number) => [`${value.toLocaleString("fr-FR")}`, "Dépenses"]}
               />
               <Line type="monotone" dataKey="amount" stroke="hsl(84,81%,44%)" strokeWidth={2.5} dot={{ fill: "hsl(84,81%,44%)", r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>

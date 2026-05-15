@@ -284,7 +284,7 @@ const Transactions = () => {
                 <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
               </div>
               <span className={`text-sm font-semibold whitespace-nowrap ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-                {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))} F
+                {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))}
               </span>
               <ConfirmDeleteDialog onConfirm={() => handleDelete(t.id)} title="Supprimer cette transaction ?" />
               </div>

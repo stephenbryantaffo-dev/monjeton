@@ -300,7 +300,7 @@ const Scan = () => {
           <div>
             <p className="text-sm font-medium text-foreground">Mes reçus</p>
             <p className="text-xs text-muted-foreground">
-              {totalConfirmed} confirmé{totalConfirmed > 1 ? "s" : ""} · {totalAmount.toLocaleString("fr-FR")} F total
+              {totalConfirmed} confirmé{totalConfirmed > 1 ? "s" : ""} · {totalAmount.toLocaleString("fr-FR")} total
             </p>
           </div>
         </div>

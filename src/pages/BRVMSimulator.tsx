@@ -226,7 +226,7 @@ const BRVMSimulator = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-foreground">
-                        {selectedStock.price.toLocaleString("fr-FR")} F
+                        {selectedStock.price.toLocaleString("fr-FR")}
                       </p>
                       <div className={`flex items-center justify-end gap-1 text-xs font-medium ${
                         selectedStock.variation >= 0 ? "text-primary" : "text-destructive"
@@ -351,7 +351,7 @@ const BRVMSimulator = () => {
                           <div className="bg-secondary/50 rounded-xl p-3 text-center">
                             <p className="text-[10px] text-muted-foreground mb-1">Gain estimé</p>
                             <p className={`text-sm font-bold ${simulation.profit >= 0 ? "text-primary" : "text-destructive"}`}>
-                              {simulation.profit > 0 ? "+" : ""}{simulation.profit.toLocaleString("fr-FR")} F
+                              {simulation.profit > 0 ? "+" : ""}{simulation.profit.toLocaleString("fr-FR")}
                             </p>
                           </div>
                           <div className="bg-secondary/50 rounded-xl p-3 text-center">
@@ -367,7 +367,7 @@ const BRVMSimulator = () => {
                           <div className="bg-secondary/50 rounded-xl p-3 text-center">
                             <p className="text-[10px] text-muted-foreground mb-1">Investissement réel</p>
                             <p className="text-sm font-bold text-foreground">
-                              {simulation.actualInvest.toLocaleString("fr-FR")} F
+                              {simulation.actualInvest.toLocaleString("fr-FR")}
                             </p>
                           </div>
                         </div>

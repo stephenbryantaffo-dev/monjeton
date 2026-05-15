@@ -76,7 +76,7 @@ export const PaymentModal = ({
     if (amount > remaining) {
       toast({
         title: "Dépassement",
-        description: `Max ${formatThousands(remaining)} F`,
+        description: `Max ${formatThousands(remaining)}`,
         variant: "destructive",
       });
       return;
@@ -149,7 +149,7 @@ export const PaymentModal = ({
     setSaving(false);
     toast({
       title: "Paiement enregistré ✅",
-      description: `${formatThousands(amount)} F via ${method}`,
+      description: `${formatThousands(amount)} via ${method}`,
     });
     onSaved();
     onClose();
@@ -164,8 +164,8 @@ export const PaymentModal = ({
         <p className="text-xs text-muted-foreground -mt-1">
           {debt.person_name} ·{" "}
           {targetInstallment
-            ? `Échéance de ${formatThousands(targetInstallment.expected_amount)} F`
-            : `Reste ${formatThousands(remaining)} F`}
+            ? `Échéance de ${formatThousands(targetInstallment.expected_amount)}`
+            : `Reste ${formatThousands(remaining)}`}
         </p>
 
         <div className="space-y-3 mt-2">

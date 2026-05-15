@@ -963,7 +963,7 @@ const TontinePage = () => {
               <div className="bg-secondary rounded-xl p-2.5 text-center">
                 <p className="text-[10px] text-muted-foreground font-medium">Total collecté</p>
                 <p className="text-sm font-bold text-primary tabular-nums">
-                  {fmt(closedCycles.reduce((s, c) => s + c.total_collected, 0) + (openCycle?.total_collected || 0))} F
+                  {fmt(closedCycles.reduce((s, c) => s + c.total_collected, 0) + (openCycle?.total_collected || 0))}
                 </p>
               </div>
               <div className="bg-secondary rounded-xl p-2.5 text-center">
@@ -1386,7 +1386,7 @@ const CalendrierTab = ({
           <span className="text-foreground font-bold">{tontine.frequency}</span>
           {" "}· Pot par cycle :{" "}
           <span className="text-primary font-bold">
-            {(members.length * tontine.contribution_amount).toLocaleString("fr-FR")} F
+            {(members.length * tontine.contribution_amount).toLocaleString("fr-FR")}
           </span>
         </p>
       </div>
@@ -1417,7 +1417,7 @@ const CalendrierTab = ({
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-sm font-bold text-primary tabular-nums">
-              {item.pot.toLocaleString("fr-FR")} F
+              {item.pot.toLocaleString("fr-FR")}
             </p>
             <p className="text-[10px] text-muted-foreground">pot total</p>
           </div>

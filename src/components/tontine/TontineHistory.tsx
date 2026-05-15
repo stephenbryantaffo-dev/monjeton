@@ -150,7 +150,7 @@ const TontineHistory = ({ tontine }: Props) => {
           <td style="padding:8px;border-bottom:1px solid #2a2f3a">${new Date(p.payment_date).toLocaleDateString("fr-FR")}</td>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a">${m?.name || "—"}</td>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a;color:#94a3b8;font-size:12px">${c ? `Cycle ${c.cycle_number}` : "—"}</td>
-          <td style="padding:8px;border-bottom:1px solid #2a2f3a;text-align:right;font-weight:600;color:#10b981">+${fmt(Number(p.amount_paid))} F</td>
+          <td style="padding:8px;border-bottom:1px solid #2a2f3a;text-align:right;font-weight:600;color:#10b981">+${fmt(Number(p.amount_paid))}</td>
           <td style="padding:8px;border-bottom:1px solid #2a2f3a;color:#94a3b8;font-size:12px">${p.note || ""}</td>
         </tr>`;
       })
@@ -383,7 +383,7 @@ ${filteredPayments.length > 0 ? `<table><thead><tr><th>Date</th><th>Membre</th><
                         </p>
                       </div>
                       <p className="text-sm font-bold text-primary tabular-nums shrink-0">
-                        +{fmt(Number(p.amount_paid))} F
+                        +{fmt(Number(p.amount_paid))}
                       </p>
                     </div>
                   );

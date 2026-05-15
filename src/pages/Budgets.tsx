@@ -1213,12 +1213,12 @@ const Budgets = () => {
                     </div>
                     {!amountsHidden && over && (
                       <p className="text-[10px] text-destructive mt-1 font-medium animate-pulse">
-                        🔴 Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} F !
+                        🔴 Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} !
                       </p>
                     )}
                     {pred && !over && pred.predictedEndOfMonth > cb.budget_amount && (
                       <p className="text-[10px] text-[hsl(30,90%,55%)] mt-1">
-                        ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} F en fin de mois
+                        ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} en fin de mois
                       </p>
                     )}
                     {(() => {

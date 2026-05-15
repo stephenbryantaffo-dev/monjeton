@@ -79,7 +79,7 @@ export const PlanHistoryView = ({ coachingId }: Props) => {
                   {h.category_name}
                   {h.amount_before !== null && h.amount_after !== null && (
                     <span className="ml-1">
-                      · {formatThousands(h.amount_before)} → {formatThousands(h.amount_after)} F
+                      · {formatThousands(h.amount_before)} → {formatThousands(h.amount_after)}
                     </span>
                   )}
                 </p>

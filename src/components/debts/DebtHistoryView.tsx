@@ -163,7 +163,7 @@ export const DebtHistoryView = ({ debtId, open, onClose }: Props) => {
                           </span>
                           {h.amount && (
                             <span className="text-xs font-bold text-primary tabular-nums">
-                              {formatThousands(h.amount)} F
+                              {formatThousands(h.amount)}
                             </span>
                           )}
                         </div>

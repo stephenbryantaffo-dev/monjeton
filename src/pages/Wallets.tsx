@@ -333,7 +333,7 @@ const Wallets = () => {
                 <SelectContent>
                   {wallets.filter(w => w.id !== toWalletId).map(w => (
                     <SelectItem key={w.id} value={w.id}>
-                      {w.wallet_name} ({formatAmount(getWalletSolde(w))} F)
+                      {w.wallet_name} ({formatAmount(getWalletSolde(w))})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -349,7 +349,7 @@ const Wallets = () => {
                 <SelectContent>
                   {wallets.filter(w => w.id !== fromWalletId).map(w => (
                     <SelectItem key={w.id} value={w.id}>
-                      {w.wallet_name} ({formatAmount(getWalletSolde(w))} F)
+                      {w.wallet_name} ({formatAmount(getWalletSolde(w))})
                     </SelectItem>
                   ))}
                 </SelectContent>
