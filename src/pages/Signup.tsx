@@ -16,6 +16,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [existingAccountEmail, setExistingAccountEmail] = useState("");
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,6 +62,7 @@ const Signup = () => {
     }
 
     setLoading(true);
+    setExistingAccountEmail("");
     const { error } = await signUp(email, password, safeName);
     setLoading(false);
 
@@ -71,6 +73,7 @@ const Signup = () => {
       if (m.includes('already') || m.includes('registered')
           || m.includes('user already') || m.includes('exists')) {
         desc = "Cet email existe déjà. Connecte-toi, ou réinitialise le mot de passe si tu ne l'as pas.";
+        setExistingAccountEmail(email.trim());
       } else if (m.includes('rate') || m.includes('limit')
                  || m.includes('too many')) {
         desc = "Trop de tentatives. Patiente 5 minutes et réessaie.";
@@ -162,6 +165,21 @@ const Signup = () => {
               {loading ? "Création..." : "Créer mon compte"}
             </Button>
           </form>
+
+          {existingAccountEmail && (
+            <div className="mt-4 rounded-lg border border-border bg-secondary/60 p-4 text-sm space-y-3">
+              <p className="text-foreground font-medium">Ce compte existe déjà.</p>
+              <p className="text-muted-foreground">Essaie de te connecter avec cet email, ou change le mot de passe si tu ne t'en souviens plus.</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button type="button" variant="hero" onClick={() => navigate(`/login?email=${encodeURIComponent(existingAccountEmail)}`)}>
+                  Se connecter
+                </Button>
+                <Button type="button" variant="outline" onClick={() => sendPasswordReset(existingAccountEmail)}>
+                  Mot de passe oublié
+                </Button>
+              </div>
+            </div>
+          )}
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Déjà un compte ?{" "}
