@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { formatThousands } from "@/lib/formatAmount";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { applyPaymentToInstallments } from "@/lib/debtHistory";
 import type { DebtCardData } from "./DebtCard";
 
@@ -76,7 +76,7 @@ export const PaymentModal = ({
     if (amount > remaining) {
       toast({
         title: "Dépassement",
-        description: `Max ${formatThousands(remaining)} F`,
+        description: `Max ${formatMoneyDisplay(remaining)}`,
         variant: "destructive",
       });
       return;
@@ -149,7 +149,7 @@ export const PaymentModal = ({
     setSaving(false);
     toast({
       title: "Paiement enregistré ✅",
-      description: `${formatThousands(amount)} F via ${method}`,
+      description: `${formatMoneyDisplay(amount)} via ${method}`,
     });
     onSaved();
     onClose();
@@ -164,8 +164,8 @@ export const PaymentModal = ({
         <p className="text-xs text-muted-foreground -mt-1">
           {debt.person_name} ·{" "}
           {targetInstallment
-            ? `Échéance de ${formatThousands(targetInstallment.expected_amount)} F`
-            : `Reste ${formatThousands(remaining)} F`}
+            ? `Échéance de ${formatMoneyDisplay(targetInstallment.expected_amount)}`
+            : `Reste ${formatMoneyDisplay(remaining)}`}
         </p>
 
         <div className="space-y-3 mt-2">

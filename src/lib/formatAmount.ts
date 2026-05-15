@@ -21,10 +21,12 @@ export const parseThousands = (
   return Number(cleaned) || 0;
 };
 
+import { getActiveCurrencySymbol } from "./currencyStore";
+
 export const formatMoneyDisplay = (
   value: number,
   showCurrency: boolean = true
 ): string => {
   const formatted = formatThousands(value);
-  return showCurrency ? `${formatted} F` : formatted;
+  return showCurrency ? `${formatted}\u202F${getActiveCurrencySymbol()}` : formatted;
 };

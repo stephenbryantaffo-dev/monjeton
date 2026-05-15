@@ -136,7 +136,7 @@ const Reports = () => {
     setAiLoading(true);
     try {
       const context = predictions.map(p =>
-        `${p.category}: dépensé ${p.currentMonth} FCFA, prévu ${Math.round(p.predictedEndOfMonth)} FCFA${p.budgetAmount ? `, budget ${p.budgetAmount} FCFA` : ""}, tendance ${p.trend}`
+        `${p.category}: dépensé ${p.currentMonth}, prévu ${Math.round(p.predictedEndOfMonth)}${p.budgetAmount ? `, budget ${p.budgetAmount}` : ""}, tendance ${p.trend}`
       ).join("\n");
 
       const { data, error } = await supabase.functions.invoke("chat", {
@@ -267,7 +267,7 @@ const Reports = () => {
                       <span className="text-sm text-foreground">{l.category}</span>
                       <span className="text-xs text-muted-foreground ml-2">{l.count} fois</span>
                     </div>
-                    <span className="text-sm font-semibold text-[hsl(45,96%,58%)]">{formatAmount(l.total)} F</span>
+                    <span className="text-sm font-semibold text-[hsl(45,96%,58%)]">{formatAmount(l.total)}</span>
                   </div>
                 ))}
               </div>
@@ -300,7 +300,7 @@ const Reports = () => {
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
                           <span className="text-sm text-foreground">{c.name}</span>
                         </div>
-                        <span className="text-sm text-muted-foreground">{formatAmount(c.value)} F</span>
+                        <span className="text-sm text-muted-foreground">{formatAmount(c.value)}</span>
                       </div>
                     ))}
                   </div>
@@ -357,7 +357,7 @@ const Reports = () => {
                       <YAxis tick={{ fill: "hsl(150, 5%, 50%)", fontSize: 10 }} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
                       <RTooltip
                         contentStyle={{ backgroundColor: "hsl(0,0%,10%)", border: "1px solid hsl(0,0%,20%)", borderRadius: 12, fontSize: 12 }}
-                        formatter={(value: number, name: string) => [`${value.toLocaleString("fr-FR")} F`, name === "depense" ? "Dépensé" : name === "prevu" ? "Prévu" : "Budget"]}
+                        formatter={(value: number, name: string) => [`${value.toLocaleString("fr-FR")}`, name === "depense" ? "Dépensé" : name === "prevu" ? "Prévu" : "Budget"]}
                       />
                       <Bar dataKey="depense" fill="hsl(84, 81%, 44%)" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="prevu" fill="hsl(45, 96%, 58%)" radius={[4, 4, 0, 0]} />
@@ -393,9 +393,9 @@ const Reports = () => {
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground space-y-0.5 mb-2">
-                        <p>Dépensé : <span className="text-foreground font-medium">{formatAmount(p.currentMonth)} F</span></p>
-                        <p>Prévu fin de mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.predictedEndOfMonth))} F</span></p>
-                        <p>Moy. 3 mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.avgMonthly))} F</span></p>
+                        <p>Dépensé : <span className="text-foreground font-medium">{formatAmount(p.currentMonth)}</span></p>
+                        <p>Prévu fin de mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.predictedEndOfMonth))}</span></p>
+                        <p>Moy. 3 mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.avgMonthly))}</span></p>
                       </div>
                       {p.budgetAmount ? (
                         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary">
@@ -631,8 +631,8 @@ const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapsho
                     <div key={item.id} className="flex items-center justify-between text-xs">
                       <span className="text-foreground">{item.category}</span>
                       <div className="flex gap-3 text-muted-foreground">
-                        <span>Prévu : <span className="text-foreground">{formatAmount(item.predicted_amount)} F</span></span>
-                        <span>Réel : <span className="text-foreground">{formatAmount(item.actual_amount || 0)} F</span></span>
+                        <span>Prévu : <span className="text-foreground">{formatAmount(item.predicted_amount)}</span></span>
+                        <span>Réel : <span className="text-foreground">{formatAmount(item.actual_amount || 0)}</span></span>
                       </div>
                     </div>
                   ))}

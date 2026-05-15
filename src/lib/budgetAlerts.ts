@@ -52,7 +52,7 @@ export const checkBudgetAlerts = (
         spent,
         percentage: pct,
         level: "danger",
-        message: `Plus que ${Math.round(budgetAmount - spent).toLocaleString("fr-FR")} FCFA restants en ${catName} !`,
+        message: `Plus que ${Math.round(budgetAmount - spent).toLocaleString("fr-FR")} restants en ${catName} !`,
       });
     } else if (pct >= 70 && prediction && prediction.predictedEndOfMonth > budgetAmount) {
       const dailyRate = now.getDate() > 0 ? spent / now.getDate() : 0;

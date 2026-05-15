@@ -200,8 +200,8 @@ const Dashboard = () => {
                 ? `⚠️ Échéance aujourd'hui !`
                 : `🔔 Rappel dans ${daysLeft} jour(s)`,
               description: debt.type === "owed_to_me"
-                ? `${debt.person_name} te doit encore ${Number(debt.amount).toLocaleString()} FCFA`
-                : `Tu dois ${Number(debt.amount).toLocaleString()} FCFA à ${debt.person_name}`,
+                ? `${debt.person_name} te doit encore ${Number(debt.amount).toLocaleString()}`
+                : `Tu dois ${Number(debt.amount).toLocaleString()} à ${debt.person_name}`,
             });
           });
         }

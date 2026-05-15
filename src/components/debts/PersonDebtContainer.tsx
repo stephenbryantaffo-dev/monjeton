@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { formatThousands } from "@/lib/formatAmount";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { DebtCard, type DebtCardData } from "./DebtCard";
 import type { InstallmentItem } from "./InstallmentCalendar";
 
@@ -85,12 +85,12 @@ export const PersonDebtContainer = ({ group, onEdit, onPay }: Props) => {
           <div className="flex items-center gap-3 mt-0.5 text-[11px]">
             {totalOwed > 0 && (
               <span className="text-primary font-bold tabular-nums">
-                Te doit {formatThousands(totalOwed)} F
+                Te doit {formatMoneyDisplay(totalOwed)}
               </span>
             )}
             {totalIOwe > 0 && (
               <span className="text-destructive font-bold tabular-nums">
-                Tu dois {formatThousands(totalIOwe)} F
+                Tu dois {formatMoneyDisplay(totalIOwe)}
               </span>
             )}
             {totalOwed === 0 && totalIOwe === 0 && (

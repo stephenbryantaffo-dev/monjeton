@@ -326,7 +326,7 @@ const TontinePage = () => {
         const ben = getBeneficiary();
         toast({
           title: `Tour complet ! 🎉`,
-          description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)} F`,
+          description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)}`,
         });
       }
     } catch {
@@ -586,7 +586,7 @@ const TontinePage = () => {
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-foreground truncate">{t.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {fmt(t.contribution_amount)} F/cycle · {mc} membres
+                            {fmt(t.contribution_amount)}/cycle · {mc} membres
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -697,7 +697,7 @@ const TontinePage = () => {
           <Progress value={cyclePct} className="h-2.5 mb-2" />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{paidCount}/{members.length} ont cotisé</span>
-            <span>{fmt(openCycle.total_collected)} / {fmt(openCycle.total_expected)} F</span>
+            <span>{fmt(openCycle.total_collected)} / {fmt(openCycle.total_expected)}</span>
           </div>
 
           {/* Beneficiary */}
@@ -709,7 +709,7 @@ const TontinePage = () => {
                   <p className="text-xs text-muted-foreground">Bénéficiaire de ce tour</p>
                   <p className="text-sm font-bold text-foreground truncate">{beneficiary.name}</p>
                 </div>
-                <span className="text-sm font-bold text-primary shrink-0">{fmt(openCycle.total_expected)} F</span>
+                <span className="text-sm font-bold text-primary shrink-0">{fmt(openCycle.total_expected)}</span>
               </div>
             </div>
           )}
@@ -719,7 +719,7 @@ const TontinePage = () => {
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
               <p className="text-sm font-bold text-primary">Tour complet ! 🎉</p>
               <p className="text-xs text-muted-foreground">
-                {beneficiary?.name} reçoit {fmt(openCycle.total_expected)} F
+                {beneficiary?.name} reçoit {fmt(openCycle.total_expected)}
               </p>
             </div>
           )}
@@ -804,7 +804,7 @@ const TontinePage = () => {
                       ? "Ne participe plus"
                       : s.member.status === "suspended"
                         ? "Suspendu temporairement"
-                        : s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)} F` : "En attente de paiement"}
+                        : s.status === "paid" ? "A payé ce cycle" : s.status === "partial" ? `${fmt(s.totalPaid)} / ${fmt(s.expected)}` : "En attente de paiement"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -927,7 +927,7 @@ const TontinePage = () => {
                       </div>
                       <Progress value={cPct} className="h-1.5 mb-1" />
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{fmt(c.total_collected)} / {fmt(c.total_expected)} F</span>
+                        <span>{fmt(c.total_collected)} / {fmt(c.total_expected)}</span>
                         {ben && <span className="truncate ml-2">👑 {ben.name}</span>}
                       </div>
                     </div>
@@ -963,7 +963,7 @@ const TontinePage = () => {
               <div className="bg-secondary rounded-xl p-2.5 text-center">
                 <p className="text-[10px] text-muted-foreground font-medium">Total collecté</p>
                 <p className="text-sm font-bold text-primary tabular-nums">
-                  {fmt(closedCycles.reduce((s, c) => s + c.total_collected, 0) + (openCycle?.total_collected || 0))} F
+                  {fmt(closedCycles.reduce((s, c) => s + c.total_collected, 0) + (openCycle?.total_collected || 0))}
                 </p>
               </div>
               <div className="bg-secondary rounded-xl p-2.5 text-center">
@@ -1238,7 +1238,7 @@ const TontinePage = () => {
               <div className="rounded-lg p-3 bg-secondary/50 border border-border">
                 <p className="text-xs text-muted-foreground">
                   Total cotisé par ce membre :{" "}
-                  <span className="text-foreground font-semibold">{fmt(ms.totalPaid)} F</span>
+                  <span className="text-foreground font-semibold">{fmt(ms.totalPaid)}</span>
                 </p>
               </div>
             );
@@ -1386,7 +1386,7 @@ const CalendrierTab = ({
           <span className="text-foreground font-bold">{tontine.frequency}</span>
           {" "}· Pot par cycle :{" "}
           <span className="text-primary font-bold">
-            {(members.length * tontine.contribution_amount).toLocaleString("fr-FR")} F
+            {(members.length * tontine.contribution_amount).toLocaleString("fr-FR")}
           </span>
         </p>
       </div>
@@ -1417,7 +1417,7 @@ const CalendrierTab = ({
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-sm font-bold text-primary tabular-nums">
-              {item.pot.toLocaleString("fr-FR")} F
+              {item.pot.toLocaleString("fr-FR")}
             </p>
             <p className="text-[10px] text-muted-foreground">pot total</p>
           </div>

@@ -45,7 +45,7 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       return `<tr>
         <td>${m.name}</td>
         <td class="ca"><span style="color:${statusColor(m.status)};font-weight:bold;font-size:11px">${statusLabel(m.status)}</span></td>
-        <td class="ra bold">${fmt(total)} F</td>
+        <td class="ra bold">${fmt(total)}</td>
         <td class="ca">${m.phone || "—"}</td>
       </tr>`;
     })
@@ -59,7 +59,7 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       return `<tr>
         <td>${new Date(c.cotisation_date).toLocaleDateString("fr-FR")}</td>
         <td>${memberName}</td>
-        <td class="ra green bold">+${fmt(c.amount)} F</td>
+        <td class="ra green bold">+${fmt(c.amount)}</td>
         <td>${c.cycle_label || "—"}</td>
       </tr>`;
     })
@@ -73,7 +73,7 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       return `<tr>
         <td>${c.cancelled_at ? new Date(c.cancelled_at).toLocaleDateString("fr-FR") : "—"}</td>
         <td>${memberName}</td>
-        <td class="ra" style="color:#f39c12;text-decoration:line-through">${fmt(c.amount)} F</td>
+        <td class="ra" style="color:#f39c12;text-decoration:line-through">${fmt(c.amount)}</td>
         <td>${c.cancel_reason || "—"}</td>
       </tr>`;
     })
@@ -87,7 +87,7 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       return `<tr>
         <td>${new Date(d.depense_date).toLocaleDateString("fr-FR")}</td>
         <td>${d.label}</td>
-        <td class="ra red bold">-${fmt(d.amount)} F</td>
+        <td class="ra red bold">-${fmt(d.amount)}</td>
         <td>${catLabel}</td>
         <td>${d.beneficiaire || "—"}</td>
       </tr>`;
@@ -118,7 +118,7 @@ export const generateCaissePdf = (data: CaissePdfData) => {
     .sort((a, b) => b[1] - a[1])
     .map(([cat, amount]) => {
       const pct = caisse.total_spent > 0 ? Math.round((amount / caisse.total_spent) * 100) : 0;
-      return `<tr><td>${cat}</td><td class="ra bold">${fmt(amount)} F</td><td class="ca">${pct}%</td></tr>`;
+      return `<tr><td>${cat}</td><td class="ra bold">${fmt(amount)}</td><td class="ca">${pct}%</td></tr>`;
     })
     .join("");
 
@@ -181,17 +181,17 @@ tr:nth-child(even) td{background:#f9f9f9}
   <div class="cards">
     <div class="card cg">
       <div class="lbl">💚 Total collecté</div>
-      <div class="val green">${fmt(caisse.total_collected)} F</div>
+      <div class="val green">${fmt(caisse.total_collected)}</div>
       <div class="sub-val">${cotisations.length} cotisation${cotisations.length > 1 ? "s" : ""}</div>
     </div>
     <div class="card cr">
       <div class="lbl">🔴 Total dépensé</div>
-      <div class="val red">${fmt(caisse.total_spent)} F</div>
+      <div class="val red">${fmt(caisse.total_spent)}</div>
       <div class="sub-val">${depenses.length} dépense${depenses.length > 1 ? "s" : ""}</div>
     </div>
     <div class="card" style="background:#f0fff4;border:2px solid #7ec845">
       <div class="lbl">💰 Solde disponible</div>
-      <div class="val" style="color:${soldeDisponible >= 0 ? "#27ae60" : "#e74c3c"}">${fmt(soldeDisponible)} F</div>
+      <div class="val" style="color:${soldeDisponible >= 0 ? "#27ae60" : "#e74c3c"}">${fmt(soldeDisponible)}</div>
       <div class="sub-val">${soldeDisponible >= 0 ? "En caisse" : "Déficit"}</div>
     </div>
     <div class="card cb">
@@ -246,7 +246,7 @@ tr:nth-child(even) td{background:#f9f9f9}
       <thead><tr><th>Catégorie</th><th>Montant</th><th>Part</th></tr></thead>
       <tbody>
         ${catSummaryRows}
-        <tr class="total"><td>TOTAL</td><td class="ra">${fmt(caisse.total_spent)} F</td><td class="ca">100%</td></tr>
+        <tr class="total"><td>TOTAL</td><td class="ra">${fmt(caisse.total_spent)}</td><td class="ca">100%</td></tr>
       </tbody>
     </table>
   </div>` : ""}

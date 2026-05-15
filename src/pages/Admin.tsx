@@ -34,7 +34,7 @@ const Admin = () => {
           { label: "Utilisateurs", value: totalUsers.toLocaleString("fr-FR"), icon: Users },
           { label: "Abonnements actifs", value: activeSubs.toLocaleString("fr-FR"), icon: CreditCard },
           { label: "Transactions totales", value: totalTx.toLocaleString("fr-FR"), icon: Activity },
-          { label: "Revenus (total)", value: `${totalRevenue.toLocaleString("fr-FR")} F`, icon: TrendingUp },
+          { label: "Revenus (total)", value: `${totalRevenue.toLocaleString("fr-FR")}`, icon: TrendingUp },
         ]);
       } catch (err: any) {
         console.error("Admin fetchStats error:", err);

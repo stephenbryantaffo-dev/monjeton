@@ -165,7 +165,7 @@ const ScanResultCard = ({ result, categories, wallets, onConfirm, onReject, isPr
               <div className="glass rounded-xl p-3">
                 <p className="text-muted-foreground text-xs">Montant {needsConversion ? "(XOF)" : ""}</p>
                 <p className="font-bold text-foreground">
-                  {(needsConversion && hasConversion ? data.converted_amount_xof : data.amount)?.toLocaleString("fr-FR")} F
+                  {(needsConversion && hasConversion ? data.converted_amount_xof : data.amount)?.toLocaleString("fr-FR")}
                 </p>
               </div>
             )}

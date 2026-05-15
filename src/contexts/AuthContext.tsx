@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { initSessionMonitor } from "@/lib/security";
+import { setActiveCurrency } from "@/lib/currencyStore";
+import type { CurrencyCode } from "@/lib/currency";
 
 interface AuthContextType {
   session: Session | null;
@@ -32,6 +34,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ]);
     if (!profileRes.error && profileRes.data) {
       setProfile(profileRes.data);
+      const cur = (profileRes.data as any).currency_preference as CurrencyCode | undefined;
+      if (cur === "XOF" || cur === "EUR" || cur === "USD") setActiveCurrency(cur);
     } else {
       setProfile(null);
     }

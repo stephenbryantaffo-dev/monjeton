@@ -142,7 +142,7 @@ const ScanHistory = ({ scans, onRefresh }: ScanHistoryProps) => {
               {scan.parsed_amount != null && (
                 <div className="flex-shrink-0 text-right">
                   <p className="text-sm font-semibold text-foreground tabular-nums">
-                    {Number(scan.parsed_amount).toLocaleString("fr-FR")} F
+                    {Number(scan.parsed_amount).toLocaleString("fr-FR")}
                   </p>
                   {scan.parsed_currency && scan.parsed_currency !== "XOF" && (
                     <p className="text-xs text-muted-foreground">

@@ -10,7 +10,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { formatThousands } from "@/lib/formatAmount";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
@@ -163,7 +163,7 @@ export const DebtHistoryView = ({ debtId, open, onClose }: Props) => {
                           </span>
                           {h.amount && (
                             <span className="text-xs font-bold text-primary tabular-nums">
-                              {formatThousands(h.amount)} F
+                              {formatMoneyDisplay(h.amount)}
                             </span>
                           )}
                         </div>

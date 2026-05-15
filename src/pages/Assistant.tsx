@@ -589,7 +589,7 @@ const Assistant = () => {
         date: transaction.date || today,
         category_id: cat?.id || null,
       });
-      const confirmText = `✅ C'est noté ! ${transaction.amount.toLocaleString()} FCFA enregistré.`;
+      const confirmText = `✅ C'est noté ! ${transaction.amount.toLocaleString()} enregistré.`;
       const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
@@ -660,8 +660,8 @@ const Assistant = () => {
       }
 
       const confirmText = debt.action === "create_debt"
-        ? `✅ Dette enregistrée pour ${debt.person_name} — ${(debt.amount || 0).toLocaleString()} FCFA`
-        : `✅ Mis à jour ! ${debt.amount_paid?.toLocaleString()} FCFA reçu de ${debt.person_name}`;
+        ? `✅ Dette enregistrée pour ${debt.person_name} — ${(debt.amount || 0).toLocaleString()}`
+        : `✅ Mis à jour ! ${debt.amount_paid?.toLocaleString()} reçu de ${debt.person_name}`;
       const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
@@ -795,7 +795,7 @@ const Assistant = () => {
       if (error) { toast({ title: "Erreur Supabase", variant: "destructive" }); return; }
 
       const label = tx.merchant_name || tx.note || "Transaction";
-      const confirmText = `✅ Catégorie mise à jour !\n📦 ${label} — ${Number(tx.amount).toLocaleString()} FCFA\n📂 Déplacé vers : ${cat.name}`;
+      const confirmText = `✅ Catégorie mise à jour !\n📦 ${label} — ${Number(tx.amount).toLocaleString()}\n📂 Déplacé vers : ${cat.name}`;
       setMessages(prev => [...prev, { role: "assistant", content: confirmText, type: "text" }]);
       await saveMessage("assistant", confirmText);
     }
@@ -827,7 +827,7 @@ const Assistant = () => {
       if (error) throw error;
       const confirmMsg: Message = {
         role: 'assistant',
-        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} F → ${Number(action.new_value).toLocaleString('fr-FR')} F`,
+        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} → ${Number(action.new_value).toLocaleString('fr-FR')}`,
         type: 'text',
       };
       setMessages(prev => [...prev, confirmMsg]);
@@ -1041,7 +1041,7 @@ const Assistant = () => {
             ✅ Transaction détectée
           </p>
           <div className="text-sm text-foreground space-y-0.5">
-            <p>💰 <strong>{transaction.amount.toLocaleString()} FCFA</strong></p>
+            <p>💰 <strong>{transaction.amount.toLocaleString()}</strong></p>
             <p>📁 {transaction.category}</p>
             {transaction.note && <p>📝 {transaction.note}</p>}
           </div>
@@ -1087,9 +1087,9 @@ const Assistant = () => {
           </p>
           <div className="text-sm text-foreground space-y-1">
             <p>👤 <strong>{debt.person_name}</strong></p>
-            {debt.amount != null && <p>💰 Montant : <strong>{debt.amount.toLocaleString()} FCFA</strong></p>}
-            {debt.amount_paid != null && <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()} FCFA</strong></p>}
-            {debt.remaining != null && <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()} FCFA</strong></p>}
+            {debt.amount != null && <p>💰 Montant : <strong>{debt.amount.toLocaleString()}</strong></p>}
+            {debt.amount_paid != null && <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()}</strong></p>}
+            {debt.remaining != null && <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()}</strong></p>}
             {debt.due_date && <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>}
           </div>
           <div className="flex gap-2">
@@ -1136,7 +1136,7 @@ const Assistant = () => {
           </div>
           <div className="text-sm text-foreground space-y-1">
             <p>👤 Membre : <strong>{tontinePayment.member_name}</strong></p>
-            <p>💰 Montant : <strong>{tontinePayment.amount.toLocaleString()} FCFA</strong></p>
+            <p>💰 Montant : <strong>{tontinePayment.amount.toLocaleString()}</strong></p>
             <p>🤝 Tontine : <strong>{tontinePayment.tontine_name}</strong></p>
           </div>
           <div className="flex gap-2">
@@ -1183,7 +1183,7 @@ const Assistant = () => {
           </div>
           <div className="text-sm text-foreground space-y-1">
             <p>📌 Nom : <strong>{savingsGoal.name}</strong></p>
-            <p>💰 Objectif : <strong>{savingsGoal.target_amount.toLocaleString()} FCFA</strong></p>
+            <p>💰 Objectif : <strong>{savingsGoal.target_amount.toLocaleString()}</strong></p>
             {savingsGoal.deadline && (
               <p>📅 Avant le : <strong>{new Date(savingsGoal.deadline).toLocaleDateString("fr-FR")}</strong></p>
             )}
@@ -1428,11 +1428,11 @@ const Assistant = () => {
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Ancien montant</span>
-                              <span className="text-destructive font-bold tabular-nums line-through">{Number(pendingAction.action.old_value).toLocaleString('fr-FR')} F</span>
+                              <span className="text-destructive font-bold tabular-nums line-through">{Number(pendingAction.action.old_value).toLocaleString('fr-FR')}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Nouveau montant</span>
-                              <span className="text-primary font-bold tabular-nums">{Number(pendingAction.action.new_value).toLocaleString('fr-FR')} F</span>
+                              <span className="text-primary font-bold tabular-nums">{Number(pendingAction.action.new_value).toLocaleString('fr-FR')}</span>
                             </div>
                           </div>
                           <div className="flex gap-2">

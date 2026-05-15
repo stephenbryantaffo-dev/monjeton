@@ -169,7 +169,7 @@ const CyclesTab = ({ tontines }: Props) => {
             </p>
             <Progress value={pct} className="h-3 mb-2" />
             <p className="text-sm text-muted-foreground">
-              {paidCount} / {members.length} membres ont cotisé — {fmt(openCycle.total_collected)} / {fmt(openCycle.total_expected)} F
+              {paidCount} / {members.length} membres ont cotisé — {fmt(openCycle.total_collected)} / {fmt(openCycle.total_expected)}
             </p>
           </motion.div>
 
@@ -204,13 +204,13 @@ const CyclesTab = ({ tontines }: Props) => {
                         <p className="text-xs text-muted-foreground">Payé le {new Date(s.lastDate).toLocaleDateString("fr-FR")}</p>
                       )}
                       {s.status === "partial" && (
-                        <p className="text-xs text-amber-400 truncate">Partiel : {fmt(s.totalPaid)} / {fmt(s.expected)} F</p>
+                        <p className="text-xs text-amber-400 truncate">Partiel : {fmt(s.totalPaid)} / {fmt(s.expected)}</p>
                       )}
                       {s.status === "pending" && (
                         <p className="text-xs text-muted-foreground">En attente</p>
                       )}
                     </div>
-                    <span className="text-sm font-bold text-foreground flex-shrink-0">{fmt(s.totalPaid)} F</span>
+                    <span className="text-sm font-bold text-foreground flex-shrink-0">{fmt(s.totalPaid)}</span>
                   </motion.div>
                 ))}
               </div>
@@ -234,7 +234,7 @@ const CyclesTab = ({ tontines }: Props) => {
                           <span className="text-xs font-bold text-primary">{cPct}%</span>
                         </div>
                         <Progress value={cPct} className="h-1.5" />
-                        <p className="text-xs text-muted-foreground mt-1">{fmt(c.total_collected)} / {fmt(c.total_expected)} F</p>
+                        <p className="text-xs text-muted-foreground mt-1">{fmt(c.total_collected)} / {fmt(c.total_expected)}</p>
                       </div>
                     );
                   })

@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/MoneyInput';
-import { formatThousands } from '@/lib/formatAmount';
+import { formatMoneyDisplay } from '@/lib/formatAmount';
 import {
   Check, Edit3, CheckCircle2, AlertTriangle,
   Loader2, Sparkles, ChevronDown,
@@ -286,7 +286,7 @@ export const MultiReceiptValidator = ({
           <div className="flex items-center justify-between bg-primary/10 rounded-xl px-3 py-2">
             <span className="text-xs text-muted-foreground">Total à enregistrer</span>
             <span className="text-base font-bold text-primary tabular-nums">
-              {formatThousands(totalAmount)} F
+              {formatMoneyDisplay(totalAmount)}
             </span>
           </div>
         )}
@@ -437,7 +437,7 @@ export const MultiReceiptValidator = ({
                   />
                 ) : (
                   <div className={`text-sm font-bold tabular-nums ${item.type === 'income' ? 'text-primary' : 'text-foreground'}`}>
-                    {item.type === 'income' ? '+' : '-'}{formatThousands(item.amount)} F
+                    {item.type === 'income' ? '+' : '-'}{formatMoneyDisplay(item.amount)}
                   </div>
                 )}
               </div>
@@ -570,7 +570,7 @@ export const MultiReceiptValidator = ({
               <Sparkles className="w-4 h-4 mr-2" />
               {isSingle
                 ? 'Enregistrer cette transaction'
-                : <>Enregistrer {selectedCount} transaction(s){selectedCount > 0 && ` · ${formatThousands(totalAmount)} F`}</>}
+                : <>Enregistrer {selectedCount} transaction(s){selectedCount > 0 && ` · ${formatMoneyDisplay(totalAmount)}`}</>}
             </>
           )}
         </Button>

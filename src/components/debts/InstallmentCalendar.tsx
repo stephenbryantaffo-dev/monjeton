@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronDown } from "lucide-react";
-import { formatThousands } from "@/lib/formatAmount";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 
 export interface InstallmentItem {
   id: string;
@@ -94,7 +94,7 @@ export const InstallmentCalendar = ({ installments, onPayInstallment }: Props) =
                     <span className="text-base shrink-0">{cfg.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs font-bold tabular-nums ${cfg.color}`}>
-                        {formatThousands(inst.expected_amount)} F
+                        {formatMoneyDisplay(inst.expected_amount)}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
                         {new Date(inst.due_date).toLocaleDateString("fr-FR", {

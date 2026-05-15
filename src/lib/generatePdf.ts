@@ -176,7 +176,7 @@ export const generateMonthlyPdf = (data: PdfData) => {
       const isTop = idx === 0;
       return `<tr>
           <td>${isTop ? "🔥 " : ""}${cat.name}</td>
-          <td class="ra bold">${fmt(cat.value)} F</td>
+          <td class="ra bold">${fmt(cat.value)}</td>
           <td class="ca">${pct}%</td>
           <td class="bar">${bar}</td>
         </tr>`;
@@ -300,17 +300,17 @@ tr:nth-child(even) td{background:#f9f9f9}
   <div class="cards">
     <div class="card cg">
       <div class="lbl">\ud83d\udc9a Revenus</div>
-      <div class="val green">${fmt(data.totalIncome)} F</div>
+      <div class="val green">${fmt(data.totalIncome)}</div>
       <div class="sub">Ce que tu as gagn\u00e9</div>
     </div>
     <div class="card cr">
       <div class="lbl">\ud83d\udd34 D\u00e9penses</div>
-      <div class="val red">${fmt(data.totalExpense)} F</div>
+      <div class="val red">${fmt(data.totalExpense)}</div>
       <div class="sub">Ce que tu as d\u00e9pens\u00e9</div>
     </div>
     <div class="card cgy">
       <div class="lbl">${balance >= 0 ? "\ud83d\udcb0" : "\u26a0\ufe0f"} Solde net</div>
-      <div class="val" style="color:${balance >= 0 ? "#7ec845" : "#e74c3c"}">${balance >= 0 ? "+" : ""}${fmt(balance)} F</div>
+      <div class="val" style="color:${balance >= 0 ? "#7ec845" : "#e74c3c"}">${balance >= 0 ? "+" : ""}${fmt(balance)}</div>
       <div class="sub">${balance >= 0 ? "Il te reste \u00e7a" : "Tu as d\u00e9pass\u00e9"}</div>
     </div>
     <div class="card cg">
@@ -324,7 +324,7 @@ tr:nth-child(even) td{background:#f9f9f9}
   <div class="joke-box">
     <div style="font-size:13px;font-weight:bold;color:#1a1a2e;margin-bottom:8px">\ud83d\ude02 La blague du mois</div>
     <div class="joke-emoji">${joke.emoji}</div>
-    <div class="joke-top">Ce mois, ta plus grosse d\u00e9pense : ${joke.topCategory} (${fmt(joke.topAmount)} F)</div>
+    <div class="joke-top">Ce mois, ta plus grosse d\u00e9pense : ${joke.topCategory} (${fmt(joke.topAmount)})</div>
     <div class="joke-text">"${joke.blague}"</div>
   </div>
   ` : ""}
@@ -339,7 +339,7 @@ tr:nth-child(even) td{background:#f9f9f9}
         ${catRows}
         <tr class="total">
           <td>TOTAL D\u00c9PENS\u00c9</td>
-          <td class="ra">${fmt(total)} F</td>
+          <td class="ra">${fmt(total)}</td>
           <td class="ca">100%</td>
           <td></td>
         </tr>

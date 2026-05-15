@@ -60,10 +60,10 @@ const DashboardPredictions = ({ predictions, formatAmount }: Props) => {
                 {trendIcons[p.trend]}
               </div>
               <div className="text-xs text-muted-foreground space-y-0.5 mb-2">
-                <p>Dépensé : <span className="text-foreground font-medium">{formatAmount(p.currentMonth)} FCFA</span></p>
-                <p>Prévu fin de mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.predictedEndOfMonth))} F</span></p>
+                <p>Dépensé : <span className="text-foreground font-medium">{formatAmount(p.currentMonth)}</span></p>
+                <p>Prévu fin de mois : <span className="text-foreground font-medium">{formatAmount(Math.round(p.predictedEndOfMonth))}</span></p>
                 {p.budgetAmount ? (
-                  <p>Budget : <span className="text-foreground font-medium">{formatAmount(p.budgetAmount)} FCFA</span></p>
+                  <p>Budget : <span className="text-foreground font-medium">{formatAmount(p.budgetAmount)}</span></p>
                 ) : null}
               </div>
               {p.budgetAmount ? (

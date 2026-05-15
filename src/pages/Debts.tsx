@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
-import { formatThousands } from "@/lib/formatAmount";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import {
   ContactPicker,
   type PickedContact,
@@ -449,7 +449,7 @@ const Debts = () => {
             On te doit
           </p>
           <p className="text-lg font-black text-primary tabular-nums mt-0.5">
-            {formatThousands(totals.owedToMe)} F
+            {formatMoneyDisplay(totals.owedToMe)}
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             {totals.countOwed} personne{totals.countOwed > 1 ? "s" : ""}
@@ -460,7 +460,7 @@ const Debts = () => {
             Tu dois
           </p>
           <p className="text-lg font-black text-destructive tabular-nums mt-0.5">
-            {formatThousands(totals.iOwe)} F
+            {formatMoneyDisplay(totals.iOwe)}
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             {totals.countIOwe} personne{totals.countIOwe > 1 ? "s" : ""}
@@ -736,7 +736,7 @@ const Debts = () => {
                           </p>
                           <p className="text-xs text-foreground">
                             {nbMonths} versement(s) de{" "}
-                            {formatThousands(monthlyAmount)} F
+                            {formatMoneyDisplay(monthlyAmount)}
                           </p>
                           <p className="text-[11px] text-muted-foreground">
                             Fin estimée :{" "}
@@ -747,7 +747,7 @@ const Debts = () => {
                           </p>
                           {lastInst !== monthlyAmount && (
                             <p className="text-[11px] text-muted-foreground">
-                              Dernier versement : {formatThousands(lastInst)} F
+                              Dernier versement : {formatMoneyDisplay(lastInst)}
                             </p>
                           )}
                         </>
@@ -765,10 +765,10 @@ const Debts = () => {
                     Échéances personnalisées
                   </Label>
                   <span className="text-[10px] text-muted-foreground tabular-nums">
-                    {formatThousands(
+                    {formatMoneyDisplay(
                       customInstallments.reduce((s, i) => s + i.amount, 0),
                     )}{" "}
-                    / {formatThousands(newAmount)} F
+                    / {formatMoneyDisplay(newAmount)}
                   </span>
                 </div>
                 {customInstallments.map((inst, idx) => (
@@ -778,7 +778,7 @@ const Debts = () => {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold tabular-nums">
-                        {formatThousands(inst.amount)} F
+                        {formatMoneyDisplay(inst.amount)}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
                         {new Date(inst.date).toLocaleDateString("fr-FR", {
@@ -825,12 +825,12 @@ const Debts = () => {
                   if (remaining < 0)
                     return (
                       <p className="text-[11px] text-destructive font-bold">
-                        ⚠️ Dépasse de {formatThousands(-remaining)} F
+                        ⚠️ Dépasse de {formatMoneyDisplay(-remaining)}
                       </p>
                     );
                   return (
                     <p className="text-[11px] text-muted-foreground">
-                      Reste {formatThousands(remaining)} F à allouer
+                      Reste {formatMoneyDisplay(remaining)} à allouer
                     </p>
                   );
                 })()}

@@ -116,7 +116,7 @@ const TontineList = ({ tontines, loading, onRefresh }: Props) => {
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground truncate">
-                        {fmt(t.contribution_amount)} F · {mc} membres
+                        {fmt(t.contribution_amount)} · {mc} membres
                       </p>
                     </div>
                     <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
@@ -130,7 +130,7 @@ const TontineList = ({ tontines, loading, onRefresh }: Props) => {
                     <div className="mt-2">
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>{cycle.period_label}</span>
-                        <span>{fmt(cycle.total_collected)} / {fmt(cycle.total_expected)} F</span>
+                        <span>{fmt(cycle.total_collected)} / {fmt(cycle.total_expected)}</span>
                       </div>
                       <Progress value={pct} className="h-2" />
                     </div>

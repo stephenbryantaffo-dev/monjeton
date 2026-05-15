@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
 import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
+import { setActiveCurrency } from "@/lib/currencyStore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,6 +68,7 @@ const Settings = () => {
   const handleCurrencyChange = async (code: CurrencyCode) => {
     if (!user) return;
     setCurrencyPref(code);
+    setActiveCurrency(code);
     const { error } = await supabase
       .from("profiles")
       .update({ currency_preference: code } as any)
@@ -90,7 +92,9 @@ const Settings = () => {
           setWhatsappAlerts((data as any).whatsapp_alerts);
         }
         if (data && (data as any).currency_preference) {
-          setCurrencyPref((data as any).currency_preference as CurrencyCode);
+          const c = (data as any).currency_preference as CurrencyCode;
+          setCurrencyPref(c);
+          setActiveCurrency(c);
         }
         if (data && (data as any).phone) {
           const savedPhone = (data as any).phone as string;

@@ -1,3 +1,4 @@
+import { getActiveCurrencySymbol } from "@/lib/currencyStore";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -626,9 +627,9 @@ const Receipts = () => {
               {
                 label: "Montant",
                 value: isDiscreetMode
-                  ? `${MASK_SHORT} F`
+                  ? `${MASK_SHORT} ${getActiveCurrencySymbol()}`
                   : selectedScan.parsed_amount
-                  ? `${Number(selectedScan.parsed_amount).toLocaleString("fr-FR")} F`
+                  ? `${Number(selectedScan.parsed_amount).toLocaleString("fr-FR")} ${getActiveCurrencySymbol()}`
                   : null,
               },
               {
@@ -888,7 +889,7 @@ const Receipts = () => {
           >
             <p className="text-xs text-muted-foreground mb-1">Total des reçus confirmés</p>
             <p className="text-2xl font-bold text-primary tabular-nums">
-              {formatAmount(stats.totalAmount)} F
+              {formatAmount(stats.totalAmount)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""}
@@ -902,7 +903,7 @@ const Receipts = () => {
           >
             <p className="text-xs text-muted-foreground mb-1">Ce mois-ci</p>
             <p className="text-2xl font-bold text-foreground tabular-nums">
-              {formatAmount(stats.thisMonthAmount)} F
+              {formatAmount(stats.thisMonthAmount)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
@@ -943,8 +944,8 @@ const Receipts = () => {
                       <span className="text-foreground font-medium">{cat}</span>
                       <span className="text-muted-foreground tabular-nums">
                         {isDiscreetMode
-                          ? `${MASK_SHORT} F · ••%`
-                          : `${amount.toLocaleString("fr-FR")} F · ${pct}%`}
+                          ? `${MASK_SHORT} ${getActiveCurrencySymbol()} · ••%`
+                          : `${amount.toLocaleString("fr-FR")} ${getActiveCurrencySymbol()} · ${pct}%`}
                       </span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-1.5">
@@ -1121,8 +1122,8 @@ const Receipts = () => {
                   >
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       {isDiscreetMode
-                        ? `${MASK_SHORT} F`
-                        : `${Number(scan.parsed_amount).toLocaleString("fr-FR")} F`}
+                        ? `${MASK_SHORT} ${getActiveCurrencySymbol()}`
+                        : `${Number(scan.parsed_amount).toLocaleString("fr-FR")} ${getActiveCurrencySymbol()}`}
                     </p>
                     {scan.parsed_currency && scan.parsed_currency !== "XOF" && !isDiscreetMode && (
                       <p className="text-xs text-muted-foreground">
@@ -1168,7 +1169,7 @@ const Receipts = () => {
                       : "")}
                   {fullscreenScan?.parsed_amount != null && (
                     <span className="ml-2 text-primary font-bold">
-                      · {Number(fullscreenScan.parsed_amount).toLocaleString("fr-FR")} F
+                      · {Number(fullscreenScan.parsed_amount).toLocaleString("fr-FR")} {getActiveCurrencySymbol()}
                     </span>
                   )}
                 </p>

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { formatThousands } from '@/lib/formatAmount';
+import { formatMoneyDisplay } from '@/lib/formatAmount';
 
 interface CheckParams {
   userId: string;
@@ -121,8 +121,8 @@ function buildAlertMessage(alert: AlertItem): string {
   if (alert.type === '100pct') {
     return (
       `🚨 *Budget ${alert.category} dépassé !*\n\n` +
-      `Tu as dépensé *${formatThousands(alert.spent)} F* sur un budget de *${formatThousands(alert.budget)} F*.\n\n` +
-      `Dépassement : *${formatThousands(exceeded)} F*\n\n` +
+      `Tu as dépensé *${formatMoneyDisplay(alert.spent)}* sur un budget de *${formatMoneyDisplay(alert.budget)}*.\n\n` +
+      `Dépassement : *${formatMoneyDisplay(exceeded)}*\n\n` +
       `_Sois vigilant pour la fin du mois._\n\n` +
       `🪙 Mon Jeton — monjeton.app`
     );
@@ -130,8 +130,8 @@ function buildAlertMessage(alert: AlertItem): string {
 
   return (
     `⚠️ *Budget ${alert.category} à 80%*\n\n` +
-    `Tu as dépensé *${formatThousands(alert.spent)} F* sur ${formatThousands(alert.budget)} F.\n\n` +
-    `Plus que *${formatThousands(remaining)} F* disponibles ce mois.\n\n` +
+    `Tu as dépensé *${formatMoneyDisplay(alert.spent)}* sur ${formatMoneyDisplay(alert.budget)}.\n\n` +
+    `Plus que *${formatMoneyDisplay(remaining)}* disponibles ce mois.\n\n` +
     `_Pense à ralentir pour rester dans les clous._\n\n` +
     `🪙 Mon Jeton — monjeton.app`
   );
