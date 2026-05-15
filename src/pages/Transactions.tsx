@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import WalletIcon from "@/components/WalletIcon";
 import { formatMoneySmart } from "@/lib/formatMoney";
 import { motion } from "framer-motion";
 import { 
