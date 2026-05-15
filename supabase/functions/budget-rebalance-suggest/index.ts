@@ -1,6 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
+import { loadUserCurrency } from '../_shared/currency-context.ts';
 
 const RebalanceSchema = z.object({
   modifiedCategory: z.string().trim().min(1).max(100),
