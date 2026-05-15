@@ -104,7 +104,10 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[100] bg-background flex items-center justify-center p-4 overflow-y-auto"
+      style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 16px))" }}
+    >
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
