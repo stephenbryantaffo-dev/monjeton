@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { loadUserCurrency } from "../_shared/currency-context.ts";
 
 const BudgetSuggestSchema = z.object({
   month: z.number().int().min(1).max(12).optional(),
