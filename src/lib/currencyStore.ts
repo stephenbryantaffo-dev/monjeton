@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import type { CurrencyCode } from "./currency";
-import { CURRENCY_SYMBOLS } from "./currency";
+import { CURRENCY_SYMBOLS, ALL_CURRENCY_CODES } from "./currency";
 
 const STORAGE_KEY = "monjeton_active_currency";
 
 let active: CurrencyCode = (() => {
   try {
     const v = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (v === "XOF" || v === "EUR" || v === "USD") return v;
+    if (v && ALL_CURRENCY_CODES.has(v)) return v as CurrencyCode;
   } catch {}
   return "XOF";
 })();

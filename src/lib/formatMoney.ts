@@ -1,5 +1,5 @@
 import { getActiveCurrency, getActiveCurrencySymbol } from "./currencyStore";
-import { CURRENCY_SYMBOLS, type CurrencyCode } from "./currency";
+import { CURRENCY_SYMBOLS, NO_DECIMAL_CURRENCIES, type CurrencyCode } from "./currency";
 
 /**
  * Smart money formatting.
@@ -18,7 +18,7 @@ export function formatMoneySmart(
   const abs = Math.abs(amount);
 
   let body: string;
-  if (currency === "XOF") {
+  if (NO_DECIMAL_CURRENCIES.has(currency)) {
     if (abs < 1000) {
       body = `${Math.round(abs)}`;
     } else if (abs < 1_000_000) {
