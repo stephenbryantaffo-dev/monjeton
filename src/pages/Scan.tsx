@@ -9,9 +9,32 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import ScanHistory from "@/components/scan/ScanHistory";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
+import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 import { ScanProgress } from "@/components/scan/ScanProgress";
 
 const FREE_SCAN_LIMIT = 5;
+
+interface DetectedTransaction {
+  id: string;
+  merchant: string;
+  amount: number;
+  currency: string;
+  date: string;
+  type: 'expense' | 'income';
+  category_suggestion: string;
+  note: string;
+  confidence: number;
+  raw_text: string;
+  issues: string;
+}
+
+interface MultiScanResult {
+  document_type: string;
+  total_detected: number;
+  transactions: DetectedTransaction[];
+  global_confidence: number;
+  warnings: string[];
+}
 
 const getScanCount = (): { count: number; month: string } => {
   const now = new Date();
@@ -38,6 +61,7 @@ const Scan = () => {
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
   const [history, setHistory] = useState<any[]>([]);
   const [scanResult, setScanResult] = useState<ParsedResult | null>(null);
+  const [multiScanResult, setMultiScanResult] = useState<MultiScanResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -106,6 +130,7 @@ const Scan = () => {
 
     setScanning(true);
     setScanResult(null);
+    setMultiScanResult(null);
 
     try {
       let processedFile: File = file;
@@ -138,7 +163,7 @@ const Scan = () => {
 
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipt`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
 
       const res = await fetch(url, {
         method: 'POST',
@@ -147,9 +172,8 @@ const Scan = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          image: base64,
-          mimeType: processedFile.type,
-          scanType: 'receipt',
+          imageBase64: base64,
+          mediaType: processedFile.type,
         }),
       });
 
@@ -158,10 +182,10 @@ const Scan = () => {
         throw new Error(err.error || 'Erreur scan');
       }
 
-      const result = await res.json();
-      const parsed: ParsedResult = result.parsed || {};
+      const result: MultiScanResult = await res.json();
+      const txs = result.transactions || [];
 
-      if (!parsed.amount || parsed.amount <= 0) {
+      if (txs.length === 0) {
         toast({
           title: 'Aucune transaction détectée',
           description: 'Essaie avec une image plus nette',
@@ -175,11 +199,28 @@ const Scan = () => {
         setScansRemaining((prev) => prev - 1);
       }
 
-      setScanResult(parsed);
-      toast({
-        title: 'Reçu analysé 🎯',
-        description: 'Vérifie et valide les informations',
-      });
+      // Routage automatique : 1 tx => ScanResultCard, 2+ => MultiReceiptValidator
+      if (txs.length === 1) {
+        const tx = txs[0];
+        setScanResult({
+          amount: tx.amount,
+          date: tx.date,
+          merchant: tx.merchant,
+          type: tx.type,
+          category: tx.category_suggestion,
+          currency: tx.currency,
+        });
+        toast({
+          title: 'Reçu analysé 🎯',
+          description: 'Vérifie et valide les informations',
+        });
+      } else {
+        setMultiScanResult(result);
+        toast({
+          title: `${txs.length} transactions détectées 🎯`,
+          description: 'Sélectionne et valide ce que tu veux enregistrer',
+        });
+      }
     } catch (e: any) {
       toast({
         title: 'Erreur scan',
@@ -260,6 +301,31 @@ const Scan = () => {
     setImagePreview(null);
   };
 
+  const handleMultiClose = () => {
+    setMultiScanResult(null);
+    setImagePreview(null);
+  };
+
+  const handleMultiValidated = async (_count: number) => {
+    setMultiScanResult(null);
+    setImagePreview(null);
+    await Promise.all([fetchHistory(), refreshReceiptStats()]);
+  };
+
+  // Mode multi-scan : on prend tout l'écran (Screen géré par MultiReceiptValidator)
+  if (multiScanResult) {
+    return (
+      <DashboardLayout title="Valider les transactions">
+        <MultiReceiptValidator
+          scanResult={multiScanResult}
+          imagePreview={imagePreview}
+          onClose={handleMultiClose}
+          onValidated={handleMultiValidated}
+        />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Scan Intelligent">
       {/* Free tier scan counter */}
@@ -301,7 +367,7 @@ const Scan = () => {
             <h3 className="text-foreground font-semibold text-base">Scan Intelligent</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Prends ou importe une photo d'un reçu, d'une facture ou d'un
-              historique Mobile Money. L'IA extrait automatiquement le montant.
+              historique Mobile Money. L'IA détecte automatiquement une ou plusieurs transactions.
             </p>
           </div>
 
