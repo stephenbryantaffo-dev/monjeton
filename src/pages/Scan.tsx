@@ -11,6 +11,7 @@ import ScanHistory from "@/components/scan/ScanHistory";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 import { ScanProgress } from "@/components/scan/ScanProgress";
+import { useActiveCurrency } from "@/lib/currencyStore";
 
 const FREE_SCAN_LIMIT = 5;
 
