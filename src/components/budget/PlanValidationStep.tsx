@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { MoneyInput } from '@/components/ui/MoneyInput';
-import { formatThousands } from '@/lib/formatAmount';
+import { formatMoneyDisplay } from '@/lib/formatAmount';
 import {
   Check, CheckCircle2, Edit3, Sparkles, Loader2,
   AlertTriangle, RotateCcw, X,
@@ -185,7 +185,7 @@ export const PlanValidationStep = ({
     } else {
       toast({
         title: `${editingCategory} mis à jour`,
-        description: `${formatThousands(newAmount)}`,
+        description: `${formatMoneyDisplay(newAmount)}`,
       });
     }
   };
@@ -254,7 +254,7 @@ export const PlanValidationStep = ({
           }
         : p
     ));
-    toast({ title: `${category} restauré à ${formatThousands(item.original)}` });
+    toast({ title: `${category} restauré à ${formatMoneyDisplay(item.original)}` });
   };
 
   const removeCategory = (category: string) => {
@@ -345,8 +345,8 @@ export const PlanValidationStep = ({
       toast({
         title: 'Plan déséquilibré',
         description: isOverBudget
-          ? `Tu dépasses de ${formatThousands(difference)}`
-          : `Il reste ${formatThousands(-difference)} à allouer`,
+          ? `Tu dépasses de ${formatMoneyDisplay(difference)}`
+          : `Il reste ${formatMoneyDisplay(-difference)} à allouer`,
         variant: 'destructive',
       });
       return;
@@ -444,7 +444,7 @@ export const PlanValidationStep = ({
         <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-xs text-muted-foreground">Budget total</p>
-            <p className="text-lg font-bold text-foreground tabular-nums">{formatThousands(budgetTotal)}</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{formatMoneyDisplay(budgetTotal)}</p>
           </div>
           <span
             className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
@@ -455,14 +455,14 @@ export const PlanValidationStep = ({
           >
             {isBalanced
               ? 'Équilibré ✓'
-              : `Déséquilibré ${isOverBudget ? '+' : '−'}${formatThousands(Math.abs(difference))}`}
+              : `Déséquilibré ${isOverBudget ? '+' : '−'}${formatMoneyDisplay(Math.abs(difference))}`}
           </span>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Alloué</p>
             <p className={`text-lg font-bold tabular-nums ${
               isBalanced ? 'text-primary' : isOverBudget ? 'text-destructive' : 'text-[hsl(45,96%,58%)]'
             }`}>
-              {formatThousands(sumPlan)}
+              {formatMoneyDisplay(sumPlan)}
             </p>
           </div>
         </div>
@@ -480,8 +480,8 @@ export const PlanValidationStep = ({
           <span className="text-muted-foreground">{validatedCount}/{plan.length} validées</span>
           <span className={isBalanced ? 'text-primary font-medium' : isOverBudget ? 'text-destructive font-medium' : 'text-muted-foreground'}>
             {isOverBudget
-              ? `Dépassement ${formatThousands(difference)}`
-              : isBalanced ? '✓ Équilibré' : `Reste ${formatThousands(-difference)} à allouer`}
+              ? `Dépassement ${formatMoneyDisplay(difference)}`
+              : isBalanced ? '✓ Équilibré' : `Reste ${formatMoneyDisplay(-difference)} à allouer`}
           </span>
         </div>
       </div>
@@ -555,7 +555,7 @@ export const PlanValidationStep = ({
               ) : (
                 <div className="flex items-center justify-between">
                   <p className="text-xl font-bold text-foreground tabular-nums">
-                    {formatThousands(item.montant)}
+                    {formatMoneyDisplay(item.montant)}
                   </p>
                   <div className="flex items-center gap-1">
                     {!item.validated && (
@@ -582,7 +582,7 @@ export const PlanValidationStep = ({
 
               {item.modified && (
                 <p className="text-[11px] text-muted-foreground">
-                  Initial : {formatThousands(item.original)}
+                  Initial : {formatMoneyDisplay(item.original)}
                 </p>
               )}
 
@@ -631,8 +631,8 @@ export const PlanValidationStep = ({
           {isBalanced
             ? '✓ Le plan est équilibré, tu peux finaliser'
             : isOverBudget
-              ? `⚠️ Tu dépasses ton budget de ${formatThousands(difference)}`
-              : `💡 Il reste ${formatThousands(-difference)} à allouer`}
+              ? `⚠️ Tu dépasses ton budget de ${formatMoneyDisplay(difference)}`
+              : `💡 Il reste ${formatMoneyDisplay(-difference)} à allouer`}
         </p>
       </div>
 
@@ -694,13 +694,13 @@ export const PlanValidationStep = ({
                                 <div key={i} className="flex items-center justify-between text-xs">
                                   <span className="text-muted-foreground truncate">{c.category}</span>
                                   <div className="flex items-center gap-1 shrink-0">
-                                    <span className="text-muted-foreground tabular-nums">{formatThousands(c.from)}</span>
+                                    <span className="text-muted-foreground tabular-nums">{formatMoneyDisplay(c.from)}</span>
                                     <span>→</span>
                                     <span className={`font-medium tabular-nums ${c.diff > 0 ? 'text-primary' : 'text-destructive'}`}>
-                                      {formatThousands(c.to)}
+                                      {formatMoneyDisplay(c.to)}
                                     </span>
                                     <span className={`text-[10px] tabular-nums ${c.diff > 0 ? 'text-primary' : 'text-destructive'}`}>
-                                      ({c.diff > 0 ? '+' : ''}{formatThousands(c.diff)})
+                                      ({c.diff > 0 ? '+' : ''}{formatMoneyDisplay(c.diff)})
                                     </span>
                                   </div>
                                 </div>

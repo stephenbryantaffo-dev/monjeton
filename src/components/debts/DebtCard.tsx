@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Banknote, Edit3, MessageCircle, Calendar, History } from "lucide-react";
-import { formatThousands } from "@/lib/formatAmount";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { useToast } from "@/hooks/use-toast";
 import {
   InstallmentCalendar,
@@ -79,8 +79,8 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
     const finalPhone = cleaned.startsWith("225") ? cleaned : `225${cleaned}`;
     const msg =
       debt.type === "owed_to_me"
-        ? `Bonjour ${debt.person_name},\n\nJe te rappelle que tu me dois *${formatThousands(remaining)}* 🙏\n\n_Mon Jeton — monjeton.app_`
-        : `Bonjour ${debt.person_name},\n\nJe dois encore te rembourser *${formatThousands(remaining)}*.\n\n_Mon Jeton — monjeton.app_`;
+        ? `Bonjour ${debt.person_name},\n\nJe te rappelle que tu me dois *${formatMoneyDisplay(remaining)}* 🙏\n\n_Mon Jeton — monjeton.app_`
+        : `Bonjour ${debt.person_name},\n\nJe dois encore te rembourser *${formatMoneyDisplay(remaining)}*.\n\n_Mon Jeton — monjeton.app_`;
     window.open(
       `https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`,
       "_blank",
@@ -128,15 +128,15 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
           <p className="text-lg font-black tabular-nums leading-none">
-            {formatThousands(remaining)}
+            {formatMoneyDisplay(remaining)}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">
-            restant / {formatThousands(total)} total
+            restant / {formatMoneyDisplay(total)} total
           </p>
         </div>
         {paid > 0 && (
           <p className="text-[11px] text-primary font-bold tabular-nums shrink-0">
-            +{formatThousands(paid)} payés
+            +{formatMoneyDisplay(paid)} payés
           </p>
         )}
       </div>
@@ -166,7 +166,7 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Calendar className="w-3 h-3" />
             {nextDue.status === "overdue" ? "⚠️ En retard : " : "Prochain : "}
-            {formatThousands(nextDue.expected_amount)} le{" "}
+            {formatMoneyDisplay(nextDue.expected_amount)} le{" "}
             {new Date(nextDue.due_date).toLocaleDateString("fr-FR", {
               day: "2-digit",
               month: "short",

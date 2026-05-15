@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   History, Edit3, CheckCircle2, Sparkles, TrendingUp,
 } from 'lucide-react';
-import { formatThousands } from '@/lib/formatAmount';
+import { formatMoneyDisplay } from '@/lib/formatAmount';
 
 interface Props {
   coachingId: string;
@@ -79,7 +79,7 @@ export const PlanHistoryView = ({ coachingId }: Props) => {
                   {h.category_name}
                   {h.amount_before !== null && h.amount_after !== null && (
                     <span className="ml-1">
-                      · {formatThousands(h.amount_before)} → {formatThousands(h.amount_after)}
+                      · {formatMoneyDisplay(h.amount_before)} → {formatMoneyDisplay(h.amount_after)}
                     </span>
                   )}
                 </p>
