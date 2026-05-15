@@ -596,12 +596,26 @@ const NewTransaction = () => {
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-secondary border-border" />
             </div>
 
-            <Button variant="hero" size="lg" className="w-full" disabled={loading}>
-              {loading ? "Enregistrement..." : "Enregistrer"}
-            </Button>
           </form>
         </>
       )}
+        </Screen.Content>
+
+        {!voiceTransactions && (
+          <Screen.StickyAction>
+            <Button
+              form="new-tx-form"
+              type="submit"
+              variant="hero"
+              size="lg"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Enregistrement..." : "Enregistrer la transaction"}
+            </Button>
+          </Screen.StickyAction>
+        )}
+      </Screen>
     </DashboardLayout>
   );
 };
