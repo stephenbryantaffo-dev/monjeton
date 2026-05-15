@@ -17,7 +17,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [existingAccountEmail, setExistingAccountEmail] = useState("");
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -72,6 +72,13 @@ const Signup = () => {
 
       if (m.includes('already') || m.includes('registered')
           || m.includes('user already') || m.includes('exists')) {
+        const { error: loginError } = await signIn(email, password);
+        if (!loginError) {
+          toast({ title: "Connexion réussie ✅", description: "Ce compte existait déjà, tu es connecté." });
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
         desc = "Cet email existe déjà. Connecte-toi, ou réinitialise le mot de passe si tu ne l'as pas.";
         setExistingAccountEmail(email.trim());
       } else if (m.includes('rate') || m.includes('limit')
