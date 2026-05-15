@@ -134,7 +134,7 @@ const Scan = () => {
     setScanning(true);
     setScanResult(null);
     setMultiScanResult(null);
-
+    setScanStoragePath(null);
     try {
       let processedFile: File = file;
       if (file.size > 4 * 1024 * 1024) {
