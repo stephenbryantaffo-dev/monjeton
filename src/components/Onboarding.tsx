@@ -9,11 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
 
 const WALLET_OPTIONS = [
-  { name: "Wave", emoji: "🌊" },
-  { name: "Orange Money", emoji: "🟠" },
-  { name: "MTN Mobile Money", emoji: "🟡" },
-  { name: "Moov Money", emoji: "🔵" },
-  { name: "Cash", emoji: "💵" },
+  { name: "Wave" },
+  { name: "Orange Money" },
+  { name: "MTN Mobile Money" },
+  { name: "Moov Money" },
+  { name: "Cash" },
 ];
 
 const slideVariants = {
