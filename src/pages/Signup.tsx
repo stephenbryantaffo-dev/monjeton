@@ -48,8 +48,49 @@ const Signup = () => {
     setLoading(false);
 
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de créer le compte", variant: "destructive" });
-    } else {
+      const m = (error?.message || '').toLowerCase();
+      let desc = "Réessaie dans un instant.";
+
+      if (m.includes('already') || m.includes('registered')
+          || m.includes('user already') || m.includes('exists')) {
+        desc = "Cet email a déjà un compte. Connecte-toi à la place.";
+      } else if (m.includes('rate') || m.includes('limit')
+                 || m.includes('too many')) {
+        desc = "Trop de tentatives. Patiente 5 minutes et réessaie.";
+      } else if (m.includes('invalid email')
+                 || m.includes('valid email')) {
+        desc = "Adresse email invalide. Vérifie l'orthographe.";
+      } else if (m.includes('pwned') || m.includes('compromised')
+                 || m.includes('hibp') || m.includes('breach')
+                 || m.includes('weak password')
+                 || m.includes('common password')) {
+        desc = "Ce mot de passe a déjà fuité dans une base de données publique. Choisis-en un plus original (évite les mots courants comme Password, 123456, etc.).";
+      } else if (m.includes('password should')
+                 || m.includes('password must')
+                 || m.includes('password length')
+                 || m.includes('characters')) {
+        desc = "Mot de passe refusé : " + (error?.message || "format invalide");
+      } else if (m.includes('network')
+                 || m.includes('failed to fetch')
+                 || m.includes('timeout')) {
+        desc = "Problème de connexion. Vérifie ton réseau et réessaie.";
+      } else if (m.includes('disabled') || m.includes('signup')) {
+        desc = "Inscription temporairement désactivée.";
+      } else if (error?.message) {
+        desc = error.message;
+      }
+
+      toast({
+        title: "Inscription échouée",
+        description: desc,
+        variant: "destructive",
+        duration: 6000,
+      });
+
+      console.error('[Signup error]', error);
+      return;
+    }
+    {
       toast({ title: "Compte créé ! ✅", description: "Bienvenue sur Mon Jeton 🎉" });
       navigate("/dashboard", { replace: true });
     }
