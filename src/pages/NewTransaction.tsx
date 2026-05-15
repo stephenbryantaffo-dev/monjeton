@@ -8,6 +8,7 @@ import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Screen } from "@/components/layout/Screen";
 import VoiceConfirmationDialog, { type ParsedTransaction } from "@/components/voice/VoiceConfirmationDialog";
 import AudioLevelVisualizer from "@/components/voice/AudioLevelVisualizer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -414,15 +415,17 @@ const NewTransaction = () => {
 
   return (
     <DashboardLayout showBack={false}>
-      <div className="pt-6 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
-      </div>
+      <Screen>
+        <Screen.Content>
+          <div className="pt-6 pb-4 flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
+          </div>
 
       {/* Voice Input */}
       <motion.div
@@ -545,7 +548,7 @@ const NewTransaction = () => {
             </button>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form id="new-tx-form" className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label>Montant (FCFA)</Label>
               <MoneyInput
@@ -593,12 +596,26 @@ const NewTransaction = () => {
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-secondary border-border" />
             </div>
 
-            <Button variant="hero" size="lg" className="w-full" disabled={loading}>
-              {loading ? "Enregistrement..." : "Enregistrer"}
-            </Button>
           </form>
         </>
       )}
+        </Screen.Content>
+
+        {!voiceTransactions && (
+          <Screen.StickyAction>
+            <Button
+              form="new-tx-form"
+              type="submit"
+              variant="hero"
+              size="lg"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Enregistrement..." : "Enregistrer la transaction"}
+            </Button>
+          </Screen.StickyAction>
+        )}
+      </Screen>
     </DashboardLayout>
   );
 };

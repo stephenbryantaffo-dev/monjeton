@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Screen } from "@/components/layout/Screen";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -362,99 +363,99 @@ const Onboarding = () => {
   if (!currentQuestion) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="fixed inset-0 z-50 bg-background">
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
       </div>
 
-      {/* Progress bar */}
-      <div className="relative z-10 px-6 pt-6 pb-2">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">
-            Question {currentIndex + 1}/{totalSteps}
-          </span>
-          <button
-            onClick={handleSkip}
-            className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
+      <Screen hasBottomNav={false} className="relative z-10 h-full">
+        <Screen.Header>
+          <div className="px-6 pt-6 pb-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">
+                Question {currentIndex + 1}/{totalSteps}
+              </span>
+              <button
+                onClick={handleSkip}
+                className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
+              >
+                <SkipForward className="w-3 h-3" /> Passer
+              </button>
+            </div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                initial={false}
+                animate={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+        </Screen.Header>
+
+        <Screen.Content className="overflow-y-auto">
+          <div className="flex items-start justify-center px-5 py-4">
+            <div className="w-full max-w-md bg-background/60 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-border/30">
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={`${currentQuestion.id}-${currentIndex}`}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-2xl font-bold text-foreground text-center leading-snug mb-2">
+                    {currentQuestion.title}
+                  </h2>
+
+                  <div className={`grid gap-3 ${currentQuestion.options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
+                    {currentQuestion.options.map((opt) => {
+                      const isSelected = currentQuestion.multi
+                        ? multiSelection.includes(opt.value)
+                        : answers[currentQuestion.id as keyof Answers] === opt.value;
+
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => handleSelect(opt.value)}
+                          className={`p-3.5 rounded-xl text-sm font-medium transition-all border text-left flex items-center gap-3 ${
+                            isSelected
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
+                          }`}
+                        >
+                          <span className="text-lg flex-shrink-0">{opt.emoji}</span>
+                          <span>{opt.label}</span>
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </Screen.Content>
+
+        <Screen.StickyAction>
+          <Button
+            variant="hero"
+            size="lg"
+            className="w-full gap-2"
+            disabled={!hasAnswer || saving}
+            onClick={goNext}
           >
-            <SkipForward className="w-3 h-3" /> Passer
-          </button>
-        </div>
-        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-primary rounded-full"
-            initial={false}
-            animate={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          />
-        </div>
-      </div>
-
-      {/* Question area */}
-      <div className="flex-1 flex items-center justify-center px-5 overflow-hidden py-4">
-        <div className="w-full max-w-md bg-background/60 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-border/30">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={`${currentQuestion.id}-${currentIndex}`}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="space-y-6"
-            >
-              <h2 className="text-2xl font-bold text-foreground text-center leading-snug mb-2">
-                {currentQuestion.title}
-              </h2>
-
-              <div className={`grid gap-3 ${currentQuestion.options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
-                {currentQuestion.options.map((opt) => {
-                  const isSelected = currentQuestion.multi
-                    ? multiSelection.includes(opt.value)
-                    : answers[currentQuestion.id as keyof Answers] === opt.value;
-
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleSelect(opt.value)}
-                      className={`p-3.5 rounded-xl text-sm font-medium transition-all border text-left flex items-center gap-3 ${
-                        isSelected
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
-                      }`}
-                    >
-                      <span className="text-lg flex-shrink-0">{opt.emoji}</span>
-                      <span>{opt.label}</span>
-                      {isSelected && (
-                        <Check className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Bottom button */}
-      <div
-        className="relative z-10 px-6 pb-8"
-        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 16px))" }}
-      >
-        <Button
-          variant="hero"
-          size="lg"
-          className="w-full gap-2"
-          disabled={!hasAnswer || saving}
-          onClick={goNext}
-        >
-          {saving ? "Enregistrement..." : isLast ? "Terminer" : "Suivant"}
-          {isLast ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-        </Button>
-      </div>
+            {saving ? "Enregistrement..." : isLast ? "Terminer" : "Suivant"}
+            {isLast ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+          </Button>
+        </Screen.StickyAction>
+      </Screen>
     </div>
   );
 };

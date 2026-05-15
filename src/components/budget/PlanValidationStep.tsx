@@ -11,6 +11,7 @@ import {
   Check, CheckCircle2, Edit3, Sparkles, Loader2,
   AlertTriangle, RotateCcw, X,
 } from 'lucide-react';
+import { Screen } from '@/components/layout/Screen';
 
 interface PlanItem {
   categorie: string;
@@ -611,30 +612,31 @@ export const PlanValidationStep = ({
         })}
       </div>
 
-      {/* Boutons globaux */}
-      <div className="space-y-2 pt-2">
-        <Button
-          onClick={finalizeAll}
-          disabled={finalizing || !isBalanced}
-          className="w-full h-12 gradient-primary text-primary-foreground font-bold"
-        >
-          {finalizing ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalisation...</>
-          ) : (
-            <><CheckCircle2 className="w-4 h-4 mr-2" /> Tout approuver et activer le budget</>
-          )}
-        </Button>
+      <Screen.StickyAction>
+        <div className="max-w-md mx-auto space-y-2">
+          <Button
+            onClick={finalizeAll}
+            disabled={finalizing || !isBalanced}
+            className="w-full h-12 gradient-primary text-primary-foreground font-bold"
+          >
+            {finalizing ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalisation...</>
+            ) : (
+              <><CheckCircle2 className="w-4 h-4 mr-2" /> Tout approuver et activer le budget</>
+            )}
+          </Button>
 
-        <p className={`text-center text-xs ${
-          isBalanced ? 'text-primary' : isOverBudget ? 'text-destructive' : 'text-muted-foreground'
-        }`}>
-          {isBalanced
-            ? '✓ Le plan est équilibré, tu peux finaliser'
-            : isOverBudget
-              ? `⚠️ Tu dépasses ton budget de ${formatMoneyDisplay(difference)}`
-              : `💡 Il reste ${formatMoneyDisplay(-difference)} à allouer`}
-        </p>
-      </div>
+          <p className={`text-center text-xs ${
+            isBalanced ? 'text-primary' : isOverBudget ? 'text-destructive' : 'text-muted-foreground'
+          }`}>
+            {isBalanced
+              ? '✓ Le plan est équilibré, tu peux finaliser'
+              : isOverBudget
+                ? `⚠️ Tu dépasses ton budget de ${formatMoneyDisplay(difference)}`
+                : `💡 Il reste ${formatMoneyDisplay(-difference)} à allouer`}
+          </p>
+        </div>
+      </Screen.StickyAction>
 
       {/* Modal IA rééquilibrage */}
       <AnimatePresence>
