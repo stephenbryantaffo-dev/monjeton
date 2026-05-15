@@ -56,6 +56,7 @@ const incrementScanCount = () => {
 
 const Scan = () => {
   const { user, isAdmin } = useAuth();
+  const activeCurrency = useActiveCurrency();
   const [totalConfirmed, setTotalConfirmed] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
