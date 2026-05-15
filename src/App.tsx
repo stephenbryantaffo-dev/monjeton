@@ -11,6 +11,7 @@ import AdminRoute from "@/components/AdminRoute";
 import OnboardingGuard from "@/components/OnboardingGuard";
 import PinLockScreen from "@/components/PinLockScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import CurrencyRateLoader from "@/components/CurrencyRateLoader";
 import { lazy, Suspense } from "react";
 
 // Eager load critical paths
@@ -60,6 +61,7 @@ const AppContent = () => {
 
   return (
     <Suspense fallback={<PageLoader />}>
+      <CurrencyRateLoader />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
