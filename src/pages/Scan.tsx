@@ -11,6 +11,7 @@ import ScanHistory from "@/components/scan/ScanHistory";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 import { ScanProgress } from "@/components/scan/ScanProgress";
+import { useActiveCurrency } from "@/lib/currencyStore";
 
 const FREE_SCAN_LIMIT = 5;
 
@@ -55,6 +56,7 @@ const incrementScanCount = () => {
 
 const Scan = () => {
   const { user, isAdmin } = useAuth();
+  const activeCurrency = useActiveCurrency();
   const [totalConfirmed, setTotalConfirmed] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
@@ -165,6 +167,12 @@ const Scan = () => {
       const token = session.session?.access_token;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
 
+      console.log('[Scan request]', {
+        imageSize: base64?.length,
+        mediaType: processedFile.type,
+        currency: activeCurrency,
+      });
+
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -179,7 +187,7 @@ const Scan = () => {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Erreur scan');
+        throw new Error(err.error || `Erreur scan (HTTP ${res.status})`);
       }
 
       const result: MultiScanResult = await res.json();
@@ -222,11 +230,33 @@ const Scan = () => {
         });
       }
     } catch (e: any) {
+      const m = (e?.message || e?.error || '').toLowerCase();
+      let desc = "Une erreur est survenue. Réessaie.";
+
+      if (m.includes('rate') || m.includes('limit')) {
+        desc = "Trop de scans en peu de temps. Attends 5 minutes.";
+      } else if (m.includes('image') || m.includes('media')) {
+        desc = "Image illisible. Vérifie qu'elle est bien éclairée et nette.";
+      } else if (m.includes('currency') || m.includes('xof') || m.includes('eur')) {
+        desc = "Problème de devise. Vérifie ta devise préférée dans Settings.";
+      } else if (m.includes('anthropic') || m.includes('ai service') || m.includes('claude')) {
+        desc = "Service IA temporairement indisponible. Réessaie dans 1 minute.";
+      } else if (m.includes('auth') || m.includes('token')) {
+        desc = "Session expirée. Reconnecte-toi.";
+      } else if (m.includes('network') || m.includes('failed to fetch')) {
+        desc = "Problème de connexion. Vérifie ton réseau.";
+      } else if (e?.message) {
+        desc = e.message;
+      }
+
       toast({
-        title: 'Erreur scan',
-        description: e?.message,
-        variant: 'destructive',
+        title: "Scan échoué",
+        description: desc,
+        variant: "destructive",
+        duration: 6000,
       });
+
+      console.error('[Scan error]', e);
     } finally {
       setScanning(false);
     }
