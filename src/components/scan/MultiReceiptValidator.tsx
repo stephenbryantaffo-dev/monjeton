@@ -61,6 +61,7 @@ interface WalletRow {
 interface Props {
   scanResult: ScanResult;
   imagePreview: string | null;
+  storagePath?: string | null;
   onClose: () => void;
   onValidated: (count: number) => void;
 }
@@ -82,7 +83,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 export const MultiReceiptValidator = ({
-  scanResult, imagePreview, onClose, onValidated,
+  scanResult, imagePreview, storagePath, onClose, onValidated,
 }: Props) => {
   const { user } = useAuth();
 
@@ -214,6 +215,7 @@ export const MultiReceiptValidator = ({
           parsed_date: item.date,
           status: 'confirmed',
           extracted_text: item.raw_text,
+          storage_path: storagePath ?? null,
         });
 
         successCount++;

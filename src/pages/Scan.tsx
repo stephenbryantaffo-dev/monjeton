@@ -65,6 +65,7 @@ const Scan = () => {
   const [scanResult, setScanResult] = useState<ParsedResult | null>(null);
   const [multiScanResult, setMultiScanResult] = useState<MultiScanResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [scanStoragePath, setScanStoragePath] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
@@ -133,7 +134,7 @@ const Scan = () => {
     setScanning(true);
     setScanResult(null);
     setMultiScanResult(null);
-
+    setScanStoragePath(null);
     try {
       let processedFile: File = file;
       if (file.size > 4 * 1024 * 1024) {
@@ -162,6 +163,27 @@ const Scan = () => {
 
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
+
+      // Upload image to private storage (best-effort, don't block the scan)
+      let storagePath: string | null = null;
+      try {
+        const now = new Date();
+        const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const ext = (processedFile.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const uuid = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const path = `${user.id}/${ym}/${uuid}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('receipts')
+          .upload(path, processedFile, { contentType: processedFile.type, upsert: false });
+        if (!upErr) {
+          storagePath = path;
+          setScanStoragePath(path);
+        } else {
+          console.warn('[Scan upload]', upErr);
+        }
+      } catch (e) {
+        console.warn('[Scan upload exception]', e);
+      }
 
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
@@ -311,11 +333,13 @@ const Scan = () => {
         parsed_category: data.category,
         parsed_currency: data.currency,
         status: 'confirmed',
+        storage_path: scanStoragePath,
       });
 
       toast({ title: 'Transaction enregistrée ✅' });
       setScanResult(null);
       setImagePreview(null);
+      setScanStoragePath(null);
       await Promise.all([fetchHistory(), refreshReceiptStats()]);
     } catch (e: any) {
       toast({
@@ -329,16 +353,19 @@ const Scan = () => {
   const handleReject = () => {
     setScanResult(null);
     setImagePreview(null);
+    setScanStoragePath(null);
   };
 
   const handleMultiClose = () => {
     setMultiScanResult(null);
     setImagePreview(null);
+    setScanStoragePath(null);
   };
 
   const handleMultiValidated = async (_count: number) => {
     setMultiScanResult(null);
     setImagePreview(null);
+    setScanStoragePath(null);
     await Promise.all([fetchHistory(), refreshReceiptStats()]);
   };
 
@@ -349,6 +376,7 @@ const Scan = () => {
         <MultiReceiptValidator
           scanResult={multiScanResult}
           imagePreview={imagePreview}
+          storagePath={scanStoragePath}
           onClose={handleMultiClose}
           onValidated={handleMultiValidated}
         />
