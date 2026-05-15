@@ -1169,7 +1169,7 @@ const Receipts = () => {
                       : "")}
                   {fullscreenScan?.parsed_amount != null && (
                     <span className="ml-2 text-primary font-bold">
-                      · {Number(fullscreenScan.parsed_amount).toLocaleString("fr-FR")} F
+                      · {Number(fullscreenScan.parsed_amount).toLocaleString("fr-FR")} {getActiveCurrencySymbol()}
                     </span>
                   )}
                 </p>
