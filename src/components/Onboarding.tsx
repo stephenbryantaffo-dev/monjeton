@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
 import WalletIcon from "@/components/WalletIcon";
 import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
+import { setActiveCurrency } from "@/lib/currencyStore";
 
 const WALLET_OPTIONS = [
   { name: "Wave" },
@@ -58,6 +59,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
         .from("profiles")
         .update({ currency_preference: currency } as any)
         .eq("user_id", user.id);
+      setActiveCurrency(currency);
       goNext();
     } catch {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la devise", variant: "destructive" });
