@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, ArrowRight, Check, SkipForward } from "lucide-react";
+import { Wallet, ArrowRight, Check, SkipForward, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCountry } from "@/contexts/CountryContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
 import WalletIcon from "@/components/WalletIcon";
-import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
+import {
+  PRIMARY_CURRENCIES,
+  EXTRA_CURRENCIES,
+  ALL_CURRENCIES,
+  currencyForCountry,
+  type CurrencyCode,
+} from "@/lib/currency";
 import { setActiveCurrency } from "@/lib/currencyStore";
 
 const WALLET_OPTIONS = [
@@ -32,21 +39,28 @@ interface OnboardingProps {
 
 const Onboarding = ({ onComplete }: OnboardingProps) => {
   const { user, profile } = useAuth();
+  const { country } = useCountry();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
-  // Step 2 state
+  // Wallet state
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState("");
   const [creatingWallet, setCreatingWallet] = useState(false);
   const [createdWalletId, setCreatedWalletId] = useState<string | null>(null);
 
-  // Step currency state
-  const [currency, setCurrency] = useState<CurrencyCode>("XOF");
+  // Currency state — pre-selected from detected country
+  const [currency, setCurrency] = useState<CurrencyCode>(() => currencyForCountry(country?.code));
   const [savingCurrency, setSavingCurrency] = useState(false);
+  const [showMoreCurrencies, setShowMoreCurrencies] = useState(false);
 
-  // Step demo state
+  // Re-sync if country detection finishes after mount
+  useEffect(() => {
+    if (country?.code) setCurrency((prev) => prev || currencyForCountry(country.code));
+  }, [country?.code]);
+
+  // Demo state
   const [demoAmount, setDemoAmount] = useState("1000");
   const [demoNote, setDemoNote] = useState("Transport");
   const [creatingTx, setCreatingTx] = useState(false);
