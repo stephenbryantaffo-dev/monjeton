@@ -14,6 +14,7 @@ const WALLET_OPTIONS = [
   { name: "Orange Money" },
   { name: "MTN Mobile Money" },
   { name: "Moov Money" },
+  { name: "Carte bancaire" },
   { name: "Cash" },
 ];
 
