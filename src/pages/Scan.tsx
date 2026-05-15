@@ -65,6 +65,7 @@ const Scan = () => {
   const [scanResult, setScanResult] = useState<ParsedResult | null>(null);
   const [multiScanResult, setMultiScanResult] = useState<MultiScanResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [scanStoragePath, setScanStoragePath] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
