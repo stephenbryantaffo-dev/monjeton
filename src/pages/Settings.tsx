@@ -232,6 +232,32 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* Currency preference */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <CreditCard className="w-4 h-4" /> Devise
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Devise dans laquelle tu affiches tes montants.
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {CURRENCY_OPTIONS.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => handleCurrencyChange(c.code)}
+              className={`p-3 rounded-xl text-sm transition-all border flex flex-col items-center gap-1 ${
+                currencyPref === c.code
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              <span className="text-xl">{c.flag}</span>
+              <span className="text-xs font-medium">{c.code}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Privacy section */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-4">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
