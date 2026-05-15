@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
+import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,12 +62,27 @@ const Settings = () => {
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
+  const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
+
+  const handleCurrencyChange = async (code: CurrencyCode) => {
+    if (!user) return;
+    setCurrencyPref(code);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ currency_preference: code } as any)
+      .eq("user_id", user.id);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la devise", variant: "destructive" });
+    } else {
+      toast({ title: "Devise mise à jour ✅" });
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("whatsapp_alerts, phone")
+      .select("whatsapp_alerts, phone, currency_preference")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
