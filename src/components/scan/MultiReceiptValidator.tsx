@@ -61,6 +61,7 @@ interface WalletRow {
 interface Props {
   scanResult: ScanResult;
   imagePreview: string | null;
+  storagePath?: string | null;
   onClose: () => void;
   onValidated: (count: number) => void;
 }
