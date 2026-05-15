@@ -548,7 +548,7 @@ const NewTransaction = () => {
             </button>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form id="new-tx-form" className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label>Montant (FCFA)</Label>
               <MoneyInput
