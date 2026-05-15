@@ -14,6 +14,7 @@ import {
   Users, ShoppingBag, Calendar, RefreshCw,
 } from 'lucide-react';
 import { PlanValidationStep } from '@/components/budget/PlanValidationStep';
+import { Screen } from '@/components/layout/Screen';
 
 interface CoachingState {
   current_step: number;
