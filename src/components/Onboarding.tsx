@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
+import WalletIcon from "@/components/WalletIcon";
 
 const WALLET_OPTIONS = [
   { name: "Wave" },
