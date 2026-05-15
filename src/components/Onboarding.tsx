@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
 import WalletIcon from "@/components/WalletIcon";
+import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
 
 const WALLET_OPTIONS = [
   { name: "Wave" },
@@ -40,10 +41,30 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
   const [creatingWallet, setCreatingWallet] = useState(false);
   const [createdWalletId, setCreatedWalletId] = useState<string | null>(null);
 
-  // Step 3 state
+  // Step currency state
+  const [currency, setCurrency] = useState<CurrencyCode>("XOF");
+  const [savingCurrency, setSavingCurrency] = useState(false);
+
+  // Step demo state
   const [demoAmount, setDemoAmount] = useState("1000");
   const [demoNote, setDemoNote] = useState("Transport");
   const [creatingTx, setCreatingTx] = useState(false);
+
+  const handleSaveCurrency = async () => {
+    if (!user) return;
+    setSavingCurrency(true);
+    try {
+      await supabase
+        .from("profiles")
+        .update({ currency_preference: currency } as any)
+        .eq("user_id", user.id);
+      goNext();
+    } catch {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la devise", variant: "destructive" });
+    } finally {
+      setSavingCurrency(false);
+    }
+  };
 
   const firstName = profile?.full_name?.split(" ")[0] || "ami";
 
@@ -118,7 +139,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
       <div className="relative w-full max-w-md">
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-8">
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 ${
@@ -245,7 +266,61 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
 
           {step === 2 && (
             <motion.div
-              key="step-2"
+              key="step-currency"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="space-y-6"
+            >
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl">💱</span>
+                </div>
+                <h2 className="text-xl font-bold text-foreground">
+                  Dans quelle devise affiches-tu tes montants ?
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Tu pourras changer ça à tout moment dans tes réglages.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {CURRENCY_OPTIONS.map((c) => (
+                  <button
+                    key={c.code}
+                    onClick={() => setCurrency(c.code)}
+                    className={`w-full p-4 rounded-xl text-left transition-all border flex items-center gap-3 ${
+                      currency === c.code
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="text-2xl">{c.flag}</span>
+                    <span className="font-medium flex-1">{c.label}</span>
+                    {currency === c.code && <Check className="w-5 h-5 text-primary" />}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full gap-2"
+                disabled={savingCurrency}
+                onClick={handleSaveCurrency}
+              >
+                {savingCurrency ? "Enregistrement..." : "Continuer"}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div
+              key="step-demo"
               custom={direction}
               variants={slideVariants}
               initial="enter"

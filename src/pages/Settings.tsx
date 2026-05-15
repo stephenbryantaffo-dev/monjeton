@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
+import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,17 +62,35 @@ const Settings = () => {
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
+  const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
+
+  const handleCurrencyChange = async (code: CurrencyCode) => {
+    if (!user) return;
+    setCurrencyPref(code);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ currency_preference: code } as any)
+      .eq("user_id", user.id);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer la devise", variant: "destructive" });
+    } else {
+      toast({ title: "Devise mise à jour ✅" });
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("whatsapp_alerts, phone")
+      .select("whatsapp_alerts, phone, currency_preference")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data && typeof (data as any).whatsapp_alerts === "boolean") {
           setWhatsappAlerts((data as any).whatsapp_alerts);
+        }
+        if (data && (data as any).currency_preference) {
+          setCurrencyPref((data as any).currency_preference as CurrencyCode);
         }
         if (data && (data as any).phone) {
           const savedPhone = (data as any).phone as string;
@@ -210,6 +229,32 @@ const Settings = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* Currency preference */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <CreditCard className="w-4 h-4" /> Devise
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Devise dans laquelle tu affiches tes montants.
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {CURRENCY_OPTIONS.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => handleCurrencyChange(c.code)}
+              className={`p-3 rounded-xl text-sm transition-all border flex flex-col items-center gap-1 ${
+                currencyPref === c.code
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              <span className="text-xl">{c.flag}</span>
+              <span className="text-xs font-medium">{c.code}</span>
+            </button>
+          ))}
         </div>
       </div>
 

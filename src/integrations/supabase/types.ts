@@ -1079,6 +1079,7 @@ export type Database = {
           beauty_budget_range: string | null
           country: string | null
           created_at: string
+          currency_preference: string
           dependents_count: number | null
           email: string | null
           financial_goal: string | null
@@ -1101,6 +1102,7 @@ export type Database = {
           beauty_budget_range?: string | null
           country?: string | null
           created_at?: string
+          currency_preference?: string
           dependents_count?: number | null
           email?: string | null
           financial_goal?: string | null
@@ -1123,6 +1125,7 @@ export type Database = {
           beauty_budget_range?: string | null
           country?: string | null
           created_at?: string
+          currency_preference?: string
           dependents_count?: number | null
           email?: string | null
           financial_goal?: string | null
