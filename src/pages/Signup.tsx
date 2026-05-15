@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, validatePasswordStrength, sanitizeText } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.webp";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
@@ -18,6 +19,22 @@ const Signup = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const sendPasswordReset = async (targetEmail: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({
+      title: "Email envoyé ✅",
+      description: "Vérifie ta boîte mail pour définir un nouveau mot de passe.",
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +70,7 @@ const Signup = () => {
 
       if (m.includes('already') || m.includes('registered')
           || m.includes('user already') || m.includes('exists')) {
-        desc = "Cet email a déjà un compte. Connecte-toi à la place.";
+        desc = "Cet email existe déjà. Connecte-toi, ou réinitialise le mot de passe si tu ne l'as pas.";
       } else if (m.includes('rate') || m.includes('limit')
                  || m.includes('too many')) {
         desc = "Trop de tentatives. Patiente 5 minutes et réessaie.";
