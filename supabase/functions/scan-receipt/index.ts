@@ -192,7 +192,7 @@ Return ONLY the JSON, no other text.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    let parsed: Record<string, any> = {};
+    let parsedResult: Record<string, any> = {};
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
