@@ -57,7 +57,24 @@ Deno.serve(async (req) => {
     const { imageBase64, mediaType } = parsed.data;
     const safeMediaType = mediaType || 'image/jpeg';
 
-    const systemPrompt = `Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech en Afrique de l'Ouest (UEMOA, F CFA).
+    // Load user's preferred currency as fallback when no currency symbol detected
+    let userCurrency = 'XOF';
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('currency_preference')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if ((prof as any)?.currency_preference) {
+        userCurrency = String((prof as any).currency_preference).toUpperCase();
+      }
+    } catch {}
+    const ctx = getCurrencyCtx(userCurrency);
+
+    const systemPrompt = `Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech multi-devises.
+
+Devise préférée de l'utilisateur : ${userCurrency} (${ctx.region}).
+Si aucun symbole de devise n'est lisible sur le document, utiliser ${userCurrency} par défaut.
 
 TU DOIS ANALYSER L'IMAGE et détecter TOUTES les transactions financières visibles, peu importe leur format :
 
