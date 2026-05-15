@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import ScanHistory from "@/components/scan/ScanHistory";
-import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
+import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 
 const FREE_SCAN_LIMIT = 5;
 
@@ -36,9 +36,11 @@ const Scan = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
   const [history, setHistory] = useState<any[]>([]);
-  const [multiScanResult, setMultiScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<ParsedResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [wallets, setWallets] = useState<any[]>([]);
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -71,11 +73,15 @@ const Scan = () => {
     Promise.all([
       supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed"),
       supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
-    ]).then(([histRes, subRes]) => {
+      supabase.from("categories").select("id, name, type").eq("user_id", user.id),
+      supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
+    ]).then(([histRes, subRes, catRes, walRes]) => {
       const confirmed = histRes.data || [];
       setTotalConfirmed(confirmed.length);
       setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
       setIsPremium(!!subRes.data || isAdmin);
+      setCategories(catRes.data || []);
+      setWallets(walRes.data || []);
     });
     fetchHistory();
     const scanData = getScanCount();
@@ -98,7 +104,7 @@ const Scan = () => {
     }
 
     setScanning(true);
-    setMultiScanResult(null);
+    setScanResult(null);
 
     try {
       let processedFile: File = file;
@@ -131,7 +137,7 @@ const Scan = () => {
 
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipt`;
 
       const res = await fetch(url, {
         method: 'POST',
@@ -140,8 +146,9 @@ const Scan = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageBase64: base64,
-          mediaType: processedFile.type,
+          image: base64,
+          mimeType: processedFile.type,
+          scanType: 'receipt',
         }),
       });
 
@@ -151,11 +158,12 @@ const Scan = () => {
       }
 
       const result = await res.json();
+      const parsed: ParsedResult = result.parsed || {};
 
-      if (result.total_detected === 0) {
+      if (!parsed.amount || parsed.amount <= 0) {
         toast({
           title: 'Aucune transaction détectée',
-          description: result.warnings?.[0] || 'Essaie avec une image plus nette',
+          description: 'Essaie avec une image plus nette',
           variant: 'destructive',
         });
         return;
@@ -166,10 +174,10 @@ const Scan = () => {
         setScansRemaining((prev) => prev - 1);
       }
 
-      setMultiScanResult(result);
+      setScanResult(parsed);
       toast({
-        title: `${result.total_detected} transaction(s) détectée(s) 🎯`,
-        description: 'Vérifie et valide ce que tu veux garder',
+        title: 'Reçu analysé 🎯',
+        description: 'Vérifie et valide les informations',
       });
     } catch (e: any) {
       toast({
@@ -186,6 +194,69 @@ const Scan = () => {
     const f = e.target.files?.[0];
     if (f) await scanImage(f);
     e.target.value = "";
+  };
+
+  const findCategoryId = (name?: string | null, type: 'expense' | 'income' = 'expense') => {
+    if (!name) return null;
+    const match = categories.find(
+      (c) => c.name?.toLowerCase() === name.toLowerCase() && (!c.type || c.type === type)
+    ) || categories.find((c) => c.name?.toLowerCase() === name.toLowerCase());
+    return match?.id ?? null;
+  };
+
+  const findWalletId = (name?: string | null) => {
+    if (!name) return null;
+    const match = wallets.find((w) => w.wallet_name?.toLowerCase() === name.toLowerCase());
+    return match?.id ?? null;
+  };
+
+  const handleConfirm = async (data: ParsedResult) => {
+    if (!user) return;
+    try {
+      const type = data.type === 'income' ? 'income' : 'expense';
+      const amount = data.converted_amount_xof ?? data.amount ?? 0;
+      const catId = findCategoryId(data.category, type);
+      const walletId = findWalletId(data.wallet);
+
+      const { error } = await supabase.from('transactions').insert({
+        user_id: user.id,
+        amount,
+        type,
+        date: data.date || new Date().toISOString().slice(0, 10),
+        note: data.merchant || 'Reçu scanné',
+        category_id: catId,
+        wallet_id: walletId,
+      } as any);
+
+      if (error) throw error;
+
+      await supabase.from('receipt_scans').insert({
+        user_id: user.id,
+        scan_type: 'photo',
+        parsed_merchant: data.merchant,
+        parsed_amount: amount,
+        parsed_date: data.date,
+        parsed_category: data.category,
+        parsed_currency: data.currency,
+        status: 'confirmed',
+      });
+
+      toast({ title: 'Transaction enregistrée ✅' });
+      setScanResult(null);
+      setImagePreview(null);
+      await Promise.all([fetchHistory(), refreshReceiptStats()]);
+    } catch (e: any) {
+      toast({
+        title: 'Erreur enregistrement',
+        description: e?.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReject = () => {
+    setScanResult(null);
+    setImagePreview(null);
   };
 
   return (
@@ -206,20 +277,14 @@ const Scan = () => {
         </div>
       )}
 
-      {multiScanResult ? (
-        <MultiReceiptValidator
-          scanResult={multiScanResult}
-          imagePreview={imagePreview}
-          onClose={() => {
-            setMultiScanResult(null);
-            setImagePreview(null);
-          }}
-          onValidated={async (count) => {
-            setMultiScanResult(null);
-            setImagePreview(null);
-            await Promise.all([fetchHistory(), refreshReceiptStats()]);
-            toast({ title: `${count} transaction(s) ajoutée(s) ✅` });
-          }}
+      {scanResult ? (
+        <ScanResultCard
+          result={scanResult}
+          categories={categories}
+          wallets={wallets}
+          onConfirm={handleConfirm}
+          onReject={handleReject}
+          isPremium={true}
         />
       ) : (
         <motion.div
@@ -234,8 +299,8 @@ const Scan = () => {
           <div className="text-center space-y-1.5 max-w-md">
             <h3 className="text-foreground font-semibold text-base">Scan Intelligent</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Prends ou importe une photo. L'IA détecte automatiquement reçus,
-              factures, historique Mobile Money ou commandes.
+              Prends ou importe une photo d'un reçu, d'une facture ou d'un
+              historique Mobile Money. L'IA extrait automatiquement le montant.
             </p>
           </div>
 
