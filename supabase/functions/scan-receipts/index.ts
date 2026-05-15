@@ -263,7 +263,7 @@ Si aucune transaction détectée :
       id: tx.id || `tx_${i + 1}`,
       merchant: String(tx.merchant || 'Inconnu').slice(0, 100),
       amount: Math.max(0, Math.min(999999999, Math.floor(Number(tx.amount) || 0))),
-      currency: tx.currency || 'XOF',
+      currency: tx.currency || userCurrency,
       date: tx.date || new Date().toISOString().split('T')[0],
       type: tx.type === 'income' ? 'income' : 'expense',
       category_suggestion: tx.category_suggestion || 'Autre',
