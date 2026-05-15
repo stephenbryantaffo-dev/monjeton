@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import WalletIcon from '@/components/WalletIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -472,7 +473,12 @@ export const MultiReceiptValidator = ({
                   </SelectTrigger>
                   <SelectContent>
                     {wallets.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.wallet_name}</SelectItem>
+                      <SelectItem key={w.id} value={w.id}>
+                        <span className="inline-flex items-center gap-2">
+                          <WalletIcon name={w.wallet_name} size={18} />
+                          {w.wallet_name}
+                        </span>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

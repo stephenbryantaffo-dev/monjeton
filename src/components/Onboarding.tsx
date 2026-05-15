@@ -7,13 +7,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
+import WalletIcon from "@/components/WalletIcon";
 
 const WALLET_OPTIONS = [
-  { name: "Wave", emoji: "🌊" },
-  { name: "Orange Money", emoji: "🟠" },
-  { name: "MTN Mobile Money", emoji: "🟡" },
-  { name: "Moov Money", emoji: "🔵" },
-  { name: "Cash", emoji: "💵" },
+  { name: "Wave" },
+  { name: "Orange Money" },
+  { name: "MTN Mobile Money" },
+  { name: "Moov Money" },
+  { name: "Cash" },
 ];
 
 const slideVariants = {
@@ -197,14 +198,14 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
                   <button
                     key={w.name}
                     onClick={() => setSelectedWallet(w.name)}
-                    className={`p-3 rounded-xl text-sm font-medium transition-all border ${
+                    className={`p-3 rounded-xl text-sm font-medium transition-all border flex items-center gap-2 ${
                       selectedWallet === w.name
                         ? "border-primary bg-primary/10 text-foreground"
                         : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    <span className="text-lg mr-2">{w.emoji}</span>
-                    {w.name}
+                    <WalletIcon name={w.name} size={28} />
+                    <span className="text-left">{w.name}</span>
                   </button>
                 ))}
               </div>
