@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCountry } from "@/contexts/CountryContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Screen } from "@/components/layout/Screen";
 import logoMonjeton from "@/assets/logo-monjeton.webp";
 import WalletIcon from "@/components/WalletIcon";
 import {
