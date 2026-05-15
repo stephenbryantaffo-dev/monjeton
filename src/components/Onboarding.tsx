@@ -215,7 +215,94 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
 
           {step === 1 && (
             <motion.div
-              key="step-1"
+              key="step-currency"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="space-y-6"
+            >
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl">💱</span>
+                </div>
+                <h2 className="text-xl font-bold text-foreground">
+                  Quelle est ta devise principale ?
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Détectée depuis ton pays. Tu pourras changer à tout moment.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {PRIMARY_CURRENCIES.map((c) => (
+                  <button
+                    key={c.code}
+                    onClick={() => setCurrency(c.code)}
+                    className={`w-full p-4 rounded-xl text-left transition-all border flex items-center gap-3 ${
+                      currency === c.code
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="text-2xl">{c.flag}</span>
+                    <span className="font-medium flex-1">{c.label}</span>
+                    {currency === c.code && <Check className="w-5 h-5 text-primary" />}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setShowMoreCurrencies((v) => !v)}
+                  className="w-full p-3 rounded-xl text-sm text-muted-foreground border border-dashed border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2"
+                >
+                  Plus de devises
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showMoreCurrencies ? "rotate-180" : ""}`} />
+                </button>
+
+                {showMoreCurrencies && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    {EXTRA_CURRENCIES.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => setCurrency(c.code)}
+                        className={`w-full p-3 rounded-xl text-left transition-all border flex items-center gap-3 ${
+                          currency === c.code
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <span className="text-xl">{c.flag}</span>
+                        <span className="font-medium flex-1 text-sm">{c.label}</span>
+                        {currency === c.code && <Check className="w-4 h-4 text-primary" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full gap-2"
+                disabled={savingCurrency}
+                onClick={handleSaveCurrency}
+              >
+                {savingCurrency ? "Enregistrement..." : "Continuer"}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div
+              key="step-wallet"
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -255,7 +342,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
                   className="space-y-2"
                 >
                   <label className="text-sm font-medium text-foreground">
-                    Solde actuel (FCFA)
+                    Solde actuel
                   </label>
                   <Input
                     type="number"
@@ -275,60 +362,6 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
                 onClick={handleCreateWallet}
               >
                 {creatingWallet ? "Création..." : "Continuer"}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </motion.div>
-          )}
-
-          {step === 2 && (
-            <motion.div
-              key="step-currency"
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-              className="space-y-6"
-            >
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl">💱</span>
-                </div>
-                <h2 className="text-xl font-bold text-foreground">
-                  Dans quelle devise affiches-tu tes montants ?
-                </h2>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Tu pourras changer ça à tout moment dans tes réglages.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                {CURRENCY_OPTIONS.map((c) => (
-                  <button
-                    key={c.code}
-                    onClick={() => setCurrency(c.code)}
-                    className={`w-full p-4 rounded-xl text-left transition-all border flex items-center gap-3 ${
-                      currency === c.code
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
-                    }`}
-                  >
-                    <span className="text-2xl">{c.flag}</span>
-                    <span className="font-medium flex-1">{c.label}</span>
-                    {currency === c.code && <Check className="w-5 h-5 text-primary" />}
-                  </button>
-                ))}
-              </div>
-
-              <Button
-                variant="hero"
-                size="lg"
-                className="w-full gap-2"
-                disabled={savingCurrency}
-                onClick={handleSaveCurrency}
-              >
-                {savingCurrency ? "Enregistrement..." : "Continuer"}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </motion.div>
