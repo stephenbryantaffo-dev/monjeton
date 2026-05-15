@@ -146,7 +146,7 @@ const Savings = () => {
       return;
     }
     if (currentAmount + val > targetAmount) {
-      toast({ title: "Dépassement", description: `Max ${formatMoneySmart(targetAmount - currentAmount)} F restants`, variant: "destructive" });
+      toast({ title: "Dépassement", description: `Max ${formatMoneySmart(targetAmount - currentAmount)} restants`, variant: "destructive" });
       return;
     }
     if (!depositWalletId) {
@@ -209,7 +209,7 @@ const Savings = () => {
         .eq("id", goalId);
       if (upErr) throw upErr;
 
-      toast({ title: `${formatMoneySmart(val)} F versés ✅` });
+      toast({ title: `${formatMoneySmart(val)} versés ✅` });
       setDepositGoalId(null);
       setDepositAmount("");
       setDepositWalletId("");
@@ -235,7 +235,7 @@ const Savings = () => {
       if (txErr) throw txErr;
 
       await supabase.from("savings_goals").update({ current_amount: 0 }).eq("id", goal.id);
-      toast({ title: `${formatMoneySmart(goal.current_amount)} F retirés vers ${wallets[0].wallet_name} ✅` });
+      toast({ title: `${formatMoneySmart(goal.current_amount)} retirés vers ${wallets[0].wallet_name} ✅` });
       fetchGoals();
     } catch {
       toast({ title: "Erreur de retrait", variant: "destructive" });
@@ -293,7 +293,7 @@ const Savings = () => {
                   <span className="text-2xl">{t.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatMoneySmart(t.amount)} F</p>
+                    <p className="text-xs text-muted-foreground">{formatMoneySmart(t.amount)}</p>
                   </div>
                   <Plus className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -347,19 +347,19 @@ const Savings = () => {
                   {/* ─── PROGRESS BAR ─── */}
                   <Progress value={Math.min(pct, 100)} className="h-2 bg-secondary" />
                   <div className="flex justify-between mt-2">
-                    <span className="text-xs text-muted-foreground">{formatMoneySmart(g.current_amount)} F</span>
-                    <span className="text-xs text-muted-foreground">{formatMoneySmart(g.target_amount)} F</span>
+                    <span className="text-xs text-muted-foreground">{formatMoneySmart(g.current_amount)}</span>
+                    <span className="text-xs text-muted-foreground">{formatMoneySmart(g.target_amount)}</span>
                   </div>
 
                   {/* ─── SMART INFO ─── */}
                   {!isAchieved && (
                     <div className="mt-3 space-y-1">
                       <p className="text-xs text-muted-foreground">
-                        Reste : <span className="font-medium text-foreground">{formatMoneySmart(remaining)} F</span>
+                        Reste : <span className="font-medium text-foreground">{formatMoneySmart(remaining)}</span>
                       </p>
                       {daysLeft !== null && daysLeft > 0 && dailyTarget && (
                         <p className="text-xs text-muted-foreground">
-                          Épargne <span className="font-medium text-primary">{formatMoneySmart(dailyTarget)} F/jour</span> pour atteindre l'objectif avant le{" "}
+                          Épargne <span className="font-medium text-primary">{formatMoneySmart(dailyTarget)}/jour</span> pour atteindre l'objectif avant le{" "}
                           {new Date(g.deadline!).toLocaleDateString("fr-FR")}
                         </p>
                       )}
@@ -449,7 +449,7 @@ const Savings = () => {
                                 <span className="text-muted-foreground">
                                   {new Date(d.created_at).toLocaleDateString("fr-FR")}
                                 </span>
-                                <span className="font-medium text-foreground">+{formatMoneySmart(d.amount)} F</span>
+                                <span className="font-medium text-foreground">+{formatMoneySmart(d.amount)}</span>
                               </div>
                             ))
                           )}

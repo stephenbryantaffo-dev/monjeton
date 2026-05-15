@@ -200,7 +200,7 @@ export const InstallmentPlanInput = ({
                         {new Date(row.due_date).toLocaleDateString("fr-FR")}
                       </span>
                       <span className="text-xs font-bold text-primary tabular-nums">
-                        {formatMoneySmart(row.expected_amount)} F
+                        {formatMoneySmart(row.expected_amount)}
                       </span>
                     </>
                   )}
@@ -223,7 +223,7 @@ export const InstallmentPlanInput = ({
 
           <div className="flex justify-between text-[11px] pt-1 border-t border-border">
             <span className="text-muted-foreground">
-              Total réparti : {formatMoneySmart(sum)} F
+              Total réparti : {formatMoneySmart(sum)}
             </span>
             <span
               className={
@@ -235,8 +235,8 @@ export const InstallmentPlanInput = ({
               {diff === 0
                 ? "✓ Équilibré"
                 : diff > 0
-                ? `Manque ${formatMoneySmart(diff)} F`
-                : `Excédent ${formatMoneySmart(-diff)} F`}
+                ? `Manque ${formatMoneySmart(diff)}`
+                : `Excédent ${formatMoneySmart(-diff)}`}
             </span>
           </div>
         </>

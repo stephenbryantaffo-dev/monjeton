@@ -259,7 +259,7 @@ const Categories = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
             <p className="text-xs text-muted-foreground">
-              {spent > 0 ? `Ce mois : ${formatMoneySmart(spent)} F` : "Aucune transaction"}
+              {spent > 0 ? `Ce mois : ${formatMoneySmart(spent)}` : "Aucune transaction"}
             </p>
           </div>
         </div>
