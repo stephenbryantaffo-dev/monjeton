@@ -333,11 +333,13 @@ const Scan = () => {
         parsed_category: data.category,
         parsed_currency: data.currency,
         status: 'confirmed',
+        storage_path: scanStoragePath,
       });
 
       toast({ title: 'Transaction enregistrée ✅' });
       setScanResult(null);
       setImagePreview(null);
+      setScanStoragePath(null);
       await Promise.all([fetchHistory(), refreshReceiptStats()]);
     } catch (e: any) {
       toast({
@@ -351,16 +353,19 @@ const Scan = () => {
   const handleReject = () => {
     setScanResult(null);
     setImagePreview(null);
+    setScanStoragePath(null);
   };
 
   const handleMultiClose = () => {
     setMultiScanResult(null);
     setImagePreview(null);
+    setScanStoragePath(null);
   };
 
   const handleMultiValidated = async (_count: number) => {
     setMultiScanResult(null);
     setImagePreview(null);
+    setScanStoragePath(null);
     await Promise.all([fetchHistory(), refreshReceiptStats()]);
   };
 
