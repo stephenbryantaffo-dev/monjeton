@@ -89,6 +89,9 @@ const Settings = () => {
         if (data && typeof (data as any).whatsapp_alerts === "boolean") {
           setWhatsappAlerts((data as any).whatsapp_alerts);
         }
+        if (data && (data as any).currency_preference) {
+          setCurrencyPref((data as any).currency_preference as CurrencyCode);
+        }
         if (data && (data as any).phone) {
           const savedPhone = (data as any).phone as string;
           setPhoneInput(savedPhone);
