@@ -539,17 +539,6 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
           ⚠️ Tes charges dépassent tes revenus. Le coach te proposera un plan d'urgence.
         </div>
       )}
-      <Button
-        onClick={generatePlan}
-        disabled={generating}
-        className="w-full gradient-primary text-primary-foreground h-12"
-      >
-        {generating ? (
-          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Génération en cours...</>
-        ) : (
-          <><Sparkles className="w-4 h-4 mr-2" /> Générer mon plan</>
-        )}
-      </Button>
     </div>
   );
 
