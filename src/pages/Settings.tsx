@@ -64,6 +64,7 @@ const Settings = () => {
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
   const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
+  const activeCurrency = useActiveCurrency();
 
   const handleCurrencyChange = async (code: CurrencyCode) => {
     if (!user || code === currencyPref) return;
