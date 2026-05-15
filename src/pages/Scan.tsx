@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import ScanHistory from "@/components/scan/ScanHistory";
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
+import { ScanProgress } from "@/components/scan/ScanProgress";
 
 const FREE_SCAN_LIMIT = 5;
 
@@ -323,11 +324,7 @@ const Scan = () => {
           />
 
           {scanning ? (
-            <div className="flex flex-col items-center gap-2 py-2">
-              <Loader2 className="w-7 h-7 text-primary animate-spin" />
-              <p className="text-sm font-medium text-foreground">L'IA analyse l'image...</p>
-              <p className="text-xs text-muted-foreground">Détection en cours, patiente quelques secondes</p>
-            </div>
+            <ScanProgress isAnalyzing={scanning} />
           ) : (
             <div className="flex gap-3">
               <Button
