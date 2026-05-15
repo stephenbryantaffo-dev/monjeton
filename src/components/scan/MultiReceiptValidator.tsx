@@ -472,7 +472,12 @@ export const MultiReceiptValidator = ({
                   </SelectTrigger>
                   <SelectContent>
                     {wallets.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.wallet_name}</SelectItem>
+                      <SelectItem key={w.id} value={w.id}>
+                        <span className="inline-flex items-center gap-2">
+                          <WalletIcon name={w.wallet_name} size={18} />
+                          {w.wallet_name}
+                        </span>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
