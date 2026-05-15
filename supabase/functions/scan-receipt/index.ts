@@ -48,6 +48,20 @@ serve(async (req) => {
       if (!rl.allowed) return rateLimitResponse('scan-receipt', rl.retryAfter, corsHeaders);
     }
 
+    // Load user's preferred currency as fallback when receipt has no symbol
+    let userCurrency = 'XOF';
+    if (userIdFromToken) {
+      try {
+        const { data: prof } = await supabaseAuth
+          .from('profiles')
+          .select('currency_preference')
+          .eq('user_id', userIdFromToken)
+          .maybeSingle();
+        if (prof?.currency_preference) userCurrency = String(prof.currency_preference).toUpperCase();
+      } catch {}
+    }
+    const ctx = getCurrencyCtx(userCurrency);
+
     const rawBody = await req.json().catch(() => null);
     const parsed = ScanReceiptSchema.safeParse(rawBody);
     if (!parsed.success) {
