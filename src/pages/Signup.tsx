@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, validatePasswordStrength, sanitizeText } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.webp";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
@@ -15,9 +16,26 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signUp } = useAuth();
+  const [existingAccountEmail, setExistingAccountEmail] = useState("");
+  const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const sendPasswordReset = async (targetEmail: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({
+      title: "Email envoyé ✅",
+      description: "Vérifie ta boîte mail pour définir un nouveau mot de passe.",
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +62,7 @@ const Signup = () => {
     }
 
     setLoading(true);
+    setExistingAccountEmail("");
     const { error } = await signUp(email, password, safeName);
     setLoading(false);
 
@@ -53,7 +72,15 @@ const Signup = () => {
 
       if (m.includes('already') || m.includes('registered')
           || m.includes('user already') || m.includes('exists')) {
-        desc = "Cet email a déjà un compte. Connecte-toi à la place.";
+        const { error: loginError } = await signIn(email, password);
+        if (!loginError) {
+          toast({ title: "Connexion réussie ✅", description: "Ce compte existait déjà, tu es connecté." });
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        desc = "Cet email existe déjà. Connecte-toi, ou réinitialise le mot de passe si tu ne l'as pas.";
+        setExistingAccountEmail(email.trim());
       } else if (m.includes('rate') || m.includes('limit')
                  || m.includes('too many')) {
         desc = "Trop de tentatives. Patiente 5 minutes et réessaie.";
@@ -145,6 +172,21 @@ const Signup = () => {
               {loading ? "Création..." : "Créer mon compte"}
             </Button>
           </form>
+
+          {existingAccountEmail && (
+            <div className="mt-4 rounded-lg border border-border bg-secondary/60 p-4 text-sm space-y-3">
+              <p className="text-foreground font-medium">Ce compte existe déjà.</p>
+              <p className="text-muted-foreground">Essaie de te connecter avec cet email, ou change le mot de passe si tu ne t'en souviens plus.</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button type="button" variant="hero" onClick={() => navigate(`/login?email=${encodeURIComponent(existingAccountEmail)}`)}>
+                  Se connecter
+                </Button>
+                <Button type="button" variant="outline" onClick={() => sendPasswordReset(existingAccountEmail)}>
+                  Mot de passe oublié
+                </Button>
+              </div>
+            </div>
+          )}
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Déjà un compte ?{" "}
