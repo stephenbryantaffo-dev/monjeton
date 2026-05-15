@@ -215,6 +215,7 @@ export const MultiReceiptValidator = ({
           parsed_date: item.date,
           status: 'confirmed',
           extracted_text: item.raw_text,
+          storage_path: storagePath ?? null,
         });
 
         successCount++;
