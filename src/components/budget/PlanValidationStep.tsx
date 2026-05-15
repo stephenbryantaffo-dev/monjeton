@@ -11,6 +11,7 @@ import {
   Check, CheckCircle2, Edit3, Sparkles, Loader2,
   AlertTriangle, RotateCcw, X,
 } from 'lucide-react';
+import { Screen } from '@/components/layout/Screen';
 
 interface PlanItem {
   categorie: string;
