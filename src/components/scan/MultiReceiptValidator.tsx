@@ -83,7 +83,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 export const MultiReceiptValidator = ({
-  scanResult, imagePreview, onClose, onValidated,
+  scanResult, imagePreview, storagePath, onClose, onValidated,
 }: Props) => {
   const { user } = useAuth();
 
