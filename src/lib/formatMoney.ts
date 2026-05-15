@@ -1,21 +1,29 @@
 import { getActiveCurrency, getActiveCurrencySymbol } from "./currencyStore";
 import { CURRENCY_SYMBOLS, NO_DECIMAL_CURRENCIES, type CurrencyCode } from "./currency";
+import { getRateState } from "./exchangeRateStore";
 
 /**
  * Smart money formatting.
- * For XOF (FCFA) we use the compact West-African format (150 000, 1,2 M, 1,2 Md).
- * For EUR/USD we use the standard fr-FR 2-decimal format.
- * The active currency symbol is appended (separated by a thin space).
+ * Inputs are XOF (the database pivot currency). When the user's active
+ * currency is different, we silently convert via the cached XOF→active rate
+ * before formatting. If conversion is unavailable the helper falls back to XOF.
  */
 export function formatMoneySmart(
   amount: number,
-  opts?: { currency?: CurrencyCode; withSymbol?: boolean }
+  opts?: { currency?: CurrencyCode; withSymbol?: boolean; raw?: boolean }
 ): string {
-  const currency = opts?.currency ?? getActiveCurrency();
+  const rate = getRateState();
+  // `raw` skips conversion (used when the value is already in the target currency).
+  const skipConvert = opts?.raw === true || opts?.currency !== undefined;
+  const targetCurrency =
+    opts?.currency ??
+    (rate.fallback ? "XOF" : getActiveCurrency());
   const withSymbol = opts?.withSymbol !== false;
-  const symbol = CURRENCY_SYMBOLS[currency];
-  const sign = amount < 0 ? "-" : "";
-  const abs = Math.abs(amount);
+  const symbol = CURRENCY_SYMBOLS[targetCurrency];
+  const converted = skipConvert ? amount : amount * rate.xofToActive;
+  const sign = converted < 0 ? "-" : "";
+  const abs = Math.abs(converted);
+  const currency = targetCurrency;
 
   let body: string;
   if (NO_DECIMAL_CURRENCIES.has(currency)) {
