@@ -51,8 +51,8 @@ const sendWhatsAppReminder = (
   const isOwed = debt.type === "owed_to_me";
 
   const message = isOwed
-    ? `Bonjour *${person.name}* 👋\n\nJe te rappelle qu'un versement de *${formatMoneyDisplay(remaining)} F* est attendu *demain ${dueDate}* 🗓️\n\nMerci de ton sérieux 🙏\n\n_Mon Jeton — monjeton.app_`
-    : `Bonjour *${person.name}* 👋\n\nJe te rappelle que je te dois *${formatMoneyDisplay(remaining)} F* demain ${dueDate} 🗓️\n\nJe te fais le virement dès demain 🙏\n\n_Mon Jeton — monjeton.app_`;
+    ? `Bonjour *${person.name}* 👋\n\nJe te rappelle qu'un versement de *${formatMoneyDisplay(remaining)}* est attendu *demain ${dueDate}* 🗓️\n\nMerci de ton sérieux 🙏\n\n_Mon Jeton — monjeton.app_`
+    : `Bonjour *${person.name}* 👋\n\nJe te rappelle que je te dois *${formatMoneyDisplay(remaining)}* demain ${dueDate} 🗓️\n\nJe te fais le virement dès demain 🙏\n\n_Mon Jeton — monjeton.app_`;
 
   window.open(
     `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`,
@@ -72,8 +72,8 @@ const sendPushNotification = async (
     ? `💰 Versement attendu demain`
     : `📅 Paiement à effectuer demain`;
   const body = isOwed
-    ? `${person.name} doit te verser ${formatMoneyDisplay(remaining)} F`
-    : `Tu dois ${formatMoneyDisplay(remaining)} F à ${person.name}`;
+    ? `${person.name} doit te verser ${formatMoneyDisplay(remaining)}`
+    : `Tu dois ${formatMoneyDisplay(remaining)} à ${person.name}`;
 
   try {
     const { LocalNotifications } = await import(

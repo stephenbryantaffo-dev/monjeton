@@ -40,7 +40,7 @@ const buildMessage = (
     return (
       `Bonjour ${membre.name} 👋\n\n` +
       `Rappel pour la tontine *${tontineName}*.\n\n` +
-      `Ta cotisation de *${fmtMoney(extra.montant || 0)} F CFA* ` +
+      `Ta cotisation de *${fmtMoney(extra.montant || 0)} CFA* ` +
       `pour le cycle *${extra.cycleNumero}* n'a pas encore été enregistrée.\n\n` +
       (extra.dateProchaineEcheance
         ? `📅 Date limite : *${extra.dateProchaineEcheance}*\n\n`
@@ -54,7 +54,7 @@ const buildMessage = (
       `Bonjour ${membre.name} 👋\n\n` +
       `🔔 Nouveau cycle ouvert dans la tontine *${tontineName}* !\n\n` +
       `📌 Cycle numéro : *${extra.cycleNumero}*\n` +
-      `💰 Montant à cotiser : *${fmtMoney(extra.montant || 0)} F CFA*\n\n` +
+      `💰 Montant à cotiser : *${fmtMoney(extra.montant || 0)} CFA*\n\n` +
       (extra.dateProchaineEcheance
         ? `📅 Date limite : *${extra.dateProchaineEcheance}*\n\n`
         : "") +
@@ -66,7 +66,7 @@ const buildMessage = (
     return (
       `Bonjour ${membre.name} 👋\n\n` +
       `Tu as été ajouté(e) à la tontine *${tontineName}* sur Mon Jeton.\n\n` +
-      `💰 Cotisation : *${fmtMoney(extra.montant || 0)} F CFA*\n\n` +
+      `💰 Cotisation : *${fmtMoney(extra.montant || 0)} CFA*\n\n` +
       `Tu recevras des notifications pour chaque nouveau cycle. 📲\n\n` +
       `_Mon Jeton — monjeton.app_`
     );
