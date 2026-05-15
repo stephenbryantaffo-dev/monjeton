@@ -104,7 +104,7 @@ CURRENCY DETECTION RULES:
 - ₦ or NGN → NGN
 - GH₵ or GHS → GHS
 - DH or MAD → MAD
-- No currency detected → XOF (default)
+- No currency detected →  (user's preferred)
 
 FRENCH KEYWORDS: "envoyé"=expense, "reçu"=income, "solde"=balance, "frais"=fees, "montant"=amount, "bénéficiaire"=recipient, "expéditeur"=sender
 ENGLISH KEYWORDS: "sent"=expense, "received"=income, "balance"=balance, "fee"=fees, "amount"=amount, "recipient"=recipient, "sender"=sender, "total"=amount, "paid"=expense
@@ -151,7 +151,7 @@ AMOUNT RULES:
 CURRENCY DETECTION:
 - $ → USD, € → EUR, £ → GBP
 - CFA/FCFA → XOF, ₦ → NGN, GH₵ → GHS
-- DH → MAD, No currency → XOF
+- DH → MAD, No currency → ${userCurrency}
 
 DATE FORMATS ACCEPTED:
 - DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD
