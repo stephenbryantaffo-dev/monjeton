@@ -58,7 +58,8 @@ Deno.serve(async (req) => {
     }
     const { context, disponible, month, year } = parsed.data;
 
-    const systemPrompt = buildSystemPrompt(context, disponible, month, year);
+    const ctx = await loadUserCurrency(supabase, user.id);
+    const systemPrompt = buildSystemPrompt(context, disponible, month, year, ctx);
 
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -73,7 +74,7 @@ Deno.serve(async (req) => {
         system: systemPrompt,
         messages: [{
           role: 'user',
-          content: `Génère le plan complet pour ${disponible} F CFA disponibles ce mois.`,
+          content: `Génère le plan complet pour ${disponible} ${ctx.label} disponibles ce mois.`,
         }],
       }),
     });
