@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 import { parsePhone, DIAL_CODES } from "@/lib/phoneValidation";
-import { CURRENCY_OPTIONS, type CurrencyCode } from "@/lib/currency";
+import { PRIMARY_CURRENCIES, EXTRA_CURRENCIES, type CurrencyCode } from "@/lib/currency";
 import { setActiveCurrency } from "@/lib/currencyStore";
 import {
   AlertDialog,
@@ -66,7 +66,8 @@ const Settings = () => {
   const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
 
   const handleCurrencyChange = async (code: CurrencyCode) => {
-    if (!user) return;
+    if (!user || code === currencyPref) return;
+    const previous = currencyPref;
     setCurrencyPref(code);
     setActiveCurrency(code);
     const { error } = await supabase
@@ -74,9 +75,15 @@ const Settings = () => {
       .update({ currency_preference: code } as any)
       .eq("user_id", user.id);
     if (error) {
+      setCurrencyPref(previous);
+      setActiveCurrency(previous);
       toast({ title: "Erreur", description: "Impossible d'enregistrer la devise", variant: "destructive" });
     } else {
-      toast({ title: "Devise mise à jour ✅" });
+      toast({
+        title: "Devise mise à jour ✅",
+        description: `Les transactions futures seront enregistrées en ${code}. Les anciennes gardent leur devise d'origine.`,
+        duration: 6000,
+      });
     }
   };
 
@@ -244,8 +251,8 @@ const Settings = () => {
         <p className="text-xs text-muted-foreground">
           Devise dans laquelle tu affiches tes montants.
         </p>
-        <div className="grid grid-cols-3 gap-2">
-          {CURRENCY_OPTIONS.map((c) => (
+        <div className="grid grid-cols-4 gap-2">
+          {PRIMARY_CURRENCIES.map((c) => (
             <button
               key={c.code}
               onClick={() => handleCurrencyChange(c.code)}
@@ -260,6 +267,21 @@ const Settings = () => {
             </button>
           ))}
         </div>
+        <Select
+          value={EXTRA_CURRENCIES.some((c) => c.code === currencyPref) ? currencyPref : ""}
+          onValueChange={(v) => handleCurrencyChange(v as CurrencyCode)}
+        >
+          <SelectTrigger className="bg-secondary border-border">
+            <SelectValue placeholder="Plus de devises…" />
+          </SelectTrigger>
+          <SelectContent>
+            {EXTRA_CURRENCIES.map((c) => (
+              <SelectItem key={c.code} value={c.code}>
+                {c.flag} {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Privacy section */}
