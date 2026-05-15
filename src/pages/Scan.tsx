@@ -376,6 +376,7 @@ const Scan = () => {
         <MultiReceiptValidator
           scanResult={multiScanResult}
           imagePreview={imagePreview}
+          storagePath={scanStoragePath}
           onClose={handleMultiClose}
           onValidated={handleMultiValidated}
         />
