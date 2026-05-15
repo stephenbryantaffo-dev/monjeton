@@ -208,7 +208,7 @@ Return ONLY the JSON, no other text.`;
               price: Math.max(0, Math.min(Number(it.price) || 0, 999_999_999)),
             }));
         }
-        parsed = {
+        parsedResult = {
           amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
           currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
           date: String(raw.date || "").slice(0, 10),
