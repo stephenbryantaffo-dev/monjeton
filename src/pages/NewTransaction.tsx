@@ -415,7 +415,8 @@ const NewTransaction = () => {
 
   return (
     <DashboardLayout showBack={false}>
-      <div className="pt-6 pb-4 flex items-center gap-3">
+      <Screen>
+        <Screen.Content>
         <button
           onClick={() => navigate(-1)}
           className="text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1"
