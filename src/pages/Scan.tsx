@@ -167,6 +167,12 @@ const Scan = () => {
       const token = session.session?.access_token;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipts`;
 
+      console.log('[Scan request]', {
+        imageSize: base64?.length,
+        mediaType: processedFile.type,
+        currency: activeCurrency,
+      });
+
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -181,7 +187,7 @@ const Scan = () => {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Erreur scan');
+        throw new Error(err.error || `Erreur scan (HTTP ${res.status})`);
       }
 
       const result: MultiScanResult = await res.json();
