@@ -230,11 +230,33 @@ const Scan = () => {
         });
       }
     } catch (e: any) {
+      const m = (e?.message || e?.error || '').toLowerCase();
+      let desc = "Une erreur est survenue. Réessaie.";
+
+      if (m.includes('rate') || m.includes('limit')) {
+        desc = "Trop de scans en peu de temps. Attends 5 minutes.";
+      } else if (m.includes('image') || m.includes('media')) {
+        desc = "Image illisible. Vérifie qu'elle est bien éclairée et nette.";
+      } else if (m.includes('currency') || m.includes('xof') || m.includes('eur')) {
+        desc = "Problème de devise. Vérifie ta devise préférée dans Settings.";
+      } else if (m.includes('anthropic') || m.includes('ai service') || m.includes('claude')) {
+        desc = "Service IA temporairement indisponible. Réessaie dans 1 minute.";
+      } else if (m.includes('auth') || m.includes('token')) {
+        desc = "Session expirée. Reconnecte-toi.";
+      } else if (m.includes('network') || m.includes('failed to fetch')) {
+        desc = "Problème de connexion. Vérifie ton réseau.";
+      } else if (e?.message) {
+        desc = e.message;
+      }
+
       toast({
-        title: 'Erreur scan',
-        description: e?.message,
-        variant: 'destructive',
+        title: "Scan échoué",
+        description: desc,
+        variant: "destructive",
+        duration: 6000,
       });
+
+      console.error('[Scan error]', e);
     } finally {
       setScanning(false);
     }
