@@ -440,7 +440,10 @@ const Onboarding = () => {
       </div>
 
       {/* Bottom button */}
-      <div className="relative z-10 px-6 pb-8">
+      <div
+        className="relative z-10 px-6 pb-8"
+        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 16px))" }}
+      >
         <Button
           variant="hero"
           size="lg"
