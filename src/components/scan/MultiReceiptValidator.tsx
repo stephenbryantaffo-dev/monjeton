@@ -262,7 +262,10 @@ export const MultiReceiptValidator = ({
   const isSingle = scanResult.total_detected === 1;
 
   return (
-    <div className="space-y-4 pb-32">
+    <div
+      className="space-y-4"
+      style={{ paddingBottom: "calc(72px + 96px + env(safe-area-inset-bottom, 0px))" }}
+    >
       {/* Header résumé */}
       <div className="glass-card rounded-2xl p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
@@ -556,8 +559,11 @@ export const MultiReceiptValidator = ({
         ))}
       </div>
 
-      {/* Boutons finaux */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border space-y-2 pb-safe z-40">
+      {/* Boutons finaux — positionnés AU-DESSUS de la BottomNav (z-50) */}
+      <div
+        className="fixed left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border space-y-2 z-40"
+        style={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
+      >
         <Button
           onClick={handleValidate}
           disabled={selectedCount === 0 || saving}
