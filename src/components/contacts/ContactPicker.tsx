@@ -342,7 +342,8 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
