@@ -1,0 +1,4 @@
+ALTER TABLE public.savings_goals
+  ADD COLUMN IF NOT EXISTS emoji text NOT NULL DEFAULT '🎯',
+  ADD COLUMN IF NOT EXISTS note text,
+  ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'XOF';

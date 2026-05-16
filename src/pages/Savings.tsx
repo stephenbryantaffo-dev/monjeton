@@ -5,11 +5,14 @@ import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Target, Plus, ChevronDown, ChevronUp, ArrowDownToLine, PartyPopper, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Screen } from "@/components/layout/Screen";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +28,9 @@ interface SavingsGoal {
   current_amount: number;
   deadline: string | null;
   created_at: string;
+  emoji: string | null;
+  note: string | null;
+  currency: string | null;
 }
 
 interface Deposit {
@@ -45,15 +51,23 @@ const TEMPLATES = [
   { emoji: "🎓", name: "Formation", amount: 200000 },
 ];
 
+const EMOJI_CHOICES = ["🎯", "🏖️", "✈️", "🚗", "💍", "🎓", "🏠", "💻", "🎁", "📱", "💰", "🛍️", "🍽️", "⚽", "🎮"];
+
 const Savings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
-  const [showAdd, setShowAdd] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Modal create/edit
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [emoji, setEmoji] = useState("🎯");
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Deposit states
   const [depositGoalId, setDepositGoalId] = useState<string | null>(null);
@@ -75,7 +89,7 @@ const Savings = () => {
         .from("savings_goals")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at");
+        .order("created_at", { ascending: false });
       if (error) throw error;
       setGoals((data as SavingsGoal[]) || []);
     } catch {
@@ -109,7 +123,6 @@ const Savings = () => {
     fetchWallets();
   }, [fetchGoals, fetchWallets]);
 
-  // Fire confetti for achieved goals
   useEffect(() => {
     goals.forEach(g => {
       if (g.current_amount >= g.target_amount && g.target_amount > 0 && !confettiFired.has(g.id)) {
@@ -119,23 +132,81 @@ const Savings = () => {
     });
   }, [goals, confettiFired]);
 
-  const handleAdd = async (templateName?: string, templateAmount?: number) => {
-    const goalName = templateName || name;
-    const goalTarget = templateAmount || Number(target);
-    if (!goalName || !goalTarget || !user) return;
+  const resetForm = () => {
+    setEditingGoalId(null);
+    setName("");
+    setEmoji("🎯");
+    setTarget("");
+    setDeadline("");
+    setNote("");
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setModalOpen(true);
+  };
+
+  const openTemplateModal = (t: typeof TEMPLATES[number]) => {
+    resetForm();
+    setName(t.name);
+    setEmoji(t.emoji);
+    setTarget(String(t.amount));
+    setModalOpen(true);
+  };
+
+  const openEditModal = (g: SavingsGoal) => {
+    setEditingGoalId(g.id);
+    setName(g.name);
+    setEmoji(g.emoji || "🎯");
+    setTarget(String(g.target_amount));
+    setDeadline(g.deadline || "");
+    setNote(g.note || "");
+    setModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    const trimmedName = name.trim();
+    const goalTarget = Number(target);
+    if (!trimmedName) {
+      toast({ title: "Nom requis", variant: "destructive" });
+      return;
+    }
+    if (!goalTarget || goalTarget <= 0) {
+      toast({ title: "Montant cible invalide", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
     try {
-      const { error } = await supabase.from("savings_goals").insert({
-        user_id: user.id,
-        name: goalName,
+      const payload = {
+        name: trimmedName.slice(0, 50),
+        emoji: emoji || "🎯",
         target_amount: goalTarget,
         deadline: deadline || null,
-      });
-      if (error) throw error;
-      toast({ title: "Objectif créé ✅" });
-      setName(""); setTarget(""); setDeadline(""); setShowAdd(false);
+        note: note ? note.slice(0, 200) : null,
+      };
+      if (editingGoalId) {
+        const { error } = await supabase
+          .from("savings_goals")
+          .update(payload)
+          .eq("id", editingGoalId);
+        if (error) throw error;
+        toast({ title: "Objectif mis à jour ✅" });
+      } else {
+        const { error } = await supabase.from("savings_goals").insert({
+          user_id: user.id,
+          ...payload,
+        });
+        if (error) throw error;
+        toast({ title: "Objectif créé ✅" });
+      }
+      setModalOpen(false);
+      resetForm();
       fetchGoals();
     } catch {
-      toast({ title: "Erreur de création", variant: "destructive" });
+      toast({ title: "Erreur d'enregistrement", variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -156,7 +227,6 @@ const Savings = () => {
     if (!user) return;
 
     try {
-      // Find or create "Épargne" category
       let { data: catData } = await supabase
         .from("categories")
         .select("id")
@@ -174,7 +244,6 @@ const Savings = () => {
         categoryId = newCat?.id;
       }
 
-      // Create transaction
       const { data: txData, error: txErr } = await supabase
         .from("transactions")
         .insert({
@@ -190,7 +259,6 @@ const Savings = () => {
         .single();
       if (txErr) throw txErr;
 
-      // Record deposit
       const { error: depErr } = await supabase
         .from("savings_deposits")
         .insert({
@@ -202,7 +270,6 @@ const Savings = () => {
         });
       if (depErr) throw depErr;
 
-      // Update goal current_amount
       const { error: upErr } = await supabase
         .from("savings_goals")
         .update({ current_amount: currentAmount + val })
@@ -222,7 +289,6 @@ const Savings = () => {
 
   const handleWithdraw = async (goal: SavingsGoal) => {
     if (!user || wallets.length === 0) return;
-    // Withdraw to first wallet by default (could add picker)
     try {
       const { error: txErr } = await supabase.from("transactions").insert({
         user_id: user.id,
@@ -270,38 +336,14 @@ const Savings = () => {
     }
   };
 
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <DashboardLayout title="Épargne">
       <div className="space-y-3 mb-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
-        ) : goals.length === 0 && !showAdd ? (
-          /* ─── EMPTY STATE WITH TEMPLATES ─── */
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <div className="text-center py-6">
-              <p className="text-4xl mb-3">🎯</p>
-              <p className="font-semibold text-foreground mb-1">Commence à épargner</p>
-              <p className="text-sm text-muted-foreground mb-5">Choisis un objectif ou crée le tien</p>
-            </div>
-            <div className="grid gap-3">
-              {TEMPLATES.map((t) => (
-                <button
-                  key={t.name}
-                  onClick={() => handleAdd(t.name, t.amount)}
-                  className="flex items-center gap-3 p-4 rounded-2xl bg-secondary/50 border border-border hover:bg-secondary transition-colors text-left"
-                >
-                  <span className="text-2xl">{t.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatMoneySmart(t.amount)}</p>
-                  </div>
-                  <Plus className="w-4 h-4 text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
         ) : (
-          /* ─── GOALS LIST ─── */
           goals.map((g, i) => {
             const pct = g.target_amount > 0 ? Math.round((g.current_amount / g.target_amount) * 100) : 0;
             const remaining = Math.max(g.target_amount - g.current_amount, 0);
@@ -320,38 +362,42 @@ const Savings = () => {
                 transition={{ delay: 0.06 * i }}
               >
                 <BorderRotate className="p-4" animationSpeed={18}>
-                  {/* ─── HEADER ─── */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAchieved ? "bg-green-500/20" : "bg-primary/20"}`}>
-                      {isAchieved ? <PartyPopper className="w-5 h-5 text-green-500" /> : <Target className="w-5 h-5 text-primary" />}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${isAchieved ? "bg-green-500/20" : "bg-primary/20"}`}>
+                      {isAchieved ? <PartyPopper className="w-5 h-5 text-green-500" /> : (g.emoji || <Target className="w-5 h-5 text-primary" />)}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(g)}
+                      className="flex-1 min-w-0 text-left"
+                    >
                       <p className="text-sm font-medium text-foreground truncate">{g.name}</p>
                       {g.deadline && (
                         <p className="text-xs text-muted-foreground">
                           Échéance : {new Date(g.deadline).toLocaleDateString("fr-FR")}
                         </p>
                       )}
-                    </div>
+                    </button>
                     <span className="text-sm font-bold text-primary">{pct}%</span>
                     <ConfirmDeleteDialog onConfirm={() => handleDelete(g.id)} title="Supprimer cet objectif ?" />
                   </div>
 
-                  {/* ─── ACHIEVED BADGE ─── */}
+                  {g.note && (
+                    <p className="text-xs text-muted-foreground mb-3 italic line-clamp-2">{g.note}</p>
+                  )}
+
                   {isAchieved && (
                     <Badge className="mb-3 bg-green-500/20 text-green-500 border-green-500/30">
                       Objectif atteint ! 🎉
                     </Badge>
                   )}
 
-                  {/* ─── PROGRESS BAR ─── */}
                   <Progress value={Math.min(pct, 100)} className="h-2 bg-secondary" />
                   <div className="flex justify-between mt-2">
                     <span className="text-xs text-muted-foreground">{formatMoneySmart(g.current_amount)}</span>
                     <span className="text-xs text-muted-foreground">{formatMoneySmart(g.target_amount)}</span>
                   </div>
 
-                  {/* ─── SMART INFO ─── */}
                   {!isAchieved && (
                     <div className="mt-3 space-y-1">
                       <p className="text-xs text-muted-foreground">
@@ -369,7 +415,6 @@ const Savings = () => {
                     </div>
                   )}
 
-                  {/* ─── DEPOSIT FORM ─── */}
                   <AnimatePresence>
                     {depositGoalId === g.id ? (
                       <motion.div
@@ -423,7 +468,6 @@ const Savings = () => {
                     )}
                   </AnimatePresence>
 
-                  {/* ─── HISTORY TOGGLE ─── */}
                   <button
                     onClick={() => toggleHistory(g.id)}
                     className="w-full flex items-center justify-center gap-1 mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -464,27 +508,171 @@ const Savings = () => {
         )}
       </div>
 
-      {/* ─── ADD FORM ─── */}
-      {showAdd ? (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 space-y-3">
-          <Input placeholder="Nom de l'objectif" value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary border-border" />
-          <MoneyInput placeholder="Montant cible (FCFA)" value={target} onChange={(n) => setTarget(n ? String(n) : "")} showCurrency={false} className="[&>input]:bg-secondary [&>input]:border-border" />
-          <div className="space-y-1">
-            <Label className="text-xs">Échéance (optionnel)</Label>
-            <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-secondary border-border" />
+      {/* ─── SUGGESTIONS + CUSTOM CREATE ─── */}
+      {!loading && (
+        <div className="space-y-3">
+          {goals.length === 0 && (
+            <div className="text-center py-4">
+              <p className="text-4xl mb-2">🎯</p>
+              <p className="font-semibold text-foreground mb-1">Commence à épargner</p>
+              <p className="text-sm text-muted-foreground">Choisis un objectif ou crée le tien</p>
+            </div>
+          )}
+
+          <p className="text-xs uppercase tracking-wide text-muted-foreground px-1">
+            Suggestions
+          </p>
+          <div className="grid gap-2">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.name}
+                onClick={() => openTemplateModal(t)}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/50 border border-border hover:bg-secondary transition-colors text-left"
+              >
+                <span className="text-2xl">{t.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatMoneySmart(t.amount)}</p>
+                </div>
+                <Plus className="w-4 h-4 text-muted-foreground" />
+              </button>
+            ))}
           </div>
-          <div className="flex gap-2">
-            <Button variant="glass" onClick={() => setShowAdd(false)} className="flex-1">Annuler</Button>
-            <Button variant="hero" onClick={() => handleAdd()} className="flex-1">Créer</Button>
+
+          <div className="flex items-center gap-3 py-1">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground uppercase">ou</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
-        </motion.div>
-      ) : (
-        goals.length > 0 && (
-          <Button variant="glass" size="lg" className="w-full" onClick={() => setShowAdd(true)}>
-            <Plus className="w-4 h-4" /> Nouvel objectif
-          </Button>
-        )
+
+          <button
+            onClick={openCreateModal}
+            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl border-2 border-dashed border-primary/40 text-primary font-medium hover:bg-primary/5 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Créer un objectif personnalisé
+          </button>
+        </div>
       )}
+
+      {/* ─── CREATE/EDIT MODAL ─── */}
+      <Dialog
+        open={modalOpen}
+        onOpenChange={(o) => {
+          setModalOpen(o);
+          if (!o) resetForm();
+        }}
+      >
+        <DialogContent className="p-0 max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+          <Screen hasBottomNav={false} className="flex-1 min-h-0">
+            <Screen.Header className="px-5 pt-5 pb-3 border-b border-border">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingGoalId ? "Modifier l'objectif" : "Nouvel objectif"}
+                </DialogTitle>
+              </DialogHeader>
+            </Screen.Header>
+
+            <Screen.Content className="overflow-y-auto px-5 py-4 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nom de l'objectif</Label>
+                <Input
+                  placeholder="Ex : Voyage Japon"
+                  value={name}
+                  maxLength={50}
+                  onChange={(e) => setName(e.target.value)}
+                  className="bg-secondary border-border"
+                  autoFocus
+                />
+                <p className="text-[10px] text-muted-foreground text-right">{name.length}/50</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Emoji / icône</Label>
+                <div className="flex flex-wrap gap-2">
+                  {EMOJI_CHOICES.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setEmoji(e)}
+                      className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                        emoji === e
+                          ? "bg-primary/20 ring-2 ring-primary"
+                          : "bg-secondary hover:bg-secondary/70"
+                      }`}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+                <Input
+                  placeholder="ou tape un emoji libre"
+                  value={emoji}
+                  maxLength={4}
+                  onChange={(e) => setEmoji(e.target.value)}
+                  className="bg-secondary border-border mt-2 text-center text-xl"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Montant cible</Label>
+                <MoneyInput
+                  placeholder="Combien veux-tu atteindre ?"
+                  value={target}
+                  onChange={(n) => setTarget(n ? String(n) : "")}
+                  showCurrency={false}
+                  className="[&>input]:bg-secondary [&>input]:border-border"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Date d'échéance (optionnel)</Label>
+                <Input
+                  type="date"
+                  min={today}
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  className="bg-secondary border-border"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Note (optionnel)</Label>
+                <Textarea
+                  placeholder="Pourquoi cet objectif ?"
+                  value={note}
+                  maxLength={200}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="bg-secondary border-border resize-none"
+                  rows={3}
+                />
+                <p className="text-[10px] text-muted-foreground text-right">{note.length}/200</p>
+              </div>
+            </Screen.Content>
+
+            <Screen.StickyAction>
+              <div className="flex gap-2">
+                <Button
+                  variant="glass"
+                  className="flex-1"
+                  onClick={() => setModalOpen(false)}
+                  disabled={saving}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="hero"
+                  className="flex-1"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {editingGoalId ? "Enregistrer" : "Créer"}
+                </Button>
+              </div>
+            </Screen.StickyAction>
+          </Screen>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

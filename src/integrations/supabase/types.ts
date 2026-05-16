@@ -1442,28 +1442,37 @@ export type Database = {
       savings_goals: {
         Row: {
           created_at: string
+          currency: string
           current_amount: number
           deadline: string | null
+          emoji: string
           id: string
           name: string
+          note: string | null
           target_amount: number
           user_id: string
         }
         Insert: {
           created_at?: string
+          currency?: string
           current_amount?: number
           deadline?: string | null
+          emoji?: string
           id?: string
           name: string
+          note?: string | null
           target_amount?: number
           user_id: string
         }
         Update: {
           created_at?: string
+          currency?: string
           current_amount?: number
           deadline?: string | null
+          emoji?: string
           id?: string
           name?: string
+          note?: string | null
           target_amount?: number
           user_id?: string
         }
