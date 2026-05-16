@@ -145,7 +145,9 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
     handleClose();
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -153,7 +155,7 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleClose}
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
         >
           <motion.div
             initial={{ y: 40, opacity: 0, scale: 0.98 }}
