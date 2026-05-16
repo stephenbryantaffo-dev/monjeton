@@ -400,7 +400,7 @@ const Receipts = () => {
 
     const fields: [string, string][] = [
       ['Marchand', scan.parsed_merchant || 'Inconnu'],
-      ['Montant', scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non detecte'],
+      ['Montant', scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non detecte'],
       ['Categorie', scan.parsed_category || 'Non categorise'],
       ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
       ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
