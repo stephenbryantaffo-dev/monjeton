@@ -21,12 +21,16 @@ export const parseThousands = (
   return Number(cleaned) || 0;
 };
 
-import { getActiveCurrencySymbol } from "./currencyStore";
+import { formatMoneySmart } from "./formatMoney";
 
+/**
+ * Affichage unifié d'un montant stocké en XOF (devise pivot DB).
+ * Délègue à formatMoneySmart, qui convertit automatiquement vers la
+ * devise active du user. Si la conversion est indisponible, fallback XOF.
+ */
 export const formatMoneyDisplay = (
   value: number,
   showCurrency: boolean = true
 ): string => {
-  const formatted = formatThousands(value);
-  return showCurrency ? `${formatted}\u202F${getActiveCurrencySymbol()}` : formatted;
+  return formatMoneySmart(value, { withSymbol: showCurrency });
 };
