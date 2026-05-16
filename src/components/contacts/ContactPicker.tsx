@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -66,6 +67,20 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
     init();
   }, [open]);
 
+  // Fallback de sécurité : si on est sur web et qu'on reste en "unknown",
+  // basculer automatiquement en saisie manuelle.
+  useEffect(() => {
+    if (
+      open &&
+      permissionState === "unknown" &&
+      !isNativeContactsAvailable() &&
+      !manualMode
+    ) {
+      setManualMode(true);
+      setPermissionState("denied");
+    }
+  }, [open, permissionState, manualMode]);
+
   const askPermissionAndLoad = async () => {
     setLoading(true);
     const granted = await requestContactsPermission();
@@ -130,7 +145,9 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
     handleClose();
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -138,7 +155,7 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleClose}
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
         >
           <motion.div
             initial={{ y: 40, opacity: 0, scale: 0.98 }}
@@ -325,7 +342,8 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
