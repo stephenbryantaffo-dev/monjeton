@@ -478,7 +478,7 @@ const Receipts = () => {
     const totalAmount = confirmed.reduce((sum, s) => sum + (s.parsed_amount || 0), 0);
     doc.setFontSize(18);
     doc.setTextColor(30, 30, 30);
-    doc.text(`${totalAmount.toLocaleString('fr-FR')} F CFA`, pageWidth / 2, y, { align: 'center' });
+    doc.text(formatMoneyDisplay(totalAmount), pageWidth / 2, y, { align: 'center' });
     y += 12;
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
