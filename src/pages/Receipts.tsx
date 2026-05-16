@@ -1,4 +1,5 @@
 import { getActiveCurrencySymbol } from "@/lib/currencyStore";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -340,7 +341,7 @@ const Receipts = () => {
       <div class="header"><div class="brand">🪙 Mon Jeton</div><div class="subtitle">Reçu de transaction</div></div>
       ${scan.image_url ? `<img class="receipt-img" src="${scan.image_url}" alt="Reçu"/>` : ''}
       <div class="row"><span class="row-label">Marchand</span><span class="row-value">${scan.parsed_merchant || 'Inconnu'}</span></div>
-      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non détecté'}</span></div>
+      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non détecté'}</span></div>
       <div class="row"><span class="row-label">Catégorie</span><span class="row-value">${scan.parsed_category || 'Non catégorisé'}</span></div>
       <div class="row"><span class="row-label">Date</span><span class="row-value">${scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')}</span></div>
       <div class="row"><span class="row-label">Type</span><span class="row-value">${scan.scan_type === 'screenshot' ? '📱 Capture Mobile Money' : '🧾 Ticket de caisse'}</span></div>
@@ -399,7 +400,7 @@ const Receipts = () => {
 
     const fields: [string, string][] = [
       ['Marchand', scan.parsed_merchant || 'Inconnu'],
-      ['Montant', scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non detecte'],
+      ['Montant', scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non detecte'],
       ['Categorie', scan.parsed_category || 'Non categorise'],
       ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
       ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
@@ -477,7 +478,7 @@ const Receipts = () => {
     const totalAmount = confirmed.reduce((sum, s) => sum + (s.parsed_amount || 0), 0);
     doc.setFontSize(18);
     doc.setTextColor(30, 30, 30);
-    doc.text(`${totalAmount.toLocaleString('fr-FR')} F CFA`, pageWidth / 2, y, { align: 'center' });
+    doc.text(formatMoneyDisplay(totalAmount), pageWidth / 2, y, { align: 'center' });
     y += 12;
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
@@ -527,7 +528,7 @@ const Receipts = () => {
       // Fields
       const fields: [string, string][] = [
         ['Marchand', scan.parsed_merchant || 'Inconnu'],
-        ['Montant', scan.parsed_amount ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} F CFA` : 'Non detecte'],
+        ['Montant', scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non detecte'],
         ['Categorie', scan.parsed_category || 'Non categorise'],
         ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
         ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
