@@ -67,6 +67,20 @@ export const ContactPicker = ({ open, onClose, onSelect }: Props) => {
     init();
   }, [open]);
 
+  // Fallback de sécurité : si on est sur web et qu'on reste en "unknown",
+  // basculer automatiquement en saisie manuelle.
+  useEffect(() => {
+    if (
+      open &&
+      permissionState === "unknown" &&
+      !isNativeContactsAvailable() &&
+      !manualMode
+    ) {
+      setManualMode(true);
+      setPermissionState("denied");
+    }
+  }, [open, permissionState, manualMode]);
+
   const askPermissionAndLoad = async () => {
     setLoading(true);
     const granted = await requestContactsPermission();
