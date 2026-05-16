@@ -1,4 +1,5 @@
 import { getActiveCurrencySymbol } from "@/lib/currencyStore";
+import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
