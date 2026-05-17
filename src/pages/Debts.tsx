@@ -592,55 +592,60 @@ const Debts = () => {
               ))}
             </div>
 
-            {/* Contact */}
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">
-                Personne *
+            {/* Person name */}
+            <div className="space-y-1">
+              <Label
+                htmlFor="person-name"
+                className="text-xs text-muted-foreground"
+              >
+                Personne <span className="text-destructive">*</span>
               </Label>
-              {selectedContact ? (
-                <div className="flex items-center gap-3 p-3 glass rounded-xl border border-border">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
-                    {selectedContact.photoUri ? (
-                      <img
-                        src={selectedContact.photoUri}
-                        alt={selectedContact.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-sm font-black text-primary">
-                        {selectedContact.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">
-                      {selectedContact.name}
-                    </p>
-                    {selectedContact.phone && (
-                      <p className="text-[11px] text-muted-foreground tabular-nums truncate">
-                        {formatPhoneDisplay(selectedContact.phone)}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setSelectedContact(null)}
-                    className="text-muted-foreground hover:text-foreground p-1"
-                    aria-label="Retirer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setContactOpen(true)}
-                  className="w-full p-3 glass rounded-xl border border-dashed border-border flex items-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+              <Input
+                id="person-name"
+                value={personName}
+                onChange={(e) => setPersonName(e.target.value)}
+                placeholder="Ex: Karim"
+                maxLength={100}
+                autoComplete="name"
+                className="bg-secondary border-border"
+              />
+            </div>
+
+            {/* Person phone (optional) */}
+            <div className="space-y-1">
+              <Label
+                htmlFor="person-phone"
+                className="text-xs text-muted-foreground"
+              >
+                Numéro WhatsApp (optionnel)
+              </Label>
+              <div className="flex gap-2">
+                <select
+                  value={personCountry}
+                  onChange={(e) => setPersonCountry(e.target.value)}
+                  className="w-24 bg-secondary border border-border rounded-md px-2 text-sm h-10"
+                  aria-label="Pays"
                 >
-                  <ContactRound className="w-4 h-4" />
-                  <span className="text-xs">
-                    Choisir dans le répertoire ou saisir manuellement
-                  </span>
-                </button>
-              )}
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  id="person-phone"
+                  type="tel"
+                  inputMode="tel"
+                  value={personPhone}
+                  onChange={(e) => setPersonPhone(e.target.value)}
+                  placeholder="0778361988"
+                  autoComplete="tel"
+                  className="flex-1 bg-secondary border-border"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Pour envoyer un rappel WhatsApp directement
+              </p>
             </div>
 
             {/* Amount */}
