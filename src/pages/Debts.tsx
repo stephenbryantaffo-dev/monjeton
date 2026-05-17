@@ -4,8 +4,6 @@ import {
   Plus,
   ArrowDownLeft,
   ArrowUpRight,
-  ContactRound,
-  X,
   User,
   Trash2,
 } from "lucide-react";
