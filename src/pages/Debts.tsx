@@ -897,7 +897,7 @@ const Debts = () => {
                 variant="hero"
                 className="flex-1"
                 onClick={createDebt}
-                disabled={creating || !selectedContact || newAmount <= 0}
+                disabled={creating || !personName.trim() || newAmount <= 0}
               >
                 {creating ? "..." : "Créer"}
               </Button>
@@ -905,16 +905,6 @@ const Debts = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* CONTACT PICKER */}
-      <ContactPicker
-        open={contactOpen}
-        onClose={() => setContactOpen(false)}
-        onSelect={(c) => {
-          setSelectedContact(c);
-          setContactOpen(false);
-        }}
-      />
 
       {/* EDIT MODAL */}
       <EditDebtModal
