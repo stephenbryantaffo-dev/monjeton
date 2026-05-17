@@ -47,6 +47,7 @@ const FILTERS: Array<{ key: StatusFilter; label: string }> = [
 const Debts = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { country } = useCountry();
 
   const [groups, setGroups] = useState<PersonGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,10 +56,9 @@ const Debts = () => {
 
   // New debt
   const [showNew, setShowNew] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<PickedContact | null>(
-    null,
-  );
+  const [personName, setPersonName] = useState("");
+  const [personPhone, setPersonPhone] = useState("");
+  const [personCountry, setPersonCountry] = useState<string>(country.code);
   const [newAmount, setNewAmount] = useState<number>(0);
   const [newMotif, setNewMotif] = useState("");
   const [newNote, setNewNote] = useState("");
