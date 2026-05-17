@@ -228,7 +228,9 @@ const Debts = () => {
   }, [groups]);
 
   const resetNew = () => {
-    setSelectedContact(null);
+    setPersonName("");
+    setPersonPhone("");
+    setPersonCountry(country.code);
     setNewAmount(0);
     setNewMotif("");
     setNewNote("");
