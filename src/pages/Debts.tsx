@@ -309,14 +309,31 @@ const Debts = () => {
 
   const createDebt = async () => {
     if (!user) return;
-    if (!selectedContact || !selectedContact.name.trim()) {
-      toast({ title: "Choisis un contact", variant: "destructive" });
+    const trimmedName = personName.trim();
+    if (!trimmedName) {
+      toast({ title: "Saisis le nom de la personne", variant: "destructive" });
       return;
     }
     if (newAmount <= 0) {
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
+
+    // Parse phone only if provided
+    let phoneE164: string | null = null;
+    if (personPhone.trim()) {
+      const parsed = parsePhone(personPhone.trim(), personCountry);
+      if (!parsed.valid) {
+        toast({
+          title: "Numéro invalide",
+          description: parsed.error || "Vérifie le numéro",
+          variant: "destructive",
+        });
+        return;
+      }
+      phoneE164 = parsed.e164;
+    }
+
     if (paymentType === "monthly" && monthlyAmount <= 0) {
       toast({ title: "Montant mensuel invalide", variant: "destructive" });
       return;
@@ -335,36 +352,24 @@ const Debts = () => {
     setCreating(true);
 
     try {
-      // Upsert person
+      // Upsert person by name (+ phone if available)
       let personId: string | null = null;
-      if (selectedContact.contactId) {
-        const { data: existing } = await supabase
-          .from("debt_persons")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("contact_id", selectedContact.contactId)
-          .maybeSingle();
-        if (existing) personId = existing.id;
-      }
-      if (!personId) {
-        const { data: existing } = await supabase
-          .from("debt_persons")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("name", selectedContact.name.trim())
-          .maybeSingle();
-        if (existing) personId = existing.id;
-      }
+      const { data: existing } = await supabase
+        .from("debt_persons")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("name", trimmedName)
+        .maybeSingle();
+      if (existing) personId = existing.id;
+
       if (!personId) {
         const { data: created, error: persErr } = await supabase
           .from("debt_persons")
           .insert({
             user_id: user.id,
-            name: selectedContact.name.trim(),
-            phone: selectedContact.phone || null,
-            whatsapp: selectedContact.phone || null,
-            contact_id: selectedContact.contactId || null,
-            photo_uri: selectedContact.photoUri || null,
+            name: trimmedName,
+            phone: phoneE164,
+            whatsapp: phoneE164,
           })
           .select("id")
           .single();
@@ -377,7 +382,7 @@ const Debts = () => {
         .insert({
           user_id: user.id,
           person_id: personId,
-          person_name: selectedContact.name.trim(),
+          person_name: trimmedName,
           amount: newAmount,
           amount_remaining: newAmount,
           paid_amount: 0,
@@ -386,7 +391,7 @@ const Debts = () => {
           note: newNote.trim() || null,
           date_echeance: newDueDate || null,
           due_date: newDueDate || null,
-          whatsapp: selectedContact.phone || null,
+          whatsapp: phoneE164,
           status: "pending",
           payment_type: paymentType,
           monthly_amount: paymentType === "monthly" ? monthlyAmount : null,
