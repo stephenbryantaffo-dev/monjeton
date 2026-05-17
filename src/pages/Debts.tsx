@@ -18,11 +18,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import { formatMoneyDisplay } from "@/lib/formatAmount";
-import {
-  ContactPicker,
-  type PickedContact,
-} from "@/components/contacts/ContactPicker";
-import { formatPhoneDisplay } from "@/lib/contactsService";
+import { parsePhone } from "@/lib/phoneValidation";
+import { useCountry } from "@/contexts/CountryContext";
+import { COUNTRIES } from "@/lib/i18n";
 import {
   PersonDebtContainer,
   type PersonGroup,
