@@ -4,8 +4,6 @@ import {
   Plus,
   ArrowDownLeft,
   ArrowUpRight,
-  ContactRound,
-  X,
   User,
   Trash2,
 } from "lucide-react";
@@ -20,11 +18,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import { formatMoneyDisplay } from "@/lib/formatAmount";
-import {
-  ContactPicker,
-  type PickedContact,
-} from "@/components/contacts/ContactPicker";
-import { formatPhoneDisplay } from "@/lib/contactsService";
+import { parsePhone } from "@/lib/phoneValidation";
+import { useCountry } from "@/contexts/CountryContext";
+import { COUNTRIES } from "@/lib/i18n";
 import {
   PersonDebtContainer,
   type PersonGroup,
@@ -51,6 +47,7 @@ const FILTERS: Array<{ key: StatusFilter; label: string }> = [
 const Debts = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { country } = useCountry();
 
   const [groups, setGroups] = useState<PersonGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,10 +56,9 @@ const Debts = () => {
 
   // New debt
   const [showNew, setShowNew] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<PickedContact | null>(
-    null,
-  );
+  const [personName, setPersonName] = useState("");
+  const [personPhone, setPersonPhone] = useState("");
+  const [personCountry, setPersonCountry] = useState<string>(country.code);
   const [newAmount, setNewAmount] = useState<number>(0);
   const [newMotif, setNewMotif] = useState("");
   const [newNote, setNewNote] = useState("");
@@ -232,7 +228,9 @@ const Debts = () => {
   }, [groups]);
 
   const resetNew = () => {
-    setSelectedContact(null);
+    setPersonName("");
+    setPersonPhone("");
+    setPersonCountry(country.code);
     setNewAmount(0);
     setNewMotif("");
     setNewNote("");
@@ -311,14 +309,31 @@ const Debts = () => {
 
   const createDebt = async () => {
     if (!user) return;
-    if (!selectedContact || !selectedContact.name.trim()) {
-      toast({ title: "Choisis un contact", variant: "destructive" });
+    const trimmedName = personName.trim();
+    if (!trimmedName) {
+      toast({ title: "Saisis le nom de la personne", variant: "destructive" });
       return;
     }
     if (newAmount <= 0) {
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
+
+    // Parse phone only if provided
+    let phoneE164: string | null = null;
+    if (personPhone.trim()) {
+      const parsed = parsePhone(personPhone.trim(), personCountry);
+      if (!parsed.valid) {
+        toast({
+          title: "Numéro invalide",
+          description: parsed.error || "Vérifie le numéro",
+          variant: "destructive",
+        });
+        return;
+      }
+      phoneE164 = parsed.e164;
+    }
+
     if (paymentType === "monthly" && monthlyAmount <= 0) {
       toast({ title: "Montant mensuel invalide", variant: "destructive" });
       return;
@@ -337,36 +352,24 @@ const Debts = () => {
     setCreating(true);
 
     try {
-      // Upsert person
+      // Upsert person by name (+ phone if available)
       let personId: string | null = null;
-      if (selectedContact.contactId) {
-        const { data: existing } = await supabase
-          .from("debt_persons")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("contact_id", selectedContact.contactId)
-          .maybeSingle();
-        if (existing) personId = existing.id;
-      }
-      if (!personId) {
-        const { data: existing } = await supabase
-          .from("debt_persons")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("name", selectedContact.name.trim())
-          .maybeSingle();
-        if (existing) personId = existing.id;
-      }
+      const { data: existing } = await supabase
+        .from("debt_persons")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("name", trimmedName)
+        .maybeSingle();
+      if (existing) personId = existing.id;
+
       if (!personId) {
         const { data: created, error: persErr } = await supabase
           .from("debt_persons")
           .insert({
             user_id: user.id,
-            name: selectedContact.name.trim(),
-            phone: selectedContact.phone || null,
-            whatsapp: selectedContact.phone || null,
-            contact_id: selectedContact.contactId || null,
-            photo_uri: selectedContact.photoUri || null,
+            name: trimmedName,
+            phone: phoneE164,
+            whatsapp: phoneE164,
           })
           .select("id")
           .single();
@@ -379,7 +382,7 @@ const Debts = () => {
         .insert({
           user_id: user.id,
           person_id: personId,
-          person_name: selectedContact.name.trim(),
+          person_name: trimmedName,
           amount: newAmount,
           amount_remaining: newAmount,
           paid_amount: 0,
@@ -388,7 +391,7 @@ const Debts = () => {
           note: newNote.trim() || null,
           date_echeance: newDueDate || null,
           due_date: newDueDate || null,
-          whatsapp: selectedContact.phone || null,
+          whatsapp: phoneE164,
           status: "pending",
           payment_type: paymentType,
           monthly_amount: paymentType === "monthly" ? monthlyAmount : null,
@@ -589,55 +592,60 @@ const Debts = () => {
               ))}
             </div>
 
-            {/* Contact */}
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">
-                Personne *
+            {/* Person name */}
+            <div className="space-y-1">
+              <Label
+                htmlFor="person-name"
+                className="text-xs text-muted-foreground"
+              >
+                Personne <span className="text-destructive">*</span>
               </Label>
-              {selectedContact ? (
-                <div className="flex items-center gap-3 p-3 glass rounded-xl border border-border">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
-                    {selectedContact.photoUri ? (
-                      <img
-                        src={selectedContact.photoUri}
-                        alt={selectedContact.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-sm font-black text-primary">
-                        {selectedContact.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">
-                      {selectedContact.name}
-                    </p>
-                    {selectedContact.phone && (
-                      <p className="text-[11px] text-muted-foreground tabular-nums truncate">
-                        {formatPhoneDisplay(selectedContact.phone)}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setSelectedContact(null)}
-                    className="text-muted-foreground hover:text-foreground p-1"
-                    aria-label="Retirer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setContactOpen(true)}
-                  className="w-full p-3 glass rounded-xl border border-dashed border-border flex items-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+              <Input
+                id="person-name"
+                value={personName}
+                onChange={(e) => setPersonName(e.target.value)}
+                placeholder="Ex: Karim"
+                maxLength={100}
+                autoComplete="name"
+                className="bg-secondary border-border"
+              />
+            </div>
+
+            {/* Person phone (optional) */}
+            <div className="space-y-1">
+              <Label
+                htmlFor="person-phone"
+                className="text-xs text-muted-foreground"
+              >
+                Numéro WhatsApp (optionnel)
+              </Label>
+              <div className="flex gap-2">
+                <select
+                  value={personCountry}
+                  onChange={(e) => setPersonCountry(e.target.value)}
+                  className="w-24 bg-secondary border border-border rounded-md px-2 text-sm h-10"
+                  aria-label="Pays"
                 >
-                  <ContactRound className="w-4 h-4" />
-                  <span className="text-xs">
-                    Choisir dans le répertoire ou saisir manuellement
-                  </span>
-                </button>
-              )}
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  id="person-phone"
+                  type="tel"
+                  inputMode="tel"
+                  value={personPhone}
+                  onChange={(e) => setPersonPhone(e.target.value)}
+                  placeholder="0778361988"
+                  autoComplete="tel"
+                  className="flex-1 bg-secondary border-border"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Pour envoyer un rappel WhatsApp directement
+              </p>
             </div>
 
             {/* Amount */}
@@ -889,7 +897,7 @@ const Debts = () => {
                 variant="hero"
                 className="flex-1"
                 onClick={createDebt}
-                disabled={creating || !selectedContact || newAmount <= 0}
+                disabled={creating || !personName.trim() || newAmount <= 0}
               >
                 {creating ? "..." : "Créer"}
               </Button>
@@ -897,16 +905,6 @@ const Debts = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* CONTACT PICKER */}
-      <ContactPicker
-        open={contactOpen}
-        onClose={() => setContactOpen(false)}
-        onSelect={(c) => {
-          setSelectedContact(c);
-          setContactOpen(false);
-        }}
-      />
 
       {/* EDIT MODAL */}
       <EditDebtModal
