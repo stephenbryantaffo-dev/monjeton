@@ -45,6 +45,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const BRVMSimulator = lazy(() => import("./pages/BRVMSimulator"));
 const Receipts = lazy(() => import("./pages/Receipts"));
 const PaymentPending = lazy(() => import("./pages/PaymentPending"));
+const SubscriptionManage = lazy(() => import("./pages/SubscriptionManage"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -85,6 +86,7 @@ const AppContent = () => {
         <Route path="/debts" element={<ProtectedRoute><OnboardingGuard><Debts /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/assistant" element={<ProtectedRoute><OnboardingGuard><Assistant /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><OnboardingGuard><Settings /></OnboardingGuard></ProtectedRoute>} />
+        <Route path="/settings/subscription" element={<ProtectedRoute><OnboardingGuard><SubscriptionManage /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/budgets" element={<ProtectedRoute><OnboardingGuard><Budgets /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/tontine" element={<ProtectedRoute><OnboardingGuard><Tontine /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><OnboardingGuard><Scan /></OnboardingGuard></ProtectedRoute>} />
