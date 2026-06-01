@@ -44,6 +44,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const BRVMSimulator = lazy(() => import("./pages/BRVMSimulator"));
 const Receipts = lazy(() => import("./pages/Receipts"));
+const PaymentPending = lazy(() => import("./pages/PaymentPending"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -70,6 +71,7 @@ const AppContent = () => {
         <Route path="/subscribe" element={<Subscribe />} />
         <Route path="/install" element={<Install />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/payment-pending" element={<PaymentPending />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />

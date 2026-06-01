@@ -2,18 +2,25 @@ import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import logoImg from "@/assets/logo-monjeton.webp";
 
-const features = [
+const proFeatures = [
   "Transactions illimitées",
+  "Scan IA des reçus (50 / mois)",
   "Multi-portefeuilles (Orange, MTN, Wave...)",
   "Rapports mensuels et annuels",
   "Export PDF",
-  "Catégories personnalisées",
-  "Objectifs d'épargne",
-  "Suivi des dettes",
   "Assistant IA financier",
   "Budgets & alertes",
+  "Tontines & dettes",
+];
+
+const maxFeatures = [
+  "Tout le plan Pro",
+  "Scan IA illimité",
+  "Support prioritaire",
+  "Accès en avant-première aux nouvelles features",
 ];
 
 const Pricing = () => {
@@ -33,37 +40,57 @@ const Pricing = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-4xl"
         >
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Un seul plan. Tout inclus.</h1>
-            <p className="text-muted-foreground">Pas de surprise, pas de frais cachés.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Choisis ton plan</h1>
+            <p className="text-muted-foreground">Paiement sécurisé via Jèko · Annule quand tu veux</p>
           </div>
 
-          <div className="glass-card rounded-2xl p-6 neon-glow">
-            <div className="text-center mb-6">
-              <span className="inline-block px-3 py-1 rounded-full gradient-primary text-primary-foreground text-xs font-bold mb-4">PRO</span>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl font-black text-foreground">2 000</span>
-                <span className="text-lg text-muted-foreground">FCFA</span>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Pro */}
+            <div className="glass-card rounded-2xl p-6 neon-glow border border-primary/40">
+              <div className="text-center mb-6">
+                <span className="inline-block px-3 py-1 rounded-full gradient-primary text-primary-foreground text-xs font-bold mb-4">⭐ PRO</span>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-black text-foreground">2 000</span>
+                  <span className="text-lg text-muted-foreground">F CFA</span>
+                </div>
+                <p className="text-muted-foreground text-sm">/ mois</p>
               </div>
-              <p className="text-muted-foreground text-sm">/ mois</p>
+              <ul className="space-y-3 mb-8">
+                {proFeatures.map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-sm text-foreground">
+                    <Check className="w-4 h-4 text-primary flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
+                Payer 2 000 F via Jèko
+              </Button>
             </div>
 
-            <ul className="space-y-3 mb-8">
-              {features.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm text-foreground">
-                  <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            <Link to="/signup">
-              <Button variant="hero" size="lg" className="w-full">
-                Commencer maintenant
+            {/* Ultra Pro */}
+            <div className="glass-card rounded-2xl p-6">
+              <div className="text-center mb-6">
+                <span className="inline-block px-3 py-1 rounded-full bg-foreground text-background text-xs font-bold mb-4">💎 ULTRA PRO</span>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-black text-foreground">5 000</span>
+                  <span className="text-lg text-muted-foreground">F CFA</span>
+                </div>
+                <p className="text-muted-foreground text-sm">/ mois</p>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {maxFeatures.map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-sm text-foreground">
+                    <Check className="w-4 h-4 text-primary flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Button onClick={openJekoMax} size="lg" className="w-full gradient-primary text-primary-foreground">
+                Payer 5 000 F via Jèko
               </Button>
-            </Link>
+            </div>
           </div>
         </motion.div>
       </main>

@@ -1,5 +1,5 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,22 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { useState } from "react";
+import { openJekoPro, openJekoMax } from "@/lib/jeko";
 
-const plans = [
+type PlanAction = { kind: "link"; to: string } | { kind: "jeko"; plan: "pro" | "max" };
+
+const plans: Array<{
+  name: string;
+  description: string;
+  price: number;
+  yearlyPrice: number;
+  buttonText: string;
+  popular: boolean;
+  includes: string[];
+  action: PlanAction;
+}> = [
   {
-    name: "Starter",
+    name: "Gratuit",
     description: "Pour découvrir Mon Jeton et commencer à suivre vos finances.",
     price: 0,
     yearlyPrice: 0,
@@ -22,38 +34,38 @@ const plans = [
       "Catégorisation automatique",
       "Rapports basiques",
     ],
+    action: { kind: "link", to: "/signup" },
   },
   {
     name: "Pro",
     description: "Pour les utilisateurs réguliers qui veulent aller plus loin.",
     price: 2000,
     yearlyPrice: 19900,
-    buttonText: "S'inscrire",
+    buttonText: "Payer via Jèko",
     popular: true,
     includes: [
-      "5 portefeuilles",
       "Transactions illimitées",
-      "IA Scan factures (50/mois)",
-      "Rapports avancés",
-      "Export PDF",
+      "Scan IA des reçus (50/mois)",
+      "Assistant IA financier",
+      "Rapports avancés & export PDF",
+      "Tontines & dettes",
     ],
+    action: { kind: "jeko", plan: "pro" },
   },
   {
     name: "Ultra Pro",
-    description: "L'expérience complète pour les équipes et les pros.",
+    description: "L'expérience complète pour les pros et les heavy users.",
     price: 5000,
     yearlyPrice: 49900,
-    buttonText: "S'inscrire",
+    buttonText: "Payer via Jèko",
     popular: false,
     includes: [
-      "Portefeuilles illimités",
-      "Transactions illimitées",
-      "IA Scan illimité",
-      "Mode entreprise",
-      "Chat intégré",
-      "Conversion devises",
+      "Tout le plan Pro",
+      "Scan IA illimité",
       "Support prioritaire",
+      "Accès anticipé aux nouvelles features",
     ],
+    action: { kind: "jeko", plan: "max" },
   },
 ];
 
@@ -187,19 +199,31 @@ const Pricing = () => {
                 ))}
               </ul>
 
-              <Button
-                asChild
-                className={cn(
-                  "w-full font-semibold transition-all",
-                  plan.popular
-                    ? "bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_20px_rgba(124,255,58,0.3)] hover:shadow-[0_0_30px_rgba(124,255,58,0.5)]"
-                    : "bg-[rgba(124,255,58,0.08)] border border-[rgba(124,255,58,0.18)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.15)]"
-                )}
-              >
-                <Link to="/signup">
+              {plan.action.kind === "link" ? (
+                <Button
+                  asChild
+                  className={cn(
+                    "w-full font-semibold transition-all",
+                    plan.popular
+                      ? "bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_20px_rgba(124,255,58,0.3)] hover:shadow-[0_0_30px_rgba(124,255,58,0.5)]"
+                      : "bg-[rgba(124,255,58,0.08)] border border-[rgba(124,255,58,0.18)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.15)]"
+                  )}
+                >
+                  <Link to={plan.action.to}>{plan.buttonText}</Link>
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => (plan.action.kind === "jeko" && plan.action.plan === "pro" ? openJekoPro() : openJekoMax())}
+                  className={cn(
+                    "w-full font-semibold transition-all",
+                    plan.popular
+                      ? "bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A]/90 shadow-[0_0_20px_rgba(124,255,58,0.3)] hover:shadow-[0_0_30px_rgba(124,255,58,0.5)]"
+                      : "bg-[rgba(124,255,58,0.08)] border border-[rgba(124,255,58,0.18)] text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.15)]"
+                  )}
+                >
                   {plan.buttonText}
-                </Link>
-              </Button>
+                </Button>
+              )}
             </motion.div>
           ))}
         </div>
