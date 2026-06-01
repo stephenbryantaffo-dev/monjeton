@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -30,6 +33,20 @@ const Pricing = () => {
     description: "Comparez les plans Mon Jeton. Gratuit pour démarrer, Pro à 2 000 F CFA et Ultra Pro à 5 000 F CFA / mois. Paiement Mobile Money.",
     path: "/pricing",
   });
+  const { user } = useAuth();
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscriptions")
+      .select("plan_name, status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle()
+      .then(({ data }) => setCurrentPlan(data?.plan_name ?? null));
+  }, [user]);
+  const isPro = currentPlan === "Pro";
+  const isUltra = currentPlan === "Ultra Pro";
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
@@ -71,8 +88,8 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
-                Payer 2 000 F via Jèko
+              <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full" disabled={isPro || isUltra}>
+                {isPro ? "Plan actuel" : isUltra ? "Inclus dans Ultra Pro" : "Payer 2 000 F via Jèko"}
               </Button>
             </div>
 
@@ -93,9 +110,14 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <Button onClick={openJekoMax} size="lg" className="w-full gradient-primary text-primary-foreground">
-                Payer 5 000 F via Jèko
+              <Button onClick={openJekoMax} size="lg" className="w-full gradient-primary text-primary-foreground" disabled={isUltra}>
+                {isUltra ? "Plan actuel" : isPro ? "Passer à Ultra Pro" : "Payer 5 000 F via Jèko"}
               </Button>
+              {isPro && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Ton cycle redémarre pour 30 jours en Ultra Pro.
+                </p>
+              )}
             </div>
           </div>
         </motion.div>

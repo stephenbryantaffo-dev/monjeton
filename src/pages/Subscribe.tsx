@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -5,6 +6,7 @@ import { useCountry } from "@/contexts/CountryContext";
 import { COUNTRIES } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -16,6 +18,19 @@ const Subscribe = () => {
   });
   const { isAdmin, user } = useAuth();
   const { country, setCountry } = useCountry();
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscriptions")
+      .select("plan_name, status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle()
+      .then(({ data }) => setCurrentPlan(data?.plan_name ?? null));
+  }, [user]);
+  const isPro = currentPlan === "Pro";
+  const isUltra = currentPlan === "Ultra Pro";
 
   if (isAdmin) return <Navigate to="/dashboard" replace />;
 
@@ -92,8 +107,8 @@ const Subscribe = () => {
               <li>✓ Rapports & exports PDF</li>
               <li>✓ Tontines & dettes</li>
             </ul>
-            <Button onClick={() => handleSubscribe("pro")} variant="hero" size="lg" className="w-full">
-              Payer 2 000 F via Jèko
+            <Button onClick={() => handleSubscribe("pro")} variant="hero" size="lg" className="w-full" disabled={isPro || isUltra}>
+              {isPro ? "Plan actuel" : isUltra ? "Inclus dans Ultra Pro" : "Payer 2 000 F via Jèko"}
             </Button>
           </div>
 
@@ -114,9 +129,14 @@ const Subscribe = () => {
               <li>✓ Support prioritaire</li>
               <li>✓ Accès en avant-première aux nouvelles features</li>
             </ul>
-            <Button onClick={() => handleSubscribe("max")} size="lg" className="w-full gradient-primary text-primary-foreground">
-              Payer 5 000 F via Jèko
+            <Button onClick={() => handleSubscribe("max")} size="lg" className="w-full gradient-primary text-primary-foreground" disabled={isUltra}>
+              {isUltra ? "Plan actuel" : isPro ? "Passer à Ultra Pro" : "Payer 5 000 F via Jèko"}
             </Button>
+            {isPro && (
+              <p className="text-xs text-muted-foreground text-center">
+                Ton cycle redémarre pour 30 jours en Ultra Pro.
+              </p>
+            )}
           </div>
 
           <p className="text-center text-xs text-muted-foreground">
