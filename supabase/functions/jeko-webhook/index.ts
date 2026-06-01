@@ -132,13 +132,21 @@ Deno.serve(async (req) => {
       return json({ received: true, note: 'logged, user unmatched: ' + phoneRaw });
     }
 
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const graceUntil = new Date(expiresAt.getTime() + 3 * 24 * 60 * 60 * 1000);
+
     const { error: upErr } = await supabase.from('subscriptions').upsert(
       {
         user_id: userId,
         status: 'active',
         plan_name: planName,
         price_xof: priceXof,
-        updated_at: new Date().toISOString(),
+        activated_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        grace_until: graceUntil.toISOString(),
+        last_reminder_sent: null,
+        updated_at: now.toISOString(),
       },
       { onConflict: 'user_id' }
     );
