@@ -40,7 +40,7 @@ const menuItems = [
   { icon: Users, label: "Tontine", path: "/tontine" },
   { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
   { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
-  { icon: CreditCard, label: "Abonnement", path: "/subscribe" },
+  { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
   { icon: Download, label: "Installer l'app", path: "/install" },
 ];
 
