@@ -41,7 +41,7 @@ const plans: Array<{
     description: "Pour les utilisateurs réguliers qui veulent aller plus loin.",
     price: 2000,
     yearlyPrice: 19900,
-    buttonText: "Payer via Jèko",
+    buttonText: "S'abonner",
     popular: true,
     includes: [
       "Transactions illimitées",
@@ -57,7 +57,7 @@ const plans: Array<{
     description: "L'expérience complète pour les pros et les heavy users.",
     price: 5000,
     yearlyPrice: 49900,
-    buttonText: "Payer via Jèko",
+    buttonText: "S'abonner",
     popular: false,
     includes: [
       "Tout le plan Pro",
