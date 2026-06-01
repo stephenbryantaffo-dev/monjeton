@@ -5,6 +5,7 @@ import SectionReveal from "@/components/landing/SectionReveal";
 import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
 import FloatingFCFA from "@/components/landing/FloatingFCFA";
 import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Stats = lazy(() => import("@/components/landing/Stats"));
 const Features = lazy(() => import("@/components/landing/Features"));
