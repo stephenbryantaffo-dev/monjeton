@@ -88,8 +88,8 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
-                Payer 2 000 F via Jèko
+              <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full" disabled={isPro || isUltra}>
+                {isPro ? "Plan actuel" : isUltra ? "Inclus dans Ultra Pro" : "Payer 2 000 F via Jèko"}
               </Button>
             </div>
 
