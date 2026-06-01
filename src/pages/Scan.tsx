@@ -395,8 +395,8 @@ const Scan = () => {
               : "📷 Limite de scans atteinte ce mois"}
           </span>
           {scansRemaining <= 0 && (
-            <Button asChild size="sm" className="gradient-primary text-primary-foreground">
-              <a href="/subscribe">Passer à PRO</a>
+            <Button onClick={() => openJekoPro()} size="sm" className="gradient-primary text-primary-foreground">
+              Passer à PRO
             </Button>
           )}
         </div>
