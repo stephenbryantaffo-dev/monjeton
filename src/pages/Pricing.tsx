@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import logoImg from "@/assets/logo-monjeton.webp";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const proFeatures = [
   "Transactions illimitées",

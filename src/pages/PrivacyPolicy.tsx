@@ -1,7 +1,13 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const PrivacyPolicy = () => {
+  useDocumentMeta({
+    title: "Politique de Confidentialité — Mon Jeton",
+    description: "Comment Mon Jeton collecte, utilise et protège vos données financières personnelles en conformité avec la réglementation.",
+    path: "/privacy",
+  });
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background text-foreground px-5 py-8 max-w-3xl mx-auto">

@@ -8,8 +8,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoImg from "@/assets/logo-monjeton.webp";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const ResetPassword = () => {
+  useDocumentMeta({
+    title: "Réinitialiser le mot de passe — Mon Jeton",
+    description: "Définissez un nouveau mot de passe sécurisé pour votre compte Mon Jeton.",
+    path: "/reset-password",
+  });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

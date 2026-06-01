@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, validatePasswordStrength, sanitizeText } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.webp";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");

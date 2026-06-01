@@ -6,10 +6,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-monjeton.webp";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const SUPPORT_EMAIL = "monjeton@brentgroup.io";
 
 const PaymentPending = () => {
+  useDocumentMeta({
+    title: "Paiement en cours — Mon Jeton",
+    description: "Vérification de votre paiement Jèko et activation de votre abonnement Mon Jeton.",
+    path: "/payment-pending",
+  });
   const navigate = useNavigate();
   const [checking, setChecking] = useState(false);
 

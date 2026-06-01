@@ -14,6 +14,7 @@ import {
   Ripple,
   OrbitingCircles,
 } from "@/components/ui/animated-login";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 // Mobile money operator colors
 const operators = [

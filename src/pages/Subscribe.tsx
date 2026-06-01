@@ -6,8 +6,14 @@ import { COUNTRIES } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import logoImg from "@/assets/logo-monjeton.webp";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Subscribe = () => {
+  useDocumentMeta({
+    title: "S'abonner à Mon Jeton — Plans Pro et Ultra Pro",
+    description: "Débloquez le scan IA illimité, les rapports avancés et l'assistant financier. Paiement Mobile Money via Jèko.",
+    path: "/subscribe",
+  });
   const { isAdmin, user } = useAuth();
   const { country, setCountry } = useCountry();
 
