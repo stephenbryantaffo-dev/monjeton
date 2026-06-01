@@ -12,6 +12,11 @@ import logoImg from "@/assets/logo-monjeton.webp";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const Signup = () => {
+  useDocumentMeta({
+    title: "Créer un compte — Mon Jeton",
+    description: "Inscrivez-vous gratuitement à Mon Jeton et commencez à gérer vos finances en FCFA en moins de 2 minutes.",
+    path: "/signup",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");

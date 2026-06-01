@@ -25,6 +25,11 @@ const operators = [
 ];
 
 const Login = () => {
+  useDocumentMeta({
+    title: "Se connecter — Mon Jeton",
+    description: "Connectez-vous à votre compte Mon Jeton pour suivre vos finances en Franc CFA.",
+    path: "/login",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
