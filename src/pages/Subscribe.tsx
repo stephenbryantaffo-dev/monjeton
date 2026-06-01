@@ -18,6 +18,19 @@ const Subscribe = () => {
   });
   const { isAdmin, user } = useAuth();
   const { country, setCountry } = useCountry();
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscriptions")
+      .select("plan_name, status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle()
+      .then(({ data }) => setCurrentPlan(data?.plan_name ?? null));
+  }, [user]);
+  const isPro = currentPlan === "Pro";
+  const isUltra = currentPlan === "Ultra Pro";
 
   if (isAdmin) return <Navigate to="/dashboard" replace />;
 
