@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -14,11 +14,11 @@ import {
   Gauge,
   Camera,
   MessageCircle,
+  ArrowLeft,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
@@ -154,6 +154,7 @@ const SubscriptionManage = () => {
   });
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<JekoPayment[]>([]);
@@ -166,7 +167,7 @@ const SubscriptionManage = () => {
     let cancelled = false;
     const monthStart = startOfMonthISO();
     (async () => {
-      const [subRes, payRes, scansRes, msgsRes] = await Promise.all([
+      const [subRes, payRes, scansRes, msgsRes] = await Promise.allSettled([
         supabase
           .from("subscriptions")
           .select("status, plan_name, price_xof, updated_at, created_at")
@@ -192,10 +193,10 @@ const SubscriptionManage = () => {
           .gte("created_at", monthStart),
       ]);
       if (cancelled) return;
-      setSub((subRes.data as Subscription | null) ?? null);
-      setPayments((payRes.data as JekoPayment[] | null) ?? []);
-      setScansThisMonth(scansRes.count ?? 0);
-      setAiMsgsThisMonth(msgsRes.count ?? 0);
+      setSub(subRes.status === "fulfilled" ? ((subRes.value.data as Subscription | null) ?? null) : null);
+      setPayments(payRes.status === "fulfilled" ? ((payRes.value.data as JekoPayment[] | null) ?? []) : []);
+      setScansThisMonth(scansRes.status === "fulfilled" ? (scansRes.value.count ?? 0) : 0);
+      setAiMsgsThisMonth(msgsRes.status === "fulfilled" ? (msgsRes.value.count ?? 0) : 0);
       setLoading(false);
     })();
     return () => {
@@ -233,7 +234,20 @@ const SubscriptionManage = () => {
   };
 
   return (
-    <DashboardLayout title="Mon abonnement">
+    <DashboardLayout
+      title="Mon abonnement"
+      showBack={false}
+      headerLeft={
+        <button
+          type="button"
+          onClick={() => navigate("/settings")}
+          className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 hover:bg-secondary/80 transition-colors"
+          aria-label="Retour à Plus"
+        >
+          <ArrowLeft className="w-4 h-4 text-foreground" />
+        </button>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-5">
         {loading ? (
           <>

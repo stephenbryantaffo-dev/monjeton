@@ -414,13 +414,34 @@ const Settings = () => {
       </div>
 
       <div className="space-y-1 mb-6">
-        {menuItems.filter((item) => item.path !== "/brvm" || activeCurrency === "XOF" || activeCurrency === "XAF").map((item) => (
-          <Link key={item.path} to={item.path} className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
-            <item.icon className="w-5 h-5 text-muted-foreground" />
-            <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </Link>
-        ))}
+        {menuItems.filter((item) => item.path !== "/brvm" || activeCurrency === "XOF" || activeCurrency === "XAF").map((item) => {
+          const content = (
+            <>
+              <item.icon className="w-5 h-5 text-muted-foreground" />
+              <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </>
+          );
+
+          if (item.path === "/settings/subscription") {
+            return (
+              <button
+                key={item.path}
+                type="button"
+                onClick={() => navigate("/settings/subscription")}
+                className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors text-left"
+              >
+                {content}
+              </button>
+            );
+          }
+
+          return (
+            <Link key={item.path} to={item.path} className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
+              {content}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Mes badges */}
