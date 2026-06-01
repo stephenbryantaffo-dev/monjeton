@@ -33,6 +33,20 @@ const Pricing = () => {
     description: "Comparez les plans Mon Jeton. Gratuit pour démarrer, Pro à 2 000 F CFA et Ultra Pro à 5 000 F CFA / mois. Paiement Mobile Money.",
     path: "/pricing",
   });
+  const { user } = useAuth();
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscriptions")
+      .select("plan_name, status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle()
+      .then(({ data }) => setCurrentPlan(data?.plan_name ?? null));
+  }, [user]);
+  const isPro = currentPlan === "Pro";
+  const isUltra = currentPlan === "Ultra Pro";
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
