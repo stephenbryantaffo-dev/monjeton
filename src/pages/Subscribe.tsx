@@ -129,9 +129,14 @@ const Subscribe = () => {
               <li>✓ Support prioritaire</li>
               <li>✓ Accès en avant-première aux nouvelles features</li>
             </ul>
-            <Button onClick={() => handleSubscribe("max")} size="lg" className="w-full gradient-primary text-primary-foreground">
-              Payer 5 000 F via Jèko
+            <Button onClick={() => handleSubscribe("max")} size="lg" className="w-full gradient-primary text-primary-foreground" disabled={isUltra}>
+              {isUltra ? "Plan actuel" : isPro ? "Passer à Ultra Pro" : "Payer 5 000 F via Jèko"}
             </Button>
+            {isPro && (
+              <p className="text-xs text-muted-foreground text-center">
+                Ton cycle redémarre pour 30 jours en Ultra Pro.
+              </p>
+            )}
           </div>
 
           <p className="text-center text-xs text-muted-foreground">
