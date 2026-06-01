@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
+import { openJekoPro } from "@/lib/jeko";
 import { motion } from "framer-motion";
 import { ChevronRight, Camera, Upload, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
