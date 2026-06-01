@@ -1,31 +1,48 @@
-## Objectif
+# Page de gestion d'abonnement utilisateur
 
-Désactiver temporairement le multi-scan (qui bug) et revenir à l'ancien comportement : un scan = une transaction détectée et validée via la fiche `ScanResultCard`.
+Créer une vraie page où l'utilisateur voit l'état de son abonnement Jèko et peut agir dessus, au lieu d'envoyer directement vers `/subscribe`.
 
-## Changements
+## Parcours
 
-### `src/pages/Scan.tsx` — refonte du flux scan
-- Retirer l'import et l'utilisation de `MultiReceiptValidator`.
-- Remplacer l'état `multiScanResult` par `scanResult: ParsedResult | null`.
-- Charger `categories` et `wallets` de l'utilisateur (nécessaires à `ScanResultCard`).
-- Appeler l'edge function **`scan-receipt`** (singulier) au lieu de `scan-receipts`, avec le payload attendu : `{ image: base64, mimeType }`.
-- Afficher `<ScanResultCard>` quand un résultat est présent :
-  - `onConfirm(data)` → insérer une ligne dans `transactions` (montant, date, catégorie, wallet, devise, marchand en note) + créer une entrée `receipt_scans` confirmée → rafraîchir l'historique et les stats → toast succès.
-  - `onReject()` → enregistrer le scan en `rejected` (ou simplement fermer) → reset state.
-- Garder intacts : compteur de scans gratuits, upload caméra/galerie, compression > 4 Mo, `ScanHistory`, lien vers `/receipts`.
+- Dans **Settings**, remplacer le lien "Abonnement → /subscribe" par "Mon abonnement → /settings/subscription".
+- Sur la nouvelle page :
+  - Si l'utilisateur a un abonnement actif → afficher l'état du plan + historique + actions.
+  - Sinon → afficher un encart "Aucun abonnement actif" avec un CTA vers `/subscribe`.
 
-### Fichiers conservés (non supprimés, pour réactivation future)
-- `src/components/scan/MultiReceiptValidator.tsx`
-- `supabase/functions/scan-receipts/index.ts`
+## Contenu de la page `/settings/subscription`
 
-Aucune migration SQL, aucune modification d'autre page.
+1. **Carte "Plan actuel"**
+   - Badge plan (Gratuit / Pro / Ultra Pro) avec couleur cohérente (`neon-glow` pour Pro, gradient pour Ultra).
+   - Prix mensuel localisé.
+   - Statut (`active` / `inactive`) + date de dernière activation (`subscriptions.updated_at`).
+   - Liste courte des avantages du plan.
+
+2. **Actions**
+   - Bouton "Renouveler" (toujours visible si abo actif) → ouvre Jèko avec le même plan.
+   - Bouton "Passer à Ultra Pro" (visible uniquement si plan = Pro) → ouvre Jèko Max.
+   - Bouton secondaire "Voir tous les plans" → `/subscribe`.
+   - Lien discret "Un problème de paiement ?" → ouvre WhatsApp support (numéro déjà utilisé ailleurs si présent, sinon mailto).
+
+3. **Historique des paiements Jèko de l'utilisateur**
+   - Liste des entrées de `jeko_payments` où `matched_user_id = auth.uid()`, triée desc.
+   - Pour chaque ligne : date, montant FCFA, plan, numéro téléphone masqué (`**** 1234`), badge "Reçu".
+   - État vide propre ("Aucun paiement enregistré pour le moment").
 
 ## Détails techniques
 
-- L'edge function `scan-receipt` retourne déjà un objet plat `ParsedResult` (montant, marchand, date, catégorie, devise, conversion XOF). Pas de tableau `receipts[]`.
-- Si `total_detected` n'existe plus dans cette réponse, on considère qu'un résultat avec `amount > 0` est valide ; sinon toast "Aucune transaction détectée".
-- L'incrément du compteur `scan_counter` reste sur succès uniquement (avant `setScanResult`).
+- **RLS à ajouter** sur `jeko_payments` : nouvelle policy SELECT `authenticated` `USING (matched_user_id = auth.uid())`. La policy admin existante reste. Pas d'INSERT/UPDATE/DELETE côté client (webhook s'en charge via service_role).
+- **Lecture abonnement** : `supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle()` (policy SELECT déjà OK).
+- **Renouvellement** : réutiliser `openJekoPro` / `openJekoMax` depuis `src/lib/jeko.ts`.
+- **Route** : ajouter `/settings/subscription` dans `src/App.tsx` sous `ProtectedRoute` + `OnboardingGuard`.
+- **Composants** : nouveau fichier `src/pages/SubscriptionManage.tsx` utilisant `DashboardLayout` (titre "Mon abonnement"), `glass-card`, skeletons pendant chargement, Framer Motion comme le reste de l'app.
+- **Settings.tsx** : changer le `path: "/subscribe"` du item Abonnement en `/settings/subscription` et renommer le label en "Mon abonnement".
+- **SEO** : `useDocumentMeta` avec title/description appropriés.
+- **i18n monétaire** : utiliser `formatMoney` existant + `useCountry` pour conversion XOF.
 
-## Hors scope
-- Pas de suppression définitive du code multi-scan.
-- Pas de modification de la page `Receipts`, ni du système de PIN, ni de l'historique.
+## Hors scope (à proposer ensuite si tu veux)
+
+- Expiration automatique 30 jours + cron `pg_cron` pour passer `status='expired'`.
+- Notifications J-3 avant expiration.
+- Page admin `/admin/payments` pour réconcilier les paiements `matched_user_id IS NULL`.
+
+Dis-moi si je passe en build, ou si tu veux ajuster le scope (par ex. ajouter dès maintenant l'expiration auto).
