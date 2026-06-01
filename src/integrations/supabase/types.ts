@@ -942,6 +942,48 @@ export type Database = {
         }
         Relationships: []
       }
+      jeko_payments: {
+        Row: {
+          amount: number | null
+          created_at: string
+          id: string
+          matched_user_id: string | null
+          payment_link_id: string | null
+          phone: string | null
+          plan_name: string | null
+          raw_amount: number | null
+          raw_payload: Json | null
+          reference: string | null
+          txn_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          matched_user_id?: string | null
+          payment_link_id?: string | null
+          phone?: string | null
+          plan_name?: string | null
+          raw_amount?: number | null
+          raw_payload?: Json | null
+          reference?: string | null
+          txn_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          matched_user_id?: string | null
+          payment_link_id?: string | null
+          phone?: string | null
+          plan_name?: string | null
+          raw_amount?: number | null
+          raw_payload?: Json | null
+          reference?: string | null
+          txn_id?: string | null
+        }
+        Relationships: []
+      }
       monthly_badges: {
         Row: {
           badge_id: string
