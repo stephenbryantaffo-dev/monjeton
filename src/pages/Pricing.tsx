@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
