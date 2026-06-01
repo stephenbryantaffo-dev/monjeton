@@ -6,6 +6,7 @@ const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
+import SubscriptionRenewBanner from "@/components/SubscriptionRenewBanner";
 import DashboardPredictions from "@/components/DashboardPredictions";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
