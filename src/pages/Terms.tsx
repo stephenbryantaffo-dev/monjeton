@@ -1,7 +1,13 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Terms = () => {
+  useDocumentMeta({
+    title: "Conditions Générales d'Utilisation — Mon Jeton",
+    description: "Conditions générales d'utilisation de l'application Mon Jeton, éditée par Djaitech (Côte d'Ivoire).",
+    path: "/terms",
+  });
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background text-foreground px-5 py-8 max-w-3xl mx-auto">

@@ -5,6 +5,7 @@ import SectionReveal from "@/components/landing/SectionReveal";
 import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
 import FloatingFCFA from "@/components/landing/FloatingFCFA";
 import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Stats = lazy(() => import("@/components/landing/Stats"));
 const Features = lazy(() => import("@/components/landing/Features"));
@@ -22,6 +23,11 @@ const SectionFallback = () => (
 );
 
 const Landing = () => {
+  useDocumentMeta({
+    title: "Mon Jeton — Gestion financière en FCFA pour l'Afrique de l'Ouest",
+    description: "Suivez vos dépenses, revenus, budgets, épargne et dettes en Franc CFA. Scan IA des reçus Mobile Money (Orange, MTN, Wave, Moov).",
+    path: "/",
+  });
   return (
     <div className="min-h-screen bg-[#05070A] relative" style={{ isolation: "isolate" }}>
       <GlobalDigitalEffects />

@@ -10,7 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, validatePasswordStrength, sanitizeText } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.webp";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const Signup = () => {
+  useDocumentMeta({
+    title: "Créer un compte — Mon Jeton",
+    description: "Inscrivez-vous gratuitement à Mon Jeton et commencez à gérer vos finances en FCFA en moins de 2 minutes.",
+    path: "/signup",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -161,7 +167,7 @@ const Signup = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 bg-secondary border-border" required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Afficher/Masquer le mot de passe" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>

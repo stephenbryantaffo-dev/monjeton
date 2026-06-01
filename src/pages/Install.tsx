@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Share, MoreVertical, Plus, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,6 +10,11 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const Install = () => {
+  useDocumentMeta({
+    title: "Installer Mon Jeton sur iOS / Android",
+    description: "Guide pas à pas pour installer l'application Mon Jeton sur votre iPhone ou Android et profiter d'une expérience native.",
+    path: "/install",
+  });
   const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import logoImg from "@/assets/logo-monjeton.webp";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const proFeatures = [
   "Transactions illimitées",
@@ -24,6 +25,11 @@ const maxFeatures = [
 ];
 
 const Pricing = () => {
+  useDocumentMeta({
+    title: "Tarifs Mon Jeton — Plans Gratuit, Pro et Ultra Pro",
+    description: "Comparez les plans Mon Jeton. Gratuit pour démarrer, Pro à 2 000 F CFA et Ultra Pro à 5 000 F CFA / mois. Paiement Mobile Money.",
+    path: "/pricing",
+  });
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">

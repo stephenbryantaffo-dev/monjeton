@@ -1,0 +1,15 @@
+# Mon Jeton
+
+> Mon Jeton est une application de gestion financière personnelle conçue pour l'Afrique de l'Ouest. Elle permet de suivre revenus, dépenses, budgets, épargne, dettes et tontines en Franc CFA, avec scan IA des reçus Mobile Money (Orange Money, MTN MoMo, Wave, Moov).
+
+Édité par Djaitech. Slogan : « Tu vas voir clair dans ton jeton. »
+
+## Pages
+
+- [Accueil](/): Présentation, fonctionnalités et témoignages.
+- [Tarifs](/pricing): Plans Gratuit, Pro et Ultra Pro avec paiement Mobile Money via Jèko.
+- [Se connecter](/login): Accès au compte existant.
+- [S'inscrire](/signup): Création d'un nouveau compte.
+- [Installer l'app](/install): Guide d'installation PWA (iOS / Android).
+- [Confidentialité](/privacy): Politique de confidentialité et traitement des données.
+- [CGU](/terms): Conditions générales d'utilisation.

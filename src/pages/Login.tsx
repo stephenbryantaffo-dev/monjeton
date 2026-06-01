@@ -14,6 +14,7 @@ import {
   Ripple,
   OrbitingCircles,
 } from "@/components/ui/animated-login";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 // Mobile money operator colors
 const operators = [
@@ -24,6 +25,11 @@ const operators = [
 ];
 
 const Login = () => {
+  useDocumentMeta({
+    title: "Se connecter — Mon Jeton",
+    description: "Connectez-vous à votre compte Mon Jeton pour suivre vos finances en Franc CFA.",
+    path: "/login",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -195,6 +201,7 @@ const Login = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="hover:text-foreground transition-colors"
+                    aria-label="Afficher/Masquer le mot de passe"
                     tabIndex={-1}
                   >
                     {showPassword ? (
