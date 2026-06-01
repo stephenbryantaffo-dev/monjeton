@@ -207,8 +207,8 @@ const ScanResultCard = ({ result, categories, wallets, onConfirm, onReject, isPr
         <div className="glass rounded-xl p-4 text-center space-y-2">
           <p className="text-sm font-semibold text-foreground">🔒 Fonctionnalité Premium</p>
           <p className="text-xs text-muted-foreground">Débloquez Scan Intelligent avec le plan PRO pour enregistrer automatiquement vos transactions.</p>
-          <Button asChild className="gradient-primary text-primary-foreground w-full">
-            <a href="/subscribe">Passer à PRO →</a>
+          <Button onClick={() => openJekoPro()} className="gradient-primary text-primary-foreground w-full">
+            Passer à PRO →
           </Button>
         </div>
       ) : (
