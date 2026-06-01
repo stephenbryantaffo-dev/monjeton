@@ -45,6 +45,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const BRVMSimulator = lazy(() => import("./pages/BRVMSimulator"));
 const Receipts = lazy(() => import("./pages/Receipts"));
 const PaymentPending = lazy(() => import("./pages/PaymentPending"));
+const SubscriptionManage = lazy(() => import("./pages/SubscriptionManage"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
