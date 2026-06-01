@@ -74,7 +74,7 @@ const NotificationBell = () => {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <button className="relative p-2 rounded-full hover:bg-secondary/60 transition-colors">
+        <button aria-label="Notifications" className="relative p-2 rounded-full hover:bg-secondary/60 transition-colors">
           <Bell className="w-5 h-5 text-muted-foreground" />
           {unreadCount > 0 && (
             <motion.span

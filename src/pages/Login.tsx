@@ -195,6 +195,7 @@ const Login = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="hover:text-foreground transition-colors"
+                    aria-label="Afficher/Masquer le mot de passe"
                     tabIndex={-1}
                   >
                     {showPassword ? (

@@ -252,7 +252,7 @@ const FinancialScore = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">Score Financier</h3>
+          <h2 className="text-sm font-semibold text-foreground">Score Financier</h2>
         </div>
         <div className="flex items-center gap-1">
           <button

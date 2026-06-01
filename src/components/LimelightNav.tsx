@@ -31,6 +31,7 @@ const LimelightNav = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  aria-label="Ajouter une transaction"
                   className="relative -mt-7"
                 >
                   <motion.div

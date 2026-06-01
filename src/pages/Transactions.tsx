@@ -180,6 +180,7 @@ const Transactions = () => {
           variant={hasActiveFilters ? "hero" : "glass"}
           size="icon"
           onClick={() => setShowFilters(!showFilters)}
+          aria-label="Filtrer les transactions"
           className="shrink-0"
         >
           <Filter className="w-4 h-4" />
