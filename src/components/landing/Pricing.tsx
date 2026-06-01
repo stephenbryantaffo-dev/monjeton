@@ -34,6 +34,7 @@ const plans: Array<{
       "Catégorisation automatique",
       "Rapports basiques",
     ],
+    action: { kind: "link", to: "/signup" },
   },
   {
     name: "Pro",
