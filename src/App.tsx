@@ -44,6 +44,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const BRVMSimulator = lazy(() => import("./pages/BRVMSimulator"));
 const Receipts = lazy(() => import("./pages/Receipts"));
+const PaymentPending = lazy(() => import("./pages/PaymentPending"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
