@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
+import { openJekoPro } from "@/lib/jeko";
 
 export interface ParsedResult {
   amount?: number;
