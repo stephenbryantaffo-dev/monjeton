@@ -1,48 +1,52 @@
-# Page de gestion d'abonnement utilisateur
+## Objectif
 
-Créer une vraie page où l'utilisateur voit l'état de son abonnement Jèko et peut agir dessus, au lieu d'envoyer directement vers `/subscribe`.
+Transformer `/settings/subscription` en vrai tableau de bord d'abonnement où l'utilisateur voit d'un coup d'œil :
+- Son **plan actuel** (Gratuit / Pro / Ultra Pro) avec badge bien visible
+- Son **usage du mois** (scans IA, messages assistant) avec jauges
+- La **prochaine échéance estimée** (basée sur le dernier paiement Jèko + 30 jours)
+- Un **comparatif des 3 plans** pour décider d'upgrader
+- L'**historique des paiements** (déjà existant, conservé)
 
-## Parcours
+## Modifications
 
-- Dans **Settings**, remplacer le lien "Abonnement → /subscribe" par "Mon abonnement → /settings/subscription".
-- Sur la nouvelle page :
-  - Si l'utilisateur a un abonnement actif → afficher l'état du plan + historique + actions.
-  - Sinon → afficher un encart "Aucun abonnement actif" avec un CTA vers `/subscribe`.
+### `src/pages/SubscriptionManage.tsx` — refonte du contenu
 
-## Contenu de la page `/settings/subscription`
+1. **Hero "Mon plan actuel"** (toujours affiché, même en Gratuit) :
+   - Grand badge : Gratuit (gris), Pro (gradient lime), Ultra Pro (noir/or avec couronne)
+   - Prix mensuel + date d'activation
+   - Pour Gratuit : "Tu utilises Mon Jeton en mode découverte"
+   - Pour actif : date de prochaine échéance estimée = `last_payment + 30j`
 
-1. **Carte "Plan actuel"**
-   - Badge plan (Gratuit / Pro / Ultra Pro) avec couleur cohérente (`neon-glow` pour Pro, gradient pour Ultra).
-   - Prix mensuel localisé.
-   - Statut (`active` / `inactive`) + date de dernière activation (`subscriptions.updated_at`).
-   - Liste courte des avantages du plan.
+2. **Carte "Usage ce mois-ci"** (nouveau) :
+   - Scans IA utilisés : `X / 5` (Gratuit) · `X / 50` (Pro) · `X / ∞` (Ultra)
+     - Source : `SELECT count(*) FROM receipt_scans WHERE user_id = ? AND created_at >= début_du_mois`
+   - Messages Assistant IA : `X` ce mois
+     - Source : `SELECT count(*) FROM assistant_messages WHERE user_id = ? AND message_role = 'user' AND created_at >= début_du_mois`
+   - Jauge `<Progress />` avec couleur qui passe au orange à 70%, rouge à 90%
 
-2. **Actions**
-   - Bouton "Renouveler" (toujours visible si abo actif) → ouvre Jèko avec le même plan.
-   - Bouton "Passer à Ultra Pro" (visible uniquement si plan = Pro) → ouvre Jèko Max.
-   - Bouton secondaire "Voir tous les plans" → `/subscribe`.
-   - Lien discret "Un problème de paiement ?" → ouvre WhatsApp support (numéro déjà utilisé ailleurs si présent, sinon mailto).
+3. **Carte "Comparer les plans"** (nouveau, collapsible) :
+   - Tableau 3 colonnes : Gratuit · Pro · Ultra Pro
+   - 5-6 lignes : Transactions, Scans IA/mois, Assistant IA, Rapports PDF, Support, Nouveautés
+   - Plan actuel mis en évidence avec bordure neon
+   - CTA "Passer à Pro" / "Passer à Ultra Pro" selon plan actuel
 
-3. **Historique des paiements Jèko de l'utilisateur**
-   - Liste des entrées de `jeko_payments` où `matched_user_id = auth.uid()`, triée desc.
-   - Pour chaque ligne : date, montant FCFA, plan, numéro téléphone masqué (`**** 1234`), badge "Reçu".
-   - État vide propre ("Aucun paiement enregistré pour le moment").
+4. **Carte renouvellement** (si actif) :
+   - "Prochain paiement estimé : 30 juin 2026"
+   - Note : "Renouvelle avant cette date pour ne pas perdre l'accès Pro"
+   - Bouton "Renouveler maintenant"
 
-## Détails techniques
+5. **Historique paiements** : conservé tel quel
 
-- **RLS à ajouter** sur `jeko_payments` : nouvelle policy SELECT `authenticated` `USING (matched_user_id = auth.uid())`. La policy admin existante reste. Pas d'INSERT/UPDATE/DELETE côté client (webhook s'en charge via service_role).
-- **Lecture abonnement** : `supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle()` (policy SELECT déjà OK).
-- **Renouvellement** : réutiliser `openJekoPro` / `openJekoMax` depuis `src/lib/jeko.ts`.
-- **Route** : ajouter `/settings/subscription` dans `src/App.tsx` sous `ProtectedRoute` + `OnboardingGuard`.
-- **Composants** : nouveau fichier `src/pages/SubscriptionManage.tsx` utilisant `DashboardLayout` (titre "Mon abonnement"), `glass-card`, skeletons pendant chargement, Framer Motion comme le reste de l'app.
-- **Settings.tsx** : changer le `path: "/subscribe"` du item Abonnement en `/settings/subscription` et renommer le label en "Mon abonnement".
-- **SEO** : `useDocumentMeta` avec title/description appropriés.
-- **i18n monétaire** : utiliser `formatMoney` existant + `useCountry` pour conversion XOF.
+### Code structurel
 
-## Hors scope (à proposer ensuite si tu veux)
+- Ajouter 2 requêtes parallèles dans le `useEffect` existant : count scans + count messages du mois
+- Constante `PLAN_LIMITS = { Gratuit: 5, Pro: 50, "Ultra Pro": Infinity }`
+- Composant `<UsageBar label, current, limit />` réutilisable
+- Helper `nextRenewalDate(lastPaymentISO)` qui ajoute 30 jours
 
-- Expiration automatique 30 jours + cron `pg_cron` pour passer `status='expired'`.
-- Notifications J-3 avant expiration.
-- Page admin `/admin/payments` pour réconcilier les paiements `matched_user_id IS NULL`.
+### Hors scope
 
-Dis-moi si je passe en build, ou si tu veux ajuster le scope (par ex. ajouter dès maintenant l'expiration auto).
+- Pas de modification base de données (toutes les tables nécessaires existent : `subscriptions`, `jeko_payments`, `receipt_scans`, `assistant_messages`)
+- Pas de modification du lien dans Settings (déjà bon : `/settings/subscription`)
+- Pas de modification du routing dans App.tsx (route déjà présente)
+- La publication sur monjeton.app reste à faire par l'utilisateur après validation
