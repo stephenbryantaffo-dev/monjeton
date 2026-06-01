@@ -54,20 +54,18 @@ const plans: Array<{
   },
   {
     name: "Ultra Pro",
-    description: "L'expérience complète pour les équipes et les pros.",
+    description: "L'expérience complète pour les pros et les heavy users.",
     price: 5000,
     yearlyPrice: 49900,
-    buttonText: "S'inscrire",
+    buttonText: "Payer via Jèko",
     popular: false,
     includes: [
-      "Portefeuilles illimités",
-      "Transactions illimitées",
-      "IA Scan illimité",
-      "Mode entreprise",
-      "Chat intégré",
-      "Conversion devises",
+      "Tout le plan Pro",
+      "Scan IA illimité",
       "Support prioritaire",
+      "Accès anticipé aux nouvelles features",
     ],
+    action: { kind: "jeko", plan: "max" },
   },
 ];
 
