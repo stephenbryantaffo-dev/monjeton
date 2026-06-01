@@ -110,9 +110,14 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <Button onClick={openJekoMax} size="lg" className="w-full gradient-primary text-primary-foreground">
-                Payer 5 000 F via Jèko
+              <Button onClick={openJekoMax} size="lg" className="w-full gradient-primary text-primary-foreground" disabled={isUltra}>
+                {isUltra ? "Plan actuel" : isPro ? "Passer à Ultra Pro" : "Payer 5 000 F via Jèko"}
               </Button>
+              {isPro && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Ton cycle redémarre pour 30 jours en Ultra Pro.
+                </p>
+              )}
             </div>
           </div>
         </motion.div>
