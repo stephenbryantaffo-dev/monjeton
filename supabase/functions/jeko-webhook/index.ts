@@ -2,82 +2,86 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'content-type, x-jeko-signature, x-webhook-secret, authorization',
+  'Access-Control-Allow-Headers': 'content-type, jeko-signature',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+async function verifyHmac(rawBody: string, signature: string, secret: string): Promise<boolean> {
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(rawBody));
+    const expected = Array.from(new Uint8Array(sigBuf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    if (expected.length !== signature.length) return false;
+    let r = 0;
+    for (let i = 0; i < expected.length; i++) r |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+    return r === 0;
+  } catch (e) {
+    console.error('HMAC error', e);
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS')
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   try {
-    const JEKO_API_KEY = Deno.env.get('JEKO_API_KEY');
+    const WEBHOOK_SECRET = Deno.env.get('JEKO_WEBHOOK_SECRET');
+    const rawBody = await req.text();
+    const signature =
+      req.headers.get('jeko-signature') || req.headers.get('Jeko-Signature') || '';
 
-    // Vérifier signature Jèko
-    const sig =
-      req.headers.get('x-jeko-signature') ||
-      req.headers.get('x-webhook-secret') ||
-      req.headers.get('authorization')?.replace('Bearer ', '');
-
-    if (JEKO_API_KEY && sig !== JEKO_API_KEY) {
-      console.error('Invalid signature:', sig);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Vérif signature (si secret configuré)
+    if (WEBHOOK_SECRET) {
+      const ok = await verifyHmac(rawBody, signature, WEBHOOK_SECRET);
+      if (!ok) {
+        console.error('Bad signature');
+        return json({ error: 'Invalid signature' }, 401);
+      }
     }
 
-    const body = await req.json();
-    console.log('Jèko payload:', JSON.stringify(body));
+    const parsed = JSON.parse(rawBody);
+    console.log('Jèko webhook RAW:', rawBody);
 
-    const status =
-      body?.status || body?.payment_status || body?.data?.status;
-    const email =
-      body?.customer?.email ||
-      body?.payer_email ||
-      body?.email ||
-      body?.data?.customer?.email;
-    const amount = Number(
-      body?.amount || body?.payment?.amount || body?.data?.amount || 0
-    );
-    const paymentLinkId =
-      body?.payment_link_id ||
-      body?.link_id ||
-      body?.data?.payment_link_id ||
-      '';
+    // La doc se contredit : tantôt champs à la racine, tantôt sous .data.
+    const tx = parsed?.data ?? parsed;
 
-    console.log('Status:', status, 'Email:', email, 'Amount:', amount);
+    const status = String(tx?.status ?? '').toLowerCase();
+    const txType = String(tx?.transactionType ?? '');
+    const isPayment = txType === 'PaymentRequest' || txType.toLowerCase() === 'payment';
 
-    const successStatuses = [
-      'success',
-      'paid',
-      'completed',
-      'successful',
-      'approved',
-    ];
-    if (!successStatuses.includes(String(status).toLowerCase())) {
-      return new Response(
-        JSON.stringify({ received: true, action: 'ignored', status }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const phoneRaw = tx?.counterpartIdentifier ?? '';
+    const txnId = tx?.id ?? '';
+    const paymentLinkId = tx?.transactionDetails?.paymentLinkId ?? '';
+    const reference = tx?.transactionDetails?.reference ?? '';
 
-    if (!email) {
-      console.error('No email in payload:', body);
-      return new Response(JSON.stringify({ error: 'No email' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // MONTANT : centimes vs XOF direct
+    const rawAmount = Number(tx?.amount?.amount ?? 0);
+    const amountXof = rawAmount >= 100000 ? Math.round(rawAmount / 100) : rawAmount;
+
+    console.log('Parsed →', { status, txType, phoneRaw, rawAmount, amountXof, paymentLinkId });
+
+    if (!isPayment || status !== 'success') {
+      return json({ received: true, action: 'ignored', status, txType });
     }
 
     const PRO_ID = 'd616710c-47fb-4afc-b0e2-e9fe3e0b29ab';
     const MAX_ID = 'e7715547-b693-40dd-b06e-9bbb63a90961';
-
     let planName = 'Pro';
     let priceXof = 2000;
-
-    if (String(paymentLinkId).includes(MAX_ID) || amount >= 5000) {
+    if (String(paymentLinkId).includes(MAX_ID) || amountXof >= 5000) {
       planName = 'Ultra Pro';
       priceXof = 5000;
     }
@@ -87,59 +91,63 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Trouver le user par email (paginé)
-    let user: { id: string; email?: string } | undefined;
-    let page = 1;
-    const perPage = 1000;
-    const target = String(email).toLowerCase();
-    while (!user) {
-      const { data, error } = await supabase.auth.admin.listUsers({
-        page,
-        perPage,
-      });
-      if (error) throw error;
-      user = data?.users?.find((u) => u.email?.toLowerCase() === target);
-      if (user || !data?.users?.length || data.users.length < perPage) break;
-      page++;
-    }
+    // MATCHING USER par téléphone
+    const digits = String(phoneRaw).replace(/[^0-9]/g, '');
+    const variants = new Set([
+      digits,
+      digits.replace(/^225/, ''),
+      '225' + digits.replace(/^225/, ''),
+    ]);
 
-    if (!user) {
-      console.error('User not found:', email);
-      return new Response(
-        JSON.stringify({
-          received: true,
-          note: 'User not found for: ' + email,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { error } = await supabase
-      .from('subscriptions')
-      .upsert(
-        {
-          user_id: user.id,
-          status: 'active',
-          plan_name: planName,
-          price_xof: priceXof,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-
-    if (error) throw error;
-
-    console.log(`✅ Activated ${planName} for ${email}`);
-
-    return new Response(
-      JSON.stringify({ success: true, plan: planName, email }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (e) {
-    console.error('Webhook error:', e);
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    let userId: string | null = null;
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, phone')
+      .not('phone', 'is', null);
+    const match = profiles?.find((p) => {
+      const pd = String(p.phone ?? '').replace(/[^0-9]/g, '');
+      if (!pd) return false;
+      for (const v of variants) {
+        if (v && (pd === v || pd.endsWith(v) || v.endsWith(pd))) return true;
+      }
+      return false;
     });
+    if (match?.user_id) userId = match.user_id;
+
+    // LOG TOUJOURS (réconciliation manuelle si non matché)
+    await supabase.from('jeko_payments').insert({
+      txn_id: txnId,
+      phone: phoneRaw,
+      amount: amountXof,
+      raw_amount: rawAmount,
+      plan_name: planName,
+      payment_link_id: paymentLinkId,
+      reference,
+      matched_user_id: userId,
+      raw_payload: parsed,
+    });
+
+    if (!userId) {
+      console.error('User NOT matched, phone:', phoneRaw);
+      return json({ received: true, note: 'logged, user unmatched: ' + phoneRaw });
+    }
+
+    const { error: upErr } = await supabase.from('subscriptions').upsert(
+      {
+        user_id: userId,
+        status: 'active',
+        plan_name: planName,
+        price_xof: priceXof,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' }
+    );
+    if (upErr) throw upErr;
+
+    console.log(`✅ Activated ${planName} for user ${userId} (${phoneRaw})`);
+    return json({ success: true, plan: planName, userId });
+  } catch (e) {
+    console.error('Webhook fatal:', e);
+    return json({ error: String(e) }, 500);
   }
 });

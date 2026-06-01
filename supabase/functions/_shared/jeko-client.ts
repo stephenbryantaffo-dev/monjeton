@@ -10,7 +10,12 @@ export const jekoFetch = async (path: string, options: RequestInit = {}) => {
       ...options.headers,
     },
   });
-
   if (!res.ok) throw new Error(`Jèko ${res.status}: ${await res.text()}`);
   return res.json();
+};
+
+// Liste les transactions récentes du magasin pour double-vérif
+export const listRecentTransactions = async (storeId?: string) => {
+  const q = storeId ? `?storeId=${storeId}&limit=100` : '?limit=100';
+  return jekoFetch(`/transactions${q}`);
 };
