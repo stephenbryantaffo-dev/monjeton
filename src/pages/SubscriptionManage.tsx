@@ -332,14 +332,19 @@ const SubscriptionManage = () => {
                     </Button>
 
                     {isPro && (
-                      <Button
-                        onClick={openJekoMax}
-                        size="lg"
-                        className="w-full bg-foreground text-background hover:bg-foreground/90"
-                      >
-                        <ArrowUpRight className="w-4 h-4 mr-2" />
-                        Passer à Ultra Pro
-                      </Button>
+                      <>
+                        <Button
+                          onClick={openJekoMax}
+                          size="lg"
+                          className="w-full bg-foreground text-background hover:bg-foreground/90"
+                        >
+                          <ArrowUpRight className="w-4 h-4 mr-2" />
+                          Passer à Ultra Pro
+                        </Button>
+                        <p className="text-xs text-muted-foreground text-center pt-1">
+                          Ton cycle redémarre pour 30 jours en Ultra Pro.
+                        </p>
+                      </>
                     )}
                   </>
                 )}
