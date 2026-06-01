@@ -1522,8 +1522,12 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          activated_at: string | null
           created_at: string
+          expires_at: string | null
+          grace_until: string | null
           id: string
+          last_reminder_sent: string | null
           plan_name: string | null
           price_xof: number | null
           status: string
@@ -1533,8 +1537,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activated_at?: string | null
           created_at?: string
+          expires_at?: string | null
+          grace_until?: string | null
           id?: string
+          last_reminder_sent?: string | null
           plan_name?: string | null
           price_xof?: number | null
           status?: string
@@ -1544,8 +1552,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activated_at?: string | null
           created_at?: string
+          expires_at?: string | null
+          grace_until?: string | null
           id?: string
+          last_reminder_sent?: string | null
           plan_name?: string | null
           price_xof?: number | null
           status?: string

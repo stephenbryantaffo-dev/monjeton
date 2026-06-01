@@ -6,6 +6,7 @@ const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 const FinancialScore = lazy(() => import("@/components/FinancialScore"));
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
+import SubscriptionRenewBanner from "@/components/SubscriptionRenewBanner";
 import DashboardPredictions from "@/components/DashboardPredictions";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
@@ -468,6 +469,7 @@ const Dashboard = () => {
         </button>
       }
     >
+      <SubscriptionRenewBanner />
       <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-muted-foreground text-sm">Bonjour 👋</p>
