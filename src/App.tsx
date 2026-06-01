@@ -71,6 +71,7 @@ const AppContent = () => {
         <Route path="/subscribe" element={<Subscribe />} />
         <Route path="/install" element={<Install />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/payment-pending" element={<PaymentPending />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
