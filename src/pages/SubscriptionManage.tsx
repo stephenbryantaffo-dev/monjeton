@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -14,6 +14,7 @@ import {
   Gauge,
   Camera,
   MessageCircle,
+  ArrowLeft,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -154,6 +155,7 @@ const SubscriptionManage = () => {
   });
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<JekoPayment[]>([]);
@@ -166,7 +168,7 @@ const SubscriptionManage = () => {
     let cancelled = false;
     const monthStart = startOfMonthISO();
     (async () => {
-      const [subRes, payRes, scansRes, msgsRes] = await Promise.all([
+      const [subRes, payRes, scansRes, msgsRes] = await Promise.allSettled([
         supabase
           .from("subscriptions")
           .select("status, plan_name, price_xof, updated_at, created_at")
@@ -192,10 +194,10 @@ const SubscriptionManage = () => {
           .gte("created_at", monthStart),
       ]);
       if (cancelled) return;
-      setSub((subRes.data as Subscription | null) ?? null);
-      setPayments((payRes.data as JekoPayment[] | null) ?? []);
-      setScansThisMonth(scansRes.count ?? 0);
-      setAiMsgsThisMonth(msgsRes.count ?? 0);
+      setSub(subRes.status === "fulfilled" ? ((subRes.value.data as Subscription | null) ?? null) : null);
+      setPayments(payRes.status === "fulfilled" ? ((payRes.value.data as JekoPayment[] | null) ?? []) : []);
+      setScansThisMonth(scansRes.status === "fulfilled" ? (scansRes.value.count ?? 0) : 0);
+      setAiMsgsThisMonth(msgsRes.status === "fulfilled" ? (msgsRes.value.count ?? 0) : 0);
       setLoading(false);
     })();
     return () => {
