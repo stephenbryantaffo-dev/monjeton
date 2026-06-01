@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -235,7 +235,20 @@ const SubscriptionManage = () => {
   };
 
   return (
-    <DashboardLayout title="Mon abonnement">
+    <DashboardLayout
+      title="Mon abonnement"
+      showBack={false}
+      headerLeft={
+        <button
+          type="button"
+          onClick={() => navigate("/settings")}
+          className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 hover:bg-secondary/80 transition-colors"
+          aria-label="Retour à Plus"
+        >
+          <ArrowLeft className="w-4 h-4 text-foreground" />
+        </button>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-5">
         {loading ? (
           <>
