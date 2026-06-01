@@ -107,8 +107,8 @@ const Subscribe = () => {
               <li>✓ Rapports & exports PDF</li>
               <li>✓ Tontines & dettes</li>
             </ul>
-            <Button onClick={() => handleSubscribe("pro")} variant="hero" size="lg" className="w-full">
-              Payer 2 000 F via Jèko
+            <Button onClick={() => handleSubscribe("pro")} variant="hero" size="lg" className="w-full" disabled={isPro || isUltra}>
+              {isPro ? "Plan actuel" : isUltra ? "Inclus dans Ultra Pro" : "Payer 2 000 F via Jèko"}
             </Button>
           </div>
 
