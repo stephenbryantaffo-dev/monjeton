@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -5,6 +6,7 @@ import { useCountry } from "@/contexts/CountryContext";
 import { COUNTRIES } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
