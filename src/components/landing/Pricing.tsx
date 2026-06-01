@@ -1,5 +1,5 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,22 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { useState } from "react";
+import { openJekoPro, openJekoMax } from "@/lib/jeko";
 
-const plans = [
+type PlanAction = { kind: "link"; to: string } | { kind: "jeko"; plan: "pro" | "max" };
+
+const plans: Array<{
+  name: string;
+  description: string;
+  price: number;
+  yearlyPrice: number;
+  buttonText: string;
+  popular: boolean;
+  includes: string[];
+  action: PlanAction;
+}> = [
   {
-    name: "Starter",
+    name: "Gratuit",
     description: "Pour découvrir Mon Jeton et commencer à suivre vos finances.",
     price: 0,
     yearlyPrice: 0,
