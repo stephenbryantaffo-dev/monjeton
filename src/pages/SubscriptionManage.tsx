@@ -418,34 +418,32 @@ const SubscriptionManage = () => {
                         {p}
                       </div>
                     ))}
-                    {COMPARE_ROWS.map((row) => (
-                      <>
+                    {COMPARE_ROWS.flatMap((row) => [
+                      <div
+                        key={`${row.label}-l`}
+                        className="text-muted-foreground py-2 border-t border-border/60"
+                      >
+                        {row.label}
+                      </div>,
+                      ...row.values.map((v, i) => (
                         <div
-                          key={`${row.label}-l`}
-                          className="text-muted-foreground py-2 border-t border-border/60"
+                          key={`${row.label}-${i}`}
+                          className={`text-center py-2 border-t border-border/60 ${
+                            ["Gratuit", "Pro", "Ultra Pro"][i] === plan
+                              ? "text-foreground font-semibold"
+                              : "text-foreground/80"
+                          }`}
                         >
-                          {row.label}
+                          {v === "—" ? (
+                            <X className="w-3.5 h-3.5 inline text-muted-foreground" />
+                          ) : v === "✓" ? (
+                            <Check className="w-3.5 h-3.5 inline text-primary" />
+                          ) : (
+                            v
+                          )}
                         </div>
-                        {row.values.map((v, i) => (
-                          <div
-                            key={`${row.label}-${i}`}
-                            className={`text-center py-2 border-t border-border/60 ${
-                              ["Gratuit", "Pro", "Ultra Pro"][i] === plan
-                                ? "text-foreground font-semibold"
-                                : "text-foreground/80"
-                            }`}
-                          >
-                            {v === "—" ? (
-                              <X className="w-3.5 h-3.5 inline text-muted-foreground" />
-                            ) : v === "✓" ? (
-                              <Check className="w-3.5 h-3.5 inline text-primary" />
-                            ) : (
-                              v
-                            )}
-                          </div>
-                        ))}
-                      </>
-                    ))}
+                      )),
+                    ])}
                   </div>
 
                   {!isUltra && (
