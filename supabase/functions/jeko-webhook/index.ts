@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
-    const JEKO_API_KEY = Deno.env.get('JEKO_API_KEY') || Deno.env.get('Jeko_pay');
+    const JEKO_API_KEY = Deno.env.get('JEKO_API_KEY');
 
     // Vérifier signature Jèko
     const sig =
