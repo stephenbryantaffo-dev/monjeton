@@ -629,6 +629,15 @@ const TontinePage = () => {
   }
 
   // ─── DETAIL VIEW ───
+  // Si c'est une caisse de projet → vue dédiée (recettes/dépenses/solde)
+  if (selected?.caisse_type === "project") {
+    return (
+      <DashboardLayout title={selected.name}>
+        <ProjectCaisseView tontine={selected} onBack={goBack} onUpdated={loadTontines} />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title={selected?.name || "Tontine"}>
       <button onClick={goBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
