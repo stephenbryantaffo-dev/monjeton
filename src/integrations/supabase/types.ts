@@ -443,6 +443,50 @@ export type Database = {
           },
         ]
       }
+      caisse_invites: {
+        Row: {
+          caisse_id: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          role: string
+          token: string
+          uses_count: number
+        }
+        Insert: {
+          caisse_id: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          role?: string
+          token?: string
+          uses_count?: number
+        }
+        Update: {
+          caisse_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          role?: string
+          token?: string
+          uses_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_invites_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caisse_member_history: {
         Row: {
           action: string
@@ -2410,7 +2454,9 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      join_caisse_via_token: { Args: { _token: string }; Returns: Json }
       mark_overdue_installments: { Args: never; Returns: undefined }
+      preview_caisse_invite: { Args: { _token: string }; Returns: Json }
       recalculate_cycle_collected: {
         Args: { p_cycle_id: string }
         Returns: undefined
