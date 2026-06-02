@@ -585,9 +585,19 @@ const TontinePage = () => {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-foreground truncate">{t.name}</p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-bold text-foreground truncate">{t.name}</p>
+                            {t.caisse_type === "project" ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
+                            )}
+                            {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
+                          </div>
                           <p className="text-xs text-muted-foreground">
-                            {fmt(t.contribution_amount)}/cycle · {mc} membres
+                            {t.caisse_type === "project"
+                              ? `Cible ${fmt(Number(t.target_amount || 0))} · ${mc} membres`
+                              : `${fmt(t.contribution_amount)}/cycle · ${mc} membres`}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
