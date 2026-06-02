@@ -210,6 +210,11 @@ const Onboarding = () => {
   const [saving, setSaving] = useState(false);
   const [multiSelection, setMultiSelection] = useState<string[]>([]);
   const [shouldSave, setShouldSave] = useState(false);
+  const [inviteContext, setInviteContext] = useState<string | null>(null);
+
+  useEffect(() => {
+    setInviteContext(localStorage.getItem('invite_context'));
+  }, []);
 
   // Compute visible questions based on current answers
   const visibleQuestions = useMemo(() => {
