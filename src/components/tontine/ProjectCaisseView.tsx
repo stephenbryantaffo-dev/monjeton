@@ -477,6 +477,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Edit caisse modal ─── */}
+      <EditCaisseModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        tontine={tontine}
+        onUpdated={() => { load(); onUpdated(); }}
+      />
     </div>
   );
 };
