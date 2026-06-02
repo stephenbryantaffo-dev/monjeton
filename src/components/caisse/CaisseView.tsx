@@ -183,8 +183,8 @@ const CaisseView = () => {
 
   useEffect(() => { loadCaisses(); }, [loadCaisses]);
 
-  const openDetail = (c: CaisseData) => { setSelected(c); loadDetail(c); };
-  const goBack = () => { setSelected(null); loadCaisses(); };
+  const openDetail = (c: CaisseData) => { setSelected(c); loadDetail(c); loadAccess(c.id); };
+  const goBack = () => { setSelected(null); setCurrentRole(null); setCollaborators([]); loadCaisses(); };
 
   const deleteCaisse = async (id: string) => {
     await supabase.from("caisses" as any).delete().eq("id", id);
