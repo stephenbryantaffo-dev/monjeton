@@ -310,6 +310,38 @@ export type Database = {
         }
         Relationships: []
       }
+      caisse_collaborators: {
+        Row: {
+          caisse_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          caisse_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          caisse_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_collaborators_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caisse_cotisations: {
         Row: {
           amount: number
@@ -2364,6 +2396,10 @@ export type Database = {
           _user_id: string
           _workspace_id: string
         }
+        Returns: boolean
+      }
+      is_caisse_collaborator: {
+        Args: { _caisse_id: string; _min_role?: string }
         Returns: boolean
       }
       is_tontine_owner: {
