@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw, Link2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -14,8 +14,27 @@ import { useToast } from "@/hooks/use-toast";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import CreateCaisseModal from "./CreateCaisseModal";
+import InviteCaisseModal from "./InviteCaisseModal";
 import { CaisseData, CaisseMember, CaisseCotisation, CaisseDepense, CaisseMemberHistory, DEPENSE_CATEGORIES, DEPENSE_CAT_LABELS } from "./types";
 import { generateCaissePdf } from "./generateCaissePdf";
+
+type CollaboratorEntry = {
+  user_id: string;
+  role: "owner" | "manager" | "viewer";
+  name: string;
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  owner: "Propriétaire",
+  manager: "Gestionnaire",
+  viewer: "Observateur",
+};
+
+const ROLE_COLOR: Record<string, string> = {
+  owner: "bg-primary/20 text-primary",
+  manager: "bg-blue-500/20 text-blue-400",
+  viewer: "bg-muted text-muted-foreground",
+};
 
 const fmt = (n: number) => n?.toLocaleString("fr-FR") ?? "0";
 
@@ -83,12 +102,50 @@ const CaisseView = () => {
 
   const [saving, setSaving] = useState(false);
 
+  // Sharing / collaboration
+  const [currentRole, setCurrentRole] = useState<"owner" | "manager" | "viewer" | null>(null);
+  const [collaborators, setCollaborators] = useState<CollaboratorEntry[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+
+  const canManage = currentRole === "owner" || currentRole === "manager";
+  const isOwner = currentRole === "owner";
+
   const loadCaisses = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase.from("caisses" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    const { data } = await supabase.from("caisses" as any).select("*").order("created_at", { ascending: false });
     setCaisses((data || []) as unknown as CaisseData[]);
     setLoading(false);
+  }, [user]);
+
+  const loadAccess = useCallback(async (caisseId: string) => {
+    if (!user) return;
+    const { data: rows } = await supabase
+      .from("caisse_collaborators" as any)
+      .select("user_id, role")
+      .eq("caisse_id", caisseId);
+    const list = (rows || []) as any[];
+    const mine = list.find((r) => r.user_id === user.id);
+    setCurrentRole((mine?.role as any) || null);
+
+    const ids = list.map((r) => r.user_id);
+    let namesById: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("profiles" as any)
+        .select("user_id, full_name, email")
+        .in("user_id", ids);
+      (profs || []).forEach((p: any) => {
+        namesById[p.user_id] = p.full_name || p.email || "Utilisateur";
+      });
+    }
+    setCollaborators(
+      list.map((r) => ({
+        user_id: r.user_id,
+        role: r.role,
+        name: namesById[r.user_id] || (r.user_id === user.id ? "Toi" : "Utilisateur"),
+      }))
+    );
   }, [user]);
 
   const loadDetail = useCallback(async (caisse: CaisseData) => {
@@ -126,8 +183,8 @@ const CaisseView = () => {
 
   useEffect(() => { loadCaisses(); }, [loadCaisses]);
 
-  const openDetail = (c: CaisseData) => { setSelected(c); loadDetail(c); };
-  const goBack = () => { setSelected(null); loadCaisses(); };
+  const openDetail = (c: CaisseData) => { setSelected(c); loadDetail(c); loadAccess(c.id); };
+  const goBack = () => { setSelected(null); setCurrentRole(null); setCollaborators([]); loadCaisses(); };
 
   const deleteCaisse = async (id: string) => {
     await supabase.from("caisses" as any).delete().eq("id", id);
@@ -473,6 +530,20 @@ const CaisseView = () => {
             <p className="text-lg font-bold text-foreground truncate">{selected.name}</p>
             {selected.description && <p className="text-xs text-muted-foreground truncate">{selected.description}</p>}
           </div>
+          {isOwner && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="glass rounded-xl p-2 border border-primary/30 hover:border-primary/60 transition"
+              title="Inviter à suivre"
+            >
+              <Link2 className="w-4 h-4 text-primary" />
+            </button>
+          )}
+          {currentRole && (
+            <span className={`text-[10px] font-semibold uppercase px-2 py-1 rounded-full ${ROLE_COLOR[currentRole]}`}>
+              {ROLE_LABEL[currentRole]}
+            </span>
+          )}
         </div>
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="glass rounded-xl p-3">
@@ -490,23 +561,50 @@ const CaisseView = () => {
         </div>
       </div>
 
+      {/* COLLABORATORS — "Suivi par" */}
+      {collaborators.length > 0 && (
+        <div className="glass-card rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Suivi par ({collaborators.length})</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {collaborators.map((c) => (
+              <div key={c.user_id} className="glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 border border-border">
+                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                  {(c.name || "?").slice(0, 1).toUpperCase()}
+                </div>
+                <span className="text-xs font-medium text-foreground truncate max-w-[110px]">{c.name}</span>
+                <span className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded ${ROLE_COLOR[c.role]}`}>
+                  {ROLE_LABEL[c.role]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ACTION BUTTONS */}
       <div className="flex gap-3 mb-6">
-        <button onClick={() => { setCotisationAmount(String(selected.contribution_amount)); setCycleLabel(defaultCycleLabel); setShowCotisation(true); }}
-          className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-primary/30">
-          <ArrowDownLeft className="w-5 h-5 text-primary" />
-          <span className="text-xs font-medium text-foreground">Cotisation</span>
-        </button>
-        <button onClick={() => { setDepenseDate(new Date().toISOString().split("T")[0]); setShowDepense(true); }}
-          className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-destructive/30">
-          <ArrowUpRight className="w-5 h-5 text-destructive" />
-          <span className="text-xs font-medium text-foreground">Dépense</span>
-        </button>
-        <button onClick={() => setShowAddMember(true)}
-          className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-border">
-          <UserPlus className="w-5 h-5 text-muted-foreground" />
-          <span className="text-xs font-medium text-foreground">Membre</span>
-        </button>
+        {canManage && (
+          <>
+            <button onClick={() => { setCotisationAmount(String(selected.contribution_amount)); setCycleLabel(defaultCycleLabel); setShowCotisation(true); }}
+              className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-primary/30">
+              <ArrowDownLeft className="w-5 h-5 text-primary" />
+              <span className="text-xs font-medium text-foreground">Cotisation</span>
+            </button>
+            <button onClick={() => { setDepenseDate(new Date().toISOString().split("T")[0]); setShowDepense(true); }}
+              className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-destructive/30">
+              <ArrowUpRight className="w-5 h-5 text-destructive" />
+              <span className="text-xs font-medium text-foreground">Dépense</span>
+            </button>
+            <button onClick={() => setShowAddMember(true)}
+              className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-border">
+              <UserPlus className="w-5 h-5 text-muted-foreground" />
+              <span className="text-xs font-medium text-foreground">Membre</span>
+            </button>
+          </>
+        )}
         <button onClick={() => generateCaissePdf({
             caisse: selected,
             members,
@@ -521,6 +619,13 @@ const CaisseView = () => {
           <span className="text-xs font-medium text-foreground">PDF</span>
         </button>
       </div>
+
+      <InviteCaisseModal
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        caisseId={selected.id}
+        caisseName={selected.name}
+      />
 
       {/* CYCLE INFO + RESET */}
       <div className="flex items-center justify-between mb-3 gap-2">

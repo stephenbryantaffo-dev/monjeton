@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ const Signup = () => {
   const [existingAccountEmail, setExistingAccountEmail] = useState("");
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/dashboard";
   const { toast } = useToast();
 
   const sendPasswordReset = async (targetEmail: string) => {
@@ -81,7 +83,7 @@ const Signup = () => {
         const { error: loginError } = await signIn(email, password);
         if (!loginError) {
           toast({ title: "Connexion réussie ✅", description: "Ce compte existait déjà, tu es connecté." });
-          navigate("/dashboard", { replace: true });
+          navigate(returnTo, { replace: true });
           return;
         }
 
@@ -125,7 +127,7 @@ const Signup = () => {
     }
     {
       toast({ title: "Compte créé ! ✅", description: "Bienvenue sur Mon Jeton 🎉" });
-      navigate("/dashboard", { replace: true });
+      navigate(returnTo, { replace: true });
     }
   };
 

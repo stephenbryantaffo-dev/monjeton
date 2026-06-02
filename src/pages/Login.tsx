@@ -70,7 +70,7 @@ const Login = () => {
       });
     } else {
       resetRateLimit(`login:${email}`);
-      navigate("/dashboard", { replace: true });
+      navigate(searchParams.get("returnTo") || "/dashboard", { replace: true });
     }
   };
 
