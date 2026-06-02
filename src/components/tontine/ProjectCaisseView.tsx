@@ -135,21 +135,36 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   };
 
   const deleteExpense = async (id: string) => {
-    await supabase.from("tontine_expenses" as any).delete().eq("id", id);
-    toast({ title: "Dépense supprimée" });
-    load();
+    const { error } = await supabase.from("tontine_expenses" as any).delete().eq("id", id);
+    if (error) {
+      console.error("Delete expense error:", error);
+      toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Dépense supprimée ✅" });
+    await load();
   };
 
   const addMember = async () => {
     if (!newMemberName.trim() || !isOwner) return;
     const { error } = await supabase.from("tontine_members" as any).insert({
-      tontine_id: tontine.id, name: newMemberName.trim(), phone: newMemberPhone.trim() || null, is_owner: false,
+      tontine_id: tontine.id,
+      name: newMemberName.trim(),
+      phone: newMemberPhone.trim() || null,
+      is_owner: false,
     });
-    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
-    setNewMemberName(""); setNewMemberPhone(""); setAddMemberOpen(false);
-    toast({ title: "Membre ajouté ✅" });
-    load();
+    if (error) {
+      console.error("Add project member error:", error);
+      toast({ title: "Ajout membre impossible", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewMemberName("");
+    setNewMemberPhone("");
+    setAddMemberOpen(false);
+    toast({ title: `${newMemberName.trim()} ajouté ✅` });
+    await load();
   };
+
 
   const cloturer = async () => {
     if (!isOwner) return;

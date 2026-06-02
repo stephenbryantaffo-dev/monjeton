@@ -514,9 +514,19 @@ const TontinePage = () => {
   };
 
   const deleteTontine = async (id: string) => {
-    await supabase.from("tontines").delete().eq("id", id);
-    toast({ title: "Tontine supprimée" });
-    loadTontines();
+    const { error } = await supabase.from("tontines").delete().eq("id", id);
+    if (error) {
+      console.error("Delete tontine error:", error);
+      toast({
+        title: "Suppression impossible",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Caisse supprimée ✅" });
+    if (selectedId === id) setSelectedId(null);
+    await loadTontines();
   };
 
   const getInitials = (name: string) => {
