@@ -109,6 +109,7 @@ const Settings = () => {
           const savedPhone = (data as any).phone as string;
           setPhoneInput(savedPhone);
           setPhoneSavedDisplay(savedPhone);
+          setEditingPhone(!savedPhone);
           // Détecter pays à partir de l'indicatif sauvegardé
           if (savedPhone.startsWith("+")) {
             const digits = savedPhone.slice(1);
@@ -141,6 +142,7 @@ const Settings = () => {
     setPhoneInput(result.display || result.e164!);
     setPhoneSavedDisplay(result.e164);
     toast({ title: "Numéro WhatsApp enregistré ✅", description: result.display || "" });
+    setEditingPhone(false);
   };
 
   const toggleWhatsappAlerts = async (checked: boolean) => {
