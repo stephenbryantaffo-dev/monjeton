@@ -223,6 +223,15 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
             </p>
           )}
         </div>
+        {isOwner && !isClosed && (
+          <button
+            onClick={() => setEditOpen(true)}
+            className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+            title="Modifier la caisse"
+          >
+            <Pencil className="w-4 h-4 text-primary" />
+          </button>
+        )}
       </div>
 
       {/* ─── 3 KPIs ─── */}
