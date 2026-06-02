@@ -7,8 +7,9 @@ import {
   Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
   Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
   PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert,
-  MoreVertical, UserX, RotateCcw, Ban,
+  MoreVertical, UserX, RotateCcw, Ban, Pencil,
 } from "lucide-react";
+import EditCaisseModal from "@/components/tontine/EditCaisseModal";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { sendWhatsAppTontine, notifyAllUnpaid, logNotification } from "@/lib/tontineNotifications";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ const TontinePage = () => {
   const [memberHistory, setMemberHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [editCaisseOpen, setEditCaisseOpen] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
@@ -656,11 +658,22 @@ const TontinePage = () => {
            <CheckCircle className="w-3 h-3" />}
           {isClosed ? "Terminée" : isPaused ? "En pause" : "Active"}
         </div>
-        {!isOwner && (
-          <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-            <ShieldAlert className="w-3 h-3" /> Lecture seule
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isOwner && !isClosed && (
+            <button
+              onClick={() => setEditCaisseOpen(true)}
+              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+              title="Modifier la tontine"
+            >
+              <Pencil className="w-4 h-4 text-primary" />
+            </button>
+          )}
+          {!isOwner && (
+            <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <ShieldAlert className="w-3 h-3" /> Lecture seule
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Owner-only status controls */}
@@ -1346,6 +1359,16 @@ const TontinePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Edit caisse (tontine) ─── */}
+      {selected && (
+        <EditCaisseModal
+          open={editCaisseOpen}
+          onClose={() => setEditCaisseOpen(false)}
+          tontine={selected}
+          onUpdated={() => { loadDetail(selected.id); loadTontines(); }}
+        />
+      )}
     </DashboardLayout>
   );
 };

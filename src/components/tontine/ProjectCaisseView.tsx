@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
-  TrendingUp, TrendingDown, Trash2, CheckCircle2,
+  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import EditCaisseModal from "./EditCaisseModal";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, TontineExpense } from "./types";
 import { fmt } from "./utils";
 
@@ -67,6 +68,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   // Cloture dialog
   const [clotureOpen, setClotureOpen] = useState(false);
   const [bilanOpen, setBilanOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -221,6 +223,15 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
             </p>
           )}
         </div>
+        {isOwner && !isClosed && (
+          <button
+            onClick={() => setEditOpen(true)}
+            className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+            title="Modifier la caisse"
+          >
+            <Pencil className="w-4 h-4 text-primary" />
+          </button>
+        )}
       </div>
 
       {/* ─── 3 KPIs ─── */}
@@ -466,6 +477,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Edit caisse modal ─── */}
+      <EditCaisseModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        tontine={tontine}
+        onUpdated={() => { load(); onUpdated(); }}
+      />
     </div>
   );
 };
