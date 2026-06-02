@@ -83,7 +83,7 @@ const Signup = () => {
         const { error: loginError } = await signIn(email, password);
         if (!loginError) {
           toast({ title: "Connexion réussie ✅", description: "Ce compte existait déjà, tu es connecté." });
-          navigate("/dashboard", { replace: true });
+          navigate(returnTo, { replace: true });
           return;
         }
 
