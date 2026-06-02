@@ -102,12 +102,50 @@ const CaisseView = () => {
 
   const [saving, setSaving] = useState(false);
 
+  // Sharing / collaboration
+  const [currentRole, setCurrentRole] = useState<"owner" | "manager" | "viewer" | null>(null);
+  const [collaborators, setCollaborators] = useState<CollaboratorEntry[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+
+  const canManage = currentRole === "owner" || currentRole === "manager";
+  const isOwner = currentRole === "owner";
+
   const loadCaisses = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase.from("caisses" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    const { data } = await supabase.from("caisses" as any).select("*").order("created_at", { ascending: false });
     setCaisses((data || []) as unknown as CaisseData[]);
     setLoading(false);
+  }, [user]);
+
+  const loadAccess = useCallback(async (caisseId: string) => {
+    if (!user) return;
+    const { data: rows } = await supabase
+      .from("caisse_collaborators" as any)
+      .select("user_id, role")
+      .eq("caisse_id", caisseId);
+    const list = (rows || []) as any[];
+    const mine = list.find((r) => r.user_id === user.id);
+    setCurrentRole((mine?.role as any) || null);
+
+    const ids = list.map((r) => r.user_id);
+    let namesById: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("profiles" as any)
+        .select("user_id, full_name, email")
+        .in("user_id", ids);
+      (profs || []).forEach((p: any) => {
+        namesById[p.user_id] = p.full_name || p.email || "Utilisateur";
+      });
+    }
+    setCollaborators(
+      list.map((r) => ({
+        user_id: r.user_id,
+        role: r.role,
+        name: namesById[r.user_id] || (r.user_id === user.id ? "Toi" : "Utilisateur"),
+      }))
+    );
   }, [user]);
 
   const loadDetail = useCallback(async (caisse: CaisseData) => {
