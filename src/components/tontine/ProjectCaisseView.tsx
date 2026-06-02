@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
-  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil,
+  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import EditCaisseModal from "./EditCaisseModal";
+import InviteCaisseModal from "@/components/caisse/InviteCaisseModal";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, TontineExpense } from "./types";
 import { fmt } from "./utils";
 
@@ -69,6 +70,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   const [clotureOpen, setClotureOpen] = useState(false);
   const [bilanOpen, setBilanOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -239,13 +241,22 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
           )}
         </div>
         {isOwner && !isClosed && (
-          <button
-            onClick={() => setEditOpen(true)}
-            className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-            title="Modifier la caisse"
-          >
-            <Pencil className="w-4 h-4 text-primary" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+              title="Inviter à suivre la caisse"
+            >
+              <Link2 className="w-4 h-4 text-primary" />
+            </button>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+              title="Modifier la caisse"
+            >
+              <Pencil className="w-4 h-4 text-primary" />
+            </button>
+          </div>
         )}
       </div>
 
@@ -499,6 +510,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
         onClose={() => setEditOpen(false)}
         tontine={tontine}
         onUpdated={() => { load(); onUpdated(); }}
+      />
+
+      {/* ─── Invite modal ─── */}
+      <InviteCaisseModal
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        caisseId={tontine.id}
+        caisseName={tontine.name}
       />
     </div>
   );
