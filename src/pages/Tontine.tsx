@@ -7,8 +7,9 @@ import {
   Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
   Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
   PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert,
-  MoreVertical, UserX, RotateCcw, Ban,
+  MoreVertical, UserX, RotateCcw, Ban, Pencil,
 } from "lucide-react";
+import EditCaisseModal from "@/components/tontine/EditCaisseModal";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { sendWhatsAppTontine, notifyAllUnpaid, logNotification } from "@/lib/tontineNotifications";
 import { Button } from "@/components/ui/button";
