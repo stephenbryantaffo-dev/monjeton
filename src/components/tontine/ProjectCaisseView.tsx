@@ -159,32 +159,45 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
     onUpdated();
   };
 
-  // ─── Export PDF ───
-  const exportPDF = async () => {
-    const { generatePdf } = await import("@/lib/generatePdf");
-    const html = `
-      <h1 style="color:#7EC845">Bilan du projet : ${tontine.name}</h1>
-      <p>Date événement : ${tontine.event_date ? new Date(tontine.event_date).toLocaleDateString("fr-FR") : "—"}</p>
-      <h2>💰 Synthèse financière</h2>
-      <ul>
-        <li>Recettes totales : <b>${fmt(recettes)} FCFA</b></li>
-        <li>Dépenses totales : <b>${fmt(depenses)} FCFA</b></li>
-        <li>Solde final : <b style="color:${solde >= 0 ? "#7EC845" : "#ef4444"}">${solde >= 0 ? "+" : ""}${fmt(solde)} FCFA</b></li>
-        <li>Cible : ${fmt(target)} FCFA</li>
-      </ul>
-      <h2>👥 Cotisations par membre</h2>
-      <table border="1" cellpadding="6" style="border-collapse:collapse;width:100%">
-        <tr><th>Membre</th><th>Cotisé</th></tr>
-        ${members.map(m => `<tr><td>${m.name}</td><td>${fmt(memberPaid(m.id))} FCFA</td></tr>`).join("")}
-      </table>
-      <h2>🧾 Dépenses détaillées</h2>
-      <table border="1" cellpadding="6" style="border-collapse:collapse;width:100%">
-        <tr><th>Date</th><th>Libellé</th><th>Catégorie</th><th>Montant</th></tr>
-        ${expenses.map(e => `<tr><td>${new Date(e.expense_date).toLocaleDateString("fr-FR")}</td><td>${e.label}</td><td>${e.category || ""}</td><td>${fmt(Number(e.amount))} FCFA</td></tr>`).join("")}
-      </table>
-      ${solde > 0 && members.length > 0 ? `<h2>🎁 Répartition équitable du bénéfice</h2><p>Chaque membre recevrait : <b>${fmt(Math.floor(solde / members.length))} FCFA</b></p>` : ""}
-    `;
-    await generatePdf(html, `bilan-${tontine.name.replace(/\s+/g, "-")}.pdf`);
+  // ─── Export PDF (print-window) ───
+  const exportPDF = () => {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bilan ${tontine.name}</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:24px;max-width:780px;margin:auto}
+  h1{color:#5a9d2e;margin-bottom:4px}
+  h2{color:#333;margin-top:24px;border-bottom:1px solid #eee;padding-bottom:4px}
+  table{border-collapse:collapse;width:100%;margin-top:8px;font-size:13px}
+  th,td{border:1px solid #ddd;padding:8px;text-align:left}
+  th{background:#f7f7f7}
+  .kpi{display:flex;gap:12px;margin:16px 0}
+  .kpi div{flex:1;padding:12px;border:1px solid #eee;border-radius:8px;text-align:center}
+  .pos{color:#5a9d2e;font-weight:700}
+  .neg{color:#c43838;font-weight:700}
+</style></head><body>
+  <h1>Bilan du projet : ${tontine.name}</h1>
+  <p>Date événement : ${tontine.event_date ? new Date(tontine.event_date).toLocaleDateString("fr-FR") : "—"}</p>
+  <div class="kpi">
+    <div><small>Recettes</small><br/><b class="pos">${fmt(recettes)} F</b></div>
+    <div><small>Dépenses</small><br/><b class="neg">${fmt(depenses)} F</b></div>
+    <div><small>Solde</small><br/><b class="${solde >= 0 ? "pos" : "neg"}">${solde >= 0 ? "+" : ""}${fmt(solde)} F</b></div>
+  </div>
+  <h2>👥 Cotisations par membre</h2>
+  <table><tr><th>Membre</th><th>Téléphone</th><th>Cotisé</th></tr>
+  ${members.map(m => `<tr><td>${m.name}</td><td>${m.phone || "—"}</td><td>${fmt(memberPaid(m.id))} F</td></tr>`).join("")}
+  </table>
+  <h2>🧾 Dépenses détaillées</h2>
+  <table><tr><th>Date</th><th>Libellé</th><th>Catégorie</th><th>Bénéficiaire</th><th>Montant</th></tr>
+  ${expenses.map(e => `<tr><td>${new Date(e.expense_date).toLocaleDateString("fr-FR")}</td><td>${e.label}</td><td>${e.category || ""}</td><td>${e.beneficiaire || ""}</td><td>${fmt(Number(e.amount))} F</td></tr>`).join("")}
+  </table>
+  ${solde > 0 && members.length > 0 ? `<h2>🎁 Répartition équitable du bénéfice</h2><p>Chaque membre recevrait : <b>${fmt(Math.floor(solde / members.length))} FCFA</b></p>` : ""}
+  ${solde < 0 ? `<h2>⚠️ Déficit</h2><p>Il manque ${fmt(Math.abs(solde))} FCFA pour équilibrer le projet.</p>` : ""}
+  <p style="margin-top:32px;font-size:11px;color:#999">Généré par Mon Jeton</p>
+</body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) { toast({ title: "Bloqué", description: "Autorise les pop-ups pour exporter", variant: "destructive" }); return; }
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 400);
   };
 
   if (loading) return <p className="text-center text-muted-foreground py-12">Chargement...</p>;
