@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe, BarChart3, AlertTriangle, Loader2 } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, LogOut, ChevronRight, MessageCircle, Shield, Lock, EyeOff, Camera, PieChart, Users, Download, Trash2, FileText, ShieldCheck, Award, Globe, BarChart3, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCountry } from "@/contexts/CountryContext";
@@ -63,6 +63,7 @@ const Settings = () => {
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
+  const [editingPhone, setEditingPhone] = useState(false);
   const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
   const activeCurrency = useActiveCurrency();
 
