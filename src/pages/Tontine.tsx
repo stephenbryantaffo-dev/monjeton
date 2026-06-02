@@ -658,11 +658,22 @@ const TontinePage = () => {
            <CheckCircle className="w-3 h-3" />}
           {isClosed ? "Terminée" : isPaused ? "En pause" : "Active"}
         </div>
-        {!isOwner && (
-          <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-            <ShieldAlert className="w-3 h-3" /> Lecture seule
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isOwner && !isClosed && (
+            <button
+              onClick={() => setEditCaisseOpen(true)}
+              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+              title="Modifier la tontine"
+            >
+              <Pencil className="w-4 h-4 text-primary" />
+            </button>
+          )}
+          {!isOwner && (
+            <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <ShieldAlert className="w-3 h-3" /> Lecture seule
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Owner-only status controls */}
