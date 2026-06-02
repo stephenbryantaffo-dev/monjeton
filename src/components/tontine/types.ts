@@ -1,3 +1,5 @@
+export type CaisseType = "recurring" | "project";
+
 export interface TontineData {
   id: string;
   user_id: string;
@@ -8,6 +10,23 @@ export interface TontineData {
   start_date: string;
   end_date: string | null;
   status: string;
+  created_at: string;
+  caisse_type?: CaisseType;
+  target_amount?: number | null;
+  contribution_per_member?: number | null;
+  event_date?: string | null;
+  is_closed?: boolean;
+}
+
+export interface TontineExpense {
+  id: string;
+  tontine_id: string;
+  label: string;
+  amount: number;
+  category: string | null;
+  beneficiaire: string | null;
+  expense_date: string;
+  note: string | null;
   created_at: string;
 }
 

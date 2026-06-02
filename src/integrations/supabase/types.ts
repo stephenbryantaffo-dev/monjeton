@@ -1615,6 +1615,42 @@ export type Database = {
           },
         ]
       }
+      tontine_expenses: {
+        Row: {
+          amount: number
+          beneficiaire: string | null
+          category: string | null
+          created_at: string
+          expense_date: string
+          id: string
+          label: string
+          note: string | null
+          tontine_id: string
+        }
+        Insert: {
+          amount: number
+          beneficiaire?: string | null
+          category?: string | null
+          created_at?: string
+          expense_date?: string
+          id?: string
+          label: string
+          note?: string | null
+          tontine_id: string
+        }
+        Update: {
+          amount?: number
+          beneficiaire?: string | null
+          category?: string | null
+          created_at?: string
+          expense_date?: string
+          id?: string
+          label?: string
+          note?: string | null
+          tontine_id?: string
+        }
+        Relationships: []
+      }
       tontine_member_history: {
         Row: {
           action: string
@@ -1796,39 +1832,54 @@ export type Database = {
       }
       tontines: {
         Row: {
+          caisse_type: string
           contribution_amount: number
+          contribution_per_member: number | null
           created_at: string
           custom_frequency_days: number | null
           end_date: string | null
+          event_date: string | null
           frequency: string
           id: string
+          is_closed: boolean
           name: string
           start_date: string
           status: string
+          target_amount: number | null
           user_id: string
         }
         Insert: {
+          caisse_type?: string
           contribution_amount?: number
+          contribution_per_member?: number | null
           created_at?: string
           custom_frequency_days?: number | null
           end_date?: string | null
+          event_date?: string | null
           frequency?: string
           id?: string
+          is_closed?: boolean
           name: string
           start_date?: string
           status?: string
+          target_amount?: number | null
           user_id: string
         }
         Update: {
+          caisse_type?: string
           contribution_amount?: number
+          contribution_per_member?: number | null
           created_at?: string
           custom_frequency_days?: number | null
           end_date?: string | null
+          event_date?: string | null
           frequency?: string
           id?: string
+          is_closed?: boolean
           name?: string
           start_date?: string
           status?: string
+          target_amount?: number | null
           user_id?: string
         }
         Relationships: []

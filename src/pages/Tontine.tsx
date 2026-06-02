@@ -25,6 +25,7 @@ import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import CreateTontineModal from "@/components/tontine/CreateTontineModal";
 import ReportsTab from "@/components/tontine/ReportsTab";
 import TontineHistory from "@/components/tontine/TontineHistory";
+import ProjectCaisseView from "@/components/tontine/ProjectCaisseView";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, FREQ_LABELS, FREQ_BADGE_CLASSES } from "@/components/tontine/types";
 import { fmt, generateCycleInfo } from "@/components/tontine/utils";
 
@@ -584,9 +585,19 @@ const TontinePage = () => {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-foreground truncate">{t.name}</p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-bold text-foreground truncate">{t.name}</p>
+                            {t.caisse_type === "project" ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
+                            )}
+                            {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
+                          </div>
                           <p className="text-xs text-muted-foreground">
-                            {fmt(t.contribution_amount)}/cycle · {mc} membres
+                            {t.caisse_type === "project"
+                              ? `Cible ${fmt(Number(t.target_amount || 0))} · ${mc} membres`
+                              : `${fmt(t.contribution_amount)}/cycle · ${mc} membres`}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -618,6 +629,15 @@ const TontinePage = () => {
   }
 
   // ─── DETAIL VIEW ───
+  // Si c'est une caisse de projet → vue dédiée (recettes/dépenses/solde)
+  if (selected?.caisse_type === "project") {
+    return (
+      <DashboardLayout title={selected.name}>
+        <ProjectCaisseView tontine={selected} onBack={goBack} onUpdated={loadTontines} />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title={selected?.name || "Tontine"}>
       <button onClick={goBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
