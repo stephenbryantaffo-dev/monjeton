@@ -337,7 +337,7 @@ export type Database = {
             foreignKeyName: "caisse_collaborators_caisse_id_fkey"
             columns: ["caisse_id"]
             isOneToOne: false
-            referencedRelation: "caisses"
+            referencedRelation: "tontines"
             referencedColumns: ["id"]
           },
         ]
@@ -482,7 +482,7 @@ export type Database = {
             foreignKeyName: "caisse_invites_caisse_id_fkey"
             columns: ["caisse_id"]
             isOneToOne: false
-            referencedRelation: "caisses"
+            referencedRelation: "tontines"
             referencedColumns: ["id"]
           },
         ]
