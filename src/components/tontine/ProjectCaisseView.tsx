@@ -68,6 +68,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   // Cloture dialog
   const [clotureOpen, setClotureOpen] = useState(false);
   const [bilanOpen, setBilanOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
