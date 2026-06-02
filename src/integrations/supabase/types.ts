@@ -1725,7 +1725,15 @@ export type Database = {
           note?: string | null
           tontine_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tontine_expenses_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tontine_member_history: {
         Row: {
