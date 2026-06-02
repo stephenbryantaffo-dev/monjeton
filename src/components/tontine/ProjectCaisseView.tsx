@@ -135,9 +135,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   };
 
   const deleteExpense = async (id: string) => {
-    await supabase.from("tontine_expenses" as any).delete().eq("id", id);
-    toast({ title: "Dépense supprimée" });
-    load();
+    const { error } = await supabase.from("tontine_expenses" as any).delete().eq("id", id);
+    if (error) {
+      console.error("Delete expense error:", error);
+      toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Dépense supprimée ✅" });
+    await load();
   };
 
   const addMember = async () => {
@@ -160,16 +165,6 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
     await load();
   };
 
-  const deleteExpenseSafe = async (id: string) => {
-    const { error } = await supabase.from("tontine_expenses" as any).delete().eq("id", id);
-    if (error) {
-      console.error("Delete expense error:", error);
-      toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
-      return;
-    }
-    toast({ title: "Dépense supprimée ✅" });
-    await load();
-  };
 
   const cloturer = async () => {
     if (!isOwner) return;
