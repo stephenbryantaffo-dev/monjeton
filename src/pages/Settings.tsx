@@ -64,6 +64,7 @@ const Settings = () => {
   const [phoneSavedDisplay, setPhoneSavedDisplay] = useState<string | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>(country.code);
   const [editingPhone, setEditingPhone] = useState(false);
+  const [editingCurrency, setEditingCurrency] = useState(false);
   const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
   const activeCurrency = useActiveCurrency();
 
@@ -86,6 +87,7 @@ const Settings = () => {
         description: `Les transactions futures seront enregistrées en ${code}. Les anciennes gardent leur devise d'origine.`,
         duration: 6000,
       });
+      setEditingCurrency(false);
     }
   };
 
@@ -194,6 +196,9 @@ const Settings = () => {
     toast({ title: "Code PIN désactivé" });
   };
 
+  const allCurrencies = [...PRIMARY_CURRENCIES, ...EXTRA_CURRENCIES];
+  const activeCurrencyInfo = allCurrencies.find(c => c.code === currencyPref);
+
   return (
     <DashboardLayout title="Paramètres">
       <div className="glass-card rounded-2xl p-5 mb-4 flex items-center gap-4">
@@ -255,37 +260,71 @@ const Settings = () => {
         <p className="text-xs text-muted-foreground">
           Devise dans laquelle tu affiches tes montants.
         </p>
-        <div className="grid grid-cols-4 gap-2">
-          {PRIMARY_CURRENCIES.map((c) => (
-            <button
-              key={c.code}
-              onClick={() => handleCurrencyChange(c.code)}
-              className={`p-3 rounded-xl text-sm transition-all border flex flex-col items-center gap-1 ${
-                currencyPref === c.code
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
-              }`}
+        {/* MODE COMPACT */}
+        {!editingCurrency ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl flex-shrink-0">{activeCurrencyInfo?.flag}</span>
+              <div className="min-w-0">
+                <span className="text-sm font-medium text-foreground">{currencyPref}</span>
+                {activeCurrencyInfo?.label && (
+                  <span className="text-xs text-muted-foreground ml-2 truncate">
+                    {activeCurrencyInfo.label}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary flex-shrink-0"
+              onClick={() => setEditingCurrency(true)}
             >
-              <span className="text-xl">{c.flag}</span>
-              <span className="text-xs font-medium">{c.code}</span>
+              Changer
+            </Button>
+          </div>
+        ) : (
+          /* MODE SÉLECTION */
+          <>
+            <div className="grid grid-cols-4 gap-2">
+              {PRIMARY_CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => handleCurrencyChange(c.code)}
+                  className={`p-3 rounded-xl text-sm transition-all border flex flex-col items-center gap-1 ${
+                    currencyPref === c.code
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border bg-secondary text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <span className="text-xl">{c.flag}</span>
+                  <span className="text-xs font-medium">{c.code}</span>
+                </button>
+              ))}
+            </div>
+            <Select
+              value={EXTRA_CURRENCIES.some((c) => c.code === currencyPref) ? currencyPref : ""}
+              onValueChange={(v) => handleCurrencyChange(v as CurrencyCode)}
+            >
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue placeholder="Plus de devises…" />
+              </SelectTrigger>
+              <SelectContent>
+                {EXTRA_CURRENCIES.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.flag} {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button
+              onClick={() => setEditingCurrency(false)}
+              className="text-xs text-muted-foreground underline"
+            >
+              Annuler
             </button>
-          ))}
-        </div>
-        <Select
-          value={EXTRA_CURRENCIES.some((c) => c.code === currencyPref) ? currencyPref : ""}
-          onValueChange={(v) => handleCurrencyChange(v as CurrencyCode)}
-        >
-          <SelectTrigger className="bg-secondary border-border">
-            <SelectValue placeholder="Plus de devises…" />
-          </SelectTrigger>
-          <SelectContent>
-            {EXTRA_CURRENCIES.map((c) => (
-              <SelectItem key={c.code} value={c.code}>
-                {c.flag} {c.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          </>
+        )}
       </div>
 
       {/* Privacy section */}
