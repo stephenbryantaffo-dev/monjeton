@@ -37,7 +37,7 @@ const menuItems = [
   { icon: Target, label: "Épargne", path: "/savings" },
   { icon: Shield, label: "Dettes", path: "/debts" },
   { icon: PieChart, label: "Budgets", path: "/budgets" },
-  { icon: Users, label: "Tontine", path: "/tontine" },
+  { icon: Users, label: "Tontine & Caisse commune", path: "/tontine" },
   { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
   { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
   { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
