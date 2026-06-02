@@ -127,7 +127,7 @@ const Signup = () => {
     }
     {
       toast({ title: "Compte créé ! ✅", description: "Bienvenue sur Mon Jeton 🎉" });
-      navigate("/dashboard", { replace: true });
+      navigate(returnTo, { replace: true });
     }
   };
 
