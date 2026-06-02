@@ -14,8 +14,27 @@ import { useToast } from "@/hooks/use-toast";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import CreateCaisseModal from "./CreateCaisseModal";
+import InviteCaisseModal from "./InviteCaisseModal";
 import { CaisseData, CaisseMember, CaisseCotisation, CaisseDepense, CaisseMemberHistory, DEPENSE_CATEGORIES, DEPENSE_CAT_LABELS } from "./types";
 import { generateCaissePdf } from "./generateCaissePdf";
+
+type CollaboratorEntry = {
+  user_id: string;
+  role: "owner" | "manager" | "viewer";
+  name: string;
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  owner: "Propriétaire",
+  manager: "Gestionnaire",
+  viewer: "Observateur",
+};
+
+const ROLE_COLOR: Record<string, string> = {
+  owner: "bg-primary/20 text-primary",
+  manager: "bg-blue-500/20 text-blue-400",
+  viewer: "bg-muted text-muted-foreground",
+};
 
 const fmt = (n: number) => n?.toLocaleString("fr-FR") ?? "0";
 
