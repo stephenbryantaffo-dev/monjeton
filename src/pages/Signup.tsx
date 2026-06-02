@@ -25,6 +25,8 @@ const Signup = () => {
   const [existingAccountEmail, setExistingAccountEmail] = useState("");
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/dashboard";
   const { toast } = useToast();
 
   const sendPasswordReset = async (targetEmail: string) => {
