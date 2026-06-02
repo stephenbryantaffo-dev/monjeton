@@ -93,6 +93,7 @@ const AppContent = () => {
         <Route path="/scan" element={<ProtectedRoute><OnboardingGuard><Scan /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/brvm" element={<ProtectedRoute><OnboardingGuard><BRVMSimulator /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/receipts" element={<ProtectedRoute><OnboardingGuard><Receipts /></OnboardingGuard></ProtectedRoute>} />
+        <Route path="/rejoindre-caisse/:token" element={<RejoindreCaisse />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
