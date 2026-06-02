@@ -309,65 +309,94 @@ const Settings = () => {
             <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-sm text-foreground">Numéro WhatsApp</p>
-              <p className="text-xs text-muted-foreground">
-                Sélectionne le pays puis saisis ton numéro local. Le format international est calculé automatiquement.
-              </p>
+              {editingPhone && (
+                <p className="text-xs text-muted-foreground">
+                  Sélectionne le pays puis saisis ton numéro local. Le format international est calculé automatiquement.
+                </p>
+              )}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Select
-              value={phoneCountry}
-              onValueChange={(code) => {
-                setPhoneCountry(code);
-                setPhoneError(null);
-                if (phoneInput) {
-                  const r = parsePhone(phoneInput, code);
-                  if (r.valid) setPhoneInput(r.display!);
-                }
-              }}
-            >
-              <SelectTrigger className="w-[110px] bg-secondary border-border flex-shrink-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COUNTRIES.filter(c => DIAL_CODES[c.code]).map(c => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.flag} +{DIAL_CODES[c.code]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="Ex: 07 12 34 56 78"
-              value={phoneInput}
-              onChange={(e) => {
-                setPhoneError(null);
-                const v = e.target.value.replace(/[^\d+\s]/g, "").slice(0, 20);
-                setPhoneInput(v);
-              }}
-              onBlur={() => {
-                if (!phoneInput) return;
-                const r = parsePhone(phoneInput, phoneCountry);
-                if (r.valid) setPhoneInput(r.display!);
-                else setPhoneError(r.error || "Numéro invalide");
-              }}
-              className={`bg-secondary flex-1 min-w-0 ${phoneError ? "border-destructive" : "border-border"}`}
-            />
-            <Button
-              variant="hero"
-              size="sm"
-              onClick={savePhone}
-              disabled={phoneSaving || !phoneInput}
-            >
-              {phoneSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "OK"}
-            </Button>
-          </div>
-          {phoneError && <p className="text-xs text-destructive pl-6">{phoneError}</p>}
-          {!phoneError && phoneSavedDisplay && (
-            <p className="text-xs text-muted-foreground pl-6">Enregistré : {phoneSavedDisplay}</p>
+          {/* MODE COMPACT : numéro déjà enregistré */}
+          {!editingPhone && phoneSavedDisplay ? (
+            <div className="flex items-center justify-between gap-2 pl-6">
+              <div className="flex items-center gap-2 min-w-0">
+                <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-sm text-foreground truncate">{phoneSavedDisplay}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary flex-shrink-0"
+                onClick={() => setEditingPhone(true)}
+              >
+                Modifier
+              </Button>
+            </div>
+          ) : (
+            /* MODE SAISIE : formulaire complet */
+            <>
+              <div className="flex gap-2">
+                <Select
+                  value={phoneCountry}
+                  onValueChange={(code) => {
+                    setPhoneCountry(code);
+                    setPhoneError(null);
+                    if (phoneInput) {
+                      const r = parsePhone(phoneInput, code);
+                      if (r.valid) setPhoneInput(r.display!);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[110px] bg-secondary border-border flex-shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.filter(c => DIAL_CODES[c.code]).map(c => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.flag} +{DIAL_CODES[c.code]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="Ex: 07 12 34 56 78"
+                  value={phoneInput}
+                  onChange={(e) => {
+                    setPhoneError(null);
+                    const v = e.target.value.replace(/[^\d+\s]/g, "").slice(0, 20);
+                    setPhoneInput(v);
+                  }}
+                  onBlur={() => {
+                    if (!phoneInput) return;
+                    const r = parsePhone(phoneInput, phoneCountry);
+                    if (r.valid) setPhoneInput(r.display!);
+                    else setPhoneError(r.error || "Numéro invalide");
+                  }}
+                  className={`bg-secondary flex-1 min-w-0 ${phoneError ? "border-destructive" : "border-border"}`}
+                />
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={savePhone}
+                  disabled={phoneSaving || !phoneInput}
+                >
+                  {phoneSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "OK"}
+                </Button>
+              </div>
+              {phoneError && <p className="text-xs text-destructive pl-6">{phoneError}</p>}
+              {/* Bouton Annuler si on édite un numéro déjà existant */}
+              {phoneSavedDisplay && (
+                <button
+                  onClick={() => { setEditingPhone(false); setPhoneError(null); }}
+                  className="text-xs text-muted-foreground pl-6 underline"
+                >
+                  Annuler
+                </button>
+              )}
+            </>
           )}
         </div>
 
