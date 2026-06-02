@@ -1359,6 +1359,16 @@ const TontinePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Edit caisse (tontine) ─── */}
+      {selected && (
+        <EditCaisseModal
+          open={editCaisseOpen}
+          onClose={() => setEditCaisseOpen(false)}
+          tontine={selected}
+          onUpdated={() => { loadDetail(selected.id); loadTontines(); }}
+        />
+      )}
     </DashboardLayout>
   );
 };
