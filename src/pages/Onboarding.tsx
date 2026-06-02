@@ -210,6 +210,11 @@ const Onboarding = () => {
   const [saving, setSaving] = useState(false);
   const [multiSelection, setMultiSelection] = useState<string[]>([]);
   const [shouldSave, setShouldSave] = useState(false);
+  const [inviteContext, setInviteContext] = useState<string | null>(null);
+
+  useEffect(() => {
+    setInviteContext(localStorage.getItem('invite_context'));
+  }, []);
 
   // Compute visible questions based on current answers
   const visibleQuestions = useMemo(() => {
@@ -352,7 +357,10 @@ const Onboarding = () => {
       }
 
       toast({ title: "Bienvenue sur Mon Jeton ! 🎉" });
-      navigate("/dashboard", { replace: true });
+      const postRedirect = localStorage.getItem('post_onboarding_redirect');
+      localStorage.removeItem('post_onboarding_redirect');
+      localStorage.removeItem('invite_context');
+      navigate(postRedirect || "/dashboard", { replace: true });
     } catch {
       toast({ title: "Erreur", description: "Impossible de sauvegarder", variant: "destructive" });
     } finally {
@@ -372,6 +380,11 @@ const Onboarding = () => {
       <Screen hasBottomNav={false} className="relative z-10 h-full">
         <Screen.Header>
           <div className="px-6 pt-6 pb-2">
+            {inviteContext === 'caisse' && (
+              <div className="mb-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary">
+                🎉 Bienvenue ! Configure ton compte en 30 secondes, puis tu rejoindras la caisse de ton ami juste après.
+              </div>
+            )}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-foreground">
                 Question {currentIndex + 1}/{totalSteps}

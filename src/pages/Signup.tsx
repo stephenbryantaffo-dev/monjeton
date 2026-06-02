@@ -127,6 +127,10 @@ const Signup = () => {
     }
     {
       toast({ title: "Compte créé ! ✅", description: "Bienvenue sur Mon Jeton 🎉" });
+      if (returnTo.startsWith('/rejoindre-caisse/')) {
+        localStorage.setItem('post_onboarding_redirect', returnTo);
+        localStorage.setItem('invite_context', 'caisse');
+      }
       navigate(returnTo, { replace: true });
     }
   };
