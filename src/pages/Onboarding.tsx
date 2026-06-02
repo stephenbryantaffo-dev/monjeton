@@ -357,7 +357,10 @@ const Onboarding = () => {
       }
 
       toast({ title: "Bienvenue sur Mon Jeton ! 🎉" });
-      navigate("/dashboard", { replace: true });
+      const postRedirect = localStorage.getItem('post_onboarding_redirect');
+      localStorage.removeItem('post_onboarding_redirect');
+      localStorage.removeItem('invite_context');
+      navigate(postRedirect || "/dashboard", { replace: true });
     } catch {
       toast({ title: "Erreur", description: "Impossible de sauvegarder", variant: "destructive" });
     } finally {
