@@ -380,6 +380,11 @@ const Onboarding = () => {
       <Screen hasBottomNav={false} className="relative z-10 h-full">
         <Screen.Header>
           <div className="px-6 pt-6 pb-2">
+            {inviteContext === 'caisse' && (
+              <div className="mb-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary">
+                🎉 Bienvenue ! Configure ton compte en 30 secondes, puis tu rejoindras la caisse de ton ami juste après.
+              </div>
+            )}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-foreground">
                 Question {currentIndex + 1}/{totalSteps}
