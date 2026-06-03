@@ -276,8 +276,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-xs font-bold bg-amber-500/15 text-amber-500 px-2 py-0.5 rounded-full">🎯 Projet</span>
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${roleInfo.cls}`}>
+              <RoleIcon className="w-3 h-3" /> {roleInfo.label}
+            </span>
             {isClosed && <span className="text-xs font-bold bg-destructive/15 text-destructive px-2 py-0.5 rounded-full">Clôturé</span>}
           </div>
           {tontine.event_date && (
@@ -286,25 +289,61 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             </p>
           )}
         </div>
-        {isOwner && !isClosed && (
+        {!isClosed && (isOwner || canManage) && (
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setInviteOpen(true)}
-              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-              title="Inviter à suivre la caisse"
-            >
-              <Link2 className="w-4 h-4 text-primary" />
-            </button>
-            <button
-              onClick={() => setEditOpen(true)}
-              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-              title="Modifier la caisse"
-            >
-              <Pencil className="w-4 h-4 text-primary" />
-            </button>
+            {isOwner && (
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+                title="Inviter à suivre la caisse"
+              >
+                <Link2 className="w-4 h-4 text-primary" />
+              </button>
+            )}
+            {isOwner && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+                title="Modifier la caisse"
+              >
+                <Pencil className="w-4 h-4 text-primary" />
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* ─── Suivi par (collaborators) ─── */}
+      {collaborators.length > 0 && (
+        <div className="glass-card rounded-2xl p-3 mb-4">
+          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
+            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par ({collaborators.length})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {collaborators.map((c) => {
+              const ri = ROLE_BADGE[c.role] || ROLE_BADGE.viewer;
+              const Icon = ri.icon;
+              const display = c.full_name || c.email || "Utilisateur";
+              const initial = (c.full_name || c.email || "?").trim().charAt(0).toUpperCase();
+              const isMe = c.user_id === user?.id;
+              return (
+                <div key={c.user_id} className="flex items-center gap-2 glass rounded-full pl-1 pr-2.5 py-1 border border-border">
+                  <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-primary-foreground">{initial}</span>
+                  </div>
+                  <span className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                    {display}{isMe && " (toi)"}
+                  </span>
+                  <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full ${ri.cls}`}>
+                    <Icon className="w-2.5 h-2.5" /> {ri.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
 
       {/* ─── 3 KPIs ─── */}
       <div className="grid grid-cols-3 gap-2 mb-4">
