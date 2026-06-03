@@ -50,7 +50,8 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
     setGenerating(false);
 
     if (error || !data) {
-      toast.error("Impossible de générer le lien.");
+      console.error("Generate invite error:", error);
+      toast.error(error?.message || "Impossible de générer le lien.");
       return;
     }
     const token = (data as any).token;
