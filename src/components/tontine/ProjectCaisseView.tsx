@@ -383,9 +383,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {/* Action buttons */}
       {!isClosed && (
         <div className="grid grid-cols-2 gap-2 mb-4">
-          <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
-            <TrendingDown className="w-4 h-4 mr-1" /> Dépense
-          </Button>
+          {canManage ? (
+            <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
+              <TrendingDown className="w-4 h-4 mr-1" /> Dépense
+            </Button>
+          ) : <div />}
           <Button onClick={exportPDF} variant="outline" className="glass">
             <FileText className="w-4 h-4 mr-1" /> Bilan PDF
           </Button>
@@ -397,7 +399,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         <p className="text-sm font-bold text-foreground flex items-center gap-1">
           <Users className="w-4 h-4" /> Membres ({members.length})
         </p>
-        {isOwner && !isClosed && (
+        {canManage && !isClosed && (
           <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1" /> Membre
           </Button>
@@ -407,11 +409,12 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         {members.map((m, i) => {
           const paid = memberPaid(m.id);
           const ok = expectedPerMember > 0 && paid >= expectedPerMember;
+          const clickable = !isClosed && canManage;
           return (
             <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}>
               <div className="glass-card rounded-xl p-3 flex items-center gap-3"
-                onClick={() => !isClosed && isOwner && openPay(m)}
-                style={{ cursor: !isClosed && isOwner ? "pointer" : "default" }}>
+                onClick={() => clickable && openPay(m)}
+                style={{ cursor: clickable ? "pointer" : "default" }}>
                 <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
                 </div>
@@ -448,7 +451,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   </p>
                 </div>
                 <span className="text-sm font-bold text-destructive flex-shrink-0">-{fmt(Number(e.amount))}</span>
-                {isOwner && !isClosed && (
+                {canManage && !isClosed && (
                   <ConfirmDeleteDialog onConfirm={() => deleteExpense(e.id)} title="Supprimer cette dépense ?">
                     <button className="text-muted-foreground hover:text-destructive p-1">
                       <Trash2 className="w-3.5 h-3.5" />
