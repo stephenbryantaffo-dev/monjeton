@@ -194,7 +194,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const addMember = async () => {
-    if (!newMemberName.trim() || !isOwner) return;
+    if (!newMemberName.trim() || !canManage) return;
     const { error } = await supabase.from("tontine_members" as any).insert({
       tontine_id: tontine.id,
       name: newMemberName.trim(),
