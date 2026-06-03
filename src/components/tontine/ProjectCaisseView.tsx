@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
-  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2,
+  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ interface Props {
   tontine: TontineData;
   onBack: () => void;
   onUpdated: () => void;
+  currentRole?: string;
 }
 
 const DEPENSE_CATS = [
@@ -33,7 +34,20 @@ const DEPENSE_CATS = [
   { id: "autre", label: "📦 Autre" },
 ];
 
-const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
+interface CollabRow {
+  user_id: string;
+  role: string;
+  full_name: string | null;
+  email: string | null;
+}
+
+const ROLE_BADGE: Record<string, { label: string; icon: typeof Eye; cls: string }> = {
+  owner:   { label: "Propriétaire",   icon: Crown,  cls: "bg-amber-500/15 text-amber-500" },
+  manager: { label: "Co-gestionnaire", icon: Wrench, cls: "bg-blue-500/15 text-blue-400" },
+  viewer:  { label: "Observateur",     icon: Eye,    cls: "bg-muted text-muted-foreground" },
+};
+
+const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRoleProp }: Props) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -41,10 +55,16 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   const [cycle, setCycle] = useState<TontineCycle | null>(null);
   const [payments, setPayments] = useState<TontinePayment[]>([]);
   const [expenses, setExpenses] = useState<TontineExpense[]>([]);
+  const [collaborators, setCollaborators] = useState<CollabRow[]>([]);
+  const [loadedRole, setLoadedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isOwner = tontine.user_id === user?.id;
+  const currentRole = currentRoleProp || loadedRole || (tontine.user_id === user?.id ? "owner" : "viewer");
+  const isOwner = currentRole === "owner";
+  const canManage = currentRole === "owner" || currentRole === "manager";
   const isClosed = !!tontine.is_closed;
+  const roleInfo = ROLE_BADGE[currentRole] || ROLE_BADGE.viewer;
+  const RoleIcon = roleInfo.icon;
 
   // Payment dialog
   const [payOpen, setPayOpen] = useState(false);
