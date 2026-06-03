@@ -108,10 +108,10 @@ const TontinePage = () => {
   const loadTontines = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    // RLS "Collaborators view tontine" already returns caisses where user is owner OR collaborator
     const { data } = await supabase
       .from("tontines")
       .select("*")
-      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     const list = (data || []) as unknown as TontineData[];
     setTontines(list);
@@ -119,9 +119,10 @@ const TontinePage = () => {
 
     if (list.length > 0) {
       const ids = list.map(t => t.id);
-      const [cyclesRes, membersRes] = await Promise.all([
+      const [cyclesRes, membersRes, collabsRes] = await Promise.all([
         supabase.from("tontine_cycles").select("tontine_id, total_expected, total_collected, period_label").in("tontine_id", ids).eq("status", "open"),
         supabase.from("tontine_members").select("tontine_id").in("tontine_id", ids),
+        supabase.from("caisse_collaborators" as any).select("caisse_id, role").eq("user_id", user.id).in("caisse_id", ids),
       ]);
       const cMap: Record<string, { total_expected: number; total_collected: number; period_label: string }> = {};
       ((cyclesRes.data || []) as any[]).forEach(c => { cMap[c.tontine_id] = c; });
@@ -129,6 +130,11 @@ const TontinePage = () => {
       const mMap: Record<string, number> = {};
       ((membersRes.data || []) as any[]).forEach(m => { mMap[m.tontine_id] = (mMap[m.tontine_id] || 0) + 1; });
       setMemberCounts(mMap);
+      const rMap: Record<string, string> = {};
+      ((collabsRes.data || []) as any[]).forEach(c => { rMap[c.caisse_id] = c.role; });
+      setRoleMap(rMap);
+    } else {
+      setRoleMap({});
     }
   }, [user]);
 
