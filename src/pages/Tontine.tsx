@@ -590,81 +590,88 @@ const TontinePage = () => {
     return (
       <DashboardLayout title={activeTab === "tontine" ? "Tontines" : "Caisses communes"}>
         {tabToggle}
-        {activeTab === "caisse" ? (
-          <CaisseView />
-        ) : (
-          <>
-            <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground">
-              <Plus className="w-4 h-4 mr-2" /> Nouvelle tontine
-            </Button>
-            <CreateTontineModal open={createOpen} onOpenChange={setCreateOpen} onCreated={loadTontines} />
+        <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground">
+          <Plus className="w-4 h-4 mr-2" /> {activeTab === "caisse" ? "Nouvelle caisse commune" : "Nouvelle tontine"}
+        </Button>
+        <CreateTontineModal open={createOpen} onOpenChange={setCreateOpen} onCreated={loadTontines} />
 
-            <div className="space-y-3">
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
-              ) : tontines.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-4xl mb-3">🪙</p>
-                  <p className="font-semibold text-foreground mb-1">Aucune tontine</p>
-                  <p className="text-sm text-muted-foreground">Crée ta première tontine pour commencer</p>
-                </div>
-              ) : (
-                tontines.map((t, i) => {
-                  const cycle = cycleMap[t.id];
-                  const mc = memberCounts[t.id] || 0;
-                  const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
-                  const pct = mc > 0 ? Math.round((paidInCycle / mc) * 100) : 0;
-
-                  return (
-                    <motion.div
-                      key={t.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 * i }}
-                      onClick={() => openDetail(t.id)}
-                      className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <p className="font-bold text-foreground truncate">{t.name}</p>
-                            {t.caisse_type === "project" ? (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
-                            ) : (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
-                            )}
-                            {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {t.caisse_type === "project"
-                              ? `Cible ${fmt(Number(t.target_amount || 0))} · ${mc} membres`
-                              : `${fmt(t.contribution_amount)}/cycle · ${mc} membres`}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
-                            <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
-                          </ConfirmDeleteDialog>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      </div>
-                      {/* Progress bar */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{paidInCycle}/{mc} ont payé</span>
-                          <span>{Math.min(pct, 100)}%</span>
-                        </div>
-                        <div className="w-full bg-secondary rounded-full h-1.5">
-                          <div className="h-1.5 gradient-primary rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
+        <div className="space-y-3">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
+          ) : visibleTontines.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-4xl mb-3">{activeTab === "caisse" ? "🏦" : "🪙"}</p>
+              <p className="font-semibold text-foreground mb-1">
+                {activeTab === "caisse" ? "Aucune caisse commune" : "Aucune tontine"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {activeTab === "caisse" ? "Crée ta première caisse de projet" : "Crée ta première tontine pour commencer"}
+              </p>
             </div>
-          </>
-        )}
+          ) : (
+            visibleTontines.map((t, i) => {
+              const cycle = cycleMap[t.id];
+              const mc = memberCounts[t.id] || 0;
+              const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
+              const pct = mc > 0 ? Math.round((paidInCycle / mc) * 100) : 0;
+              const myRole = roleMap[t.id] || (t.user_id === user?.id ? "owner" : "viewer");
+              const canDelete = myRole === "owner";
+
+              return (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * i }}
+                  onClick={() => openDetail(t.id)}
+                  className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-bold text-foreground truncate">{t.name}</p>
+                        {t.caisse_type === "project" ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
+                        )}
+                        {myRole !== "owner" && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 flex-shrink-0">
+                            {myRole === "manager" ? "✏️ Co-gestion" : "👁 Observateur"}
+                          </span>
+                        )}
+                        {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t.caisse_type === "project"
+                          ? `Cible ${fmt(Number(t.target_amount || 0))} · ${mc} membres`
+                          : `${fmt(t.contribution_amount)}/cycle · ${mc} membres`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {canDelete && (
+                        <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
+                          <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
+                        </ConfirmDeleteDialog>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{paidInCycle}/{mc} ont payé</span>
+                      <span>{Math.min(pct, 100)}%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-1.5">
+                      <div className="h-1.5 gradient-primary rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </div>
       </DashboardLayout>
     );
   }
@@ -674,7 +681,7 @@ const TontinePage = () => {
   if (selected?.caisse_type === "project") {
     return (
       <DashboardLayout title={selected.name}>
-        <ProjectCaisseView tontine={selected} onBack={goBack} onUpdated={loadTontines} />
+        <ProjectCaisseView tontine={selected} onBack={goBack} onUpdated={loadTontines} currentRole={currentRole} />
       </DashboardLayout>
     );
   }
