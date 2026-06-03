@@ -43,6 +43,7 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
         role,
         created_by: user.id,
         expires_at: expiresAt,
+        max_uses: 1,
       } as any)
       .select("token")
       .single();
