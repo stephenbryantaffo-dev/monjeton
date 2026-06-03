@@ -94,8 +94,13 @@ const TontinePage = () => {
 
   const selected = tontines.find(t => t.id === selectedId);
 
-  // Owner check
-  const isOwner = useMemo(() => selected?.user_id === user?.id, [selected, user]);
+  // Owner check via roleMap (collaborator role) with fallback to user_id ownership
+  const currentRole = useMemo<string>(() => {
+    if (!selected || !user) return "viewer";
+    return roleMap[selected.id] || (selected.user_id === user.id ? "owner" : "viewer");
+  }, [selected, user, roleMap]);
+  const isOwner = currentRole === "owner";
+  const canManage = currentRole === "owner" || currentRole === "manager";
   const isActive = (selected?.status || "active") === "active";
   const isPaused = (selected?.status || "") === "paused" || (selected?.status || "") === "pausee";
   const isClosed = (selected?.status || "") === "closed" || (selected?.status || "") === "terminee";
