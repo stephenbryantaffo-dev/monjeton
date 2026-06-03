@@ -43,6 +43,7 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
         role,
         created_by: user.id,
         expires_at: expiresAt,
+        max_uses: 1,
       } as any)
       .select("token")
       .single();
@@ -107,7 +108,7 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground mt-1.5">
-              Le lien expire dans 7 jours.
+              Lien à usage unique. Expire dans 7 jours.
             </p>
           </div>
 
