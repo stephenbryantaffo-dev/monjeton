@@ -94,10 +94,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [mRes, cRes, eRes] = await Promise.all([
+    const [mRes, cRes, eRes, collabRes] = await Promise.all([
       supabase.from("tontine_members").select("*").eq("tontine_id", tontine.id),
       supabase.from("tontine_cycles").select("*").eq("tontine_id", tontine.id).order("cycle_number").limit(1),
       supabase.from("tontine_expenses" as any).select("*").eq("tontine_id", tontine.id).order("expense_date", { ascending: false }),
+      supabase.from("caisse_collaborators" as any).select("user_id, role").eq("caisse_id", tontine.id),
     ]);
     const ms = (mRes.data || []) as unknown as TontineMember[];
     setMembers(ms);
@@ -108,8 +109,33 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       const { data: pData } = await supabase.from("tontine_payments").select("*").eq("cycle_id", cyc.id);
       setPayments((pData || []) as unknown as TontinePayment[]);
     }
+
+    // Collaborators + profile lookup for "Suivi par"
+    const collabs = (collabRes.data || []) as { user_id: string; role: string }[];
+    if (user) {
+      const mine = collabs.find(c => c.user_id === user.id);
+      setLoadedRole(mine?.role || (tontine.user_id === user.id ? "owner" : "viewer"));
+    }
+    if (collabs.length > 0) {
+      const uids = collabs.map(c => c.user_id);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", uids);
+      const pmap = new Map<string, { full_name: string | null; email: string | null }>();
+      (profs || []).forEach((p: any) => pmap.set(p.user_id, { full_name: p.full_name, email: p.email }));
+      setCollaborators(collabs.map(c => ({
+        user_id: c.user_id,
+        role: c.role,
+        full_name: pmap.get(c.user_id)?.full_name ?? null,
+        email: pmap.get(c.user_id)?.email ?? null,
+      })));
+    } else {
+      setCollaborators([]);
+    }
+
     setLoading(false);
-  }, [tontine.id]);
+  }, [tontine.id, tontine.user_id, user]);
 
   useEffect(() => { load(); }, [load]);
 
