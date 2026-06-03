@@ -42,8 +42,11 @@ type MemberStatus = {
 const TontinePage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"tontine" | "caisse">("tontine");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "caisse" ? "caisse" : "tontine";
+  const [activeTab, setActiveTab] = useState<"tontine" | "caisse">(initialTab);
   const [tontines, setTontines] = useState<TontineData[]>([]);
+  const [roleMap, setRoleMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
 
