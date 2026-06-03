@@ -80,7 +80,7 @@ const RejoindreCaisse = () => {
       return;
     }
     toast.success(`Tu as rejoint « ${res.caisse_name } » 🎉`);
-    navigate("/tontine", { replace: true });
+    navigate("/tontine?tab=caisse", { replace: true });
   };
 
   const goAuth = (target: "signup" | "login") => {

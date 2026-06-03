@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
-  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2,
+  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ interface Props {
   tontine: TontineData;
   onBack: () => void;
   onUpdated: () => void;
+  currentRole?: string;
 }
 
 const DEPENSE_CATS = [
@@ -33,7 +34,20 @@ const DEPENSE_CATS = [
   { id: "autre", label: "📦 Autre" },
 ];
 
-const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
+interface CollabRow {
+  user_id: string;
+  role: string;
+  full_name: string | null;
+  email: string | null;
+}
+
+const ROLE_BADGE: Record<string, { label: string; icon: typeof Eye; cls: string }> = {
+  owner:   { label: "Propriétaire",   icon: Crown,  cls: "bg-amber-500/15 text-amber-500" },
+  manager: { label: "Co-gestionnaire", icon: Wrench, cls: "bg-blue-500/15 text-blue-400" },
+  viewer:  { label: "Observateur",     icon: Eye,    cls: "bg-muted text-muted-foreground" },
+};
+
+const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRoleProp }: Props) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -41,10 +55,16 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   const [cycle, setCycle] = useState<TontineCycle | null>(null);
   const [payments, setPayments] = useState<TontinePayment[]>([]);
   const [expenses, setExpenses] = useState<TontineExpense[]>([]);
+  const [collaborators, setCollaborators] = useState<CollabRow[]>([]);
+  const [loadedRole, setLoadedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isOwner = tontine.user_id === user?.id;
+  const currentRole = currentRoleProp || loadedRole || (tontine.user_id === user?.id ? "owner" : "viewer");
+  const isOwner = currentRole === "owner";
+  const canManage = currentRole === "owner" || currentRole === "manager";
   const isClosed = !!tontine.is_closed;
+  const roleInfo = ROLE_BADGE[currentRole] || ROLE_BADGE.viewer;
+  const RoleIcon = roleInfo.icon;
 
   // Payment dialog
   const [payOpen, setPayOpen] = useState(false);
@@ -74,10 +94,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [mRes, cRes, eRes] = await Promise.all([
+    const [mRes, cRes, eRes, collabRes] = await Promise.all([
       supabase.from("tontine_members").select("*").eq("tontine_id", tontine.id),
       supabase.from("tontine_cycles").select("*").eq("tontine_id", tontine.id).order("cycle_number").limit(1),
       supabase.from("tontine_expenses" as any).select("*").eq("tontine_id", tontine.id).order("expense_date", { ascending: false }),
+      supabase.from("caisse_collaborators" as any).select("user_id, role").eq("caisse_id", tontine.id),
     ]);
     const ms = (mRes.data || []) as unknown as TontineMember[];
     setMembers(ms);
@@ -88,8 +109,33 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
       const { data: pData } = await supabase.from("tontine_payments").select("*").eq("cycle_id", cyc.id);
       setPayments((pData || []) as unknown as TontinePayment[]);
     }
+
+    // Collaborators + profile lookup for "Suivi par"
+    const collabs = ((collabRes.data || []) as any[]) as { user_id: string; role: string }[];
+    if (user) {
+      const mine = collabs.find(c => c.user_id === user.id);
+      setLoadedRole(mine?.role || (tontine.user_id === user.id ? "owner" : "viewer"));
+    }
+    if (collabs.length > 0) {
+      const uids = collabs.map(c => c.user_id);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", uids);
+      const pmap = new Map<string, { full_name: string | null; email: string | null }>();
+      (profs || []).forEach((p: any) => pmap.set(p.user_id, { full_name: p.full_name, email: p.email }));
+      setCollaborators(collabs.map(c => ({
+        user_id: c.user_id,
+        role: c.role,
+        full_name: pmap.get(c.user_id)?.full_name ?? null,
+        email: pmap.get(c.user_id)?.email ?? null,
+      })));
+    } else {
+      setCollaborators([]);
+    }
+
     setLoading(false);
-  }, [tontine.id]);
+  }, [tontine.id, tontine.user_id, user]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -148,7 +194,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
   };
 
   const addMember = async () => {
-    if (!newMemberName.trim() || !isOwner) return;
+    if (!newMemberName.trim() || !canManage) return;
     const { error } = await supabase.from("tontine_members" as any).insert({
       tontine_id: tontine.id,
       name: newMemberName.trim(),
@@ -230,8 +276,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-xs font-bold bg-amber-500/15 text-amber-500 px-2 py-0.5 rounded-full">🎯 Projet</span>
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${roleInfo.cls}`}>
+              <RoleIcon className="w-3 h-3" /> {roleInfo.label}
+            </span>
             {isClosed && <span className="text-xs font-bold bg-destructive/15 text-destructive px-2 py-0.5 rounded-full">Clôturé</span>}
           </div>
           {tontine.event_date && (
@@ -240,25 +289,61 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
             </p>
           )}
         </div>
-        {isOwner && !isClosed && (
+        {!isClosed && (isOwner || canManage) && (
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setInviteOpen(true)}
-              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-              title="Inviter à suivre la caisse"
-            >
-              <Link2 className="w-4 h-4 text-primary" />
-            </button>
-            <button
-              onClick={() => setEditOpen(true)}
-              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-              title="Modifier la caisse"
-            >
-              <Pencil className="w-4 h-4 text-primary" />
-            </button>
+            {isOwner && (
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+                title="Inviter à suivre la caisse"
+              >
+                <Link2 className="w-4 h-4 text-primary" />
+              </button>
+            )}
+            {isOwner && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+                title="Modifier la caisse"
+              >
+                <Pencil className="w-4 h-4 text-primary" />
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* ─── Suivi par (collaborators) ─── */}
+      {collaborators.length > 0 && (
+        <div className="glass-card rounded-2xl p-3 mb-4">
+          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
+            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par ({collaborators.length})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {collaborators.map((c) => {
+              const ri = ROLE_BADGE[c.role] || ROLE_BADGE.viewer;
+              const Icon = ri.icon;
+              const display = c.full_name || c.email || "Utilisateur";
+              const initial = (c.full_name || c.email || "?").trim().charAt(0).toUpperCase();
+              const isMe = c.user_id === user?.id;
+              return (
+                <div key={c.user_id} className="flex items-center gap-2 glass rounded-full pl-1 pr-2.5 py-1 border border-border">
+                  <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-primary-foreground">{initial}</span>
+                  </div>
+                  <span className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                    {display}{isMe && " (toi)"}
+                  </span>
+                  <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full ${ri.cls}`}>
+                    <Icon className="w-2.5 h-2.5" /> {ri.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
 
       {/* ─── 3 KPIs ─── */}
       <div className="grid grid-cols-3 gap-2 mb-4">
@@ -298,9 +383,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
       {/* Action buttons */}
       {!isClosed && (
         <div className="grid grid-cols-2 gap-2 mb-4">
-          <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
-            <TrendingDown className="w-4 h-4 mr-1" /> Dépense
-          </Button>
+          {canManage ? (
+            <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
+              <TrendingDown className="w-4 h-4 mr-1" /> Dépense
+            </Button>
+          ) : <div />}
           <Button onClick={exportPDF} variant="outline" className="glass">
             <FileText className="w-4 h-4 mr-1" /> Bilan PDF
           </Button>
@@ -312,7 +399,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
         <p className="text-sm font-bold text-foreground flex items-center gap-1">
           <Users className="w-4 h-4" /> Membres ({members.length})
         </p>
-        {isOwner && !isClosed && (
+        {canManage && !isClosed && (
           <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1" /> Membre
           </Button>
@@ -322,11 +409,12 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
         {members.map((m, i) => {
           const paid = memberPaid(m.id);
           const ok = expectedPerMember > 0 && paid >= expectedPerMember;
+          const clickable = !isClosed && canManage;
           return (
             <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}>
               <div className="glass-card rounded-xl p-3 flex items-center gap-3"
-                onClick={() => !isClosed && isOwner && openPay(m)}
-                style={{ cursor: !isClosed && isOwner ? "pointer" : "default" }}>
+                onClick={() => clickable && openPay(m)}
+                style={{ cursor: clickable ? "pointer" : "default" }}>
                 <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
                 </div>
@@ -363,7 +451,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated }: Props) => {
                   </p>
                 </div>
                 <span className="text-sm font-bold text-destructive flex-shrink-0">-{fmt(Number(e.amount))}</span>
-                {isOwner && !isClosed && (
+                {canManage && !isClosed && (
                   <ConfirmDeleteDialog onConfirm={() => deleteExpense(e.id)} title="Supprimer cette dépense ?">
                     <button className="text-muted-foreground hover:text-destructive p-1">
                       <Trash2 className="w-3.5 h-3.5" />
