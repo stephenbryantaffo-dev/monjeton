@@ -111,7 +111,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     }
 
     // Collaborators + profile lookup for "Suivi par"
-    const collabs = (collabRes.data || []) as { user_id: string; role: string }[];
+    const collabs = ((collabRes.data || []) as any[]) as { user_id: string; role: string }[];
     if (user) {
       const mine = collabs.find(c => c.user_id === user.id);
       setLoadedRole(mine?.role || (tontine.user_id === user.id ? "owner" : "viewer"));
