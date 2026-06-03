@@ -558,18 +558,32 @@ const TontinePage = () => {
     "bg-purple-500/20 text-purple-400",
   ];
 
+  const handleTabChange = (tab: "tontine" | "caisse") => {
+    setActiveTab(tab);
+    const next = new URLSearchParams(searchParams);
+    if (tab === "caisse") next.set("tab", "caisse"); else next.delete("tab");
+    setSearchParams(next, { replace: true });
+  };
+
   const tabToggle = (
     <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
-      <button onClick={() => setActiveTab("tontine")}
+      <button onClick={() => handleTabChange("tontine")}
         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "tontine" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
         🔄 Tontine
       </button>
-      <button onClick={() => setActiveTab("caisse")}
+      <button onClick={() => handleTabChange("caisse")}
         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "caisse" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
         🏦 Caisse commune
       </button>
     </div>
   );
+
+  // Filter list by current tab
+  const visibleTontines = useMemo(
+    () => tontines.filter(t => activeTab === "caisse" ? t.caisse_type === "project" : t.caisse_type !== "project"),
+    [tontines, activeTab]
+  );
+
 
   // ─── LIST VIEW ───
   if (!selectedId) {
