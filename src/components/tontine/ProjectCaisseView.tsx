@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import LeaveCaisseButton from "./LeaveCaisseButton";
 import EditCaisseModal from "./EditCaisseModal";
 import InviteCaisseModal from "@/components/caisse/InviteCaisseModal";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, TontineExpense } from "./types";
