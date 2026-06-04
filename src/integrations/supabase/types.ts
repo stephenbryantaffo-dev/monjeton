@@ -1691,6 +1691,41 @@ export type Database = {
           },
         ]
       }
+      tontine_expense_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          planned_amount: number
+          tontine_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          planned_amount?: number
+          tontine_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          planned_amount?: number
+          tontine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tontine_expense_items_tontine_id_fkey"
+            columns: ["tontine_id"]
+            isOneToOne: false
+            referencedRelation: "tontines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tontine_expenses: {
         Row: {
           amount: number
@@ -1698,6 +1733,7 @@ export type Database = {
           category: string | null
           created_at: string
           expense_date: string
+          expense_item_id: string | null
           id: string
           label: string
           note: string | null
@@ -1709,6 +1745,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           expense_date?: string
+          expense_item_id?: string | null
           id?: string
           label: string
           note?: string | null
@@ -1720,12 +1757,20 @@ export type Database = {
           category?: string | null
           created_at?: string
           expense_date?: string
+          expense_item_id?: string | null
           id?: string
           label?: string
           note?: string | null
           tontine_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tontine_expenses_expense_item_id_fkey"
+            columns: ["expense_item_id"]
+            isOneToOne: false
+            referencedRelation: "tontine_expense_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tontine_expenses_tontine_id_fkey"
             columns: ["tontine_id"]
