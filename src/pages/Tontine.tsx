@@ -27,6 +27,7 @@ import CreateTontineModal from "@/components/tontine/CreateTontineModal";
 import ReportsTab from "@/components/tontine/ReportsTab";
 import TontineHistory from "@/components/tontine/TontineHistory";
 import ProjectCaisseView from "@/components/tontine/ProjectCaisseView";
+import LeaveCaisseButton from "@/components/tontine/LeaveCaisseButton";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, FREQ_LABELS, FREQ_BADGE_CLASSES } from "@/components/tontine/types";
 import { fmt, generateCycleInfo } from "@/components/tontine/utils";
 
