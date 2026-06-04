@@ -409,7 +409,7 @@ const TontinePage = () => {
   };
 
   const startFirstCycle = async () => {
-    if (!selected || members.length === 0 || !isOwner) return;
+    if (!selected || members.length === 0 || !canManage) return;
     try {
       const cycleInfo = generateCycleInfo(selected, 1, members.length);
       const { data: cycle, error } = await supabase
