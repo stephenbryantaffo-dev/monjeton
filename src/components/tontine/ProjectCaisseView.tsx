@@ -87,12 +87,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [payAmount, setPayAmount] = useState("");
   const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
   const [payNote, setPayNote] = useState("");
+  const [payItemId, setPayItemId] = useState<string | null>(null);
 
   // Edit payment dialog
   const [editPayOpen, setEditPayOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<TontinePayment | null>(null);
   const [editPayAmount, setEditPayAmount] = useState("");
   const [editPayNote, setEditPayNote] = useState("");
+  const [editPayItemId, setEditPayItemId] = useState<string | null>(null);
 
   // Expense dialog
   const [expOpen, setExpOpen] = useState(false);
@@ -212,6 +214,15 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     });
     return map;
   }, [expenses]);
+  const collectedByItem = useMemo(() => {
+    const map: Record<string, number> = {};
+    payments.forEach((p: any) => {
+      if (p.expense_item_id) {
+        map[p.expense_item_id] = (map[p.expense_item_id] || 0) + Number(p.amount_paid);
+      }
+    });
+    return map;
+  }, [payments]);
   const totalPlanned = useMemo(
     () => expenseItems.reduce((s, it) => s + Number(it.planned_amount || 0), 0),
     [expenseItems]
@@ -228,6 +239,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     setPayAmount(String(expectedPerMember || ""));
     setPayDate(new Date().toISOString().split("T")[0]);
     setPayNote("");
+    setPayItemId(null);
     setPayOpen(true);
   };
 
@@ -239,6 +251,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         cycle_id: cycle.id, member_id: payMember.id,
         amount_paid: Number(payAmount), payment_date: payDate,
         note: payNote.trim() || null,
+        expense_item_id: payItemId || null,
       } as any);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
@@ -253,6 +266,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       } catch {}
       toast({ title: `${payMember.name} : ${fmt(Number(payAmount))} enregistré ✅` });
       setPayOpen(false);
+      setPayItemId(null);
       await load();
     } finally {
       setSaving(false);
@@ -437,7 +451,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     setSaving(true);
     try {
       const { error } = await supabase.from("tontine_payments" as any)
-        .update({ amount_paid: Number(editPayAmount), note: editPayNote.trim() || null })
+        .update({ amount_paid: Number(editPayAmount), note: editPayNote.trim() || null, expense_item_id: editPayItemId || null })
         .eq("id", editingPayment.id);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
@@ -808,6 +822,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               setEditingPayment(p);
                               setEditPayAmount(String(p.amount_paid));
                               setEditPayNote(((p as any).note ?? "") as string);
+                              setEditPayItemId(((p as any).expense_item_id ?? null));
                               setEditPayOpen(true);
                             }}
                           >
@@ -932,6 +947,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                         {p.payment_date ? new Date(p.payment_date).toLocaleDateString("fr-FR") : "—"}
                         {note ? ` · ${note}` : ""}
                       </p>
+                      {(p as any).expense_item_id && (() => {
+                        const lbl = expenseItems.find(i => i.id === (p as any).expense_item_id)?.label;
+                        return lbl ? (
+                          <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                            🎯 {lbl}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                     {canManage && !isClosed && (
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -941,6 +964,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                             setEditingPayment(p);
                             setEditPayAmount(String(p.amount_paid));
                             setEditPayNote(((p as any).note ?? "") as string);
+                            setEditPayItemId(((p as any).expense_item_id ?? null));
                             setEditPayOpen(true);
                           }}
                         >
@@ -998,6 +1022,19 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
               <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Affecter à un poste (optionnel)</label>
+              <select
+                value={payItemId || ""}
+                onChange={(e) => setPayItemId(e.target.value || null)}
+                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Pot commun (non affecté)</option>
+                {expenseItems.map((it) => (
+                  <option key={it.id} value={it.id}>{it.label}</option>
+                ))}
+              </select>
+            </div>
             <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
             </Button>
@@ -1017,6 +1054,19 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
               <Input value={editPayNote} onChange={(e) => setEditPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Affecter à un poste (optionnel)</label>
+              <select
+                value={editPayItemId || ""}
+                onChange={(e) => setEditPayItemId(e.target.value || null)}
+                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Pot commun (non affecté)</option>
+                {expenseItems.map((it) => (
+                  <option key={it.id} value={it.id}>{it.label}</option>
+                ))}
+              </select>
             </div>
             <Button onClick={updatePayment} disabled={saving || !editPayAmount || Number(editPayAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la modification"}
@@ -1214,9 +1264,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                 {expenseItems.map((it) => {
                   const planned = Number(it.planned_amount || 0);
                   const paid = paidByItem[it.id] || 0;
+                  const collected = collectedByItem[it.id] || 0;
                   const pct = planned > 0 ? Math.min(100, Math.round((paid / planned) * 100)) : (paid > 0 ? 100 : 0);
-                  const solde = planned >= paid;
                   const reste = Math.max(planned - paid, 0);
+                  const resteCollect = Math.max(planned - collected, 0);
+                  const finance = planned > 0 && collected >= planned;
                   const isEditing = editingItemId === it.id;
                   return (
                     <div key={it.id} className="glass-card rounded-xl p-3">
@@ -1274,15 +1326,29 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               </div>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {fmt(paid)} / {fmt(planned)} FCFA
-                          </p>
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Collecté</p>
+                              <p className="text-xs font-semibold text-emerald-400">{fmt(collected)}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Payé</p>
+                              <p className="text-xs font-semibold text-destructive">{fmt(paid)}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Budget</p>
+                              <p className="text-xs font-semibold text-foreground">{fmt(planned)}</p>
+                            </div>
+                          </div>
                           <Progress value={pct} className={`h-2 ${paid >= planned && planned > 0 ? "[&>div]:bg-emerald-500" : ""}`} />
-                          <p className={`text-xs mt-1.5 font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
-                            {planned > 0 && paid >= planned
-                              ? "✅ Soldé"
-                              : `Reste : ${fmt(reste)} FCFA`}
-                          </p>
+                          <div className="flex items-center justify-between mt-1.5 gap-2">
+                            <p className={`text-[11px] font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                              {planned > 0 && paid >= planned ? "✅ Soldé" : `Reste à payer : ${fmt(reste)}`}
+                            </p>
+                            <p className={`text-[11px] font-medium ${finance ? "text-emerald-400" : "text-muted-foreground"}`}>
+                              {finance ? "✅ Financé" : `À collecter : ${fmt(resteCollect)}`}
+                            </p>
+                          </div>
                           {(() => {
                             const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
                             if (linked.length === 0) return null;
