@@ -232,6 +232,17 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     }
   };
 
+  const deletePayment = async (paymentId: string) => {
+    if (saving || !cycle) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_payments" as any).delete().eq("id", paymentId);
+      if (error) { toast({ title:"Erreur", description:error.message, variant:"destructive" }); return; }
+      await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: "Cotisation supprimée ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
 
   const cloturer = async () => {
     if (!isOwner) return;
@@ -445,6 +456,23 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   <p className="text-xs text-muted-foreground">
                     {fmt(paid)} {expectedPerMember > 0 ? `/ ${fmt(expectedPerMember)}` : ""} FCFA
                   </p>
+                  {payments.filter(p => p.member_id === m.id).map(p => (
+                    <div key={p.id} className="flex items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}
+                      </span>
+                      {canManage && !isClosed && (
+                        <ConfirmDeleteDialog
+                          onConfirm={() => deletePayment(p.id)}
+                          title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
+                        >
+                          <button className="text-muted-foreground hover:text-destructive p-0.5" onClick={(e) => e.stopPropagation()}>
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </ConfirmDeleteDialog>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
