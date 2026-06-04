@@ -17,6 +17,7 @@ import EditCaisseModal from "./EditCaisseModal";
 import InviteCaisseModal from "@/components/caisse/InviteCaisseModal";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, TontineExpense } from "./types";
 import { fmt } from "./utils";
+import { logNotification } from "@/lib/tontineNotifications";
 
 interface Props {
   tontine: TontineData;
