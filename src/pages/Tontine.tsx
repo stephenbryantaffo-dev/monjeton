@@ -234,7 +234,7 @@ const TontinePage = () => {
     member: TontineMember,
     historyAction: string
   ) => {
-    if (!selected || !isOwner) return false;
+    if (!selected || !canManage) return false;
     const { error } = await supabase
       .from("tontine_members" as any)
       .update({ status: newStatus } as any)
@@ -311,6 +311,10 @@ const TontinePage = () => {
 
   const confirmPayment = async () => {
     if (!payMember || !openCycle || saving) return;
+    if (!canManage) {
+      toast({ title: "Action réservée aux gestionnaires", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from("tontine_payments").insert({
@@ -360,8 +364,8 @@ const TontinePage = () => {
 
   const addMember = async () => {
     if (!newMemberName.trim() || !selected || addingMember) return;
-    if (!isOwner) {
-      toast({ title: "Action réservée au créateur", variant: "destructive" });
+    if (!canManage) {
+      toast({ title: "Action réservée aux gestionnaires", variant: "destructive" });
       return;
     }
     setAddingMember(true);
@@ -405,7 +409,7 @@ const TontinePage = () => {
   };
 
   const startFirstCycle = async () => {
-    if (!selected || members.length === 0 || !isOwner) return;
+    if (!selected || members.length === 0 || !canManage) return;
     try {
       const cycleInfo = generateCycleInfo(selected, 1, members.length);
       const { data: cycle, error } = await supabase
@@ -441,7 +445,7 @@ const TontinePage = () => {
   };
 
   const closeCycle = async () => {
-    if (!openCycle || !selected || !isOwner) return;
+    if (!openCycle || !selected || !canManage) return;
     try {
       const { error: closeCycleError } = await supabase
         .from("tontine_cycles")
@@ -533,7 +537,7 @@ const TontinePage = () => {
   };
 
   const remindAllUnpaid = async () => {
-    if (!selected || !openCycle || !isOwner) return;
+    if (!selected || !openCycle || !canManage) return;
     const paidIds = new Set(
       members.filter(m => {
         const total = payments.filter(p => p.member_id === m.id).reduce((s, p) => s + Number(p.amount_paid), 0);
@@ -736,7 +740,7 @@ const TontinePage = () => {
               <Pencil className="w-4 h-4 text-primary" />
             </button>
           )}
-          {!isOwner && (
+          {!canManage && (
             <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <ShieldAlert className="w-3 h-3" /> Lecture seule
             </div>
@@ -776,11 +780,11 @@ const TontinePage = () => {
       )}
 
       {/* Non-owner banner */}
-      {!isOwner && (
+      {!canManage && (
         <div className="glass-card rounded-xl p-3 mb-3 border border-border flex items-start gap-2">
           <ShieldAlert className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
-            Seul le créateur de cette tontine peut effectuer des actions.
+            Vous êtes en lecture seule. Seuls le créateur et les co-gestionnaires peuvent effectuer des actions.
           </p>
         </div>
       )}
@@ -856,7 +860,7 @@ const TontinePage = () => {
 
       {/* ─── TAB: MEMBRES ─── */}
       {detailTab === "membres" && (<>
-        {isOwner && openCycle && isActive && statuses.some(s => s.status !== "paid") && (
+        {canManage && openCycle && isActive && statuses.some(s => s.status !== "paid") && (
           <button onClick={remindAllUnpaid}
             className="w-full glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-primary/30 mb-3 hover:bg-primary/5 transition-colors">
             <MessageCircle className="w-4 h-4 text-primary" />
@@ -868,7 +872,7 @@ const TontinePage = () => {
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-foreground">Membres ({visibleMembers.length})</p>
-          <Button size="sm" variant="outline" className="glass" disabled={!isOwner || isClosed}
+          <Button size="sm" variant="outline" className="glass" disabled={!canManage || isClosed}
             onClick={() => setAddMemberOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1" /> Membre
           </Button>
@@ -909,7 +913,7 @@ const TontinePage = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {s.member.phone && s.status !== "paid" && isOwner && isActive && openCycle && s.member.status !== "removed" && s.member.status !== "suspended" && (
+                  {s.member.phone && s.status !== "paid" && canManage && isActive && openCycle && s.member.status !== "removed" && s.member.status !== "suspended" && (
                     <button
                       onClick={() => sendWhatsAppTontine(selected!.name, s.member, "rappel_cotisation", {
                         montant: selected!.contribution_amount,
@@ -928,13 +932,13 @@ const TontinePage = () => {
                     ) : (
                       <button
                         onClick={() => openPayModal(s.member)}
-                        disabled={!isOwner || !isActive}
+                        disabled={!canManage || !isActive}
                         className="gradient-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
                         + Payer
                       </button>
                     )
                   )}
-                  {isOwner && (
+                  {canManage && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -967,7 +971,7 @@ const TontinePage = () => {
                   )}
                 </p>
               </div>
-              {isOwner && (
+              {canManage && (
                 <button
                   onClick={() => { setActionMember(m); setMemberActionOpen(true); loadMemberHistory(m.id); }}
                   className="p-1.5 rounded-lg bg-secondary hover:bg-muted transition-colors">
@@ -980,7 +984,7 @@ const TontinePage = () => {
           )}
         </div>
 
-        {openCycle && isOwner && isActive && (
+        {openCycle && canManage && isActive && (
           <Button onClick={closeCycle} variant="glass" className="w-full mb-4">
             <Lock className="w-4 h-4 mr-2" /> Clôturer ce cycle
           </Button>
@@ -1165,7 +1169,7 @@ const TontinePage = () => {
 
               <div className="space-y-2">
                 {/* Annuler la cotisation de ce cycle */}
-                {statuses.find(s => s.member.id === actionMember.id)?.status === "paid" && isOwner && openCycle && (
+                {statuses.find(s => s.member.id === actionMember.id)?.status === "paid" && canManage && openCycle && (
                   <button
                     onClick={() => cancelMemberPayment(actionMember)}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-yellow-500/20 text-left">
@@ -1180,7 +1184,7 @@ const TontinePage = () => {
                 )}
 
                 {/* Rappel WhatsApp */}
-                {actionMember.phone && isOwner && isActive && openCycle && actionMember.status !== "removed" && (
+                {actionMember.phone && canManage && isActive && openCycle && actionMember.status !== "removed" && (
                   <button
                     onClick={async () => {
                       await sendWhatsAppTontine(selected!.name, actionMember, "rappel_cotisation", {
@@ -1203,7 +1207,7 @@ const TontinePage = () => {
                 )}
 
                 {/* Suspendre temporairement */}
-                {(actionMember.status === "active" || !actionMember.status) && isOwner && (
+                {(actionMember.status === "active" || !actionMember.status) && canManage && (
                   <button
                     onClick={async () => {
                       const ok = await performMemberAction("suspended", actionMember, "suspended");
@@ -1224,7 +1228,7 @@ const TontinePage = () => {
                 )}
 
                 {/* Réactiver */}
-                {actionMember.status === "suspended" && isOwner && (
+                {actionMember.status === "suspended" && canManage && (
                   <button
                     onClick={async () => {
                       const ok = await performMemberAction("active", actionMember, "reactivated");
@@ -1245,7 +1249,7 @@ const TontinePage = () => {
                 )}
 
                 {/* Réintégrer si retiré */}
-                {actionMember.status === "removed" && isOwner && (
+                {actionMember.status === "removed" && canManage && (
                   <button
                     onClick={async () => {
                       const ok = await performMemberAction("active", actionMember, "reinstated");
@@ -1266,7 +1270,7 @@ const TontinePage = () => {
                 )}
 
                 {/* Retirer définitivement (avec confirmation) */}
-                {actionMember.status !== "removed" && isOwner && (
+                {actionMember.status !== "removed" && canManage && (
                   <button
                     onClick={() => setShowRemoveConfirm(true)}
                     className="w-full flex items-center gap-3 p-4 rounded-xl glass-card border border-destructive/20 text-left">
