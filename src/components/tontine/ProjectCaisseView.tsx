@@ -647,6 +647,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   )}
                 </div>
               );
+            });
             })()}
           </div>
         </div>
