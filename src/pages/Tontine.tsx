@@ -780,11 +780,11 @@ const TontinePage = () => {
       )}
 
       {/* Non-owner banner */}
-      {!isOwner && (
+      {!canManage && (
         <div className="glass-card rounded-xl p-3 mb-3 border border-border flex items-start gap-2">
           <ShieldAlert className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
-            Seul le créateur de cette tontine peut effectuer des actions.
+            Vous êtes en lecture seule. Seuls le créateur et les co-gestionnaires peuvent effectuer des actions.
           </p>
         </div>
       )}
