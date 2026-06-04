@@ -311,6 +311,10 @@ const TontinePage = () => {
 
   const confirmPayment = async () => {
     if (!payMember || !openCycle || saving) return;
+    if (!canManage) {
+      toast({ title: "Action réservée aux gestionnaires", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from("tontine_payments").insert({
