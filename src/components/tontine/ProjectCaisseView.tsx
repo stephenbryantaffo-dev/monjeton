@@ -56,9 +56,18 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [cycle, setCycle] = useState<TontineCycle | null>(null);
   const [payments, setPayments] = useState<TontinePayment[]>([]);
   const [expenses, setExpenses] = useState<TontineExpense[]>([]);
+  const [expenseItems, setExpenseItems] = useState<any[]>([]);
   const [collaborators, setCollaborators] = useState<CollabRow[]>([]);
   const [loadedRole, setLoadedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Expense items (postes) UI
+  const [itemsViewOpen, setItemsViewOpen] = useState(false);
+  const [newItemLabel, setNewItemLabel] = useState("");
+  const [newItemPlanned, setNewItemPlanned] = useState("");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemLabel, setEditItemLabel] = useState("");
+  const [editItemPlanned, setEditItemPlanned] = useState("");
 
   const currentRole = currentRoleProp || loadedRole || (tontine.user_id === user?.id ? "owner" : "viewer");
   const isOwner = currentRole === "owner";
