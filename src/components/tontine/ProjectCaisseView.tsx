@@ -551,7 +551,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               const initial = (c.full_name || c.email || "?").trim().charAt(0).toUpperCase();
               const isMe = c.user_id === user?.id;
               return (
-                <div key={c.user_id} className="flex items-center gap-2 glass rounded-full pl-1 pr-2.5 py-1 border border-border">
+                <div key={c.user_id} className="flex items-center gap-1.5 glass rounded-full pl-1 pr-1.5 py-1 border border-border">
                   <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
                     <span className="text-[10px] font-bold text-primary-foreground">{initial}</span>
                   </div>
@@ -561,6 +561,41 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full ${ri.cls}`}>
                     <Icon className="w-2.5 h-2.5" /> {ri.label}
                   </span>
+                  {canManage && !isMe && c.role !== "owner" && (
+                    <>
+                      {c.role === "viewer" ? (
+                        <button
+                          title="Promouvoir co-gestionnaire"
+                          disabled={saving}
+                          onClick={() => changeCollabRole(c.user_id, "manager")}
+                          className="text-muted-foreground hover:text-blue-400 p-1 disabled:opacity-50"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                      ) : c.role === "manager" ? (
+                        <button
+                          title="Passer observateur"
+                          disabled={saving}
+                          onClick={() => changeCollabRole(c.user_id, "viewer")}
+                          className="text-muted-foreground hover:text-amber-400 p-1 disabled:opacity-50"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      ) : null}
+                      <ConfirmDeleteDialog
+                        onConfirm={() => removeCollaborator(c.user_id)}
+                        title={`Retirer ${display} de la caisse ?`}
+                        description="Il n'aura plus accès à cette caisse."
+                      >
+                        <button
+                          title="Retirer"
+                          className="text-muted-foreground hover:text-destructive p-1"
+                        >
+                          <UserMinus className="w-3 h-3" />
+                        </button>
+                      </ConfirmDeleteDialog>
+                    </>
+                  )}
                 </div>
               );
             })}
