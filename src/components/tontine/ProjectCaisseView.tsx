@@ -149,6 +149,23 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    if (!tontine?.id) return;
+    const channel = supabase
+      .channel(`caisse-${tontine.id}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_payments" },
+        () => load())
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_members", filter: `tontine_id=eq.${tontine.id}` },
+        () => load())
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_expenses", filter: `tontine_id=eq.${tontine.id}` },
+        () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tontine?.id, load]);
+
   // ─── Computed totals ───
   const recettes = useMemo(() => payments.reduce((s, p) => s + Number(p.amount_paid), 0), [payments]);
   const depenses = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount), 0), [expenses]);
