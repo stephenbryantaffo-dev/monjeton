@@ -370,6 +370,46 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     }
   };
 
+  const removeMember = async (memberId: string) => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_members" as any).delete().eq("id", memberId);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      if (cycle) await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: "Membre retiré ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const changeCollabRole = async (collabUserId: string, newRole: "manager" | "viewer") => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("caisse_collaborators" as any)
+        .update({ role: newRole })
+        .eq("caisse_id", tontine.id)
+        .eq("user_id", collabUserId);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Rôle mis à jour ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const removeCollaborator = async (collabUserId: string) => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("caisse_collaborators" as any)
+        .delete()
+        .eq("caisse_id", tontine.id)
+        .eq("user_id", collabUserId);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Collaborateur retiré ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
   const deletePayment = async (paymentId: string) => {
     if (saving || !cycle) return;
     setSaving(true);
