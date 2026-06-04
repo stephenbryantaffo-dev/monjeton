@@ -2518,6 +2518,10 @@ export type Database = {
         Args: { p_contribution: number; p_cycle_id: string }
         Returns: undefined
       }
+      transfer_caisse_ownership: {
+        Args: { _caisse_id: string; _new_owner: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
