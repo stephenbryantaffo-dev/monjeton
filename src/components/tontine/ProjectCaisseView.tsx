@@ -917,6 +917,147 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         caisseId={tontine.id}
         caisseName={tontine.name}
       />
+
+      {/* ─── Postes de dépense Dialog ─── */}
+      <Dialog open={itemsViewOpen} onOpenChange={(o) => { setItemsViewOpen(o); if (!o) { setEditingItemId(null); } }}>
+        <DialogContent className="glass-card border-border max-w-2xl max-h-[90vh] overflow-y-auto pb-28">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="w-5 h-5 text-primary" /> Postes de dépense
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 mt-2">
+            {canManage && (
+              <div className="glass rounded-xl p-3 space-y-2 border border-border">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5 text-primary" /> Ajouter un poste
+                </p>
+                <Input
+                  value={newItemLabel}
+                  onChange={(e) => setNewItemLabel(e.target.value)}
+                  placeholder="Nom du poste (ex: Salle, Traiteur…)"
+                  className="glass"
+                />
+                <MoneyInput
+                  value={newItemPlanned}
+                  onChange={(n) => setNewItemPlanned(n ? String(n) : "")}
+                  showCurrency={false}
+                  className="[&>input]:glass"
+                />
+                <Button
+                  onClick={addExpenseItem}
+                  disabled={saving || !newItemLabel.trim()}
+                  className="w-full"
+                  size="sm"
+                >
+                  {saving ? "Enregistrement…" : "Ajouter le poste"}
+                </Button>
+              </div>
+            )}
+
+            {expenseItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Aucun poste pour l'instant. Ajoute la salle, la déco, le traiteur…
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {expenseItems.map((it) => {
+                  const planned = Number(it.planned_amount || 0);
+                  const paid = paidByItem[it.id] || 0;
+                  const pct = planned > 0 ? Math.min(100, Math.round((paid / planned) * 100)) : (paid > 0 ? 100 : 0);
+                  const solde = planned >= paid;
+                  const reste = Math.max(planned - paid, 0);
+                  const isEditing = editingItemId === it.id;
+                  return (
+                    <div key={it.id} className="glass-card rounded-xl p-3">
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editItemLabel}
+                            onChange={(e) => setEditItemLabel(e.target.value)}
+                            placeholder="Nom du poste"
+                            className="glass"
+                          />
+                          <MoneyInput
+                            value={editItemPlanned}
+                            onChange={(n) => setEditItemPlanned(n ? String(n) : "")}
+                            showCurrency={false}
+                            className="[&>input]:glass"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 glass"
+                              onClick={() => setEditingItemId(null)}
+                            >Annuler</Button>
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={updateExpenseItem}
+                              disabled={saving || !editItemLabel.trim()}
+                            >Enregistrer</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-semibold text-foreground flex-1 truncate">{it.label}</p>
+                            {canManage && !isClosed && (
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button
+                                  className="text-muted-foreground hover:text-primary p-1"
+                                  onClick={() => startEditItem(it)}
+                                  title="Modifier"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <ConfirmDeleteDialog
+                                  onConfirm={() => deleteExpenseItem(it.id)}
+                                  title="Supprimer ce poste ?"
+                                  description="Les dépenses déjà enregistrées seront conservées (sans poste)."
+                                >
+                                  <button className="text-muted-foreground hover:text-destructive p-1" title="Supprimer">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </ConfirmDeleteDialog>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {fmt(paid)} / {fmt(planned)} FCFA
+                          </p>
+                          <Progress value={pct} className={`h-2 ${paid >= planned && planned > 0 ? "[&>div]:bg-emerald-500" : ""}`} />
+                          <p className={`text-xs mt-1.5 font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                            {planned > 0 && paid >= planned
+                              ? "✅ Soldé"
+                              : `Reste : ${fmt(reste)} FCFA`}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {expenseItems.length > 0 && (
+              <div className="glass-card rounded-xl p-3 mt-3 border border-primary/30">
+                <p className="text-xs text-muted-foreground mb-1">Récapitulatif</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total prévu</span>
+                  <span className="font-bold text-foreground">{fmt(totalPlanned)} FCFA</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-muted-foreground">Total payé sur postes</span>
+                  <span className="font-bold text-emerald-400">{fmt(totalPaidOnItems)} FCFA</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
