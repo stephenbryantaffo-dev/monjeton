@@ -130,7 +130,7 @@ Screen.Content = function ScreenContent({
 
   const bottomPadding =
     (hasBottomNav ? BOTTOM_NAV_HEIGHT : 0) +
-    (hasStickyAction ? STICKY_ACTION_MIN_HEIGHT : 0) +
+    (hasStickyAction ? STICKY_ACTION_MIN_HEIGHT + 14 : 0) +
     16;
 
   return (
