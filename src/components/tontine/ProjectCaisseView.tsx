@@ -208,23 +208,28 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const addMember = async () => {
-    if (!newMemberName.trim() || !canManage) return;
-    const { error } = await supabase.from("tontine_members" as any).insert({
-      tontine_id: tontine.id,
-      name: newMemberName.trim(),
-      phone: newMemberPhone.trim() || null,
-      is_owner: false,
-    });
-    if (error) {
-      console.error("Add project member error:", error);
-      toast({ title: "Ajout membre impossible", description: error.message, variant: "destructive" });
-      return;
+    if (!newMemberName.trim() || !canManage || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_members" as any).insert({
+        tontine_id: tontine.id,
+        name: newMemberName.trim(),
+        phone: newMemberPhone.trim() || null,
+        is_owner: false,
+      });
+      if (error) {
+        console.error("Add project member error:", error);
+        toast({ title: "Ajout membre impossible", description: error.message, variant: "destructive" });
+        return;
+      }
+      setNewMemberName("");
+      setNewMemberPhone("");
+      setAddMemberOpen(false);
+      toast({ title: `${newMemberName.trim()} ajouté ✅` });
+      await load();
+    } finally {
+      setSaving(false);
     }
-    setNewMemberName("");
-    setNewMemberPhone("");
-    setAddMemberOpen(false);
-    toast({ title: `${newMemberName.trim()} ajouté ✅` });
-    await load();
   };
 
 
