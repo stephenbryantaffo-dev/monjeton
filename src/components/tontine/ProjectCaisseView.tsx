@@ -214,6 +214,15 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     });
     return map;
   }, [expenses]);
+  const collectedByItem = useMemo(() => {
+    const map: Record<string, number> = {};
+    payments.forEach((p: any) => {
+      if (p.expense_item_id) {
+        map[p.expense_item_id] = (map[p.expense_item_id] || 0) + Number(p.amount_paid);
+      }
+    });
+    return map;
+  }, [payments]);
   const totalPlanned = useMemo(
     () => expenseItems.reduce((s, it) => s + Number(it.planned_amount || 0), 0),
     [expenseItems]
