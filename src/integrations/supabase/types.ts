@@ -1919,6 +1919,7 @@ export type Database = {
           amount_paid: number
           created_at: string
           cycle_id: string
+          expense_item_id: string | null
           id: string
           member_id: string
           note: string | null
@@ -1928,6 +1929,7 @@ export type Database = {
           amount_paid?: number
           created_at?: string
           cycle_id: string
+          expense_item_id?: string | null
           id?: string
           member_id: string
           note?: string | null
@@ -1937,6 +1939,7 @@ export type Database = {
           amount_paid?: number
           created_at?: string
           cycle_id?: string
+          expense_item_id?: string | null
           id?: string
           member_id?: string
           note?: string | null
@@ -1948,6 +1951,13 @@ export type Database = {
             columns: ["cycle_id"]
             isOneToOne: false
             referencedRelation: "tontine_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tontine_payments_expense_item_id_fkey"
+            columns: ["expense_item_id"]
+            isOneToOne: false
+            referencedRelation: "tontine_expense_items"
             referencedColumns: ["id"]
           },
           {
