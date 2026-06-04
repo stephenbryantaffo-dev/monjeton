@@ -546,7 +546,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={expNote} onChange={(e) => setExpNote(e.target.value)} className="glass" />
             </div>
-            <Button onClick={addExpense} className="w-full">Enregistrer la dépense</Button>
+            <Button onClick={addExpense} disabled={saving || !expLabel.trim() || Number(expAmount) <= 0} className="w-full">
+              {saving ? "Enregistrement…" : "Enregistrer la dépense"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
