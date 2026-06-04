@@ -179,16 +179,21 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const addExpense = async () => {
-    if (!expLabel.trim() || Number(expAmount) <= 0) return;
-    const { error } = await supabase.from("tontine_expenses" as any).insert({
-      tontine_id: tontine.id, label: expLabel.trim(), amount: Number(expAmount),
-      category: expCat, beneficiaire: expBenef || null, expense_date: expDate, note: expNote || null,
-    });
-    if (error) { toast({ title: "Erreur dépense", description: error.message, variant: "destructive" }); return; }
-    toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
-    setExpOpen(false);
-    setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote("");
-    load();
+    if (!expLabel.trim() || Number(expAmount) <= 0 || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expenses" as any).insert({
+        tontine_id: tontine.id, label: expLabel.trim(), amount: Number(expAmount),
+        category: expCat, beneficiaire: expBenef || null, expense_date: expDate, note: expNote || null,
+      });
+      if (error) { toast({ title: "Erreur dépense", description: error.message, variant: "destructive" }); return; }
+      toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
+      setExpOpen(false);
+      setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote("");
+      await load();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteExpense = async (id: string) => {
