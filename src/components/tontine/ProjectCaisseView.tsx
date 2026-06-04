@@ -484,7 +484,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   {payments.filter(p => p.member_id === m.id).map(p => (
                     <div key={p.id} className="flex items-center gap-1">
                       <span className="text-[10px] text-muted-foreground">
-                        {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}
+                        {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}{(p as any).note ? ` · ${(p as any).note}` : ""}
                       </span>
                       {canManage && !isClosed && (
                         <>
