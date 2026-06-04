@@ -924,9 +924,19 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {/* ─── Historique des cotisations ─── */}
       {payments.length > 0 && (
         <>
-          <p className="text-sm font-bold text-foreground mb-2 mt-4 flex items-center gap-1">
-            <FileText className="w-4 h-4" /> Historique des cotisations ({payments.length})
-          </p>
+          <button
+            onClick={() => setHistoryOpen((v) => !v)}
+            className="w-full text-sm font-bold text-foreground mb-2 mt-4 flex items-center gap-1"
+          >
+            {historyOpen ? (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            )}
+            <FileText className="w-4 h-4" />
+            Historique des cotisations ({payments.length})
+          </button>
+          {historyOpen && (
           <div className="space-y-2 mb-4">
             {[...payments]
               .sort((a, b) => {
