@@ -572,6 +572,22 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         </DialogContent>
       </Dialog>
 
+      {/* ─── Edit Payment Dialog ─── */}
+      <Dialog open={editPayOpen} onOpenChange={(o) => { if (!o) { setEditPayOpen(false); setEditingPayment(null); } }}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader><DialogTitle>Modifier la cotisation</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Nouveau montant (FCFA)</label>
+              <MoneyInput value={editPayAmount} onChange={(n) => setEditPayAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:glass" />
+            </div>
+            <Button onClick={updatePayment} disabled={saving || !editPayAmount || Number(editPayAmount) <= 0} className="w-full">
+              {saving ? "Enregistrement…" : "Enregistrer la modification"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ─── Expense Dialog ─── */}
       <Dialog open={expOpen} onOpenChange={setExpOpen}>
         <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
