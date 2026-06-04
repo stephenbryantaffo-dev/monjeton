@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
   TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
+  Search, ArrowUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +103,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [expNote, setExpNote] = useState("");
   const [expItemId, setExpItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+
+  // Members search & sort
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberSort, setMemberSort] = useState<"name" | "paid">("name");
+
+  // Collaborators search & sort
+  const [collabSearch, setCollabSearch] = useState("");
+  const [collabSort, setCollabSort] = useState<"name" | "role">("name");
 
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -541,10 +550,50 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {collaborators.length > 0 && (
         <div className="glass-card rounded-2xl p-3 mb-4">
           <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par ({collaborators.length})
+            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par
           </p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={collabSearch}
+                onChange={(e) => setCollabSearch(e.target.value)}
+                placeholder="Rechercher…"
+                className="glass pl-8 text-xs h-8"
+              />
+            </div>
+            <button
+              onClick={() => setCollabSort(s => s === "name" ? "role" : "name")}
+              className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground glass rounded-lg px-2 py-1.5 border border-border"
+              title={collabSort === "name" ? "Trier par rôle" : "Trier par nom"}
+            >
+              <ArrowUpDown className="w-3 h-3" />
+              {collabSort === "name" ? "Nom" : "Rôle"}
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {collaborators.map((c) => {
+            {(() => {
+              const query = collabSearch.trim().toLowerCase();
+              let list = collaborators.slice();
+              if (query) {
+                list = list.filter(c =>
+                  (c.full_name || "").toLowerCase().includes(query) ||
+                  (c.email || "").toLowerCase().includes(query) ||
+                  (ROLE_BADGE[c.role]?.label || "").toLowerCase().includes(query)
+                );
+              }
+              const roleOrder: Record<string, number> = { owner: 0, manager: 1, viewer: 2 };
+              list.sort((a, b) => {
+                if (collabSort === "role") {
+                  const ra = roleOrder[a.role] ?? 3;
+                  const rb = roleOrder[b.role] ?? 3;
+                  if (ra !== rb) return ra - rb;
+                }
+                const na = (a.full_name || a.email || "").toLowerCase();
+                const nb = (b.full_name || b.email || "").toLowerCase();
+                return na.localeCompare(nb);
+              });
+              return list.map((c) => {
               const ri = ROLE_BADGE[c.role] || ROLE_BADGE.viewer;
               const Icon = ri.icon;
               const display = c.full_name || c.email || "Utilisateur";
@@ -591,14 +640,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           title="Retirer"
                           className="text-muted-foreground hover:text-destructive p-1"
                         >
-                          <UserMinus className="w-3 h-3" />
+                      <UserMinus className="w-3 h-3" />
                         </button>
                       </ConfirmDeleteDialog>
                     </>
                   )}
                 </div>
               );
-            })}
+            })()}
           </div>
         </div>
       )}
@@ -668,8 +717,41 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           </Button>
         )}
       </div>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="relative flex-1">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            placeholder="Rechercher un membre…"
+            className="glass pl-8 text-xs h-8"
+          />
+        </div>
+        <button
+          onClick={() => setMemberSort(s => s === "name" ? "paid" : "name")}
+          className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground glass rounded-lg px-2 py-1.5 border border-border"
+          title={memberSort === "name" ? "Trier par cotisation" : "Trier par nom"}
+        >
+          <ArrowUpDown className="w-3 h-3" />
+          {memberSort === "name" ? "Nom" : "Cotisé"}
+        </button>
+      </div>
       <div className="space-y-2 mb-4">
-        {members.map((m, i) => {
+        {(() => {
+          const query = memberSearch.trim().toLowerCase();
+          let list = members.slice();
+          if (query) {
+            list = list.filter(m => m.name.toLowerCase().includes(query));
+          }
+          list.sort((a, b) => {
+            if (memberSort === "paid") {
+              const pa = memberPaid(a.id);
+              const pb = memberPaid(b.id);
+              if (pb !== pa) return pb - pa;
+            }
+            return a.name.localeCompare(b.name);
+          });
+          return list.map((m, i) => {
           const paid = memberPaid(m.id);
           const ok = expectedPerMember > 0 && paid >= expectedPerMember;
           const clickable = !isClosed && canManage;
@@ -739,8 +821,18 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               </div>
             </motion.div>
           );
-        })}
-        {members.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Aucun membre — ajoutez-en pour commencer</p>}
+        })()
+        }
+        {(() => {
+          const query = memberSearch.trim().toLowerCase();
+          const list = query ? members.filter(m => m.name.toLowerCase().includes(query)) : members;
+          if (list.length === 0) {
+            return query
+              ? <p className="text-xs text-muted-foreground text-center py-4">Aucun membre ne correspond à « {memberSearch} »</p>
+              : <p className="text-xs text-muted-foreground text-center py-4">Aucun membre — ajoutez-en pour commencer</p>;
+          }
+          return null;
+        })()}
       </div>
 
       {/* ─── Expenses list ─── */}
