@@ -322,9 +322,14 @@ const TontinePage = () => {
       } as any);
       if (error) throw error;
 
-      const { data: allP } = await supabase.from("tontine_payments").select("amount_paid").eq("cycle_id", openCycle.id);
-      const newTotal = (allP || []).reduce((s: number, p: any) => s + Number(p.amount_paid), 0);
-      await supabase.from("tontine_cycles").update({ total_collected: newTotal } as any).eq("id", openCycle.id);
+      const { error: recalcError } = await supabase.rpc(
+        "recalculate_cycle_collected" as any,
+        { p_cycle_id: openCycle.id } as any
+      );
+      if (recalcError) {
+        toast({ title: "Erreur de recalcul", description: recalcError.message, variant: "destructive" });
+        return;
+      }
 
       toast({ title: `Paiement de ${payMember.name} enregistré ✅` });
       setPayModalOpen(false);
