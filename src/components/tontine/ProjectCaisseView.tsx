@@ -114,10 +114,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [mRes, cRes, eRes, collabRes] = await Promise.all([
+    const [mRes, cRes, eRes, iRes, collabRes] = await Promise.all([
       supabase.from("tontine_members").select("*").eq("tontine_id", tontine.id),
       supabase.from("tontine_cycles").select("*").eq("tontine_id", tontine.id).order("cycle_number").limit(1),
       supabase.from("tontine_expenses" as any).select("*").eq("tontine_id", tontine.id).order("expense_date", { ascending: false }),
+      supabase.from("tontine_expense_items" as any).select("*").eq("tontine_id", tontine.id).order("created_at", { ascending: true }),
       supabase.from("caisse_collaborators" as any).select("user_id, role").eq("caisse_id", tontine.id),
     ]);
     const ms = (mRes.data || []) as unknown as TontineMember[];
@@ -125,6 +126,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     const cyc = ((cRes.data || [])[0] || null) as unknown as TontineCycle | null;
     setCycle(cyc);
     setExpenses(((eRes.data as any[]) || []) as TontineExpense[]);
+    setExpenseItems((iRes.data as any[]) || []);
     if (cyc) {
       const { data: pData } = await supabase.from("tontine_payments").select("*").eq("cycle_id", cyc.id);
       setPayments((pData || []) as unknown as TontinePayment[]);
