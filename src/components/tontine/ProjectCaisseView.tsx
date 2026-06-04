@@ -100,6 +100,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [expBenef, setExpBenef] = useState("");
   const [expDate, setExpDate] = useState(new Date().toISOString().split("T")[0]);
   const [expNote, setExpNote] = useState("");
+  const [expItemId, setExpItemId] = useState<string | null>(null);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -254,11 +256,12 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       const { error } = await supabase.from("tontine_expenses" as any).insert({
         tontine_id: tontine.id, label: expLabel.trim(), amount: Number(expAmount),
         category: expCat, beneficiaire: expBenef || null, expense_date: expDate, note: expNote || null,
-      });
+        expense_item_id: expItemId || null,
+      } as any);
       if (error) { toast({ title: "Erreur dépense", description: error.message, variant: "destructive" }); return; }
       toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
       setExpOpen(false);
-      setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote("");
+      setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote(""); setExpItemId(null);
       await load();
     } finally {
       setSaving(false);
@@ -657,7 +660,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             <TrendingDown className="w-4 h-4" /> Dépenses
           </p>
           <div className="space-y-2 mb-4">
-            {expenses.map((e) => (
+            {expenses.map((e) => {
+              const itemLabel = (e as any).expense_item_id
+                ? expenseItems.find(i => i.id === (e as any).expense_item_id)?.label
+                : null;
+              return (
               <div key={e.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{e.label}</p>
@@ -665,6 +672,13 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                     {new Date(e.expense_date).toLocaleDateString("fr-FR")}
                     {e.beneficiaire && ` · ${e.beneficiaire}`}
                   </p>
+                  {itemLabel ? (
+                    <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                      📌 {itemLabel}
+                    </span>
+                  ) : (
+                    <span className="inline-block mt-1 text-[10px] text-muted-foreground/70">hors poste</span>
+                  )}
                 </div>
                 <span className="text-sm font-bold text-destructive flex-shrink-0">-{fmt(Number(e.amount))}</span>
                 {canManage && !isClosed && (
@@ -675,7 +689,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   </ConfirmDeleteDialog>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -796,7 +811,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       </Dialog>
 
       {/* ─── Expense Dialog ─── */}
-      <Dialog open={expOpen} onOpenChange={setExpOpen}>
+      <Dialog open={expOpen} onOpenChange={(o) => { setExpOpen(o); if (!o) setExpItemId(null); }}>
         <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nouvelle dépense</DialogTitle></DialogHeader>
           <div className="space-y-3">
@@ -830,6 +845,25 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={expNote} onChange={(e) => setExpNote(e.target.value)} className="glass" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Rattacher à un poste (optionnel)</label>
+              <select
+                value={expItemId || ""}
+                onChange={(e) => setExpItemId(e.target.value || null)}
+                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Aucun poste / hors poste</option>
+                {expenseItems.map((it) => {
+                  const planned = Number(it.planned_amount || 0);
+                  const paid = paidByItem[it.id] || 0;
+                  return (
+                    <option key={it.id} value={it.id}>
+                      {it.label} ({fmt(paid)}/{fmt(planned)})
+                    </option>
+                  );
+                })}
+              </select>
             </div>
             <Button onClick={addExpense} disabled={saving || !expLabel.trim() || Number(expAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la dépense"}
@@ -1034,6 +1068,33 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               ? "✅ Soldé"
                               : `Reste : ${fmt(reste)} FCFA`}
                           </p>
+                          {(() => {
+                            const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
+                            if (linked.length === 0) return null;
+                            const expanded = expandedItemId === it.id;
+                            return (
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => setExpandedItemId(expanded ? null : it.id)}
+                                  className="text-[11px] text-primary hover:underline"
+                                >
+                                  {expanded ? "▾ Masquer" : "▸ Voir"} les dépenses ({linked.length})
+                                </button>
+                                {expanded && (
+                                  <div className="mt-2 space-y-1 pl-2 border-l border-border">
+                                    {linked.map((e: any) => (
+                                      <div key={e.id} className="flex items-center justify-between text-xs">
+                                        <span className="truncate text-foreground/80">
+                                          {new Date(e.expense_date).toLocaleDateString("fr-FR")} · {e.label}
+                                        </span>
+                                        <span className="text-destructive font-semibold ml-2 flex-shrink-0">-{fmt(Number(e.amount))}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
                     </div>
