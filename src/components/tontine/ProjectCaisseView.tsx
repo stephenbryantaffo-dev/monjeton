@@ -100,6 +100,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [expBenef, setExpBenef] = useState("");
   const [expDate, setExpDate] = useState(new Date().toISOString().split("T")[0]);
   const [expNote, setExpNote] = useState("");
+  const [expItemId, setExpItemId] = useState<string | null>(null);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
