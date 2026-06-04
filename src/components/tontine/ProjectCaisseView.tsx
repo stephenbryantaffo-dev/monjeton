@@ -350,7 +350,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   if (loading) return <p className="text-center text-muted-foreground py-12">Chargement...</p>;
 
   return (
-    <div>
+    <div className="pb-28">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
         <ChevronLeft className="w-4 h-4" /> Retour
       </button>
