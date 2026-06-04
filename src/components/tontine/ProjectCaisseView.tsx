@@ -250,6 +250,23 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const cloturer = async () => {
+  const updatePayment = async () => {
+    if (saving || !cycle || !editingPayment) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_payments" as any)
+        .update({ amount_paid: Number(editPayAmount) })
+        .eq("id", editingPayment.id);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: "Cotisation modifiée ✅" });
+      setEditPayOpen(false);
+      setEditingPayment(null);
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const cloturer = async () => {
     if (!isOwner) return;
     await supabase.from("tontines" as any).update({ is_closed: true, status: "closed" } as any).eq("id", tontine.id);
     if (cycle) await supabase.from("tontine_cycles" as any).update({ status: "closed" } as any).eq("id", cycle.id);
