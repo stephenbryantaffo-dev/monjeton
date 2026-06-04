@@ -946,10 +946,19 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* Clôture button */}
       {isOwner && !isClosed && (
-        <Button onClick={() => setClotureOpen(true)} variant="outline" className="w-full glass border-destructive/30 text-destructive">
+        <Button onClick={() => setClotureOpen(true)} variant="outline" className="w-full glass border-destructive/30 text-destructive mb-2">
           <Lock className="w-4 h-4 mr-1" /> Clôturer le projet
         </Button>
       )}
+
+      {/* Quitter la caisse (tous les collaborateurs) */}
+      <LeaveCaisseButton
+        caisseId={tontine.id}
+        isOwner={isOwner}
+        onLeft={onBack}
+        className="w-full"
+      />
+
 
       {/* ─── Payment Dialog ─── */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
