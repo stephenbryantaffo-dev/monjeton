@@ -1022,6 +1022,19 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
               <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Affecter à un poste (optionnel)</label>
+              <select
+                value={payItemId || ""}
+                onChange={(e) => setPayItemId(e.target.value || null)}
+                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Pot commun (non affecté)</option>
+                {expenseItems.map((it) => (
+                  <option key={it.id} value={it.id}>{it.label}</option>
+                ))}
+              </select>
+            </div>
             <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
             </Button>
