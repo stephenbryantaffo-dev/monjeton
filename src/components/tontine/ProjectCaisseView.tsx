@@ -947,6 +947,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                         {p.payment_date ? new Date(p.payment_date).toLocaleDateString("fr-FR") : "—"}
                         {note ? ` · ${note}` : ""}
                       </p>
+                      {(p as any).expense_item_id && (() => {
+                        const lbl = expenseItems.find(i => i.id === (p as any).expense_item_id)?.label;
+                        return lbl ? (
+                          <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                            🎯 {lbl}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                     {canManage && !isClosed && (
                       <div className="flex items-center gap-1 flex-shrink-0">
