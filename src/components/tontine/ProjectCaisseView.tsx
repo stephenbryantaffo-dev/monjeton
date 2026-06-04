@@ -191,6 +191,25 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const memberPaid = (mid: string) => payments.filter(p => p.member_id === mid).reduce((s, p) => s + Number(p.amount_paid), 0);
   const expectedPerMember = Number(tontine.contribution_per_member || tontine.contribution_amount || 0);
 
+  const paidByItem = useMemo(() => {
+    const map: Record<string, number> = {};
+    expenses.forEach((e: any) => {
+      if (e.expense_item_id) {
+        map[e.expense_item_id] = (map[e.expense_item_id] || 0) + Number(e.amount);
+      }
+    });
+    return map;
+  }, [expenses]);
+  const totalPlanned = useMemo(
+    () => expenseItems.reduce((s, it) => s + Number(it.planned_amount || 0), 0),
+    [expenseItems]
+  );
+  const totalPaidOnItems = useMemo(
+    () => Object.values(paidByItem).reduce((s, v) => s + v, 0),
+    [paidByItem]
+  );
+
+
   // ─── Actions ───
   const openPay = (m: TontineMember) => {
     setPayMember(m);
