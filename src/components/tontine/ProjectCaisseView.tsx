@@ -1394,6 +1394,17 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               {finance ? "✅ Financé" : `À collecter : ${fmt(resteCollect)}`}
                             </p>
                           </div>
+                          {canManage && !isClosed && collected > paid && (planned === 0 || paid < planned) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full mt-2 h-8 text-xs glass border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                              onClick={() => openPayItem(it)}
+                              disabled={saving}
+                            >
+                              Marquer comme payé
+                            </Button>
+                          )}
                           {(() => {
                             const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
                             if (linked.length === 0) return null;
