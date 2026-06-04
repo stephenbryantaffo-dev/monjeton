@@ -159,6 +159,28 @@ const TontinePage = () => {
 
   useEffect(() => { loadTontines(); }, [loadTontines]);
 
+  // Global realtime: when current user is added/removed/role-changed as collaborator anywhere,
+  // refresh the list so removed caisses disappear immediately (and possibly redirect).
+  useEffect(() => {
+    if (!user?.id) return;
+    const ch = supabase
+      .channel(`my-collabs-${user.id}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "caisse_collaborators", filter: `user_id=eq.${user.id}` },
+        () => { loadTontines(); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, loadTontines]);
+
+  // If user is currently viewing a caisse they just lost access to, kick them back to the list.
+  useEffect(() => {
+    if (loading) return;
+    if (selectedId && !tontines.find(t => t.id === selectedId)) {
+      setSelectedId(null);
+      toast({ title: "Accès retiré", description: "Tu n'as plus accès à cette caisse.", variant: "destructive" });
+    }
+  }, [tontines, selectedId, loading]);
+
   useEffect(() => {
     if (!selectedId || selected?.caisse_type === "project") return;
     const channel = supabase
