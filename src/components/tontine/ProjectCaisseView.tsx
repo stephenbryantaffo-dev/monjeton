@@ -560,7 +560,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           <div className="space-y-3">
             <Input value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} placeholder="Nom" className="glass" />
             <Input value={newMemberPhone} onChange={(e) => setNewMemberPhone(e.target.value)} placeholder="Téléphone (optionnel)" className="glass" />
-            <Button onClick={addMember} className="w-full">Ajouter</Button>
+            <Button onClick={addMember} disabled={saving || !newMemberName.trim()} className="w-full">
+              {saving ? "Enregistrement…" : "Ajouter"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
