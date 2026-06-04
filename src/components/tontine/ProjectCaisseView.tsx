@@ -483,14 +483,27 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                         {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}
                       </span>
                       {canManage && !isClosed && (
-                        <ConfirmDeleteDialog
-                          onConfirm={() => deletePayment(p.id)}
-                          title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
-                        >
-                          <button className="text-muted-foreground hover:text-destructive p-0.5" onClick={(e) => e.stopPropagation()}>
-                            <Trash2 className="w-3 h-3" />
+                        <>
+                          <button
+                            className="text-muted-foreground hover:text-primary p-0.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingPayment(p);
+                              setEditPayAmount(String(p.amount_paid));
+                              setEditPayOpen(true);
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
                           </button>
-                        </ConfirmDeleteDialog>
+                          <ConfirmDeleteDialog
+                            onConfirm={() => deletePayment(p.id)}
+                            title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
+                          >
+                            <button className="text-muted-foreground hover:text-destructive p-0.5" onClick={(e) => e.stopPropagation()}>
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </ConfirmDeleteDialog>
+                        </>
                       )}
                     </div>
                   ))}
