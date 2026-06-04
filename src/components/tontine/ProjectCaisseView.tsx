@@ -104,6 +104,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [expItemId, setExpItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
+  // Members search & sort
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberSort, setMemberSort] = useState<"name" | "paid">("name");
+
+  // Collaborators search & sort
+  const [collabSearch, setCollabSearch] = useState("");
+  const [collabSort, setCollabSort] = useState<"name" | "role">("name");
+
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
