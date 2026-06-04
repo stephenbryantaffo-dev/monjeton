@@ -503,7 +503,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
               <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="glass" />
             </div>
-            <Button onClick={confirmPay} className="w-full">Enregistrer la cotisation</Button>
+            <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
+              {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
