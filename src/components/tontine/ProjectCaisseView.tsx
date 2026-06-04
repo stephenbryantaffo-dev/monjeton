@@ -249,7 +249,6 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     } finally { setSaving(false); }
   };
 
-  const cloturer = async () => {
   const updatePayment = async () => {
     if (saving || !cycle || !editingPayment) return;
     setSaving(true);
