@@ -495,13 +495,20 @@ const TontinePage = () => {
 
   const closeTontine = async () => {
     if (!selected || !isOwner) return;
+    const { error: closeError } = await supabase
+      .from("tontines")
+      .update({ status: "closed" } as any)
+      .eq("id", selected.id);
+    if (closeError) {
+      toast({ title: "Clôture impossible", description: closeError.message, variant: "destructive" });
+      return;
+    }
     for (const m of members) {
       if (m.phone) {
         await sendWhatsAppTontine(selected.name, m, "cloture", { tontineId: selected.id });
         await new Promise((r) => setTimeout(r, 600));
       }
     }
-    await supabase.from("tontines").update({ status: "closed" } as any).eq("id", selected.id);
     await logNotification({
       tontineId: selected.id, type: "cloture",
       message: `Tontine "${selected.name}" clôturée.`, canal: "systeme",
