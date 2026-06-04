@@ -717,8 +717,41 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           </Button>
         )}
       </div>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="relative flex-1">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            placeholder="Rechercher un membre…"
+            className="glass pl-8 text-xs h-8"
+          />
+        </div>
+        <button
+          onClick={() => setMemberSort(s => s === "name" ? "paid" : "name")}
+          className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground glass rounded-lg px-2 py-1.5 border border-border"
+          title={memberSort === "name" ? "Trier par cotisation" : "Trier par nom"}
+        >
+          <ArrowUpDown className="w-3 h-3" />
+          {memberSort === "name" ? "Nom" : "Cotisé"}
+        </button>
+      </div>
       <div className="space-y-2 mb-4">
-        {members.map((m, i) => {
+        {(() => {
+          const query = memberSearch.trim().toLowerCase();
+          let list = members.slice();
+          if (query) {
+            list = list.filter(m => m.name.toLowerCase().includes(query));
+          }
+          list.sort((a, b) => {
+            if (memberSort === "paid") {
+              const pa = memberPaid(a.id);
+              const pb = memberPaid(b.id);
+              if (pb !== pa) return pb - pa;
+            }
+            return a.name.localeCompare(b.name);
+          });
+          return list.map((m, i) => {
           const paid = memberPaid(m.id);
           const ok = expectedPerMember > 0 && paid >= expectedPerMember;
           const clickable = !isClosed && canManage;
