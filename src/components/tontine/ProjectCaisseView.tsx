@@ -1326,15 +1326,29 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               </div>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {fmt(paid)} / {fmt(planned)} FCFA
-                          </p>
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Collecté</p>
+                              <p className="text-xs font-semibold text-emerald-400">{fmt(collected)}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Payé</p>
+                              <p className="text-xs font-semibold text-destructive">{fmt(paid)}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Budget</p>
+                              <p className="text-xs font-semibold text-foreground">{fmt(planned)}</p>
+                            </div>
+                          </div>
                           <Progress value={pct} className={`h-2 ${paid >= planned && planned > 0 ? "[&>div]:bg-emerald-500" : ""}`} />
-                          <p className={`text-xs mt-1.5 font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
-                            {planned > 0 && paid >= planned
-                              ? "✅ Soldé"
-                              : `Reste : ${fmt(reste)} FCFA`}
-                          </p>
+                          <div className="flex items-center justify-between mt-1.5 gap-2">
+                            <p className={`text-[11px] font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                              {planned > 0 && paid >= planned ? "✅ Soldé" : `Reste à payer : ${fmt(reste)}`}
+                            </p>
+                            <p className={`text-[11px] font-medium ${finance ? "text-emerald-400" : "text-muted-foreground"}`}>
+                              {finance ? "✅ Financé" : `À collecter : ${fmt(resteCollect)}`}
+                            </p>
+                          </div>
                           {(() => {
                             const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
                             if (linked.length === 0) return null;
