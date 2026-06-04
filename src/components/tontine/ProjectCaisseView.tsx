@@ -647,6 +647,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   )}
                 </div>
               );
+            });
             })()}
           </div>
         </div>
@@ -821,7 +822,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               </div>
             </motion.div>
           );
-        })()
+          });
+          })()
         }
         {(() => {
           const query = memberSearch.trim().toLowerCase();
