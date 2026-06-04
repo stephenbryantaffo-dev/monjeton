@@ -364,8 +364,8 @@ const TontinePage = () => {
 
   const addMember = async () => {
     if (!newMemberName.trim() || !selected || addingMember) return;
-    if (!isOwner) {
-      toast({ title: "Action réservée au créateur", variant: "destructive" });
+    if (!canManage) {
+      toast({ title: "Action réservée aux gestionnaires", variant: "destructive" });
       return;
     }
     setAddingMember(true);
