@@ -721,6 +721,21 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                     </div>
                   ))}
                 </div>
+                {canManage && !isClosed && (
+                  <ConfirmDeleteDialog
+                    onConfirm={() => removeMember(m.id)}
+                    title={`Retirer ${m.name} de la liste ?`}
+                    description="Ses cotisations seront aussi supprimées."
+                  >
+                    <button
+                      className="text-muted-foreground hover:text-destructive p-1 flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Retirer ce membre"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </ConfirmDeleteDialog>
+                )}
               </div>
             </motion.div>
           );
