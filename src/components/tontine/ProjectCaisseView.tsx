@@ -660,7 +660,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             <TrendingDown className="w-4 h-4" /> Dépenses
           </p>
           <div className="space-y-2 mb-4">
-            {expenses.map((e) => (
+            {expenses.map((e) => {
+              const itemLabel = (e as any).expense_item_id
+                ? expenseItems.find(i => i.id === (e as any).expense_item_id)?.label
+                : null;
+              return (
               <div key={e.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{e.label}</p>
@@ -668,6 +672,13 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                     {new Date(e.expense_date).toLocaleDateString("fr-FR")}
                     {e.beneficiaire && ` · ${e.beneficiaire}`}
                   </p>
+                  {itemLabel ? (
+                    <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                      📌 {itemLabel}
+                    </span>
+                  ) : (
+                    <span className="inline-block mt-1 text-[10px] text-muted-foreground/70">hors poste</span>
+                  )}
                 </div>
                 <span className="text-sm font-bold text-destructive flex-shrink-0">-{fmt(Number(e.amount))}</span>
                 {canManage && !isClosed && (
@@ -678,7 +689,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   </ConfirmDeleteDialog>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
