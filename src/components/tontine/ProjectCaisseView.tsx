@@ -74,11 +74,13 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [payMember, setPayMember] = useState<TontineMember | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
+  const [payNote, setPayNote] = useState("");
 
   // Edit payment dialog
   const [editPayOpen, setEditPayOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<TontinePayment | null>(null);
   const [editPayAmount, setEditPayAmount] = useState("");
+  const [editPayNote, setEditPayNote] = useState("");
 
   // Expense dialog
   const [expOpen, setExpOpen] = useState(false);
@@ -162,6 +164,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     setPayMember(m);
     setPayAmount(String(expectedPerMember || ""));
     setPayDate(new Date().toISOString().split("T")[0]);
+    setPayNote("");
     setPayOpen(true);
   };
 
@@ -172,6 +175,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       const { error } = await supabase.from("tontine_payments").insert({
         cycle_id: cycle.id, member_id: payMember.id,
         amount_paid: Number(payAmount), payment_date: payDate,
+        note: payNote.trim() || null,
       } as any);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
@@ -254,7 +258,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     setSaving(true);
     try {
       const { error } = await supabase.from("tontine_payments" as any)
-        .update({ amount_paid: Number(editPayAmount) })
+        .update({ amount_paid: Number(editPayAmount), note: editPayNote.trim() || null })
         .eq("id", editingPayment.id);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
@@ -480,7 +484,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   {payments.filter(p => p.member_id === m.id).map(p => (
                     <div key={p.id} className="flex items-center gap-1">
                       <span className="text-[10px] text-muted-foreground">
-                        {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}
+                        {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}{(p as any).note ? ` · ${(p as any).note}` : ""}
                       </span>
                       {canManage && !isClosed && (
                         <>
@@ -490,6 +494,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               e.stopPropagation();
                               setEditingPayment(p);
                               setEditPayAmount(String(p.amount_paid));
+                              setEditPayNote(((p as any).note ?? "") as string);
                               setEditPayOpen(true);
                             }}
                           >
@@ -545,6 +550,70 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         </>
       )}
 
+      {/* ─── Historique des cotisations ─── */}
+      {payments.length > 0 && (
+        <>
+          <p className="text-sm font-bold text-foreground mb-2 mt-4 flex items-center gap-1">
+            <FileText className="w-4 h-4" /> Historique des cotisations ({payments.length})
+          </p>
+          <div className="space-y-2 mb-4">
+            {[...payments]
+              .sort((a, b) => {
+                const da = new Date(a.payment_date || 0).getTime();
+                const db = new Date(b.payment_date || 0).getTime();
+                return db - da;
+              })
+              .map((p) => {
+                const member = members.find(m => m.id === p.member_id);
+                const note = (p as any).note as string | null | undefined;
+                return (
+                  <div key={p.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-bold text-primary-foreground">
+                        {(member?.name || "?").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {member?.name || "Membre supprimé"} · <span className="text-emerald-400">{fmt(Number(p.amount_paid))} FCFA</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {p.payment_date ? new Date(p.payment_date).toLocaleDateString("fr-FR") : "—"}
+                        {note ? ` · ${note}` : ""}
+                      </p>
+                    </div>
+                    {canManage && !isClosed && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          className="text-muted-foreground hover:text-primary p-1"
+                          onClick={() => {
+                            setEditingPayment(p);
+                            setEditPayAmount(String(p.amount_paid));
+                            setEditPayNote(((p as any).note ?? "") as string);
+                            setEditPayOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <ConfirmDeleteDialog
+                          onConfirm={() => deletePayment(p.id)}
+                          title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
+                        >
+                          <button className="text-muted-foreground hover:text-destructive p-1">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </ConfirmDeleteDialog>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </>
+      )}
+
+
+
       {/* Clôture button */}
       {isOwner && !isClosed && (
         <Button onClick={() => setClotureOpen(true)} variant="outline" className="w-full glass border-destructive/30 text-destructive">
@@ -565,6 +634,10 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
               <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="glass" />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
+              <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
+            </div>
             <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
             </Button>
@@ -580,6 +653,10 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Nouveau montant (FCFA)</label>
               <MoneyInput value={editPayAmount} onChange={(n) => setEditPayAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:glass" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
+              <Input value={editPayNote} onChange={(e) => setEditPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
             </div>
             <Button onClick={updatePayment} disabled={saving || !editPayAmount || Number(editPayAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la modification"}
