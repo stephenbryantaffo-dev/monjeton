@@ -655,6 +655,20 @@ const TontinePage = () => {
     </div>
   );
 
+  const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
+
+  // Filter list by current tab then by status
+  const byTab = useMemo(
+    () => tontines.filter(t => activeTab === "caisse" ? t.caisse_type === "project" : t.caisse_type !== "project"),
+    [tontines, activeTab]
+  );
+
+  const visibleTontines = useMemo(() => {
+    if (statusFilter === "active") return byTab.filter(t => !isCaisseClosed(t));
+    if (statusFilter === "closed") return byTab.filter(t => isCaisseClosed(t));
+    return byTab; // "all"
+  }, [byTab, statusFilter]);
+
   const statusFilterBar = (
     <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
       {(["active", "closed", "all"] as const).map((f) => {
@@ -681,20 +695,6 @@ const TontinePage = () => {
       })}
     </div>
   );
-
-  const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
-
-  // Filter list by current tab then by status
-  const byTab = useMemo(
-    () => tontines.filter(t => activeTab === "caisse" ? t.caisse_type === "project" : t.caisse_type !== "project"),
-    [tontines, activeTab]
-  );
-
-  const visibleTontines = useMemo(() => {
-    if (statusFilter === "active") return byTab.filter(t => !isCaisseClosed(t));
-    if (statusFilter === "closed") return byTab.filter(t => isCaisseClosed(t));
-    return byTab; // "all"
-  }, [byTab, statusFilter]);
 
 
   // ─── LIST VIEW ───
