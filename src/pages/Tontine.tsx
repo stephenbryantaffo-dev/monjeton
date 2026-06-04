@@ -159,6 +159,23 @@ const TontinePage = () => {
 
   useEffect(() => { loadTontines(); }, [loadTontines]);
 
+  useEffect(() => {
+    if (!selectedId || selected?.caisse_type === "project") return;
+    const channel = supabase
+      .channel(`tontine-${selectedId}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_members", filter: `tontine_id=eq.${selectedId}` },
+        () => loadDetail(selectedId))
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_cycles", filter: `tontine_id=eq.${selectedId}` },
+        () => loadDetail(selectedId))
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_payments" },
+        () => loadDetail(selectedId))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedId, selected?.caisse_type, loadDetail]);
+
   const openDetail = (id: string) => {
     setSelectedId(id);
     setShowHistory(false);
