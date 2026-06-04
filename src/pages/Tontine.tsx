@@ -445,7 +445,7 @@ const TontinePage = () => {
   };
 
   const closeCycle = async () => {
-    if (!openCycle || !selected || !isOwner) return;
+    if (!openCycle || !selected || !canManage) return;
     try {
       const { error: closeCycleError } = await supabase
         .from("tontine_cycles")
