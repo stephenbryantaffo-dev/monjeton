@@ -61,6 +61,21 @@ function getStage(daysLeft: number): Stage | null {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  // Auth: appel cron uniquement (header x-cron-secret OU Authorization Bearer <service_role>)
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const callerSecret = req.headers.get('x-cron-secret') || '';
+  const authHeader = req.headers.get('authorization') || '';
+  const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
+  const validCron = cronSecret && callerSecret === cronSecret;
+  const validBearer = bearerToken && bearerToken === serviceRoleKey;
+  if (!validCron && !validBearer) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!

@@ -495,7 +495,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
   // ─── Export PDF (print-window) ───
   const exportPDF = () => {
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bilan ${tontine.name}</title>
+    // Échappement HTML pour éviter XSS via données utilisateur (noms membres, libellés)
+    const esc = (s: unknown) => String(s ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bilan ${esc(tontine.name)}</title>
 <style>
   body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:24px;max-width:780px;margin:auto}
   h1{color:#5a9d2e;margin-bottom:4px}
@@ -508,7 +512,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   .pos{color:#5a9d2e;font-weight:700}
   .neg{color:#c43838;font-weight:700}
 </style></head><body>
-  <h1>Bilan du projet : ${tontine.name}</h1>
+  <h1>Bilan du projet : ${esc(tontine.name)}</h1>
   <p>Date événement : ${tontine.event_date ? new Date(tontine.event_date).toLocaleDateString("fr-FR") : "—"}</p>
   <div class="kpi">
     <div><small>Recettes</small><br/><b class="pos">${fmt(recettes)} F</b></div>
@@ -517,11 +521,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   </div>
   <h2>👥 Cotisations par membre</h2>
   <table><tr><th>Membre</th><th>Téléphone</th><th>Cotisé</th></tr>
-  ${members.map(m => `<tr><td>${m.name}</td><td>${m.phone || "—"}</td><td>${fmt(memberPaid(m.id))} F</td></tr>`).join("")}
+  ${members.map(m => `<tr><td>${esc(m.name)}</td><td>${esc(m.phone || "—")}</td><td>${fmt(memberPaid(m.id))} F</td></tr>`).join("")}
   </table>
   <h2>🧾 Dépenses détaillées</h2>
   <table><tr><th>Date</th><th>Libellé</th><th>Catégorie</th><th>Bénéficiaire</th><th>Montant</th></tr>
-  ${expenses.map(e => `<tr><td>${new Date(e.expense_date).toLocaleDateString("fr-FR")}</td><td>${e.label}</td><td>${e.category || ""}</td><td>${e.beneficiaire || ""}</td><td>${fmt(Number(e.amount))} F</td></tr>`).join("")}
+  ${expenses.map(e => `<tr><td>${new Date(e.expense_date).toLocaleDateString("fr-FR")}</td><td>${esc(e.label)}</td><td>${esc(e.category || "")}</td><td>${esc(e.beneficiaire || "")}</td><td>${fmt(Number(e.amount))} F</td></tr>`).join("")}
   </table>
   ${solde > 0 && members.length > 0 ? `<h2>🎁 Répartition équitable du bénéfice</h2><p>Chaque membre recevrait : <b>${fmt(Math.floor(solde / members.length))} FCFA</b></p>` : ""}
   ${solde < 0 ? `<h2>⚠️ Déficit</h2><p>Il manque ${fmt(Math.abs(solde))} FCFA pour équilibrer le projet.</p>` : ""}

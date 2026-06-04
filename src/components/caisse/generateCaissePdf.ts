@@ -5,6 +5,15 @@ const fmt = (n: number) =>
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 
+// Échappement HTML pour éviter XSS via données utilisateur dans les exports PDF
+const esc = (s: unknown) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 const getActionLabel = (action: string) =>
   ({
     added: "➕ Membre ajouté",
@@ -43,10 +52,10 @@ export const generateCaissePdf = (data: CaissePdfData) => {
         .filter(c => c.member_id === m.id)
         .reduce((s, c) => s + Number(c.amount), 0);
       return `<tr>
-        <td>${m.name}</td>
-        <td class="ca"><span style="color:${statusColor(m.status)};font-weight:bold;font-size:11px">${statusLabel(m.status)}</span></td>
+        <td>${esc(m.name)}</td>
+        <td class="ca"><span style="color:${statusColor(m.status)};font-weight:bold;font-size:11px">${esc(statusLabel(m.status))}</span></td>
         <td class="ra bold">${fmt(total)}</td>
-        <td class="ca">${m.phone || "—"}</td>
+        <td class="ca">${esc(m.phone || "—")}</td>
       </tr>`;
     })
     .join("");
@@ -58,9 +67,9 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       const memberName = members.find(m => m.id === c.member_id)?.name || "?";
       return `<tr>
         <td>${new Date(c.cotisation_date).toLocaleDateString("fr-FR")}</td>
-        <td>${memberName}</td>
+        <td>${esc(memberName)}</td>
         <td class="ra green bold">+${fmt(c.amount)}</td>
-        <td>${c.cycle_label || "—"}</td>
+        <td>${esc(c.cycle_label || "—")}</td>
       </tr>`;
     })
     .join("");
@@ -72,9 +81,9 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       const memberName = members.find(m => m.id === c.member_id)?.name || "?";
       return `<tr>
         <td>${c.cancelled_at ? new Date(c.cancelled_at).toLocaleDateString("fr-FR") : "—"}</td>
-        <td>${memberName}</td>
+        <td>${esc(memberName)}</td>
         <td class="ra" style="color:#f39c12;text-decoration:line-through">${fmt(c.amount)}</td>
-        <td>${c.cancel_reason || "—"}</td>
+        <td>${esc(c.cancel_reason || "—")}</td>
       </tr>`;
     })
     .join("");
@@ -86,10 +95,10 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       const catLabel = DEPENSE_CAT_LABELS[d.category || "autre"] || d.category || "—";
       return `<tr>
         <td>${new Date(d.depense_date).toLocaleDateString("fr-FR")}</td>
-        <td>${d.label}</td>
+        <td>${esc(d.label)}</td>
         <td class="ra red bold">-${fmt(d.amount)}</td>
-        <td>${catLabel}</td>
-        <td>${d.beneficiaire || "—"}</td>
+        <td>${esc(catLabel)}</td>
+        <td>${esc(d.beneficiaire || "—")}</td>
       </tr>`;
     })
     .join("");
@@ -101,9 +110,9 @@ export const generateCaissePdf = (data: CaissePdfData) => {
       const memberName = members.find(m => m.id === h.member_id)?.name || "?";
       return `<tr>
         <td>${new Date(h.created_at).toLocaleDateString("fr-FR")}</td>
-        <td>${getActionLabel(h.action)}</td>
-        <td>${memberName}</td>
-        <td>${h.reason || "—"}</td>
+        <td>${esc(getActionLabel(h.action))}</td>
+        <td>${esc(memberName)}</td>
+        <td>${esc(h.reason || "—")}</td>
       </tr>`;
     })
     .join("");
@@ -118,7 +127,7 @@ export const generateCaissePdf = (data: CaissePdfData) => {
     .sort((a, b) => b[1] - a[1])
     .map(([cat, amount]) => {
       const pct = caisse.total_spent > 0 ? Math.round((amount / caisse.total_spent) * 100) : 0;
-      return `<tr><td>${cat}</td><td class="ra bold">${fmt(amount)}</td><td class="ca">${pct}%</td></tr>`;
+      return `<tr><td>${esc(cat)}</td><td class="ra bold">${fmt(amount)}</td><td class="ca">${pct}%</td></tr>`;
     })
     .join("");
 
@@ -171,8 +180,8 @@ tr:nth-child(even) td{background:#f9f9f9}
     <div>Rapport généré le ${new Date().toLocaleDateString("fr-FR")}</div>
     <div>${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>
   </div>
-  <h1>🏦 ${caisse.name}</h1>
-  <div class="sub">${caisse.description || "Caisse commune"} · ${caisse.frequency === "monthly" ? "Mensuelle" : caisse.frequency === "weekly" ? "Hebdomadaire" : caisse.frequency}</div>
+  <h1>🏦 ${esc(caisse.name)}</h1>
+  <div class="sub">${esc(caisse.description || "Caisse commune")} · ${caisse.frequency === "monthly" ? "Mensuelle" : caisse.frequency === "weekly" ? "Hebdomadaire" : esc(caisse.frequency)}</div>
 </div>
 <div class="body">
 
@@ -261,7 +270,7 @@ tr:nth-child(even) td{background:#f9f9f9}
 
 </div>
 <div class="footer">
-  <span>🪙 Mon Jeton — Caisse "${caisse.name}"</span>
+  <span>🪙 Mon Jeton — Caisse "${esc(caisse.name)}"</span>
   <span>Généré automatiquement • Confidentiel</span>
 </div>
 </body>

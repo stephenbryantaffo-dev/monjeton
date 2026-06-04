@@ -14,7 +14,21 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // IP-based rate limit (cron-triggered endpoint, no user auth required)
+    // Auth: appel cron uniquement (header x-cron-secret OU Authorization Bearer <service_role>)
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const callerSecret = req.headers.get("x-cron-secret") || "";
+    const authHeader = req.headers.get("authorization") || "";
+    const bearerToken = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : "";
+    const validCron = cronSecret && callerSecret === cronSecret;
+    const validBearer = bearerToken && bearerToken === serviceRoleKey;
+    if (!validCron && !validBearer) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // IP-based rate limit (defense in depth)
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || req.headers.get("cf-connecting-ip")
       || "cron";

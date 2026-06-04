@@ -43,13 +43,18 @@ Deno.serve(async (req) => {
     const signature =
       req.headers.get('jeko-signature') || req.headers.get('Jeko-Signature') || '';
 
-    // Vérif signature (si secret configuré)
-    if (WEBHOOK_SECRET) {
-      const ok = await verifyHmac(rawBody, signature, WEBHOOK_SECRET);
-      if (!ok) {
-        console.error('Bad signature');
-        return json({ error: 'Invalid signature' }, 401);
-      }
+    // Signature HMAC OBLIGATOIRE pour éviter les fraudes
+    if (!WEBHOOK_SECRET) {
+      console.error('JEKO_WEBHOOK_SECRET not configured — rejecting request');
+      return json({ error: 'Server misconfiguration' }, 500);
+    }
+    if (!signature) {
+      return json({ error: 'Missing signature' }, 401);
+    }
+    const ok = await verifyHmac(rawBody, signature, WEBHOOK_SECRET);
+    if (!ok) {
+      console.error('Bad signature');
+      return json({ error: 'Invalid signature' }, 401);
     }
 
     const parsed = JSON.parse(rawBody);
