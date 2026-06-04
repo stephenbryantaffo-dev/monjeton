@@ -819,6 +819,18 @@ const TontinePage = () => {
         </div>
       )}
 
+      {/* Quitter la tontine (tous les collaborateurs) */}
+      {selected && (
+        <div className="mb-3">
+          <LeaveCaisseButton
+            caisseId={selected.id}
+            isOwner={isOwner}
+            onLeft={goBack}
+            className="w-full"
+          />
+        </div>
+      )}
+
       {/* Paused banner */}
       {isPaused && (
         <div className="glass-card rounded-xl p-3 mb-3 border border-amber-500/30 flex items-start gap-2">
