@@ -846,6 +846,25 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={expNote} onChange={(e) => setExpNote(e.target.value)} className="glass" />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Rattacher à un poste (optionnel)</label>
+              <select
+                value={expItemId || ""}
+                onChange={(e) => setExpItemId(e.target.value || null)}
+                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Aucun poste / hors poste</option>
+                {expenseItems.map((it) => {
+                  const planned = Number(it.planned_amount || 0);
+                  const paid = paidByItem[it.id] || 0;
+                  return (
+                    <option key={it.id} value={it.id}>
+                      {it.label} ({fmt(paid)}/{fmt(planned)})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
             <Button onClick={addExpense} disabled={saving || !expLabel.trim() || Number(expAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la dépense"}
             </Button>
