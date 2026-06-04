@@ -740,7 +740,7 @@ const TontinePage = () => {
               <Pencil className="w-4 h-4 text-primary" />
             </button>
           )}
-          {!isOwner && (
+          {!canManage && (
             <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <ShieldAlert className="w-3 h-3" /> Lecture seule
             </div>
