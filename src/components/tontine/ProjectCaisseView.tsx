@@ -812,39 +812,20 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {fmt(paid)} {expectedPerMember > 0 ? `/ ${fmt(expectedPerMember)}` : ""} FCFA
-                  </p>
-                  {payments.filter(p => p.member_id === m.id).map(p => (
-                    <div key={p.id} className="flex items-center gap-1">
-                      <span className="text-[10px] text-muted-foreground">
-                        {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}{(p as any).note ? ` · ${(p as any).note}` : ""}
+                    {expectedPerMember > 0 && (
+                      <span className="ml-1 font-medium text-emerald-400">
+                        {Math.min(100, Math.round((paid / expectedPerMember) * 100))}%
                       </span>
-                      {canManage && !isClosed && (
-                        <>
-                          <button
-                            className="text-muted-foreground hover:text-primary p-0.5"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingPayment(p);
-                              setEditPayAmount(String(p.amount_paid));
-                              setEditPayNote(((p as any).note ?? "") as string);
-                              setEditPayItemId(((p as any).expense_item_id ?? null));
-                              setEditPayOpen(true);
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          <ConfirmDeleteDialog
-                            onConfirm={() => deletePayment(p.id)}
-                            title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
-                          >
-                            <button className="text-muted-foreground hover:text-destructive p-0.5" onClick={(e) => e.stopPropagation()}>
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </ConfirmDeleteDialog>
-                        </>
-                      )}
+                    )}
+                  </p>
+                  {expectedPerMember > 0 && (
+                    <div className="mt-1.5">
+                      <Progress
+                        value={Math.min(100, Math.round((paid / expectedPerMember) * 100))}
+                        className="h-1.5"
+                      />
                     </div>
-                  ))}
+                  )}
                 </div>
                 {canManage && !isClosed && (
                   <ConfirmDeleteDialog
