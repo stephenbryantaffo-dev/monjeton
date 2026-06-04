@@ -1,0 +1,1 @@
+ALTER TABLE public.tontine_payments ADD COLUMN IF NOT EXISTS note text;
