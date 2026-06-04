@@ -258,7 +258,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     setSaving(true);
     try {
       const { error } = await supabase.from("tontine_payments" as any)
-        .update({ amount_paid: Number(editPayAmount) })
+        .update({ amount_paid: Number(editPayAmount), note: editPayNote.trim() || null })
         .eq("id", editingPayment.id);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
