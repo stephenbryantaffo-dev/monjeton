@@ -157,6 +157,14 @@
   .pb-safe {
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
+
+  /* RÈGLE : Tout élément fixé/collé en bas d'écran doit réserver l'espace
+     de la BottomNav via var(--bottom-nav-space). Utiliser .pb-nav (padding),
+     .mb-nav (margin) ou .bottom-nav (offset bottom pour position:fixed). */
+  .pb-nav { padding-bottom: var(--bottom-nav-space); }
+  .mb-nav { margin-bottom: var(--bottom-nav-space); }
+  .bottom-nav { bottom: var(--bottom-nav-space); }
+
 }
 
 /* iOS 18 SVG visibility fix for icon circles */
