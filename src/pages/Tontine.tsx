@@ -715,10 +715,22 @@ const TontinePage = () => {
             <div className="text-center py-12">
               <p className="text-4xl mb-3">{activeTab === "caisse" ? "🏦" : "🪙"}</p>
               <p className="font-semibold text-foreground mb-1">
-                {activeTab === "caisse" ? "Aucune caisse commune" : "Aucune tontine"}
+                {statusFilter === "active"
+                  ? "Aucune caisse active"
+                  : statusFilter === "closed"
+                    ? "Aucune caisse clôturée"
+                    : activeTab === "caisse"
+                      ? "Aucune caisse commune"
+                      : "Aucune tontine"}
               </p>
               <p className="text-sm text-muted-foreground">
-                {activeTab === "caisse" ? "Crée ta première caisse de projet" : "Crée ta première tontine pour commencer"}
+                {statusFilter === "active"
+                  ? "Toutes tes caisses sont clôturées ou en pause."
+                  : statusFilter === "closed"
+                    ? "Les caisses actives apparaissent sous l'onglet Actives."
+                    : activeTab === "caisse"
+                      ? "Crée ta première caisse de projet"
+                      : "Crée ta première tontine pour commencer"}
               </p>
             </div>
           ) : (
