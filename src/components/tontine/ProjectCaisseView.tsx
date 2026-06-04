@@ -821,8 +821,18 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               </div>
             </motion.div>
           );
-        })}
-        {members.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Aucun membre — ajoutez-en pour commencer</p>}
+        })()
+        }
+        {(() => {
+          const query = memberSearch.trim().toLowerCase();
+          const list = query ? members.filter(m => m.name.toLowerCase().includes(query)) : members;
+          if (list.length === 0) {
+            return query
+              ? <p className="text-xs text-muted-foreground text-center py-4">Aucun membre ne correspond à « {memberSearch} »</p>
+              : <p className="text-xs text-muted-foreground text-center py-4">Aucun membre — ajoutez-en pour commencer</p>;
+          }
+          return null;
+        })()}
       </div>
 
       {/* ─── Expenses list ─── */}
