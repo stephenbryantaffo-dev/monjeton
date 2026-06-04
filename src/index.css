@@ -6,6 +6,12 @@
 
 @layer base {
   :root {
+    /* Hauteur globale réservée par la BottomNav (barre + safe-area iPhone).
+       Source de vérité unique — utilisée par .pb-nav / .mb-nav / .bottom-nav
+       et par Screen.StickyAction. Ne jamais coller un bouton à bottom-0
+       sans réserver cet espace. */
+    --bottom-nav-space: calc(80px + env(safe-area-inset-bottom, 0px));
+
     --background: 150 20% 4%;
     --foreground: 150 5% 92%;
 
