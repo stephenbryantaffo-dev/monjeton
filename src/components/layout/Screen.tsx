@@ -164,16 +164,17 @@ Screen.StickyAction = function ScreenStickyAction({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Positionné AU-DESSUS de la BottomNav (z-50), donc z-40 + offset bottom
-  const bottomOffset = hasBottomNav ? BOTTOM_NAV_HEIGHT : 0;
-
+  // RÈGLE GLOBALE : tout élément fixé/collé en bas d'écran DOIT réserver
+  // l'espace de la BottomNav via var(--bottom-nav-space) (jamais bottom-0
+  // brut). Ici on s'appuie sur la même variable utilisée par .bottom-nav.
   return (
     <div
       className="fixed left-0 right-0 z-40 pointer-events-none"
       style={{
-        bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom, 0px))`,
+        bottom: hasBottomNav ? "var(--bottom-nav-space)" : "env(safe-area-inset-bottom, 0px)",
       }}
     >
+
       {/* Gradient de fade pour adoucir la transition contenu → CTA */}
       <div
         aria-hidden
