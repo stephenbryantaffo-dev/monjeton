@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
+  ChevronLeft, ChevronDown, ChevronRight, Plus, Lock, Target, Calendar, Users, FileText,
   TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
   Search, ArrowUpDown,
 } from "lucide-react";
@@ -114,6 +114,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   // Collaborators search & sort
   const [collabSearch, setCollabSearch] = useState("");
   const [collabSort, setCollabSort] = useState<"name" | "role">("name");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
