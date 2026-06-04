@@ -443,12 +443,23 @@ const TontinePage = () => {
   const closeCycle = async () => {
     if (!openCycle || !selected || !isOwner) return;
     try {
-      await supabase.from("tontine_cycles").update({ status: "closed" } as any).eq("id", openCycle.id);
+      const { error: closeCycleError } = await supabase
+        .from("tontine_cycles")
+        .update({ status: "closed" } as any)
+        .eq("id", openCycle.id);
+      if (closeCycleError) {
+        toast({ title: "Erreur clôture cycle", description: closeCycleError.message, variant: "destructive" });
+        return;
+      }
       const nextInfo = generateCycleInfo(selected, openCycle.cycle_number + 1, members.length, openCycle.end_date);
-      const { data: newCycle } = await supabase
+      const { data: newCycle, error: newCycleError } = await supabase
         .from("tontine_cycles")
         .insert({ tontine_id: selected.id, ...nextInfo } as any)
         .select().single();
+      if (newCycleError) {
+        toast({ title: "Erreur création nouveau cycle", description: newCycleError.message, variant: "destructive" });
+        return;
+      }
 
       const nc: any = newCycle;
       for (const m of members) {
@@ -464,8 +475,8 @@ const TontinePage = () => {
       }
       toast({ title: "Cycle clôturé, nouveau cycle ouvert ✅" });
       loadDetail(selected.id);
-    } catch {
-      toast({ title: "Erreur clôture", variant: "destructive" });
+    } catch (e: any) {
+      toast({ title: "Erreur clôture", description: e?.message, variant: "destructive" });
     }
   };
 
