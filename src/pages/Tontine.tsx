@@ -702,6 +702,7 @@ const TontinePage = () => {
     return (
       <DashboardLayout title={activeTab === "tontine" ? "Tontines" : "Caisses communes"}>
         {tabToggle}
+        {statusFilterBar}
         <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> {activeTab === "caisse" ? "Nouvelle caisse commune" : "Nouvelle tontine"}
         </Button>
