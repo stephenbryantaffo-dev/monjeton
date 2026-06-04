@@ -496,6 +496,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               setEditPayAmount(String(p.amount_paid));
                               setEditPayNote(((p as any).note ?? "") as string);
                               setEditPayOpen(true);
+                            }}
                           >
                             <Pencil className="w-3 h-3" />
                           </button>
