@@ -234,7 +234,7 @@ const TontinePage = () => {
     member: TontineMember,
     historyAction: string
   ) => {
-    if (!selected || !isOwner) return false;
+    if (!selected || !canManage) return false;
     const { error } = await supabase
       .from("tontine_members" as any)
       .update({ status: newStatus } as any)
