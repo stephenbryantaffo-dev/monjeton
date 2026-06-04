@@ -537,7 +537,7 @@ const TontinePage = () => {
   };
 
   const remindAllUnpaid = async () => {
-    if (!selected || !openCycle || !isOwner) return;
+    if (!selected || !openCycle || !canManage) return;
     const paidIds = new Set(
       members.filter(m => {
         const total = payments.filter(p => p.member_id === m.id).reduce((s, p) => s + Number(p.amount_paid), 0);
