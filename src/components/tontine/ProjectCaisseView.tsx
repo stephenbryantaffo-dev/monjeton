@@ -570,6 +570,10 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
               <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="glass" />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
+              <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
+            </div>
             <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
             </Button>
