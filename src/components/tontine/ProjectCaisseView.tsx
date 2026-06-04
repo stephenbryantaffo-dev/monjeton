@@ -550,6 +550,70 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         </>
       )}
 
+      {/* ─── Historique des cotisations ─── */}
+      {payments.length > 0 && (
+        <>
+          <p className="text-sm font-bold text-foreground mb-2 mt-4 flex items-center gap-1">
+            <FileText className="w-4 h-4" /> Historique des cotisations ({payments.length})
+          </p>
+          <div className="space-y-2 mb-4">
+            {[...payments]
+              .sort((a, b) => {
+                const da = new Date(a.payment_date || 0).getTime();
+                const db = new Date(b.payment_date || 0).getTime();
+                return db - da;
+              })
+              .map((p) => {
+                const member = members.find(m => m.id === p.member_id);
+                const note = (p as any).note as string | null | undefined;
+                return (
+                  <div key={p.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-bold text-primary-foreground">
+                        {(member?.name || "?").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {member?.name || "Membre supprimé"} · <span className="text-emerald-400">{fmt(Number(p.amount_paid))} FCFA</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {p.payment_date ? new Date(p.payment_date).toLocaleDateString("fr-FR") : "—"}
+                        {note ? ` · ${note}` : ""}
+                      </p>
+                    </div>
+                    {canManage && !isClosed && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          className="text-muted-foreground hover:text-primary p-1"
+                          onClick={() => {
+                            setEditingPayment(p);
+                            setEditPayAmount(String(p.amount_paid));
+                            setEditPayNote(((p as any).note ?? "") as string);
+                            setEditPayOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <ConfirmDeleteDialog
+                          onConfirm={() => deletePayment(p.id)}
+                          title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
+                        >
+                          <button className="text-muted-foreground hover:text-destructive p-1">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </ConfirmDeleteDialog>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </>
+      )}
+
+
+
       {/* Clôture button */}
       {isOwner && !isClosed && (
         <Button onClick={() => setClotureOpen(true)} variant="outline" className="w-full glass border-destructive/30 text-destructive">
