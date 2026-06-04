@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
-  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench,
+  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,9 +56,18 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [cycle, setCycle] = useState<TontineCycle | null>(null);
   const [payments, setPayments] = useState<TontinePayment[]>([]);
   const [expenses, setExpenses] = useState<TontineExpense[]>([]);
+  const [expenseItems, setExpenseItems] = useState<any[]>([]);
   const [collaborators, setCollaborators] = useState<CollabRow[]>([]);
   const [loadedRole, setLoadedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Expense items (postes) UI
+  const [itemsViewOpen, setItemsViewOpen] = useState(false);
+  const [newItemLabel, setNewItemLabel] = useState("");
+  const [newItemPlanned, setNewItemPlanned] = useState("");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemLabel, setEditItemLabel] = useState("");
+  const [editItemPlanned, setEditItemPlanned] = useState("");
 
   const currentRole = currentRoleProp || loadedRole || (tontine.user_id === user?.id ? "owner" : "viewer");
   const isOwner = currentRole === "owner";
@@ -105,10 +114,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [mRes, cRes, eRes, collabRes] = await Promise.all([
+    const [mRes, cRes, eRes, iRes, collabRes] = await Promise.all([
       supabase.from("tontine_members").select("*").eq("tontine_id", tontine.id),
       supabase.from("tontine_cycles").select("*").eq("tontine_id", tontine.id).order("cycle_number").limit(1),
       supabase.from("tontine_expenses" as any).select("*").eq("tontine_id", tontine.id).order("expense_date", { ascending: false }),
+      supabase.from("tontine_expense_items" as any).select("*").eq("tontine_id", tontine.id).order("created_at", { ascending: true }),
       supabase.from("caisse_collaborators" as any).select("user_id, role").eq("caisse_id", tontine.id),
     ]);
     const ms = (mRes.data || []) as unknown as TontineMember[];
@@ -116,6 +126,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     const cyc = ((cRes.data || [])[0] || null) as unknown as TontineCycle | null;
     setCycle(cyc);
     setExpenses(((eRes.data as any[]) || []) as TontineExpense[]);
+    setExpenseItems((iRes.data as any[]) || []);
     if (cyc) {
       const { data: pData } = await supabase.from("tontine_payments").select("*").eq("cycle_id", cyc.id);
       setPayments((pData || []) as unknown as TontinePayment[]);
@@ -163,6 +174,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       .on("postgres_changes",
         { event: "*", schema: "public", table: "tontine_expenses", filter: `tontine_id=eq.${tontine.id}` },
         () => load())
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_expense_items", filter: `tontine_id=eq.${tontine.id}` },
+        () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [tontine?.id, load]);
@@ -176,6 +190,25 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
   const memberPaid = (mid: string) => payments.filter(p => p.member_id === mid).reduce((s, p) => s + Number(p.amount_paid), 0);
   const expectedPerMember = Number(tontine.contribution_per_member || tontine.contribution_amount || 0);
+
+  const paidByItem = useMemo(() => {
+    const map: Record<string, number> = {};
+    expenses.forEach((e: any) => {
+      if (e.expense_item_id) {
+        map[e.expense_item_id] = (map[e.expense_item_id] || 0) + Number(e.amount);
+      }
+    });
+    return map;
+  }, [expenses]);
+  const totalPlanned = useMemo(
+    () => expenseItems.reduce((s, it) => s + Number(it.planned_amount || 0), 0),
+    [expenseItems]
+  );
+  const totalPaidOnItems = useMemo(
+    () => Object.values(paidByItem).reduce((s, v) => s + v, 0),
+    [paidByItem]
+  );
+
 
   // ─── Actions ───
   const openPay = (m: TontineMember) => {
@@ -242,6 +275,72 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     toast({ title: "Dépense supprimée ✅" });
     await load();
   };
+
+  // ─── Expense items (postes) ───
+  const addExpenseItem = async () => {
+    if (saving || !canManage || !newItemLabel.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expense_items" as any).insert({
+        tontine_id: tontine.id,
+        label: newItemLabel.trim(),
+        planned_amount: Number(newItemPlanned) || 0,
+        created_by: user?.id,
+      } as any);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: `Poste "${newItemLabel}" ajouté ✅` });
+      setNewItemLabel("");
+      setNewItemPlanned("");
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const startEditItem = (it: any) => {
+    setEditingItemId(it.id);
+    setEditItemLabel(it.label || "");
+    setEditItemPlanned(String(it.planned_amount || ""));
+  };
+
+  const updateExpenseItem = async () => {
+    if (saving || !canManage || !editingItemId || !editItemLabel.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expense_items" as any)
+        .update({
+          label: editItemLabel.trim(),
+          planned_amount: Number(editItemPlanned) || 0,
+        } as any)
+        .eq("id", editingItemId);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Poste modifié ✅" });
+      setEditingItemId(null);
+      setEditItemLabel("");
+      setEditItemPlanned("");
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const deleteExpenseItem = async (id: string) => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expense_items" as any).delete().eq("id", id);
+      if (error) {
+        toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Poste supprimé ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+
 
   const addMember = async () => {
     if (!newMemberName.trim() || !canManage || saving) return;
@@ -464,17 +563,21 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* Action buttons */}
       {!isClosed && (
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           {canManage ? (
             <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
               <TrendingDown className="w-4 h-4 mr-1" /> Dépense
             </Button>
           ) : <div />}
+          <Button onClick={() => setItemsViewOpen(true)} variant="outline" className="glass">
+            <ListChecks className="w-4 h-4 mr-1" /> Postes{expenseItems.length > 0 ? ` (${expenseItems.length})` : ""}
+          </Button>
           <Button onClick={exportPDF} variant="outline" className="glass">
             <FileText className="w-4 h-4 mr-1" /> Bilan PDF
           </Button>
         </div>
       )}
+
 
       {/* ─── Members + cotisations ─── */}
       <div className="flex items-center justify-between mb-2 mt-4">
@@ -814,6 +917,147 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         caisseId={tontine.id}
         caisseName={tontine.name}
       />
+
+      {/* ─── Postes de dépense Dialog ─── */}
+      <Dialog open={itemsViewOpen} onOpenChange={(o) => { setItemsViewOpen(o); if (!o) { setEditingItemId(null); } }}>
+        <DialogContent className="glass-card border-border max-w-2xl max-h-[90vh] overflow-y-auto pb-28">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="w-5 h-5 text-primary" /> Postes de dépense
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 mt-2">
+            {canManage && (
+              <div className="glass rounded-xl p-3 space-y-2 border border-border">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5 text-primary" /> Ajouter un poste
+                </p>
+                <Input
+                  value={newItemLabel}
+                  onChange={(e) => setNewItemLabel(e.target.value)}
+                  placeholder="Nom du poste (ex: Salle, Traiteur…)"
+                  className="glass"
+                />
+                <MoneyInput
+                  value={newItemPlanned}
+                  onChange={(n) => setNewItemPlanned(n ? String(n) : "")}
+                  showCurrency={false}
+                  className="[&>input]:glass"
+                />
+                <Button
+                  onClick={addExpenseItem}
+                  disabled={saving || !newItemLabel.trim()}
+                  className="w-full"
+                  size="sm"
+                >
+                  {saving ? "Enregistrement…" : "Ajouter le poste"}
+                </Button>
+              </div>
+            )}
+
+            {expenseItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Aucun poste pour l'instant. Ajoute la salle, la déco, le traiteur…
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {expenseItems.map((it) => {
+                  const planned = Number(it.planned_amount || 0);
+                  const paid = paidByItem[it.id] || 0;
+                  const pct = planned > 0 ? Math.min(100, Math.round((paid / planned) * 100)) : (paid > 0 ? 100 : 0);
+                  const solde = planned >= paid;
+                  const reste = Math.max(planned - paid, 0);
+                  const isEditing = editingItemId === it.id;
+                  return (
+                    <div key={it.id} className="glass-card rounded-xl p-3">
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editItemLabel}
+                            onChange={(e) => setEditItemLabel(e.target.value)}
+                            placeholder="Nom du poste"
+                            className="glass"
+                          />
+                          <MoneyInput
+                            value={editItemPlanned}
+                            onChange={(n) => setEditItemPlanned(n ? String(n) : "")}
+                            showCurrency={false}
+                            className="[&>input]:glass"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 glass"
+                              onClick={() => setEditingItemId(null)}
+                            >Annuler</Button>
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={updateExpenseItem}
+                              disabled={saving || !editItemLabel.trim()}
+                            >Enregistrer</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-semibold text-foreground flex-1 truncate">{it.label}</p>
+                            {canManage && !isClosed && (
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button
+                                  className="text-muted-foreground hover:text-primary p-1"
+                                  onClick={() => startEditItem(it)}
+                                  title="Modifier"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <ConfirmDeleteDialog
+                                  onConfirm={() => deleteExpenseItem(it.id)}
+                                  title="Supprimer ce poste ?"
+                                  description="Les dépenses déjà enregistrées seront conservées (sans poste)."
+                                >
+                                  <button className="text-muted-foreground hover:text-destructive p-1" title="Supprimer">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </ConfirmDeleteDialog>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {fmt(paid)} / {fmt(planned)} FCFA
+                          </p>
+                          <Progress value={pct} className={`h-2 ${paid >= planned && planned > 0 ? "[&>div]:bg-emerald-500" : ""}`} />
+                          <p className={`text-xs mt-1.5 font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                            {planned > 0 && paid >= planned
+                              ? "✅ Soldé"
+                              : `Reste : ${fmt(reste)} FCFA`}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {expenseItems.length > 0 && (
+              <div className="glass-card rounded-xl p-3 mt-3 border border-primary/30">
+                <p className="text-xs text-muted-foreground mb-1">Récapitulatif</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total prévu</span>
+                  <span className="font-bold text-foreground">{fmt(totalPlanned)} FCFA</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-muted-foreground">Total payé sur postes</span>
+                  <span className="font-bold text-emerald-400">{fmt(totalPaidOnItems)} FCFA</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
