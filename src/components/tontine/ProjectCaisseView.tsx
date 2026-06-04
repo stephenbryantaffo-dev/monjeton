@@ -640,14 +640,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           title="Retirer"
                           className="text-muted-foreground hover:text-destructive p-1"
                         >
-                          <UserMinus className="w-3 h-3" />
+                      <UserMinus className="w-3 h-3" />
                         </button>
                       </ConfirmDeleteDialog>
                     </>
                   )}
                 </div>
               );
-            })}
+            })()}
           </div>
         </div>
       )}
