@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Progress } from "@/components/ui/progress";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -106,6 +107,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [expNote, setExpNote] = useState("");
   const [expItemId, setExpItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [payItemTarget, setPayItemTarget] = useState<any | null>(null);
+  const [payItemAmount, setPayItemAmount] = useState("");
 
   // Members search & sort
   const [memberSearch, setMemberSearch] = useState("");
@@ -287,6 +290,44 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
       setExpOpen(false);
       setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote(""); setExpItemId(null);
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openPayItem = (item: any) => {
+    const paid = paidByItem[item.id] || 0;
+    const collected = collectedByItem[item.id] || 0;
+    const planned = Number(item.planned_amount || 0);
+    const suggested = Math.max(0, Math.min(collected - paid, planned - paid));
+    setPayItemTarget(item);
+    setPayItemAmount(String(suggested || ""));
+  };
+
+  const markItemPaid = async () => {
+    if (!payItemTarget) return;
+    const montant = Number(payItemAmount);
+    if (saving || montant <= 0) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expenses" as any).insert({
+        tontine_id: tontine.id,
+        label: `Paiement ${payItemTarget.label}`,
+        amount: montant,
+        category: "autre",
+        beneficiaire: null,
+        expense_date: new Date().toISOString().slice(0, 10),
+        note: "Versé depuis les cotisations collectées",
+        expense_item_id: payItemTarget.id,
+      } as any);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: `${fmt(montant)} payé pour "${payItemTarget.label}" ✅` });
+      setPayItemTarget(null);
+      setPayItemAmount("");
       await load();
     } finally {
       setSaving(false);
@@ -1354,6 +1395,17 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               {finance ? "✅ Financé" : `À collecter : ${fmt(resteCollect)}`}
                             </p>
                           </div>
+                          {canManage && !isClosed && collected > paid && (planned === 0 || paid < planned) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full mt-2 h-8 text-xs glass border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                              onClick={() => openPayItem(it)}
+                              disabled={saving}
+                            >
+                              Marquer comme payé
+                            </Button>
+                          )}
                           {(() => {
                             const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
                             if (linked.length === 0) return null;
@@ -1403,6 +1455,53 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!payItemTarget} onOpenChange={(o) => { if (!o) { setPayItemTarget(null); setPayItemAmount(""); } }}>
+        <DialogContent className="glass-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>Marquer comme payé</DialogTitle>
+          </DialogHeader>
+          {payItemTarget && (() => {
+            const paid = paidByItem[payItemTarget.id] || 0;
+            const collected = collectedByItem[payItemTarget.id] || 0;
+            const planned = Number(payItemTarget.planned_amount || 0);
+            const maxPayable = Math.max(0, Math.min(collected - paid, planned > 0 ? planned - paid : collected - paid));
+            const montant = Number(payItemAmount) || 0;
+            return (
+              <div className="space-y-3">
+                <div className="glass-card rounded-lg p-3 text-xs space-y-1">
+                  <p><span className="text-muted-foreground">Poste : </span><b className="text-foreground">{payItemTarget.label}</b></p>
+                  <p><span className="text-muted-foreground">Collecté : </span><b className="text-emerald-400">{fmt(collected)} FCFA</b></p>
+                  <p><span className="text-muted-foreground">Déjà payé : </span><b className="text-destructive">{fmt(paid)} FCFA</b></p>
+                  {planned > 0 && (
+                    <p><span className="text-muted-foreground">Budget : </span><b className="text-foreground">{fmt(planned)} FCFA</b></p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-xs">Montant à payer maintenant</Label>
+                  <MoneyInput
+                    value={payItemAmount}
+                    onChange={(n) => setPayItemAmount(n ? String(n) : "")}
+                    showCurrency={false}
+                    className="[&>input]:glass mt-1"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Suggéré : {fmt(maxPayable)} FCFA (cotisations disponibles{planned > 0 ? ", sans dépasser le budget" : ""})
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1 glass" onClick={() => { setPayItemTarget(null); setPayItemAmount(""); }}>
+                    Annuler
+                  </Button>
+                  <Button className="flex-1" onClick={markItemPaid} disabled={saving || montant <= 0}>
+                    Confirmer
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
