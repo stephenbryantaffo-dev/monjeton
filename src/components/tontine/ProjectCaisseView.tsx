@@ -75,6 +75,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [payAmount, setPayAmount] = useState("");
   const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
 
+  // Edit payment dialog
+  const [editPayOpen, setEditPayOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<TontinePayment | null>(null);
+  const [editPayAmount, setEditPayAmount] = useState("");
+
   // Expense dialog
   const [expOpen, setExpOpen] = useState(false);
   const [expLabel, setExpLabel] = useState("");
@@ -240,6 +245,22 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       if (error) { toast({ title:"Erreur", description:error.message, variant:"destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
       toast({ title: "Cotisation supprimée ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const updatePayment = async () => {
+    if (saving || !cycle || !editingPayment) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_payments" as any)
+        .update({ amount_paid: Number(editPayAmount) })
+        .eq("id", editingPayment.id);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: "Cotisation modifiée ✅" });
+      setEditPayOpen(false);
+      setEditingPayment(null);
       await load();
     } finally { setSaving(false); }
   };
@@ -462,14 +483,27 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                         {fmt(Number(p.amount_paid))}{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString("fr-FR")}` : ""}
                       </span>
                       {canManage && !isClosed && (
-                        <ConfirmDeleteDialog
-                          onConfirm={() => deletePayment(p.id)}
-                          title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
-                        >
-                          <button className="text-muted-foreground hover:text-destructive p-0.5" onClick={(e) => e.stopPropagation()}>
-                            <Trash2 className="w-3 h-3" />
+                        <>
+                          <button
+                            className="text-muted-foreground hover:text-primary p-0.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingPayment(p);
+                              setEditPayAmount(String(p.amount_paid));
+                              setEditPayOpen(true);
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
                           </button>
-                        </ConfirmDeleteDialog>
+                          <ConfirmDeleteDialog
+                            onConfirm={() => deletePayment(p.id)}
+                            title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
+                          >
+                            <button className="text-muted-foreground hover:text-destructive p-0.5" onClick={(e) => e.stopPropagation()}>
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </ConfirmDeleteDialog>
+                        </>
                       )}
                     </div>
                   ))}
@@ -533,6 +567,22 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             </div>
             <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Edit Payment Dialog ─── */}
+      <Dialog open={editPayOpen} onOpenChange={(o) => { if (!o) { setEditPayOpen(false); setEditingPayment(null); } }}>
+        <DialogContent className="glass-card border-border">
+          <DialogHeader><DialogTitle>Modifier la cotisation</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Nouveau montant (FCFA)</label>
+              <MoneyInput value={editPayAmount} onChange={(n) => setEditPayAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:glass" />
+            </div>
+            <Button onClick={updatePayment} disabled={saving || !editPayAmount || Number(editPayAmount) <= 0} className="w-full">
+              {saving ? "Enregistrement…" : "Enregistrer la modification"}
             </Button>
           </div>
         </DialogContent>
