@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Lock, Target, Calendar, Users, FileText,
-  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks,
+  TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -370,6 +370,46 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     }
   };
 
+  const removeMember = async (memberId: string) => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_members" as any).delete().eq("id", memberId);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      if (cycle) await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: "Membre retiré ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const changeCollabRole = async (collabUserId: string, newRole: "manager" | "viewer") => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("caisse_collaborators" as any)
+        .update({ role: newRole })
+        .eq("caisse_id", tontine.id)
+        .eq("user_id", collabUserId);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Rôle mis à jour ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const removeCollaborator = async (collabUserId: string) => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("caisse_collaborators" as any)
+        .delete()
+        .eq("caisse_id", tontine.id)
+        .eq("user_id", collabUserId);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Collaborateur retiré ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
   const deletePayment = async (paymentId: string) => {
     if (saving || !cycle) return;
     setSaving(true);
@@ -511,7 +551,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               const initial = (c.full_name || c.email || "?").trim().charAt(0).toUpperCase();
               const isMe = c.user_id === user?.id;
               return (
-                <div key={c.user_id} className="flex items-center gap-2 glass rounded-full pl-1 pr-2.5 py-1 border border-border">
+                <div key={c.user_id} className="flex items-center gap-1.5 glass rounded-full pl-1 pr-1.5 py-1 border border-border">
                   <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
                     <span className="text-[10px] font-bold text-primary-foreground">{initial}</span>
                   </div>
@@ -521,6 +561,41 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full ${ri.cls}`}>
                     <Icon className="w-2.5 h-2.5" /> {ri.label}
                   </span>
+                  {canManage && !isMe && c.role !== "owner" && (
+                    <>
+                      {c.role === "viewer" ? (
+                        <button
+                          title="Promouvoir co-gestionnaire"
+                          disabled={saving}
+                          onClick={() => changeCollabRole(c.user_id, "manager")}
+                          className="text-muted-foreground hover:text-blue-400 p-1 disabled:opacity-50"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                      ) : c.role === "manager" ? (
+                        <button
+                          title="Passer observateur"
+                          disabled={saving}
+                          onClick={() => changeCollabRole(c.user_id, "viewer")}
+                          className="text-muted-foreground hover:text-amber-400 p-1 disabled:opacity-50"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      ) : null}
+                      <ConfirmDeleteDialog
+                        onConfirm={() => removeCollaborator(c.user_id)}
+                        title={`Retirer ${display} de la caisse ?`}
+                        description="Il n'aura plus accès à cette caisse."
+                      >
+                        <button
+                          title="Retirer"
+                          className="text-muted-foreground hover:text-destructive p-1"
+                        >
+                          <UserMinus className="w-3 h-3" />
+                        </button>
+                      </ConfirmDeleteDialog>
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -646,6 +721,21 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                     </div>
                   ))}
                 </div>
+                {canManage && !isClosed && (
+                  <ConfirmDeleteDialog
+                    onConfirm={() => removeMember(m.id)}
+                    title={`Retirer ${m.name} de la liste ?`}
+                    description="Ses cotisations seront aussi supprimées."
+                  >
+                    <button
+                      className="text-muted-foreground hover:text-destructive p-1 flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Retirer ce membre"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </ConfirmDeleteDialog>
+                )}
               </div>
             </motion.div>
           );
