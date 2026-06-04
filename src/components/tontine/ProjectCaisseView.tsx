@@ -106,6 +106,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [expNote, setExpNote] = useState("");
   const [expItemId, setExpItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [payItemTarget, setPayItemTarget] = useState<any | null>(null);
+  const [payItemAmount, setPayItemAmount] = useState("");
 
   // Members search & sort
   const [memberSearch, setMemberSearch] = useState("");
