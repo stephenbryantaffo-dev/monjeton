@@ -75,6 +75,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [payAmount, setPayAmount] = useState("");
   const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
 
+  // Edit payment dialog
+  const [editPayOpen, setEditPayOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<TontinePayment | null>(null);
+  const [editPayAmount, setEditPayAmount] = useState("");
+
   // Expense dialog
   const [expOpen, setExpOpen] = useState(false);
   const [expLabel, setExpLabel] = useState("");
