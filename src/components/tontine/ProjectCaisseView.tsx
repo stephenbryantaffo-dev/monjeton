@@ -449,13 +449,34 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const cloturer = async () => {
-    if (!isOwner) return;
-    await supabase.from("tontines" as any).update({ is_closed: true, status: "closed" } as any).eq("id", tontine.id);
-    if (cycle) await supabase.from("tontine_cycles" as any).update({ status: "closed" } as any).eq("id", cycle.id);
-    setClotureOpen(false);
-    setBilanOpen(true);
-    toast({ title: "Projet clôturé 🔒" });
-    onUpdated();
+    if (!isOwner || saving) return;
+    setSaving(true);
+    try {
+      const { error: tErr } = await supabase
+        .from("tontines" as any)
+        .update({ is_closed: true, status: "closed" } as any)
+        .eq("id", tontine.id);
+      if (tErr) {
+        toast({ title: "Clôture impossible", description: tErr.message, variant: "destructive" });
+        return;
+      }
+      if (cycle) {
+        const { error: cErr } = await supabase
+          .from("tontine_cycles" as any)
+          .update({ status: "closed" } as any)
+          .eq("id", cycle.id);
+        if (cErr) {
+          toast({ title: "Erreur", description: cErr.message, variant: "destructive" });
+          return;
+        }
+      }
+      setClotureOpen(false);
+      setBilanOpen(true);
+      toast({ title: "Projet clôturé 🔒" });
+      onUpdated();
+    } finally {
+      setSaving(false);
+    }
   };
 
   // ─── Export PDF (print-window) ───
@@ -1089,7 +1110,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           </p>
           <div className="flex gap-2 mt-4">
             <Button variant="outline" onClick={() => setClotureOpen(false)} className="flex-1 glass">Annuler</Button>
-            <Button onClick={cloturer} className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <Button onClick={cloturer} disabled={saving} className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90">
               <Lock className="w-4 h-4 mr-1" /> Clôturer
             </Button>
           </div>
