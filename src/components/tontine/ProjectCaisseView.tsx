@@ -811,7 +811,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       </Dialog>
 
       {/* ─── Expense Dialog ─── */}
-      <Dialog open={expOpen} onOpenChange={setExpOpen}>
+      <Dialog open={expOpen} onOpenChange={(o) => { setExpOpen(o); if (!o) setExpItemId(null); }}>
         <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nouvelle dépense</DialogTitle></DialogHeader>
           <div className="space-y-3">
