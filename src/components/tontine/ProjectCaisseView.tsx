@@ -161,15 +161,21 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const confirmPay = async () => {
-    if (!payMember || !cycle) return;
-    const { error } = await supabase.from("tontine_payments").insert({
-      cycle_id: cycle.id, member_id: payMember.id,
-      amount_paid: Number(payAmount), payment_date: payDate,
-    } as any);
-    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
-    await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
-    toast({ title: `${payMember.name} : ${fmt(Number(payAmount))} enregistré ✅` });
-    setPayOpen(false); load();
+    if (!payMember || !cycle || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_payments").insert({
+        cycle_id: cycle.id, member_id: payMember.id,
+        amount_paid: Number(payAmount), payment_date: payDate,
+      } as any);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: `${payMember.name} : ${fmt(Number(payAmount))} enregistré ✅` });
+      setPayOpen(false);
+      await load();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addExpense = async () => {
