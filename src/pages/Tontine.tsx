@@ -27,6 +27,7 @@ import CreateTontineModal from "@/components/tontine/CreateTontineModal";
 import ReportsTab from "@/components/tontine/ReportsTab";
 import TontineHistory from "@/components/tontine/TontineHistory";
 import ProjectCaisseView from "@/components/tontine/ProjectCaisseView";
+import LeaveCaisseButton from "@/components/tontine/LeaveCaisseButton";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, FREQ_LABELS, FREQ_BADGE_CLASSES } from "@/components/tontine/types";
 import { fmt, generateCycleInfo } from "@/components/tontine/utils";
 
@@ -815,6 +816,18 @@ const TontinePage = () => {
             className="flex-1 glass-card rounded-xl p-2.5 text-xs font-bold text-destructive border border-destructive/20 flex items-center justify-center gap-1.5">
             <XCircle className="w-4 h-4" /> Clôturer
           </button>
+        </div>
+      )}
+
+      {/* Quitter la tontine (tous les collaborateurs) */}
+      {selected && (
+        <div className="mb-3">
+          <LeaveCaisseButton
+            caisseId={selected.id}
+            isOwner={isOwner}
+            onLeft={goBack}
+            className="w-full"
+          />
         </div>
       )}
 
