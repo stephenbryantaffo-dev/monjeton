@@ -556,7 +556,8 @@ const Debts = () => {
       {/* FAB */}
       <button
         onClick={openNew}
-        className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full gradient-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 transition-transform"
+        style={{ bottom: "calc(var(--bottom-nav-space) + 16px)" }}
+        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 transition-transform"
         aria-label="Nouvelle dette"
       >
         <Plus className="w-6 h-6" />
