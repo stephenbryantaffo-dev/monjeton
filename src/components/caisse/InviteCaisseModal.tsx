@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Share2, Link2, Loader2, RefreshCw } from "lucide-react";
+import { Copy, Share2, Link2, Loader2, RefreshCw, Users, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ interface Props {
 
 const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) => {
   const [role, setRole] = useState<"viewer" | "manager">("viewer");
+  const [linkType, setLinkType] = useState<"group" | "single">("group");
   const [generating, setGenerating] = useState(false);
   const [link, setLink] = useState<string | null>(null);
 
@@ -23,12 +24,16 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
     if (open) {
       setLink(null);
       setRole("viewer");
+      setLinkType("group");
     }
   }, [open]);
 
+  const roleLabel = role === "manager" ? "Co-gestionnaire" : "Observateur";
+
   const generateLink = async () => {
     setGenerating(true);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const days = linkType === "single" ? 7 : 30;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Tu dois être connecté.");
@@ -43,7 +48,7 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
         role,
         created_by: user.id,
         expires_at: expiresAt,
-        max_uses: 1,
+        max_uses: linkType === "single" ? 1 : null,
       } as any)
       .select("token")
       .single();
@@ -87,6 +92,29 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
 
         <div className="space-y-4 pt-2">
           <div>
+            <Label className="text-xs text-muted-foreground mb-2 block">Type de lien</Label>
+            <Select value={linkType} onValueChange={(v) => { setLinkType(v as "group" | "single"); setLink(null); }}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="group">
+                  <div className="flex flex-col">
+                    <span className="font-medium flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Lien de groupe (illimité)</span>
+                    <span className="text-xs text-muted-foreground">Plusieurs personnes peuvent rejoindre</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="single">
+                  <div className="flex flex-col">
+                    <span className="font-medium flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Usage unique (1 personne)</span>
+                    <span className="text-xs text-muted-foreground">Une seule utilisation possible</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Rôle attribué</Label>
             <Select value={role} onValueChange={(v) => { setRole(v as any); setLink(null); }}>
               <SelectTrigger>
@@ -108,7 +136,7 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground mt-1.5">
-              Lien à usage unique. Expire dans 7 jours.
+              Tous ceux qui rejoignent via ce lien seront <span className="text-foreground font-medium">{roleLabel}</span>.
             </p>
           </div>
 
@@ -127,7 +155,11 @@ const InviteCaisseModal = ({ open, onOpenChange, caisseId, caisseName }: Props) 
           ) : (
             <div className="space-y-2.5">
               <div className="glass rounded-xl p-3 border border-primary/20">
-                <p className="text-[11px] text-muted-foreground mb-1">Lien à partager</p>
+                <p className="text-[11px] text-muted-foreground mb-1">
+                  {linkType === "group"
+                    ? "Lien de groupe · Expire dans 30 jours · Partage-le dans ton groupe, plusieurs personnes peuvent rejoindre."
+                    : "Lien à usage unique · Expire dans 7 jours."}
+                </p>
                 <p className="text-xs font-mono text-foreground break-all">{link}</p>
               </div>
               <div className="flex gap-2">
