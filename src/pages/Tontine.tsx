@@ -352,6 +352,16 @@ const TontinePage = () => {
         return;
       }
 
+      try {
+        await logNotification({
+          tontineId: selected!.id,
+          membreId: payMember.id,
+          type: "systeme",
+          canal: "systeme",
+          message: `${payMember.name} a cotisé ${fmt(Number(payAmount))} FCFA dans "${selected!.name}"`,
+        });
+      } catch {}
+
       toast({ title: `Paiement de ${payMember.name} enregistré ✅` });
       setPayModalOpen(false);
 
