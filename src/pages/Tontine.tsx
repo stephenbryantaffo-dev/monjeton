@@ -45,6 +45,7 @@ const TontinePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") === "caisse" ? "caisse" : "tontine";
   const [activeTab, setActiveTab] = useState<"tontine" | "caisse">(initialTab);
+  const [statusFilter, setStatusFilter] = useState<"active" | "closed" | "all">("active");
   const [tontines, setTontines] = useState<TontineData[]>([]);
   const [roleMap, setRoleMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
