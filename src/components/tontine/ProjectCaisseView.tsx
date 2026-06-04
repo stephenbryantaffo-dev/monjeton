@@ -276,6 +276,72 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     await load();
   };
 
+  // ─── Expense items (postes) ───
+  const addExpenseItem = async () => {
+    if (saving || !canManage || !newItemLabel.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expense_items" as any).insert({
+        tontine_id: tontine.id,
+        label: newItemLabel.trim(),
+        planned_amount: Number(newItemPlanned) || 0,
+        created_by: user?.id,
+      } as any);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: `Poste "${newItemLabel}" ajouté ✅` });
+      setNewItemLabel("");
+      setNewItemPlanned("");
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const startEditItem = (it: any) => {
+    setEditingItemId(it.id);
+    setEditItemLabel(it.label || "");
+    setEditItemPlanned(String(it.planned_amount || ""));
+  };
+
+  const updateExpenseItem = async () => {
+    if (saving || !canManage || !editingItemId || !editItemLabel.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expense_items" as any)
+        .update({
+          label: editItemLabel.trim(),
+          planned_amount: Number(editItemPlanned) || 0,
+        } as any)
+        .eq("id", editingItemId);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Poste modifié ✅" });
+      setEditingItemId(null);
+      setEditItemLabel("");
+      setEditItemPlanned("");
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const deleteExpenseItem = async (id: string) => {
+    if (saving || !canManage) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expense_items" as any).delete().eq("id", id);
+      if (error) {
+        toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Poste supprimé ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+
+
   const addMember = async () => {
     if (!newMemberName.trim() || !canManage || saving) return;
     setSaving(true);
