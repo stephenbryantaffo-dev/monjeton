@@ -1073,7 +1073,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       </Dialog>
 
       {/* ─── Expense Dialog ─── */}
-      <Dialog open={expOpen} onOpenChange={(o) => { setExpOpen(o); if (!o) setExpItemId(null); }}>
+      <Dialog open={expOpen} onOpenChange={(o) => { setExpOpen(o); if (!o) { setExpItemId(null); setExpCat("autre"); } }}>
         <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nouvelle dépense</DialogTitle></DialogHeader>
           <div className="space-y-3">
@@ -1086,15 +1086,42 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <MoneyInput value={expAmount} onChange={(n) => setExpAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:glass" />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Catégorie</label>
-              <div className="grid grid-cols-2 gap-2">
-                {DEPENSE_CATS.map((c) => (
-                  <button key={c.id} onClick={() => setExpCat(c.id)}
-                    className={`p-2 rounded-xl text-xs font-medium border transition-colors ${
-                      expCat === c.id ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary/50 text-muted-foreground"
-                    }`}>{c.label}</button>
-                ))}
-              </div>
+              <label className="text-sm text-muted-foreground mb-1 block">Catégoriser</label>
+              <select
+                value={
+                  expItemId ? `poste:${expItemId}`
+                  : expCat && expCat !== "autre" ? `cat:${expCat}`
+                  : ""
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v.startsWith("poste:")) {
+                    setExpItemId(v.slice(6));
+                    setExpCat("autre");
+                  } else if (v.startsWith("cat:")) {
+                    setExpCat(v.slice(4));
+                    setExpItemId(null);
+                  } else {
+                    setExpItemId(null);
+                    setExpCat("autre");
+                  }
+                }}
+                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+              >
+                <option value="">Choisir…</option>
+                {expenseItems.length > 0 && (
+                  <optgroup label="Tes postes de dépense">
+                    {expenseItems.map((it) => (
+                      <option key={`poste-${it.id}`} value={`poste:${it.id}`}>🎯 {it.label}</option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="Catégories générales">
+                  {DEPENSE_CATS.map((c) => (
+                    <option key={`cat-${c.id}`} value={`cat:${c.id}`}>{c.label}</option>
+                  ))}
+                </optgroup>
+              </select>
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Bénéficiaire (optionnel)</label>
@@ -1107,25 +1134,6 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={expNote} onChange={(e) => setExpNote(e.target.value)} className="glass" />
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Rattacher à un poste (optionnel)</label>
-              <select
-                value={expItemId || ""}
-                onChange={(e) => setExpItemId(e.target.value || null)}
-                className="w-full glass rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Aucun poste / hors poste</option>
-                {expenseItems.map((it) => {
-                  const planned = Number(it.planned_amount || 0);
-                  const paid = paidByItem[it.id] || 0;
-                  return (
-                    <option key={it.id} value={it.id}>
-                      {it.label} ({fmt(paid)}/{fmt(planned)})
-                    </option>
-                  );
-                })}
-              </select>
             </div>
             <Button onClick={addExpense} disabled={saving || !expLabel.trim() || Number(expAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la dépense"}
