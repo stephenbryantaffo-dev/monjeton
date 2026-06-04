@@ -590,6 +590,10 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Nouveau montant (FCFA)</label>
               <MoneyInput value={editPayAmount} onChange={(n) => setEditPayAmount(n ? String(n) : "")} showCurrency={false} className="[&>input]:glass" />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
+              <Input value={editPayNote} onChange={(e) => setEditPayNote(e.target.value)} placeholder="Ex: pour la vidéo du concert" className="glass" />
+            </div>
             <Button onClick={updatePayment} disabled={saving || !editPayAmount || Number(editPayAmount) <= 0} className="w-full">
               {saving ? "Enregistrement…" : "Enregistrer la modification"}
             </Button>
