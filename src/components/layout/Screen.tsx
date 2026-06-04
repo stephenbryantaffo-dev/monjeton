@@ -171,7 +171,9 @@ Screen.StickyAction = function ScreenStickyAction({
     <div
       className="fixed left-0 right-0 z-40 pointer-events-none"
       style={{
-        bottom: hasBottomNav ? "var(--bottom-nav-space)" : "env(safe-area-inset-bottom, 0px)",
+        bottom: hasBottomNav
+          ? "calc(var(--bottom-nav-space) + 14px)"
+          : "calc(env(safe-area-inset-bottom, 0px) + 14px)",
       }}
     >
 
