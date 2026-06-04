@@ -164,6 +164,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     setPayMember(m);
     setPayAmount(String(expectedPerMember || ""));
     setPayDate(new Date().toISOString().split("T")[0]);
+    setPayNote("");
     setPayOpen(true);
   };
 
@@ -174,6 +175,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       const { error } = await supabase.from("tontine_payments").insert({
         cycle_id: cycle.id, member_id: payMember.id,
         amount_paid: Number(payAmount), payment_date: payDate,
+        note: payNote.trim() || null,
       } as any);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
