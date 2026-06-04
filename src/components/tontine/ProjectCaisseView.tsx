@@ -956,6 +956,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                             setEditingPayment(p);
                             setEditPayAmount(String(p.amount_paid));
                             setEditPayNote(((p as any).note ?? "") as string);
+                            setEditPayItemId(((p as any).expense_item_id ?? null));
                             setEditPayOpen(true);
                           }}
                         >
