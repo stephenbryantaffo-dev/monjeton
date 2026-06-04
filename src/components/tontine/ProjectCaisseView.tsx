@@ -550,7 +550,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {collaborators.length > 0 && (
         <div className="glass-card rounded-2xl p-3 mb-4">
           <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par ({collaborators.length})
+            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par
           </p>
           <div className="flex items-center gap-2 mb-2">
             <div className="relative flex-1">
