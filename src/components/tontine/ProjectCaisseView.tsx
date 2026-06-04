@@ -197,6 +197,15 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       } as any);
       if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      try {
+        await logNotification({
+          tontineId: tontine.id,
+          membreId: payMember.id,
+          type: "systeme",
+          canal: "systeme",
+          message: `${payMember.name} a cotisé ${fmt(Number(payAmount))} FCFA dans "${tontine.name}"`,
+        });
+      } catch {}
       toast({ title: `${payMember.name} : ${fmt(Number(payAmount))} enregistré ✅` });
       setPayOpen(false);
       await load();
