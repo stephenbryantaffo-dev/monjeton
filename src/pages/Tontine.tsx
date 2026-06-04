@@ -643,7 +643,7 @@ const TontinePage = () => {
   };
 
   const tabToggle = (
-    <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
+    <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
       <button onClick={() => handleTabChange("tontine")}
         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "tontine" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
         🔄 Tontine
@@ -655,11 +655,46 @@ const TontinePage = () => {
     </div>
   );
 
-  // Filter list by current tab
-  const visibleTontines = useMemo(
+  const statusFilterBar = (
+    <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
+      {(["active", "closed", "all"] as const).map((f) => {
+        const counts = {
+          active: byTab.filter(t => !isCaisseClosed(t)).length,
+          closed: byTab.filter(t => isCaisseClosed(t)).length,
+          all: byTab.length,
+        };
+        const labels: Record<typeof f, string> = {
+          active: "Actives",
+          closed: "Clôturées",
+          all: "Toutes",
+        };
+        const active = statusFilter === f;
+        return (
+          <button
+            key={f}
+            onClick={() => setStatusFilter(f)}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${active ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            {labels[f]} ({counts[f]})
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
+
+  // Filter list by current tab then by status
+  const byTab = useMemo(
     () => tontines.filter(t => activeTab === "caisse" ? t.caisse_type === "project" : t.caisse_type !== "project"),
     [tontines, activeTab]
   );
+
+  const visibleTontines = useMemo(() => {
+    if (statusFilter === "active") return byTab.filter(t => !isCaisseClosed(t));
+    if (statusFilter === "closed") return byTab.filter(t => isCaisseClosed(t));
+    return byTab; // "all"
+  }, [byTab, statusFilter]);
 
 
   // ─── LIST VIEW ───
