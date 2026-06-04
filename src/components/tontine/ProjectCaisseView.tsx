@@ -563,17 +563,21 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* Action buttons */}
       {!isClosed && (
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           {canManage ? (
             <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
               <TrendingDown className="w-4 h-4 mr-1" /> Dépense
             </Button>
           ) : <div />}
+          <Button onClick={() => setItemsViewOpen(true)} variant="outline" className="glass">
+            <ListChecks className="w-4 h-4 mr-1" /> Postes{expenseItems.length > 0 ? ` (${expenseItems.length})` : ""}
+          </Button>
           <Button onClick={exportPDF} variant="outline" className="glass">
             <FileText className="w-4 h-4 mr-1" /> Bilan PDF
           </Button>
         </div>
       )}
+
 
       {/* ─── Members + cotisations ─── */}
       <div className="flex items-center justify-between mb-2 mt-4">
