@@ -1068,6 +1068,33 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                               ? "✅ Soldé"
                               : `Reste : ${fmt(reste)} FCFA`}
                           </p>
+                          {(() => {
+                            const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
+                            if (linked.length === 0) return null;
+                            const expanded = expandedItemId === it.id;
+                            return (
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => setExpandedItemId(expanded ? null : it.id)}
+                                  className="text-[11px] text-primary hover:underline"
+                                >
+                                  {expanded ? "▾ Masquer" : "▸ Voir"} les dépenses ({linked.length})
+                                </button>
+                                {expanded && (
+                                  <div className="mt-2 space-y-1 pl-2 border-l border-border">
+                                    {linked.map((e: any) => (
+                                      <div key={e.id} className="flex items-center justify-between text-xs">
+                                        <span className="truncate text-foreground/80">
+                                          {new Date(e.expense_date).toLocaleDateString("fr-FR")} · {e.label}
+                                        </span>
+                                        <span className="text-destructive font-semibold ml-2 flex-shrink-0">-{fmt(Number(e.amount))}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
                     </div>
