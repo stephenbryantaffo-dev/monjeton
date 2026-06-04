@@ -74,17 +74,6 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [payMember, setPayMember] = useState<TontineMember | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
-  const [payNote, setPayNote] = useState("");
-
-  // Edit payment dialog
-  const [editPayOpen, setEditPayOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<TontinePayment | null>(null);
-  const [editPayAmount, setEditPayAmount] = useState("");
-  const [editPayNote, setEditPayNote] = useState("");
-  const [editPayDate, setEditPayDate] = useState("");
-
-  // History
-  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Expense dialog
   const [expOpen, setExpOpen] = useState(false);
@@ -172,28 +161,39 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const confirmPay = async () => {
-    if (!payMember || !cycle) return;
-    const { error } = await supabase.from("tontine_payments").insert({
-      cycle_id: cycle.id, member_id: payMember.id,
-      amount_paid: Number(payAmount), payment_date: payDate,
-    } as any);
-    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
-    await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
-    toast({ title: `${payMember.name} : ${fmt(Number(payAmount))} enregistré ✅` });
-    setPayOpen(false); load();
+    if (!payMember || !cycle || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_payments").insert({
+        cycle_id: cycle.id, member_id: payMember.id,
+        amount_paid: Number(payAmount), payment_date: payDate,
+      } as any);
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+      await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: `${payMember.name} : ${fmt(Number(payAmount))} enregistré ✅` });
+      setPayOpen(false);
+      await load();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addExpense = async () => {
-    if (!expLabel.trim() || Number(expAmount) <= 0) return;
-    const { error } = await supabase.from("tontine_expenses" as any).insert({
-      tontine_id: tontine.id, label: expLabel.trim(), amount: Number(expAmount),
-      category: expCat, beneficiaire: expBenef || null, expense_date: expDate, note: expNote || null,
-    });
-    if (error) { toast({ title: "Erreur dépense", description: error.message, variant: "destructive" }); return; }
-    toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
-    setExpOpen(false);
-    setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote("");
-    load();
+    if (!expLabel.trim() || Number(expAmount) <= 0 || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expenses" as any).insert({
+        tontine_id: tontine.id, label: expLabel.trim(), amount: Number(expAmount),
+        category: expCat, beneficiaire: expBenef || null, expense_date: expDate, note: expNote || null,
+      });
+      if (error) { toast({ title: "Erreur dépense", description: error.message, variant: "destructive" }); return; }
+      toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
+      setExpOpen(false);
+      setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote("");
+      await load();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteExpense = async (id: string) => {
@@ -208,23 +208,28 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   };
 
   const addMember = async () => {
-    if (!newMemberName.trim() || !canManage) return;
-    const { error } = await supabase.from("tontine_members" as any).insert({
-      tontine_id: tontine.id,
-      name: newMemberName.trim(),
-      phone: newMemberPhone.trim() || null,
-      is_owner: false,
-    });
-    if (error) {
-      console.error("Add project member error:", error);
-      toast({ title: "Ajout membre impossible", description: error.message, variant: "destructive" });
-      return;
+    if (!newMemberName.trim() || !canManage || saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_members" as any).insert({
+        tontine_id: tontine.id,
+        name: newMemberName.trim(),
+        phone: newMemberPhone.trim() || null,
+        is_owner: false,
+      });
+      if (error) {
+        console.error("Add project member error:", error);
+        toast({ title: "Ajout membre impossible", description: error.message, variant: "destructive" });
+        return;
+      }
+      setNewMemberName("");
+      setNewMemberPhone("");
+      setAddMemberOpen(false);
+      toast({ title: `${newMemberName.trim()} ajouté ✅` });
+      await load();
+    } finally {
+      setSaving(false);
     }
-    setNewMemberName("");
-    setNewMemberPhone("");
-    setAddMemberOpen(false);
-    toast({ title: `${newMemberName.trim()} ajouté ✅` });
-    await load();
   };
 
 
@@ -498,7 +503,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
               <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="glass" />
             </div>
-            <Button onClick={confirmPay} className="w-full">Enregistrer la cotisation</Button>
+            <Button onClick={confirmPay} disabled={saving || !payAmount || Number(payAmount) <= 0} className="w-full">
+              {saving ? "Enregistrement…" : "Enregistrer la cotisation"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -539,7 +546,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
               <Input value={expNote} onChange={(e) => setExpNote(e.target.value)} className="glass" />
             </div>
-            <Button onClick={addExpense} className="w-full">Enregistrer la dépense</Button>
+            <Button onClick={addExpense} disabled={saving || !expLabel.trim() || Number(expAmount) <= 0} className="w-full">
+              {saving ? "Enregistrement…" : "Enregistrer la dépense"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -551,7 +560,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           <div className="space-y-3">
             <Input value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} placeholder="Nom" className="glass" />
             <Input value={newMemberPhone} onChange={(e) => setNewMemberPhone(e.target.value)} placeholder="Téléphone (optionnel)" className="glass" />
-            <Button onClick={addMember} className="w-full">Ajouter</Button>
+            <Button onClick={addMember} disabled={saving || !newMemberName.trim()} className="w-full">
+              {saving ? "Enregistrement…" : "Ajouter"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
