@@ -1264,9 +1264,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                 {expenseItems.map((it) => {
                   const planned = Number(it.planned_amount || 0);
                   const paid = paidByItem[it.id] || 0;
+                  const collected = collectedByItem[it.id] || 0;
                   const pct = planned > 0 ? Math.min(100, Math.round((paid / planned) * 100)) : (paid > 0 ? 100 : 0);
-                  const solde = planned >= paid;
                   const reste = Math.max(planned - paid, 0);
+                  const resteCollect = Math.max(planned - collected, 0);
+                  const finance = planned > 0 && collected >= planned;
                   const isEditing = editingItemId === it.id;
                   return (
                     <div key={it.id} className="glass-card rounded-xl p-3">
