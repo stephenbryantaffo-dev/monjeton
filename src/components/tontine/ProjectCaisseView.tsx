@@ -174,6 +174,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       .on("postgres_changes",
         { event: "*", schema: "public", table: "tontine_expenses", filter: `tontine_id=eq.${tontine.id}` },
         () => load())
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tontine_expense_items", filter: `tontine_id=eq.${tontine.id}` },
+        () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [tontine?.id, load]);
