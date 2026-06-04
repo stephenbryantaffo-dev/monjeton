@@ -256,11 +256,12 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       const { error } = await supabase.from("tontine_expenses" as any).insert({
         tontine_id: tontine.id, label: expLabel.trim(), amount: Number(expAmount),
         category: expCat, beneficiaire: expBenef || null, expense_date: expDate, note: expNote || null,
-      });
+        expense_item_id: expItemId || null,
+      } as any);
       if (error) { toast({ title: "Erreur dépense", description: error.message, variant: "destructive" }); return; }
       toast({ title: `Dépense "${expLabel}" : ${fmt(Number(expAmount))} ✅` });
       setExpOpen(false);
-      setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote("");
+      setExpLabel(""); setExpAmount(""); setExpCat("autre"); setExpBenef(""); setExpNote(""); setExpItemId(null);
       await load();
     } finally {
       setSaving(false);
