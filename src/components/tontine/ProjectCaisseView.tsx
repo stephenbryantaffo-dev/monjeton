@@ -295,6 +295,44 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     }
   };
 
+  const openPayItem = (item: any) => {
+    const paid = paidByItem[item.id] || 0;
+    const collected = collectedByItem[item.id] || 0;
+    const planned = Number(item.planned_amount || 0);
+    const suggested = Math.max(0, Math.min(collected - paid, planned - paid));
+    setPayItemTarget(item);
+    setPayItemAmount(String(suggested || ""));
+  };
+
+  const markItemPaid = async () => {
+    if (!payItemTarget) return;
+    const montant = Number(payItemAmount);
+    if (saving || montant <= 0) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_expenses" as any).insert({
+        tontine_id: tontine.id,
+        label: `Paiement ${payItemTarget.label}`,
+        amount: montant,
+        category: "autre",
+        beneficiaire: null,
+        expense_date: new Date().toISOString().slice(0, 10),
+        note: "Versé depuis les cotisations collectées",
+        expense_item_id: payItemTarget.id,
+      } as any);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: `${fmt(montant)} payé pour "${payItemTarget.label}" ✅` });
+      setPayItemTarget(null);
+      setPayItemAmount("");
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const deleteExpense = async (id: string) => {
     const { error } = await supabase.from("tontine_expenses" as any).delete().eq("id", id);
     if (error) {
