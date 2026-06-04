@@ -232,6 +232,17 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     }
   };
 
+  const deletePayment = async (paymentId: string) => {
+    if (saving || !cycle) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("tontine_payments" as any).delete().eq("id", paymentId);
+      if (error) { toast({ title:"Erreur", description:error.message, variant:"destructive" }); return; }
+      await supabase.rpc("recalculate_cycle_collected" as any, { p_cycle_id: cycle.id } as any);
+      toast({ title: "Cotisation supprimée ✅" });
+      await load();
+    } finally { setSaving(false); }
+  };
 
   const cloturer = async () => {
     if (!isOwner) return;
