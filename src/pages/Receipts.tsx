@@ -110,6 +110,9 @@ const Receipts = () => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenScan, setFullscreenScan] = useState<ScanItem | null>(null);
   const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
+  const [dupViewOpen, setDupViewOpen] = useState(false);
+  const [dupConfirmAll, setDupConfirmAll] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user && isUnlocked) fetchScans();
