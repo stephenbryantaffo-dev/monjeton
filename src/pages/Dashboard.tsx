@@ -74,6 +74,10 @@ const Dashboard = () => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_transactions") !== "false";
   });
+  const [showTontines, setShowTontines] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_tontines") !== "false";
+  });
   const [blocksOrder, setBlocksOrder] = useState<BlockKey[]>(() => {
     if (typeof window === "undefined") return [...DEFAULT_BLOCKS_ORDER];
     try {
@@ -115,14 +119,19 @@ const Dashboard = () => {
     setShowTransactions(v);
     try { localStorage.setItem("dashboard_show_transactions", String(v)); } catch {}
   };
+  const toggleTontines = (v: boolean) => {
+    setShowTontines(v);
+    try { localStorage.setItem("dashboard_show_tontines", String(v)); } catch {}
+  };
   const resetCustomization = () => {
     togglePredictions(true);
     toggleFinancialScore(true);
     togglePlan(true);
     toggleTransactions(true);
+    toggleTontines(true);
     persistOrder([...DEFAULT_BLOCKS_ORDER]);
   };
-  const hiddenCount = [showPredictions, showFinancialScore, showPlan, showTransactions].filter(v => !v).length;
+  const hiddenCount = [showPredictions, showFinancialScore, showPlan, showTransactions, showTontines].filter(v => !v).length;
 
   
 
