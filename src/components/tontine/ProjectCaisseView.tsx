@@ -1317,13 +1317,31 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
               </div>
             )}
 
-            {expenseItems.length === 0 ? (
+            {expenseItems.length > 0 && (
+              <div className="flex items-center justify-end gap-2">
+                <span className="text-[11px] text-muted-foreground">Trier</span>
+                <select
+                  value={itemSort}
+                  onChange={(e) => setItemSort(e.target.value)}
+                  className="glass rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs text-foreground"
+                >
+                  <option value="created">Par défaut</option>
+                  <option value="budget_desc">Budget (grand → petit)</option>
+                  <option value="budget_asc">Budget (petit → grand)</option>
+                  <option value="paid_desc">Payé (grand → petit)</option>
+                  <option value="collected_desc">Collecté (grand → petit)</option>
+                  <option value="reste_desc">Reste à payer (grand → petit)</option>
+                </select>
+              </div>
+            )}
+
+            {sortedItems.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Aucun poste pour l'instant. Ajoute la salle, la déco, le traiteur…
               </p>
             ) : (
               <div className="space-y-2">
-                {expenseItems.map((it) => {
+                {sortedItems.map((it) => {
                   const planned = Number(it.planned_amount || 0);
                   const paid = paidByItem[it.id] || 0;
                   const collected = collectedByItem[it.id] || 0;
