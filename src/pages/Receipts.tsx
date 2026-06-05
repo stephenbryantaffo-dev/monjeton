@@ -853,23 +853,21 @@ const Receipts = () => {
         <DiscreetBanner />
 
         {duplicates.length > 0 && (
-          <div className="glass-card rounded-xl p-3 flex items-start gap-3 border border-yellow-500/30 bg-yellow-500/5">
+          <button
+            onClick={() => setDupViewOpen(true)}
+            className="w-full glass-card rounded-xl p-3 flex items-start gap-3 border border-yellow-500/30 bg-yellow-500/5 text-left hover:bg-yellow-500/10 transition-colors"
+          >
             <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">
                 {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} détecté{duplicates.length > 1 ? "s" : ""}
               </p>
               <p className="text-xs text-muted-foreground">
-                Même montant, date et marchand sur plusieurs reçus.
+                Touche pour comparer et nettoyer.
               </p>
             </div>
-            <button
-              onClick={() => setDuplicates([])}
-              className="flex-shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Fermer">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          </button>
         )}
 
         {/* Global export button */}
