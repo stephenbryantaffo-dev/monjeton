@@ -55,7 +55,7 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const DEFAULT_BLOCKS_ORDER = ["wallets", "financial_score", "plan", "predictions", "transactions"] as const;
+  const DEFAULT_BLOCKS_ORDER = ["wallets", "financial_score", "plan", "predictions", "transactions", "tontines"] as const;
   type BlockKey = typeof DEFAULT_BLOCKS_ORDER[number];
   const [showPredictions, setShowPredictions] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -73,6 +73,10 @@ const Dashboard = () => {
   const [showTransactions, setShowTransactions] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_transactions") !== "false";
+  });
+  const [showTontines, setShowTontines] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_tontines") !== "false";
   });
   const [blocksOrder, setBlocksOrder] = useState<BlockKey[]>(() => {
     if (typeof window === "undefined") return [...DEFAULT_BLOCKS_ORDER];
@@ -115,14 +119,19 @@ const Dashboard = () => {
     setShowTransactions(v);
     try { localStorage.setItem("dashboard_show_transactions", String(v)); } catch {}
   };
+  const toggleTontines = (v: boolean) => {
+    setShowTontines(v);
+    try { localStorage.setItem("dashboard_show_tontines", String(v)); } catch {}
+  };
   const resetCustomization = () => {
     togglePredictions(true);
     toggleFinancialScore(true);
     togglePlan(true);
     toggleTransactions(true);
+    toggleTontines(true);
     persistOrder([...DEFAULT_BLOCKS_ORDER]);
   };
-  const hiddenCount = [showPredictions, showFinancialScore, showPlan, showTransactions].filter(v => !v).length;
+  const hiddenCount = [showPredictions, showFinancialScore, showPlan, showTransactions, showTontines].filter(v => !v).length;
 
   
 
@@ -499,6 +508,7 @@ const Dashboard = () => {
                     plan: { label: "Plan financier du mois", desc: "Alertes de budget et plan en cours", checked: showPlan, onChange: togglePlan, toggleable: true },
                     predictions: { label: "Prévisions IA", desc: "Tendances et projections de fin de mois", checked: showPredictions, onChange: togglePredictions, toggleable: true },
                     transactions: { label: "Transactions récentes", desc: "Dernières opérations enregistrées", checked: showTransactions, onChange: toggleTransactions, toggleable: true },
+                    tontines: { label: "Mes Tontines & Caisses", desc: "Caisses communes et tontines en cours", checked: showTontines, onChange: toggleTontines, toggleable: true },
                   };
                   const m = meta[key];
                   return (
@@ -733,12 +743,16 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : null;
+            const tontinesBlock = showTontines ? (
+              <DashboardTontineWidget key="tontines" />
+            ) : null;
             const blockMap: Record<BlockKey, React.ReactNode> = {
               wallets: walletsBlock,
               financial_score: financialScoreBlock,
               plan: planBlock,
               predictions: predictionsBlock,
               transactions: transactionsBlock,
+              tontines: tontinesBlock,
             };
             return blocksOrder.map(k => blockMap[k]);
           })()}
@@ -755,8 +769,6 @@ const Dashboard = () => {
               trendModes={trendModes}
             />
            </Suspense>
-
-          <DashboardTontineWidget />
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
