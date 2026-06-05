@@ -6,6 +6,7 @@ import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
   Printer, Download, FileDown, ZoomIn, X, AlertTriangle, Loader2,
+  Trash2, Receipt as ReceiptIcon,
 } from "lucide-react";
 
 /**
@@ -109,6 +110,9 @@ const Receipts = () => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenScan, setFullscreenScan] = useState<ScanItem | null>(null);
   const [duplicates, setDuplicates] = useState<DuplicatePair[]>([]);
+  const [dupViewOpen, setDupViewOpen] = useState(false);
+  const [dupConfirmAll, setDupConfirmAll] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user && isUnlocked) fetchScans();
@@ -313,6 +317,60 @@ const Receipts = () => {
       });
     }
     await loadScanHistory(selectedScan.id);
+  };
+
+  // ━━━ Duplicate management ━━━
+  const reloadAfterDup = async () => {
+    await fetchScans();
+    if (user) {
+      try {
+        const dups = await detectDuplicates(user.id);
+        setDuplicates(dups);
+        if (dups.length === 0) {
+          setDupViewOpen(false);
+          toast({ title: "Plus aucun doublon 🎉" });
+        }
+      } catch { /* ignore */ }
+    }
+  };
+
+  const deleteDuplicate = async (scanId: string) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("receipt_scans").delete().eq("id", scanId);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Doublon supprimé ✅" });
+      await reloadAfterDup();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteAllDuplicates = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const toDelete = duplicates.map((p) => {
+        const d1 = new Date(p.scan1.parsed_date || (p.scan1 as any).created_at || 0).getTime();
+        const d2 = new Date(p.scan2.parsed_date || (p.scan2 as any).created_at || 0).getTime();
+        return d2 >= d1 ? p.scan2.id : p.scan1.id;
+      });
+      const uniqueIds = [...new Set(toDelete)];
+      const { error } = await supabase.from("receipt_scans").delete().in("id", uniqueIds);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: `${uniqueIds.length} doublon${uniqueIds.length > 1 ? "s" : ""} supprimé${uniqueIds.length > 1 ? "s" : ""} ✅` });
+      setDupConfirmAll(false);
+      await reloadAfterDup();
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Helper: mask text in discreet mode
@@ -849,23 +907,21 @@ const Receipts = () => {
         <DiscreetBanner />
 
         {duplicates.length > 0 && (
-          <div className="glass-card rounded-xl p-3 flex items-start gap-3 border border-yellow-500/30 bg-yellow-500/5">
+          <button
+            onClick={() => setDupViewOpen(true)}
+            className="w-full glass-card rounded-xl p-3 flex items-start gap-3 border border-yellow-500/30 bg-yellow-500/5 text-left hover:bg-yellow-500/10 transition-colors"
+          >
             <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">
                 {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} détecté{duplicates.length > 1 ? "s" : ""}
               </p>
               <p className="text-xs text-muted-foreground">
-                Même montant, date et marchand sur plusieurs reçus.
+                Touche pour comparer et nettoyer.
               </p>
             </div>
-            <button
-              onClick={() => setDuplicates([])}
-              className="flex-shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Fermer">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          </button>
         )}
 
         {/* Global export button */}
@@ -1314,6 +1370,121 @@ const Receipts = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ━━━ Duplicate management dialog ━━━ */}
+      <Dialog open={dupViewOpen} onOpenChange={(o) => !o && setDupViewOpen(false)}>
+        <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0">
+          <div className="sticky top-0 z-10 bg-background border-b border-border p-4">
+            <DialogTitle className="text-lg font-semibold text-foreground">
+              {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} à vérifier
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Choisis le reçu à garder, supprime celui en trop. Ton total se recalcule.
+            </p>
+          </div>
+
+          <div className="p-4 space-y-4 pb-nav">
+            {duplicates.length > 0 && (
+              <button
+                onClick={() => setDupConfirmAll(true)}
+                disabled={saving}
+                className="w-full glass-card rounded-xl p-3 flex items-center justify-center gap-2 border border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10 disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Tout supprimer (garder le plus ancien)
+                </span>
+              </button>
+            )}
+
+            {duplicates.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-3xl mb-2">🎉</p>
+                <p className="text-sm text-muted-foreground">Plus aucun doublon</p>
+              </div>
+            )}
+
+            {duplicates.map((pair, idx) => {
+              const renderCard = (scan: typeof pair.scan1) => {
+                const full = scans.find((s) => s.id === scan.id);
+                const img = full?.signedImageUrl || null;
+                return (
+                  <div className="flex-1 glass-card rounded-xl p-3 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      {img ? (
+                        <img src={img} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-border" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 border border-border">
+                          <ReceiptIcon className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {scan.parsed_merchant || "—"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {scan.parsed_date || (full ? new Date(full.created_at).toLocaleDateString("fr-FR") : "—")}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-base font-bold text-foreground tabular-nums mb-2">
+                      {scan.parsed_amount != null ? formatAmount(Number(scan.parsed_amount)) : "—"}
+                    </p>
+                    <button
+                      onClick={() => deleteDuplicate(scan.id)}
+                      disabled={saving}
+                      className="w-full h-9 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Supprimer celui-ci
+                    </button>
+                  </div>
+                );
+              };
+
+              return (
+                <div key={`${pair.scan1.id}-${pair.scan2.id}-${idx}`} className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-yellow-600 dark:text-yellow-500">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>Doublon probable · {Math.round(pair.score * 100)}%</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {renderCard(pair.scan1)}
+                    {renderCard(pair.scan2)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm "delete all duplicates" */}
+      <Dialog open={dupConfirmAll} onOpenChange={(o) => !o && setDupConfirmAll(false)}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Supprimer {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} ?</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Le reçu le plus ancien de chaque paire sera conservé. Action irréversible.
+          </p>
+          <div className="flex gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setDupConfirmAll(false)}
+              disabled={saving}
+              className="flex-1"
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={deleteAllDuplicates}
+              disabled={saving}
+              className="flex-1"
+            >
+              {saving ? "Suppression…" : "Confirmer"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
