@@ -239,6 +239,19 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
     [paidByItem]
   );
 
+  const sortedItems = useMemo(() => {
+    const arr = [...expenseItems];
+    const paid = (it: any) => paidByItem[it.id] || 0;
+    const coll = (it: any) => collectedByItem[it.id] || 0;
+    switch (itemSort) {
+      case "budget_desc": return arr.sort((a, b) => Number(b.planned_amount) - Number(a.planned_amount));
+      case "budget_asc":  return arr.sort((a, b) => Number(a.planned_amount) - Number(b.planned_amount));
+      case "paid_desc":   return arr.sort((a, b) => paid(b) - paid(a));
+      case "collected_desc": return arr.sort((a, b) => coll(b) - coll(a));
+      case "reste_desc":  return arr.sort((a, b) => (Number(b.planned_amount) - paid(b)) - (Number(a.planned_amount) - paid(a)));
+      default: return arr;
+    }
+  }, [expenseItems, itemSort, paidByItem, collectedByItem]);
 
   // ─── Actions ───
   const openPay = (m: TontineMember) => {
