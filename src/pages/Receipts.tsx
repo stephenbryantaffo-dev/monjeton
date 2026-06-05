@@ -319,6 +319,60 @@ const Receipts = () => {
     await loadScanHistory(selectedScan.id);
   };
 
+  // ━━━ Duplicate management ━━━
+  const reloadAfterDup = async () => {
+    await fetchScans();
+    if (user) {
+      try {
+        const dups = await detectDuplicates(user.id);
+        setDuplicates(dups);
+        if (dups.length === 0) {
+          setDupViewOpen(false);
+          toast({ title: "Plus aucun doublon 🎉" });
+        }
+      } catch { /* ignore */ }
+    }
+  };
+
+  const deleteDuplicate = async (scanId: string) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("receipt_scans").delete().eq("id", scanId);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Doublon supprimé ✅" });
+      await reloadAfterDup();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteAllDuplicates = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const toDelete = duplicates.map((p) => {
+        const d1 = new Date(p.scan1.parsed_date || (p.scan1 as any).created_at || 0).getTime();
+        const d2 = new Date(p.scan2.parsed_date || (p.scan2 as any).created_at || 0).getTime();
+        return d2 >= d1 ? p.scan2.id : p.scan1.id;
+      });
+      const uniqueIds = [...new Set(toDelete)];
+      const { error } = await supabase.from("receipt_scans").delete().in("id", uniqueIds);
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: `${uniqueIds.length} doublon${uniqueIds.length > 1 ? "s" : ""} supprimé${uniqueIds.length > 1 ? "s" : ""} ✅` });
+      setDupConfirmAll(false);
+      await reloadAfterDup();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Helper: mask text in discreet mode
   const maskText = (text: string | null, fallback: string) => {
     if (isDiscreetMode) return MASK;
