@@ -6,6 +6,7 @@ import {
   Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
   ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
   Printer, Download, FileDown, ZoomIn, X, AlertTriangle, Loader2,
+  Trash2, Receipt as ReceiptIcon,
 } from "lucide-react";
 
 /**
