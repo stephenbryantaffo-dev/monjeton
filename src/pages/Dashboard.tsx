@@ -508,6 +508,7 @@ const Dashboard = () => {
                     plan: { label: "Plan financier du mois", desc: "Alertes de budget et plan en cours", checked: showPlan, onChange: togglePlan, toggleable: true },
                     predictions: { label: "Prévisions IA", desc: "Tendances et projections de fin de mois", checked: showPredictions, onChange: togglePredictions, toggleable: true },
                     transactions: { label: "Transactions récentes", desc: "Dernières opérations enregistrées", checked: showTransactions, onChange: toggleTransactions, toggleable: true },
+                    tontines: { label: "Mes Tontines & Caisses", desc: "Caisses communes et tontines en cours", checked: showTontines, onChange: toggleTontines, toggleable: true },
                   };
                   const m = meta[key];
                   return (
@@ -742,12 +743,16 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : null;
+            const tontinesBlock = showTontines ? (
+              <DashboardTontineWidget key="tontines" />
+            ) : null;
             const blockMap: Record<BlockKey, React.ReactNode> = {
               wallets: walletsBlock,
               financial_score: financialScoreBlock,
               plan: planBlock,
               predictions: predictionsBlock,
               transactions: transactionsBlock,
+              tontines: tontinesBlock,
             };
             return blocksOrder.map(k => blockMap[k]);
           })()}
@@ -764,8 +769,6 @@ const Dashboard = () => {
               trendModes={trendModes}
             />
            </Suspense>
-
-          <DashboardTontineWidget />
 
           {chartData.length === 0 && (
             <div className="glass-card rounded-2xl p-8 mb-6 text-center">
