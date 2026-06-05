@@ -484,14 +484,20 @@ const Settings = () => {
         )}
       </div>
 
-      <div className="space-y-1 mb-6">
+      <div className="grid grid-cols-2 gap-2.5 mb-6">
         {menuItems.filter((item) => item.path !== "/brvm" || activeCurrency === "XOF" || activeCurrency === "XAF").map((item) => {
           const content = (
-            <>
-              <item.icon className="w-5 h-5 text-muted-foreground" />
-              <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </>
+            <div className="flex flex-col items-start gap-2 h-full">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <item.icon className="w-[18px] h-[18px] text-primary" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[13.5px] font-semibold text-foreground leading-tight">{item.label}</span>
+                {item.sublabel && (
+                  <span className="block text-[10px] text-muted-foreground mt-0.5 leading-tight">{item.sublabel}</span>
+                )}
+              </div>
+            </div>
           );
 
           if (item.path === "/settings/subscription") {
@@ -500,7 +506,7 @@ const Settings = () => {
                 key={item.path}
                 type="button"
                 onClick={() => navigate("/settings/subscription")}
-                className="w-full glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors text-left"
+                className="glass-card rounded-2xl p-4 flex hover:bg-secondary/50 transition-colors min-h-[92px] text-left"
               >
                 {content}
               </button>
@@ -508,7 +514,7 @@ const Settings = () => {
           }
 
           return (
-            <Link key={item.path} to={item.path} className="glass-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
+            <Link key={item.path} to={item.path} className="glass-card rounded-2xl p-4 flex hover:bg-secondary/50 transition-colors min-h-[92px]">
               {content}
             </Link>
           );
