@@ -127,6 +127,17 @@ const Receipts = () => {
     return getReceiptImageUrl(storagePath, null);
   };
 
+  // Affiche un montant avec la devise réellement détectée sur le reçu.
+  // Fallback sur la devise active de l'app si parsed_currency est null (anciens reçus).
+  const formatReceiptAmount = (
+    amount: number | null | undefined,
+    currency?: string | null,
+  ): string => {
+    if (amount == null) return "Non détecté";
+    const cur = currency && currency.trim() ? currency : getActiveCurrencySymbol();
+    return `${Number(amount).toLocaleString("fr-FR")} ${cur}`;
+  };
+
   const [loadingViewer, setLoadingViewer] = useState(false);
 
   const openFullscreen = async (scan: ScanItem) => {
@@ -223,6 +234,14 @@ const Receipts = () => {
         acc[cat] = (acc[cat] || 0) + (s.parsed_amount || 0);
         return acc;
       }, {} as Record<string, number>),
+    mixedCurrencies: (() => {
+      const set = new Set(
+        scans
+          .filter((s) => s.status === "confirmed" && s.parsed_currency)
+          .map((s) => s.parsed_currency as string),
+      );
+      return set.size > 1;
+    })(),
   };
 
   // Filtering & sorting
@@ -399,7 +418,7 @@ const Receipts = () => {
       <div class="header"><div class="brand">🪙 Mon Jeton</div><div class="subtitle">Reçu de transaction</div></div>
       ${scan.image_url ? `<img class="receipt-img" src="${scan.image_url}" alt="Reçu"/>` : ''}
       <div class="row"><span class="row-label">Marchand</span><span class="row-value">${scan.parsed_merchant || 'Inconnu'}</span></div>
-      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non détecté'}</span></div>
+      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount != null ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} ${scan.parsed_currency || ''}`.trim() : 'Non détecté'}</span></div>
       <div class="row"><span class="row-label">Catégorie</span><span class="row-value">${scan.parsed_category || 'Non catégorisé'}</span></div>
       <div class="row"><span class="row-label">Date</span><span class="row-value">${scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')}</span></div>
       <div class="row"><span class="row-label">Type</span><span class="row-value">${scan.scan_type === 'screenshot' ? '📱 Capture Mobile Money' : '🧾 Ticket de caisse'}</span></div>
@@ -458,7 +477,7 @@ const Receipts = () => {
 
     const fields: [string, string][] = [
       ['Marchand', scan.parsed_merchant || 'Inconnu'],
-      ['Montant', scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non detecte'],
+      ['Montant', scan.parsed_amount != null ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} ${scan.parsed_currency || ''}`.trim() : 'Non detecte'],
       ['Categorie', scan.parsed_category || 'Non categorise'],
       ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
       ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
@@ -536,7 +555,11 @@ const Receipts = () => {
     const totalAmount = confirmed.reduce((sum, s) => sum + (s.parsed_amount || 0), 0);
     doc.setFontSize(18);
     doc.setTextColor(30, 30, 30);
-    doc.text(formatMoneyDisplay(totalAmount), pageWidth / 2, y, { align: 'center' });
+    const currencySet = new Set(confirmed.map((s) => s.parsed_currency).filter(Boolean) as string[]);
+    const totalLabel = currencySet.size > 1
+      ? `${formatMoneyDisplay(totalAmount)} (devises mixtes)`
+      : formatMoneyDisplay(totalAmount);
+    doc.text(totalLabel, pageWidth / 2, y, { align: 'center' });
     y += 12;
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
@@ -586,7 +609,7 @@ const Receipts = () => {
       // Fields
       const fields: [string, string][] = [
         ['Marchand', scan.parsed_merchant || 'Inconnu'],
-        ['Montant', scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non detecte'],
+        ['Montant', scan.parsed_amount != null ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} ${scan.parsed_currency || ''}`.trim() : 'Non detecte'],
         ['Categorie', scan.parsed_category || 'Non categorise'],
         ['Date', scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')],
         ['Type', scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'],
@@ -686,9 +709,9 @@ const Receipts = () => {
               {
                 label: "Montant",
                 value: isDiscreetMode
-                  ? `${MASK_SHORT} ${getActiveCurrencySymbol()}`
-                  : selectedScan.parsed_amount
-                  ? `${Number(selectedScan.parsed_amount).toLocaleString("fr-FR")} ${getActiveCurrencySymbol()}`
+                  ? `${MASK_SHORT} ${selectedScan.parsed_currency || getActiveCurrencySymbol()}`
+                  : selectedScan.parsed_amount != null
+                  ? formatReceiptAmount(selectedScan.parsed_amount, selectedScan.parsed_currency)
                   : null,
               },
               {
@@ -950,6 +973,9 @@ const Receipts = () => {
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""}
+              {stats.mixedCurrencies && (
+                <span className="ml-1 text-amber-500">(devises mixtes)</span>
+              )}
             </p>
           </motion.div>
           <motion.div
@@ -1179,14 +1205,9 @@ const Receipts = () => {
                   >
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       {isDiscreetMode
-                        ? `${MASK_SHORT} ${getActiveCurrencySymbol()}`
-                        : `${Number(scan.parsed_amount).toLocaleString("fr-FR")} ${getActiveCurrencySymbol()}`}
+                        ? `${MASK_SHORT} ${scan.parsed_currency || getActiveCurrencySymbol()}`
+                        : formatReceiptAmount(scan.parsed_amount, scan.parsed_currency)}
                     </p>
-                    {scan.parsed_currency && scan.parsed_currency !== "XOF" && !isDiscreetMode && (
-                      <p className="text-xs text-muted-foreground">
-                        ({scan.parsed_currency})
-                      </p>
-                    )}
                   </div>
                 )}
               </motion.div>
@@ -1226,7 +1247,7 @@ const Receipts = () => {
                       : "")}
                   {fullscreenScan?.parsed_amount != null && (
                     <span className="ml-2 text-primary font-bold">
-                      · {Number(fullscreenScan.parsed_amount).toLocaleString("fr-FR")} {getActiveCurrencySymbol()}
+                      · {formatReceiptAmount(fullscreenScan.parsed_amount, fullscreenScan.parsed_currency)}
                     </span>
                   )}
                 </p>
