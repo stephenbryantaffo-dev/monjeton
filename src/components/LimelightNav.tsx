@@ -36,9 +36,9 @@ const LimelightNav = () => {
                 >
                   <motion.div
                     whileTap={{ scale: 0.9 }}
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-[0_4px_24px_hsla(84,81%,44%,0.4)] rotate-45"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-[0_4px_24px_hsla(84,81%,44%,0.4)]"
                   >
-                    <item.icon className="w-5 h-5 text-primary-foreground -rotate-45" />
+                    <item.icon className="w-5 h-5 text-primary-foreground" />
                   </motion.div>
                 </Link>
               );
