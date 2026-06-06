@@ -234,6 +234,14 @@ const Receipts = () => {
         acc[cat] = (acc[cat] || 0) + (s.parsed_amount || 0);
         return acc;
       }, {} as Record<string, number>),
+    mixedCurrencies: (() => {
+      const set = new Set(
+        scans
+          .filter((s) => s.status === "confirmed" && s.parsed_currency)
+          .map((s) => s.parsed_currency as string),
+      );
+      return set.size > 1;
+    })(),
   };
 
   // Filtering & sorting
