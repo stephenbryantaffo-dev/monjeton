@@ -555,7 +555,11 @@ const Receipts = () => {
     const totalAmount = confirmed.reduce((sum, s) => sum + (s.parsed_amount || 0), 0);
     doc.setFontSize(18);
     doc.setTextColor(30, 30, 30);
-    doc.text(formatMoneyDisplay(totalAmount), pageWidth / 2, y, { align: 'center' });
+    const currencySet = new Set(confirmed.map((s) => s.parsed_currency).filter(Boolean) as string[]);
+    const totalLabel = currencySet.size > 1
+      ? `${formatMoneyDisplay(totalAmount)} (devises mixtes)`
+      : formatMoneyDisplay(totalAmount);
+    doc.text(totalLabel, pageWidth / 2, y, { align: 'center' });
     y += 12;
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
