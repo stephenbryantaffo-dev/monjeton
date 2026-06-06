@@ -127,6 +127,17 @@ const Receipts = () => {
     return getReceiptImageUrl(storagePath, null);
   };
 
+  // Affiche un montant avec la devise réellement détectée sur le reçu.
+  // Fallback sur la devise active de l'app si parsed_currency est null (anciens reçus).
+  const formatReceiptAmount = (
+    amount: number | null | undefined,
+    currency?: string | null,
+  ): string => {
+    if (amount == null) return "Non détecté";
+    const cur = currency && currency.trim() ? currency : getActiveCurrencySymbol();
+    return `${Number(amount).toLocaleString("fr-FR")} ${cur}`;
+  };
+
   const [loadingViewer, setLoadingViewer] = useState(false);
 
   const openFullscreen = async (scan: ScanItem) => {
