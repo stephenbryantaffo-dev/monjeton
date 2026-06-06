@@ -709,9 +709,9 @@ const Receipts = () => {
               {
                 label: "Montant",
                 value: isDiscreetMode
-                  ? `${MASK_SHORT} ${getActiveCurrencySymbol()}`
-                  : selectedScan.parsed_amount
-                  ? `${Number(selectedScan.parsed_amount).toLocaleString("fr-FR")} ${getActiveCurrencySymbol()}`
+                  ? `${MASK_SHORT} ${selectedScan.parsed_currency || getActiveCurrencySymbol()}`
+                  : selectedScan.parsed_amount != null
+                  ? formatReceiptAmount(selectedScan.parsed_amount, selectedScan.parsed_currency)
                   : null,
               },
               {
