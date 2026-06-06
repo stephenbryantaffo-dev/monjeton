@@ -1202,14 +1202,9 @@ const Receipts = () => {
                   >
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       {isDiscreetMode
-                        ? `${MASK_SHORT} ${getActiveCurrencySymbol()}`
-                        : `${Number(scan.parsed_amount).toLocaleString("fr-FR")} ${getActiveCurrencySymbol()}`}
+                        ? `${MASK_SHORT} ${scan.parsed_currency || getActiveCurrencySymbol()}`
+                        : formatReceiptAmount(scan.parsed_amount, scan.parsed_currency)}
                     </p>
-                    {scan.parsed_currency && scan.parsed_currency !== "XOF" && !isDiscreetMode && (
-                      <p className="text-xs text-muted-foreground">
-                        ({scan.parsed_currency})
-                      </p>
-                    )}
                   </div>
                 )}
               </motion.div>
