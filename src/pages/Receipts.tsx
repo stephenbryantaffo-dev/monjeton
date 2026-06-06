@@ -418,7 +418,7 @@ const Receipts = () => {
       <div class="header"><div class="brand">🪙 Mon Jeton</div><div class="subtitle">Reçu de transaction</div></div>
       ${scan.image_url ? `<img class="receipt-img" src="${scan.image_url}" alt="Reçu"/>` : ''}
       <div class="row"><span class="row-label">Marchand</span><span class="row-value">${scan.parsed_merchant || 'Inconnu'}</span></div>
-      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount ? formatMoneyDisplay(Number(scan.parsed_amount)) : 'Non détecté'}</span></div>
+      <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount != null ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} ${scan.parsed_currency || ''}`.trim() : 'Non détecté'}</span></div>
       <div class="row"><span class="row-label">Catégorie</span><span class="row-value">${scan.parsed_category || 'Non catégorisé'}</span></div>
       <div class="row"><span class="row-label">Date</span><span class="row-value">${scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')}</span></div>
       <div class="row"><span class="row-label">Type</span><span class="row-value">${scan.scan_type === 'screenshot' ? '📱 Capture Mobile Money' : '🧾 Ticket de caisse'}</span></div>
