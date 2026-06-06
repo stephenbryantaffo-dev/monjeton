@@ -973,6 +973,9 @@ const Receipts = () => {
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.totalConfirmed} reçu{stats.totalConfirmed > 1 ? "s" : ""}
+              {stats.mixedCurrencies && (
+                <span className="ml-1 text-amber-500">(devises mixtes)</span>
+              )}
             </p>
           </motion.div>
           <motion.div
