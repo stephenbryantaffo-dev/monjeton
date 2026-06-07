@@ -409,11 +409,15 @@ const TontinePage = () => {
         return total >= (selected?.contribution_amount || 0);
       });
       if (updatedStatuses.length > 0 && updatedStatuses.every(Boolean)) {
-        const ben = getBeneficiary();
-        toast({
-          title: `Tour complet ! 🎉`,
-          description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)}`,
-        });
+        if (selected?.caisse_type === "association") {
+          toast({ title: "Cycle complet ! 🎉", description: "Tous les membres ont cotisé ce cycle." });
+        } else {
+          const ben = getBeneficiary();
+          toast({
+            title: `Tour complet ! 🎉`,
+            description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)}`,
+          });
+        }
       }
     } catch {
       toast({ title: "Erreur paiement", variant: "destructive" });
