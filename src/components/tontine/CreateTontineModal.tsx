@@ -262,7 +262,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         )}
 
         {/* ─── RECURRING flow (existant) ─── */}
-        {caisseType === "recurring" && step === 1 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 1 && (
           <div className="space-y-4">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Nom de la tontine</label>
@@ -279,7 +279,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           </div>
         )}
 
-        {caisseType === "recurring" && step === 2 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 2 && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Choisissez la fréquence des cotisations</p>
             {FREQUENCIES.map((f) => (
@@ -300,7 +300,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           </div>
         )}
 
-        {caisseType === "recurring" && step === 3 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 3 && (
           <MembersStep
             members={members} memberName={memberName} memberPhone={memberPhone} memberIsOwner={memberIsOwner}
             setMemberName={setMemberName} setMemberPhone={setMemberPhone} setMemberIsOwner={setMemberIsOwner}
@@ -309,7 +309,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           />
         )}
 
-        {caisseType === "recurring" && step === 4 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 4 && (
           <div className="space-y-3">
             <div className="glass-card rounded-xl p-4 space-y-2">
               <p className="font-semibold text-foreground">📋 Résumé</p>
