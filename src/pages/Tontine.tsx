@@ -94,6 +94,7 @@ const TontinePage = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [editCaisseOpen, setEditCaisseOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
