@@ -335,12 +335,21 @@ const TontinePage = () => {
 
 
   // Beneficiary = member at index (cycle_number - 1) % members.length
+  // Pas de bénéficiaire pour les caisses d'association (cotisations accumulées).
   const getBeneficiary = () => {
     if (!openCycle || members.length === 0) return null;
+    if (selected?.caisse_type === "association") return null;
     const idx = (openCycle.cycle_number - 1) % members.length;
     return members[idx];
   };
   const beneficiary = getBeneficiary();
+  const isAssociation = selected?.caisse_type === "association";
+
+  // Total cumulé en caisse (tous cycles confondus) — pour les caisses d'association
+  const totalEnCaisse = useMemo(() => {
+    const closedSum = closedCycles.reduce((s, c) => s + Number(c.total_collected || 0), 0);
+    return closedSum + Number(openCycle?.total_collected || 0);
+  }, [closedCycles, openCycle]);
 
   const openPayModal = (member: TontineMember) => {
     setPayMember(member);
@@ -658,8 +667,11 @@ const TontinePage = () => {
   const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
 
   // Filter list by current tab then by status
+  // Onglet "caisse" : projets + associations. Onglet "tontine" : recurring (ou legacy null).
   const byTab = useMemo(
-    () => tontines.filter(t => activeTab === "caisse" ? t.caisse_type === "project" : t.caisse_type !== "project"),
+    () => tontines.filter(t => activeTab === "caisse"
+      ? (t.caisse_type === "project" || t.caisse_type === "association")
+      : (t.caisse_type !== "project" && t.caisse_type !== "association")),
     [tontines, activeTab]
   );
 
@@ -757,6 +769,8 @@ const TontinePage = () => {
                         <p className="font-bold text-foreground truncate">{t.name}</p>
                         {t.caisse_type === "project" ? (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
+                        ) : t.caisse_type === "association" ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-500 flex-shrink-0">🤝 Association</span>
                         ) : (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
                         )}
