@@ -1,4 +1,4 @@
-export type CaisseType = "recurring" | "project";
+export type CaisseType = "recurring" | "project" | "association";
 
 export interface TontineData {
   id: string;
