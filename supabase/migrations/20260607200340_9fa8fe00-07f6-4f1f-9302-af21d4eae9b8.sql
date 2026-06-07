@@ -1,0 +1,2 @@
+ALTER TABLE public.tontines DROP CONSTRAINT IF EXISTS tontines_caisse_type_check;
+ALTER TABLE public.tontines ADD CONSTRAINT tontines_caisse_type_check CHECK (caisse_type = ANY (ARRAY['recurring'::text, 'project'::text, 'association'::text]));
