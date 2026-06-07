@@ -851,6 +851,15 @@ const TontinePage = () => {
           {isClosed ? "Terminée" : isPaused ? "En pause" : "Active"}
         </div>
         <div className="flex items-center gap-2">
+          {canManage && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl glass-card hover:bg-primary/10 transition-colors text-xs font-bold text-primary"
+              title="Inviter"
+            >
+              <Link2 className="w-4 h-4" /> Inviter
+            </button>
+          )}
           {isOwner && !isClosed && (
             <button
               onClick={() => setEditCaisseOpen(true)}
