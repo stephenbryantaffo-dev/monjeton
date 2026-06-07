@@ -7,9 +7,11 @@ import {
   Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
   Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
   PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert,
-  MoreVertical, UserX, RotateCcw, Ban, Pencil,
+  MoreVertical, UserX, RotateCcw, Ban, Pencil, Link2,
 } from "lucide-react";
 import EditCaisseModal from "@/components/tontine/EditCaisseModal";
+import InviteCaisseModal from "@/components/caisse/InviteCaisseModal";
+import CaisseCollaborators from "@/components/tontine/CaisseCollaborators";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { sendWhatsAppTontine, notifyAllUnpaid, logNotification } from "@/lib/tontineNotifications";
 import { Button } from "@/components/ui/button";
@@ -92,6 +94,7 @@ const TontinePage = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [editCaisseOpen, setEditCaisseOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const selected = tontines.find(t => t.id === selectedId);
 
@@ -848,6 +851,15 @@ const TontinePage = () => {
           {isClosed ? "Terminée" : isPaused ? "En pause" : "Active"}
         </div>
         <div className="flex items-center gap-2">
+          {canManage && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl glass-card hover:bg-primary/10 transition-colors text-xs font-bold text-primary"
+              title="Inviter"
+            >
+              <Link2 className="w-4 h-4" /> Inviter
+            </button>
+          )}
           {isOwner && !isClosed && (
             <button
               onClick={() => setEditCaisseOpen(true)}
@@ -896,6 +908,11 @@ const TontinePage = () => {
             className="w-full"
           />
         </div>
+      )}
+
+      {/* Suivi par (collaborateurs) */}
+      {selected && (
+        <CaisseCollaborators caisseId={selected.id} canManage={canManage} />
       )}
 
       {/* Paused banner */}
@@ -1587,6 +1604,16 @@ const TontinePage = () => {
           onClose={() => setEditCaisseOpen(false)}
           tontine={selected}
           onUpdated={() => { loadDetail(selected.id); loadTontines(); }}
+        />
+      )}
+
+      {/* ─── Invite collaborators ─── */}
+      {selected && (
+        <InviteCaisseModal
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          caisseId={selected.id}
+          caisseName={selected.name}
         />
       )}
     </DashboardLayout>
