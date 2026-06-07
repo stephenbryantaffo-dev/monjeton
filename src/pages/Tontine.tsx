@@ -930,7 +930,7 @@ const TontinePage = () => {
             <span>{fmt(openCycle.total_collected)} / {fmt(openCycle.total_expected)}</span>
           </div>
 
-          {/* Beneficiary */}
+          {/* Beneficiary (tontine récurrente uniquement) */}
           {beneficiary && (
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
               <div className="flex items-center gap-2">
@@ -944,13 +944,32 @@ const TontinePage = () => {
             </div>
           )}
 
+          {/* Total cumulé en caisse (association — pas de bénéficiaire) */}
+          {isAssociation && (
+            <div className="mt-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
+              <div className="flex items-center gap-2">
+                <span className="text-lg shrink-0">💰</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Total en caisse (cumulé)</p>
+                  <p className="text-sm font-bold text-foreground tabular-nums">{fmt(totalEnCaisse)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* All paid celebration */}
-          {allPaid && (
+          {allPaid && !isAssociation && (
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
               <p className="text-sm font-bold text-primary">Tour complet ! 🎉</p>
               <p className="text-xs text-muted-foreground">
                 {beneficiary?.name} reçoit {fmt(openCycle.total_expected)}
               </p>
+            </div>
+          )}
+          {allPaid && isAssociation && (
+            <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
+              <p className="text-sm font-bold text-primary">Cycle complet ! 🎉</p>
+              <p className="text-xs text-muted-foreground">Tous les membres ont cotisé ce cycle.</p>
             </div>
           )}
         </motion.div>
