@@ -85,7 +85,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
 
   // ─── Validation ───
   const canNext = () => {
-    if (caisseType === "recurring") {
+    if (caisseType === "recurring" || caisseType === "association") {
       if (step === 1) return name.trim() && Number(amount) > 0 && startDate;
       if (step === 2) return frequency && (frequency !== "custom" || Number(customDays) > 0);
       if (step === 3) return members.length >= 2;
@@ -114,7 +114,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         frequency,
         custom_frequency_days: frequency === "custom" ? Number(customDays) : null,
         start_date: startDate,
-        caisse_type: "recurring",
+        caisse_type: caisseType === "association" ? "association" : "recurring",
       };
       const { data: tontine, error: tErr } = await supabase.from("tontines" as any).insert(payload).select().single();
       if (tErr || !tontine) throw new Error(tErr?.message || "Création impossible");
@@ -134,7 +134,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         await supabase.from("tontines" as any).delete().eq("id", tontineId);
         throw new Error(cErr.message);
       }
-      toast({ title: "Tontine créée ✅", description: `${nbMembers} membres · cycle 1 ouvert` });
+      toast({ title: caisseType === "association" ? "Caisse d'association créée ✅" : "Tontine créée ✅", description: `${nbMembers} membres · cycle 1 ouvert` });
       reset(); onOpenChange(false); onCreated();
     } catch (e: any) {
       toast({ title: "Erreur création", description: e?.message, variant: "destructive" });
