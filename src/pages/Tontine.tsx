@@ -1606,6 +1606,16 @@ const TontinePage = () => {
           onUpdated={() => { loadDetail(selected.id); loadTontines(); }}
         />
       )}
+
+      {/* ─── Invite collaborators ─── */}
+      {selected && (
+        <InviteCaisseModal
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          caisseId={selected.id}
+          caisseName={selected.name}
+        />
+      )}
     </DashboardLayout>
   );
 };
