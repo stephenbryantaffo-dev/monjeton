@@ -910,6 +910,11 @@ const TontinePage = () => {
         </div>
       )}
 
+      {/* Suivi par (collaborateurs) */}
+      {selected && (
+        <CaisseCollaborators caisseId={selected.id} canManage={canManage} />
+      )}
+
       {/* Paused banner */}
       {isPaused && (
         <div className="glass-card rounded-xl p-3 mb-3 border border-amber-500/30 flex items-start gap-2">
