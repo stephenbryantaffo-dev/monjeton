@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, ArrowLeft, ArrowRight, Check, Repeat, Target } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ArrowRight, Check, Repeat, Target, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -85,7 +85,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
 
   // ─── Validation ───
   const canNext = () => {
-    if (caisseType === "recurring") {
+    if (caisseType === "recurring" || caisseType === "association") {
       if (step === 1) return name.trim() && Number(amount) > 0 && startDate;
       if (step === 2) return frequency && (frequency !== "custom" || Number(customDays) > 0);
       if (step === 3) return members.length >= 2;
@@ -114,7 +114,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         frequency,
         custom_frequency_days: frequency === "custom" ? Number(customDays) : null,
         start_date: startDate,
-        caisse_type: "recurring",
+        caisse_type: caisseType === "association" ? "association" : "recurring",
       };
       const { data: tontine, error: tErr } = await supabase.from("tontines" as any).insert(payload).select().single();
       if (tErr || !tontine) throw new Error(tErr?.message || "Création impossible");
@@ -134,7 +134,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         await supabase.from("tontines" as any).delete().eq("id", tontineId);
         throw new Error(cErr.message);
       }
-      toast({ title: "Tontine créée ✅", description: `${nbMembers} membres · cycle 1 ouvert` });
+      toast({ title: caisseType === "association" ? "Caisse d'association créée ✅" : "Tontine créée ✅", description: `${nbMembers} membres · cycle 1 ouvert` });
       reset(); onOpenChange(false); onCreated();
     } catch (e: any) {
       toast({ title: "Erreur création", description: e?.message, variant: "destructive" });
@@ -207,7 +207,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           <DialogTitle>
             {step === 0
               ? "Choisir le type de caisse"
-              : `${caisseType === "project" ? "Caisse de projet" : "Tontine"} — Étape ${step}/${totalSteps - 1}`}
+              : `${caisseType === "project" ? "Caisse de projet" : caisseType === "association" ? "Caisse d'association" : "Tontine"} — Étape ${step}/${totalSteps - 1}`}
           </DialogTitle>
         </DialogHeader>
 
@@ -243,11 +243,26 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
                 Collecte pour un objectif précis : événement, voyage, projet. Pas de cycle mensuel — on suit recettes et dépenses jusqu'à la réalisation.
               </p>
             </button>
+
+            <button
+              onClick={() => { setCaisseType("association"); setStep(1); }}
+              className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-sky-500" />
+                </div>
+                <p className="font-bold text-foreground">🤝 Caisse d'association</p>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Cotisations mensuelles qui s'accumulent dans une caisse commune. Pas de bénéficiaire — l'argent sert au fonctionnement du groupe (association, club, équipe).
+              </p>
+            </button>
           </div>
         )}
 
         {/* ─── RECURRING flow (existant) ─── */}
-        {caisseType === "recurring" && step === 1 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 1 && (
           <div className="space-y-4">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Nom de la tontine</label>
@@ -264,7 +279,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           </div>
         )}
 
-        {caisseType === "recurring" && step === 2 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 2 && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Choisissez la fréquence des cotisations</p>
             {FREQUENCIES.map((f) => (
@@ -285,7 +300,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           </div>
         )}
 
-        {caisseType === "recurring" && step === 3 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 3 && (
           <MembersStep
             members={members} memberName={memberName} memberPhone={memberPhone} memberIsOwner={memberIsOwner}
             setMemberName={setMemberName} setMemberPhone={setMemberPhone} setMemberIsOwner={setMemberIsOwner}
@@ -294,7 +309,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           />
         )}
 
-        {caisseType === "recurring" && step === 4 && (
+        {(caisseType === "recurring" || caisseType === "association") && step === 4 && (
           <div className="space-y-3">
             <div className="glass-card rounded-xl p-4 space-y-2">
               <p className="font-semibold text-foreground">📋 Résumé</p>

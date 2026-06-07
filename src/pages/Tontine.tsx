@@ -335,12 +335,21 @@ const TontinePage = () => {
 
 
   // Beneficiary = member at index (cycle_number - 1) % members.length
+  // Pas de bénéficiaire pour les caisses d'association (cotisations accumulées).
   const getBeneficiary = () => {
     if (!openCycle || members.length === 0) return null;
+    if (selected?.caisse_type === "association") return null;
     const idx = (openCycle.cycle_number - 1) % members.length;
     return members[idx];
   };
   const beneficiary = getBeneficiary();
+  const isAssociation = selected?.caisse_type === "association";
+
+  // Total cumulé en caisse (tous cycles confondus) — pour les caisses d'association
+  const totalEnCaisse = useMemo(() => {
+    const closedSum = closedCycles.reduce((s, c) => s + Number(c.total_collected || 0), 0);
+    return closedSum + Number(openCycle?.total_collected || 0);
+  }, [closedCycles, openCycle]);
 
   const openPayModal = (member: TontineMember) => {
     setPayMember(member);
@@ -400,11 +409,15 @@ const TontinePage = () => {
         return total >= (selected?.contribution_amount || 0);
       });
       if (updatedStatuses.length > 0 && updatedStatuses.every(Boolean)) {
-        const ben = getBeneficiary();
-        toast({
-          title: `Tour complet ! 🎉`,
-          description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)}`,
-        });
+        if (selected?.caisse_type === "association") {
+          toast({ title: "Cycle complet ! 🎉", description: "Tous les membres ont cotisé ce cycle." });
+        } else {
+          const ben = getBeneficiary();
+          toast({
+            title: `Tour complet ! 🎉`,
+            description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)}`,
+          });
+        }
       }
     } catch {
       toast({ title: "Erreur paiement", variant: "destructive" });
@@ -658,8 +671,11 @@ const TontinePage = () => {
   const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
 
   // Filter list by current tab then by status
+  // Onglet "caisse" : projets + associations. Onglet "tontine" : recurring (ou legacy null).
   const byTab = useMemo(
-    () => tontines.filter(t => activeTab === "caisse" ? t.caisse_type === "project" : t.caisse_type !== "project"),
+    () => tontines.filter(t => activeTab === "caisse"
+      ? (t.caisse_type === "project" || t.caisse_type === "association")
+      : (t.caisse_type !== "project" && t.caisse_type !== "association")),
     [tontines, activeTab]
   );
 
@@ -757,6 +773,8 @@ const TontinePage = () => {
                         <p className="font-bold text-foreground truncate">{t.name}</p>
                         {t.caisse_type === "project" ? (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
+                        ) : t.caisse_type === "association" ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-500 flex-shrink-0">🤝 Association</span>
                         ) : (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
                         )}
@@ -916,7 +934,7 @@ const TontinePage = () => {
             <span>{fmt(openCycle.total_collected)} / {fmt(openCycle.total_expected)}</span>
           </div>
 
-          {/* Beneficiary */}
+          {/* Beneficiary (tontine récurrente uniquement) */}
           {beneficiary && (
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
               <div className="flex items-center gap-2">
@@ -930,13 +948,32 @@ const TontinePage = () => {
             </div>
           )}
 
+          {/* Total cumulé en caisse (association — pas de bénéficiaire) */}
+          {isAssociation && (
+            <div className="mt-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
+              <div className="flex items-center gap-2">
+                <span className="text-lg shrink-0">💰</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Total en caisse (cumulé)</p>
+                  <p className="text-sm font-bold text-foreground tabular-nums">{fmt(totalEnCaisse)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* All paid celebration */}
-          {allPaid && (
+          {allPaid && !isAssociation && (
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
               <p className="text-sm font-bold text-primary">Tour complet ! 🎉</p>
               <p className="text-xs text-muted-foreground">
                 {beneficiary?.name} reçoit {fmt(openCycle.total_expected)}
               </p>
+            </div>
+          )}
+          {allPaid && isAssociation && (
+            <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
+              <p className="text-sm font-bold text-primary">Cycle complet ! 🎉</p>
+              <p className="text-xs text-muted-foreground">Tous les membres ont cotisé ce cycle.</p>
             </div>
           )}
         </motion.div>
