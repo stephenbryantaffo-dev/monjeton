@@ -207,7 +207,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           <DialogTitle>
             {step === 0
               ? "Choisir le type de caisse"
-              : `${caisseType === "project" ? "Caisse de projet" : "Tontine"} — Étape ${step}/${totalSteps - 1}`}
+              : `${caisseType === "project" ? "Caisse de projet" : caisseType === "association" ? "Caisse d'association" : "Tontine"} — Étape ${step}/${totalSteps - 1}`}
           </DialogTitle>
         </DialogHeader>
 
@@ -241,6 +241,21 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Collecte pour un objectif précis : événement, voyage, projet. Pas de cycle mensuel — on suit recettes et dépenses jusqu'à la réalisation.
+              </p>
+            </button>
+
+            <button
+              onClick={() => { setCaisseType("association"); setStep(1); }}
+              className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-sky-500" />
+                </div>
+                <p className="font-bold text-foreground">🤝 Caisse d'association</p>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Cotisations mensuelles qui s'accumulent dans une caisse commune. Pas de bénéficiaire — l'argent sert au fonctionnement du groupe (association, club, équipe).
               </p>
             </button>
           </div>
