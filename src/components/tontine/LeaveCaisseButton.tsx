@@ -100,15 +100,41 @@ const LeaveCaisseButton = ({ caisseId, isOwner, onLeft, className }: Props) => {
   };
 
   const doLeaveSelf = async () => {
-    if (!user) return;
+    if (!user || saving) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("caisse_collaborators" as any)
+      // Garde-fou : si l'utilisateur est en réalité le user_id (créateur)
+      // de la tontine, quitter en tant que collaborateur ne suffira pas.
+      const { data: tont } = await supabase
+        .from("tontines")
+        .select("user_id")
+        .eq("id", caisseId)
+        .maybeSingle();
+      if (tont && (tont as any).user_id === user.id) {
+        toast({
+          title: "Tu es le propriétaire",
+          description: "Transfère la caisse ou supprime-la depuis l'option propriétaire.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("caisse_collaborators" as any)
         .delete()
         .eq("caisse_id", caisseId)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .select();
       if (error) {
         toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      if (!data || data.length === 0) {
+        toast({
+          title: "Impossible de quitter",
+          description: "Aucune adhésion trouvée à retirer (ou tu es le propriétaire).",
+          variant: "destructive",
+        });
         return;
       }
       toast({ title: "Tu as quitté la caisse 👋" });
