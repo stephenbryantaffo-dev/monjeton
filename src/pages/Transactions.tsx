@@ -77,8 +77,16 @@ const Transactions = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      const { data, error } = await supabase.from("transactions").delete().eq("id", id).select();
       if (error) throw error;
+      if (!data || data.length === 0) {
+        toast({
+          title: "Suppression impossible",
+          description: "Tu n'as peut-être pas les droits.",
+          variant: "destructive",
+        });
+        return;
+      }
       // Reset complet de la pagination pour garantir cohérence
       setTransactions([]);
       setPage(0);

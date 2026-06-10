@@ -116,7 +116,34 @@ const Wallets = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("wallets").delete().eq("id", id);
+    if (!user) return;
+    // Vérifier les transactions liées
+    const { count, error: countErr } = await supabase
+      .from("transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("wallet_id", id);
+    if (countErr) {
+      toast({ title: "Suppression impossible", description: countErr.message, variant: "destructive" });
+      return;
+    }
+    if ((count || 0) > 0) {
+      toast({
+        title: "Portefeuille non vide",
+        description: `Ce portefeuille contient ${count} transaction${count! > 1 ? "s" : ""}. Supprime ou déplace-les d'abord.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const { data, error } = await supabase.from("wallets").delete().eq("id", id).select();
+    if (error) {
+      toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast({ title: "Suppression impossible", description: "Tu n'as peut-être pas les droits.", variant: "destructive" });
+      return;
+    }
     toast({ title: "Portefeuille supprimé" });
     fetchData();
   };

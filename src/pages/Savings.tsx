@@ -310,8 +310,17 @@ const Savings = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase.from("savings_goals").delete().eq("id", id);
+      const { data, error } = await supabase.from("savings_goals").delete().eq("id", id).select();
       if (error) throw error;
+      if (!data || data.length === 0) {
+        toast({
+          title: "Suppression impossible",
+          description: "Tu n'as peut-être pas les droits.",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({ title: "Objectif supprimé" });
       fetchGoals();
     } catch {
       toast({ title: "Erreur de suppression", variant: "destructive" });
