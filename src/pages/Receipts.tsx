@@ -357,9 +357,13 @@ const Receipts = () => {
     if (saving) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("receipt_scans").delete().eq("id", scanId);
+      const { data, error } = await supabase.from("receipt_scans").delete().eq("id", scanId).select();
       if (error) {
         toast({ title: "Erreur", description: error.message, variant: "destructive" });
+        return;
+      }
+      if (!data || data.length === 0) {
+        toast({ title: "Suppression impossible", description: "Tu n'as peut-être pas les droits.", variant: "destructive" });
         return;
       }
       toast({ title: "Doublon supprimé ✅" });
@@ -379,12 +383,16 @@ const Receipts = () => {
         return d2 >= d1 ? p.scan2.id : p.scan1.id;
       });
       const uniqueIds = [...new Set(toDelete)];
-      const { error } = await supabase.from("receipt_scans").delete().in("id", uniqueIds);
+      const { data, error } = await supabase.from("receipt_scans").delete().in("id", uniqueIds).select();
       if (error) {
         toast({ title: "Erreur", description: error.message, variant: "destructive" });
         return;
       }
-      toast({ title: `${uniqueIds.length} doublon${uniqueIds.length > 1 ? "s" : ""} supprimé${uniqueIds.length > 1 ? "s" : ""} ✅` });
+      if (!data || data.length === 0) {
+        toast({ title: "Suppression impossible", description: "Tu n'as peut-être pas les droits.", variant: "destructive" });
+        return;
+      }
+      toast({ title: `${data.length} doublon${data.length > 1 ? "s" : ""} supprimé${data.length > 1 ? "s" : ""} ✅` });
       setDupConfirmAll(false);
       await reloadAfterDup();
     } finally {
@@ -1332,7 +1340,19 @@ const Receipts = () => {
                     type="button"
                     onClick={async () => {
                       if (!fullscreenScan) return;
-                      await supabase.from("receipt_scans").delete().eq("id", fullscreenScan.id);
+                      const { data, error } = await supabase
+                        .from("receipt_scans")
+                        .delete()
+                        .eq("id", fullscreenScan.id)
+                        .select();
+                      if (error) {
+                        toast({ title: "Suppression impossible", description: error.message, variant: "destructive" });
+                        return;
+                      }
+                      if (!data || data.length === 0) {
+                        toast({ title: "Suppression impossible", description: "Tu n'as peut-être pas les droits.", variant: "destructive" });
+                        return;
+                      }
                       toast({ title: "Reçu supprimé" });
                       setFullscreenScan(null);
                       setFullscreenImage(null);
