@@ -6,6 +6,31 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// ─── IP rate limit (in-memory): 30 req/min par IP ───
+const ipHits = new Map<string, number[]>();
+const IP_WINDOW_MS = 60_000;
+const IP_MAX = 30;
+function checkIpRateLimit(ip: string): { allowed: boolean; retryAfter: number } {
+  const now = Date.now();
+  const arr = (ipHits.get(ip) ?? []).filter((t) => now - t < IP_WINDOW_MS);
+  if (arr.length >= IP_MAX) {
+    const retryAfter = Math.ceil((IP_WINDOW_MS - (now - arr[0])) / 1000);
+    ipHits.set(ip, arr);
+    return { allowed: false, retryAfter };
+  }
+  arr.push(now);
+  ipHits.set(ip, arr);
+  // Cleanup occasionnel pour éviter la croissance mémoire
+  if (ipHits.size > 1000) {
+    for (const [k, v] of ipHits) {
+      const fresh = v.filter((t) => now - t < IP_WINDOW_MS);
+      if (fresh.length === 0) ipHits.delete(k);
+      else ipHits.set(k, fresh);
+    }
+  }
+  return { allowed: true, retryAfter: 0 };
+}
+
 async function verifyHmac(rawBody: string, signature: string, secret: string): Promise<boolean> {
   try {
     const key = await crypto.subtle.importKey(
