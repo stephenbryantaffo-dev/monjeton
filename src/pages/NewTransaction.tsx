@@ -373,7 +373,8 @@ const NewTransaction = () => {
       date,
       category_id: categoryId,
       wallet_id: walletId || null,
-    });
+      scope: merchantMode ? scope : "perso",
+    } as any);
 
     setLoading(false);
     if (error) {
