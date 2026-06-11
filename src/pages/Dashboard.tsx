@@ -422,6 +422,29 @@ const Dashboard = () => {
     fetchPredictions();
   }, [user]);
 
+  // Fetch today's BUSINESS transactions for "Bilan du jour" card
+  useEffect(() => {
+    if (!user || !merchantMode) return;
+    const today = new Date().toISOString().split("T")[0];
+    let cancelled = false;
+    supabase
+      .from("transactions")
+      .select("amount, type")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .eq("scope", "business")
+      .then(({ data }) => {
+        if (cancelled) return;
+        const d = (data || []) as Array<{ amount: number; type: string }>;
+        setTodayBiz({
+          income: d.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0),
+          expense: d.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0),
+          count: d.length,
+        });
+      });
+    return () => { cancelled = true; };
+  }, [user, merchantMode, transactions]);
+
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
 
