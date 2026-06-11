@@ -320,7 +320,12 @@ const Transactions = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
-                <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <span className="truncate">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</span>
+                  {merchantMode && t.scope === "business" && (
+                    <span title="Business" className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">🏪</span>
+                  )}
+                </p>
               </div>
               <span className={`text-sm font-semibold whitespace-nowrap ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
                 {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))}
