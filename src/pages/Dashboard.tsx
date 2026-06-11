@@ -130,6 +130,10 @@ const Dashboard = () => {
     setShowTontines(v);
     try { localStorage.setItem("dashboard_show_tontines", String(v)); } catch {}
   };
+  const toggleMerchantDaily = (v: boolean) => {
+    setShowMerchantDaily(v);
+    try { localStorage.setItem("dashboard_show_merchant_daily", String(v)); } catch {}
+  };
   const resetCustomization = () => {
     togglePredictions(true);
     toggleFinancialScore(true);
