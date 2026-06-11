@@ -758,8 +758,38 @@ const Dashboard = () => {
             const tontinesBlock = showTontines ? (
               <DashboardTontineWidget key="tontines" />
             ) : null;
+            const profit = todayBiz.income - todayBiz.expense;
+            const merchantDailyBlock = (merchantMode && showMerchantDaily) ? (
+              <div key="merchantDaily" className="glass-card rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6">
+                <h2 className="text-sm font-semibold text-foreground mb-3">🏪 Bilan du jour</h2>
+                {todayBiz.count === 0 ? (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-muted-foreground">Aucune activité business aujourd'hui</p>
+                    <Link to="/transactions/new" className="text-xs text-primary mt-2 inline-block">Enregistrer une vente →</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">💰 Ventes du jour</span>
+                      <span className="text-primary font-semibold tabular-nums">{formatAmount(todayBiz.income)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">💸 Dépenses du jour</span>
+                      <span className="text-destructive font-semibold tabular-nums">{formatAmount(todayBiz.expense)}</span>
+                    </div>
+                    <div className="flex items-end justify-between pt-2 border-t border-border">
+                      <span className="text-sm text-muted-foreground">📈 Bénéfice du jour</span>
+                      <span className={`text-2xl font-bold tabular-nums ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {formatAmount(profit)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null;
             const blockMap: Record<BlockKey, React.ReactNode> = {
               wallets: walletsBlock,
+              merchantDaily: merchantDailyBlock,
               financial_score: financialScoreBlock,
               plan: planBlock,
               predictions: predictionsBlock,
