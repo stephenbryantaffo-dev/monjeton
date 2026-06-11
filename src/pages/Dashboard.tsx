@@ -512,9 +512,10 @@ const Dashboard = () => {
                 <SheetDescription>Active, masque ou réorganise les sections du tableau de bord.</SheetDescription>
               </SheetHeader>
               <div className="mt-4 space-y-2">
-                {blocksOrder.map((key, idx) => {
+                {blocksOrder.filter(k => k !== "merchantDaily" || merchantMode).map((key, idx) => {
                   const meta: Record<BlockKey, { label: string; desc: string; checked?: boolean; onChange?: (v: boolean) => void; toggleable: boolean }> = {
                     wallets: { label: "Soldes (Revenus / Dépenses)", desc: "Toujours visible", toggleable: false },
+                    merchantDaily: { label: "🏪 Bilan du jour", desc: "Ventes, dépenses et bénéfice business d'aujourd'hui", checked: showMerchantDaily, onChange: toggleMerchantDaily, toggleable: true },
                     financial_score: { label: "Score financier IA", desc: "Score hebdomadaire et insights", checked: showFinancialScore, onChange: toggleFinancialScore, toggleable: true },
                     plan: { label: "Plan financier du mois", desc: "Alertes de budget et plan en cours", checked: showPlan, onChange: togglePlan, toggleable: true },
                     predictions: { label: "Prévisions IA", desc: "Tendances et projections de fin de mois", checked: showPredictions, onChange: togglePredictions, toggleable: true },
