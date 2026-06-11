@@ -183,7 +183,7 @@ const Transactions = () => {
     }
 
     return result;
-  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder]);
+  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder, scopeFilter, merchantMode]);
 
   return (
     <DashboardLayout title="Transactions">
