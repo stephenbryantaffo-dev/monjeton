@@ -63,6 +63,17 @@ Deno.serve(async (req) => {
     });
 
   try {
+    // Rate limit par IP AVANT calcul HMAC pour économiser du CPU contre le spam
+    const xff = req.headers.get('x-forwarded-for') ?? '';
+    const ip = (xff.split(',')[0]?.trim()) || 'unknown';
+    const ipRl = checkIpRateLimit(ip);
+    if (!ipRl.allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Too many requests' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(ipRl.retryAfter) } }
+      );
+    }
+
     const WEBHOOK_SECRET = Deno.env.get('JEKO_WEBHOOK_SECRET');
     const rawBody = await req.text();
     const signature =
