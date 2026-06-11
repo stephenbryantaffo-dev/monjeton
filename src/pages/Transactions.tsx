@@ -19,10 +19,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
+import { useMerchantMode } from "@/hooks/useMerchantMode";
 
 const Transactions = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const merchantMode = useMerchantMode();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
