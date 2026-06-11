@@ -133,7 +133,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, reportMonth, reportYear, toast]);
+  }, [user, reportMonth, reportYear, toast, merchantMode, scopeFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
