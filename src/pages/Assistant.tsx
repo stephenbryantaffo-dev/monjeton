@@ -163,6 +163,7 @@ const QUICK_ACTIONS = [
   { emoji: "💰", label: "Reçu argent", text: "J'ai reçu " },
   { emoji: "🤝", label: "Tontine", text: "Qui n'a pas payé la tontine ?" },
   { emoji: "🎯", label: "Épargne", text: "Je veux économiser " },
+  { emoji: "💭", label: "Dilemme", text: "J'hésite entre deux options : " },
 ];
 
 const Assistant = () => {
