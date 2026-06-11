@@ -39,6 +39,7 @@ const trendModes = ["Jour", "Mois"];
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const merchantMode = useMerchantMode();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
   const [activePeriod, setActivePeriod] = useState<"Jour" | "Semaine" | "Mois" | "Année" | "Custom">("Jour");
