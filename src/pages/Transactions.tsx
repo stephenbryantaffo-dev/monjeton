@@ -137,6 +137,11 @@ const Transactions = () => {
       result = result.filter(t => t.wallet_id === filterWallet);
     }
 
+    // Scope filter (merchant mode)
+    if (merchantMode && scopeFilter !== "all") {
+      result = result.filter(t => (t.scope || "perso") === scopeFilter);
+    }
+
     // Period filter
     if (filterPeriod !== "all") {
       const now = new Date();
