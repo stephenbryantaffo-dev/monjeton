@@ -80,6 +80,11 @@ const Dashboard = () => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_tontines") !== "false";
   });
+  const [showMerchantDaily, setShowMerchantDaily] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_merchant_daily") !== "false";
+  });
+  const [todayBiz, setTodayBiz] = useState<{ income: number; expense: number; count: number }>({ income: 0, expense: 0, count: 0 });
   const [blocksOrder, setBlocksOrder] = useState<BlockKey[]>(() => {
     if (typeof window === "undefined") return [...DEFAULT_BLOCKS_ORDER];
     try {
