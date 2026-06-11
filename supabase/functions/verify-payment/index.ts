@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,6 +37,10 @@ Deno.serve(async (req) => {
     }
 
     const userId = claimsData.claims.sub;
+
+    // Rate limit: 10 req/min par utilisateur
+    const rl = await checkRateLimit(userId, 'verify-payment', 10, 60);
+    if (!rl.allowed) return rateLimitResponse('verify-payment', rl.retryAfter, corsHeaders);
 
     // Cherche la sub active la plus récente
     const { data: sub, error: subError } = await supabase
