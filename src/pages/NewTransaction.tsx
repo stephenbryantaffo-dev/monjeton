@@ -545,6 +545,29 @@ const NewTransaction = () => {
       {/* Manual form */}
       {!voiceTransactions && (
         <>
+          {merchantMode && (
+            <div className="flex gap-1 p-1 glass-card rounded-xl mb-3">
+              {([
+                { v: "perso", label: "👤 Perso" },
+                { v: "business", label: "🏪 Business" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => {
+                    setScope(opt.v);
+                    try { localStorage.setItem("last_tx_scope", opt.v); } catch {}
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                    scope === opt.v ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
             <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>
               Dépense
