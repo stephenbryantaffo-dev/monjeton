@@ -26,10 +26,12 @@ const Reports = () => {
   const { user } = useAuth();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
+  const merchantMode = useMerchantMode();
 
   const now = new Date();
   const [reportMonth, setReportMonth] = useState(now.getMonth());
   const [reportYear, setReportYear] = useState(now.getFullYear());
+  const [scopeFilter, setScopeFilter] = useState<"all" | "perso" | "business">("all");
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [leaks, setLeaks] = useState<Leak[]>([]);
