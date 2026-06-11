@@ -57,7 +57,7 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const DEFAULT_BLOCKS_ORDER = ["wallets", "financial_score", "plan", "predictions", "transactions", "tontines"] as const;
+  const DEFAULT_BLOCKS_ORDER = ["wallets", "merchantDaily", "financial_score", "plan", "predictions", "transactions", "tontines"] as const;
   type BlockKey = typeof DEFAULT_BLOCKS_ORDER[number];
   const [showPredictions, setShowPredictions] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
