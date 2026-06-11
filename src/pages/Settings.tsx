@@ -45,7 +45,9 @@ const menuItems = [
 ];
 
 const Settings = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
+  const [merchantMode, setMerchantMode] = useState<boolean>(false);
+  const [merchantSaving, setMerchantSaving] = useState(false);
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
   const { country, setCountry } = useCountry();
   const { toast } = useToast();
