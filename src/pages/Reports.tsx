@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateMonthlyPdf } from "@/lib/generatePdf";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
+import { useMerchantMode } from "@/hooks/useMerchantMode";
 
 interface Leak {
   category: string;
