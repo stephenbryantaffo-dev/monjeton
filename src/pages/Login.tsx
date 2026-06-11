@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { checkRateLimit, resetRateLimit } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.webp";
+import { lovable } from "@/integrations/lovable";
 import {
   AnimatedInput,
   AnimatedForm,
