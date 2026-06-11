@@ -203,6 +203,28 @@ const Transactions = () => {
         </Button>
       </div>
 
+      {merchantMode && (
+        <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
+          {([
+            { v: "all", label: "Tout" },
+            { v: "perso", label: "👤 Perso" },
+            { v: "business", label: "🏪 Business" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.v}
+              type="button"
+              onClick={() => setScopeFilter(opt.v)}
+              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                scopeFilter === opt.v ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+
       {showFilters && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass-card rounded-2xl p-4 mb-4 space-y-3">
           <div className="flex items-center justify-between">
