@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import DailyReminderModal from "@/components/DailyReminderModal";
 import MonthlyBadge from "@/components/MonthlyBadge";
 import { calculateMonthlyBadge, type Badge } from "@/lib/badgeCalculator";
+import { useMerchantMode } from "@/hooks/useMerchantMode";
 const trendModes = ["Jour", "Mois"];
 
 const Dashboard = () => {
