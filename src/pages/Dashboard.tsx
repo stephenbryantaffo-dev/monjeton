@@ -33,11 +33,13 @@ import { cn } from "@/lib/utils";
 import DailyReminderModal from "@/components/DailyReminderModal";
 import MonthlyBadge from "@/components/MonthlyBadge";
 import { calculateMonthlyBadge, type Badge } from "@/lib/badgeCalculator";
+import { useMerchantMode } from "@/hooks/useMerchantMode";
 const trendModes = ["Jour", "Mois"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const merchantMode = useMerchantMode();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
   const [activePeriod, setActivePeriod] = useState<"Jour" | "Semaine" | "Mois" | "Année" | "Custom">("Jour");
@@ -55,7 +57,7 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const DEFAULT_BLOCKS_ORDER = ["wallets", "financial_score", "plan", "predictions", "transactions", "tontines"] as const;
+  const DEFAULT_BLOCKS_ORDER = ["wallets", "merchantDaily", "financial_score", "plan", "predictions", "transactions", "tontines"] as const;
   type BlockKey = typeof DEFAULT_BLOCKS_ORDER[number];
   const [showPredictions, setShowPredictions] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -78,6 +80,11 @@ const Dashboard = () => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_tontines") !== "false";
   });
+  const [showMerchantDaily, setShowMerchantDaily] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("dashboard_show_merchant_daily") !== "false";
+  });
+  const [todayBiz, setTodayBiz] = useState<{ income: number; expense: number; count: number }>({ income: 0, expense: 0, count: 0 });
   const [blocksOrder, setBlocksOrder] = useState<BlockKey[]>(() => {
     if (typeof window === "undefined") return [...DEFAULT_BLOCKS_ORDER];
     try {
@@ -122,6 +129,10 @@ const Dashboard = () => {
   const toggleTontines = (v: boolean) => {
     setShowTontines(v);
     try { localStorage.setItem("dashboard_show_tontines", String(v)); } catch {}
+  };
+  const toggleMerchantDaily = (v: boolean) => {
+    setShowMerchantDaily(v);
+    try { localStorage.setItem("dashboard_show_merchant_daily", String(v)); } catch {}
   };
   const resetCustomization = () => {
     togglePredictions(true);
@@ -411,6 +422,29 @@ const Dashboard = () => {
     fetchPredictions();
   }, [user]);
 
+  // Fetch today's BUSINESS transactions for "Bilan du jour" card
+  useEffect(() => {
+    if (!user || !merchantMode) return;
+    const today = new Date().toISOString().split("T")[0];
+    let cancelled = false;
+    supabase
+      .from("transactions")
+      .select("amount, type")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .eq("scope", "business")
+      .then(({ data }) => {
+        if (cancelled) return;
+        const d = (data || []) as Array<{ amount: number; type: string }>;
+        setTodayBiz({
+          income: d.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0),
+          expense: d.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0),
+          count: d.length,
+        });
+      });
+    return () => { cancelled = true; };
+  }, [user, merchantMode, transactions]);
+
   const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
 
@@ -501,9 +535,10 @@ const Dashboard = () => {
                 <SheetDescription>Active, masque ou réorganise les sections du tableau de bord.</SheetDescription>
               </SheetHeader>
               <div className="mt-4 space-y-2">
-                {blocksOrder.map((key, idx) => {
+                {blocksOrder.filter(k => k !== "merchantDaily" || merchantMode).map((key, idx) => {
                   const meta: Record<BlockKey, { label: string; desc: string; checked?: boolean; onChange?: (v: boolean) => void; toggleable: boolean }> = {
                     wallets: { label: "Soldes (Revenus / Dépenses)", desc: "Toujours visible", toggleable: false },
+                    merchantDaily: { label: "🏪 Bilan du jour", desc: "Ventes, dépenses et bénéfice business d'aujourd'hui", checked: showMerchantDaily, onChange: toggleMerchantDaily, toggleable: true },
                     financial_score: { label: "Score financier IA", desc: "Score hebdomadaire et insights", checked: showFinancialScore, onChange: toggleFinancialScore, toggleable: true },
                     plan: { label: "Plan financier du mois", desc: "Alertes de budget et plan en cours", checked: showPlan, onChange: togglePlan, toggleable: true },
                     predictions: { label: "Prévisions IA", desc: "Tendances et projections de fin de mois", checked: showPredictions, onChange: togglePredictions, toggleable: true },
@@ -746,8 +781,38 @@ const Dashboard = () => {
             const tontinesBlock = showTontines ? (
               <DashboardTontineWidget key="tontines" />
             ) : null;
+            const profit = todayBiz.income - todayBiz.expense;
+            const merchantDailyBlock = (merchantMode && showMerchantDaily) ? (
+              <div key="merchantDaily" className="glass-card rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6">
+                <h2 className="text-sm font-semibold text-foreground mb-3">🏪 Bilan du jour</h2>
+                {todayBiz.count === 0 ? (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-muted-foreground">Aucune activité business aujourd'hui</p>
+                    <Link to="/transactions/new" className="text-xs text-primary mt-2 inline-block">Enregistrer une vente →</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">💰 Ventes du jour</span>
+                      <span className="text-primary font-semibold tabular-nums">{formatAmount(todayBiz.income)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">💸 Dépenses du jour</span>
+                      <span className="text-destructive font-semibold tabular-nums">{formatAmount(todayBiz.expense)}</span>
+                    </div>
+                    <div className="flex items-end justify-between pt-2 border-t border-border">
+                      <span className="text-sm text-muted-foreground">📈 Bénéfice du jour</span>
+                      <span className={`text-2xl font-bold tabular-nums ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {formatAmount(profit)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null;
             const blockMap: Record<BlockKey, React.ReactNode> = {
               wallets: walletsBlock,
+              merchantDaily: merchantDailyBlock,
               financial_score: financialScoreBlock,
               plan: planBlock,
               predictions: predictionsBlock,
