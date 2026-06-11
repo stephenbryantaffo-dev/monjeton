@@ -18,12 +18,14 @@ import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES
 import { checkAndCreateNotifications } from "@/lib/notificationService";
 import { syncAutoBudget } from "@/lib/autoBudget";
 import { checkBudgetWhatsappAlerts } from "@/lib/budgetWhatsappAlerts";
+import { useMerchantMode } from "@/hooks/useMerchantMode";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const merchantMode = useMerchantMode();
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -33,6 +35,9 @@ const NewTransaction = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [scope, setScope] = useState<"perso" | "business">(
+    () => ((typeof window !== "undefined" && (localStorage.getItem("last_tx_scope") as any)) || "perso")
+  );
 
   // Voice states
   const [isRecording, setIsRecording] = useState(false);
