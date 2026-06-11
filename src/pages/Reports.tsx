@@ -59,7 +59,7 @@ const Reports = () => {
     setLoading(true);
     try {
       const sixMonthsAgo = new Date(reportYear, reportMonth - 5, 1).toISOString().split("T")[0];
-      const { data: transactions, error } = await supabase
+      const { data: rawTransactions, error } = await supabase
         .from("transactions")
         .select("*, categories(name, color)")
         .eq("user_id", user.id)
@@ -69,7 +69,10 @@ const Reports = () => {
         .limit(1000);
 
       if (error) throw error;
-      if (!transactions) return;
+      if (!rawTransactions) return;
+      const transactions = (!merchantMode || scopeFilter === "all")
+        ? rawTransactions
+        : rawTransactions.filter(t => ((t as any).scope || "perso") === scopeFilter);
       setAllTransactions(transactions);
 
       const startOfMonth = new Date(reportYear, reportMonth, 1).toISOString().split("T")[0];
