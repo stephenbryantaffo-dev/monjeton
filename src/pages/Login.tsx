@@ -98,6 +98,19 @@ const Login = () => {
     }
   };
 
+  const handleGoogle = async () => {
+    const returnTo = searchParams.get("returnTo") || "/dashboard";
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin + returnTo,
+    });
+    if (result.error) {
+      toast({ title: "Connexion Google échouée", description: (result.error as any)?.message || "Réessaie.", variant: "destructive" });
+      return;
+    }
+    if (result.redirected) return;
+    navigate(returnTo, { replace: true });
+  };
+
   return (
     <div className="min-h-screen flex bg-background">
       {/* ── Left: Orbital animation (hidden on mobile) ── */}
