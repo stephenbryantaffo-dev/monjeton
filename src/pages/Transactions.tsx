@@ -44,6 +44,7 @@ const Transactions = () => {
   const [filterMaxAmount, setFilterMaxAmount] = useState("");
   type SortOrder = "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
   const [sortOrder, setSortOrder] = useState<SortOrder>("date_desc");
+  const [scopeFilter, setScopeFilter] = useState<"all" | "perso" | "business">("all");
 
   const fetchData = async (pageNum = 0) => {
     if (!user) return;
