@@ -249,10 +249,53 @@ const Reports = () => {
         ))}
       </div>
 
+      {merchantMode && (
+        <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
+          {([
+            { v: "all", label: "Tout" },
+            { v: "perso", label: "👤 Perso" },
+            { v: "business", label: "🏪 Business" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.v}
+              type="button"
+              onClick={() => setScopeFilter(opt.v)}
+              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                scopeFilter === opt.v ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-4"><CardSkeleton /><ChartSkeleton /><ChartSkeleton /></div>
       ) : activeTab === 0 ? (
         <>
+          {merchantMode && scopeFilter === "business" && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
+              <h2 className="text-sm font-semibold text-foreground mb-3">📊 Bilan Business (mois en cours)</h2>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">💰 CA</span>
+                  <span className="text-primary font-semibold">{formatAmount(totalIncome)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">💸 Dépenses</span>
+                  <span className="text-destructive font-semibold">{formatAmount(total)}</span>
+                </div>
+                <div className="flex items-end justify-between pt-2 border-t border-border">
+                  <span className="text-sm text-muted-foreground">📈 Bénéfice</span>
+                  <span className={`text-2xl font-bold ${totalIncome - total >= 0 ? "text-primary" : "text-destructive"}`}>
+                    {formatAmount(totalIncome - total)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <div className="mb-4">
             <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
               <Download className="w-4 h-4" /> Exporter le rapport PDF
