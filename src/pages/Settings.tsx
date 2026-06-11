@@ -480,6 +480,22 @@ const Settings = () => {
           <Switch checked={whatsappAlerts} onCheckedChange={toggleWhatsappAlerts} />
         </div>
 
+        {/* Merchant mode */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <span className="text-base leading-none mt-0.5">🏪</span>
+            <div className="min-w-0">
+              <p className="text-sm text-foreground">Mode commerçant</p>
+              <p className="text-xs text-muted-foreground">
+                Sépare tes finances perso et business. Un sélecteur Perso/Business apparaîtra quand tu enregistres une transaction.
+              </p>
+            </div>
+          </div>
+          <Switch checked={merchantMode} disabled={merchantSaving} onCheckedChange={toggleMerchantMode} />
+        </div>
+
+
+
 
         {/* PIN lock */}
         <div className="flex items-center justify-between">
