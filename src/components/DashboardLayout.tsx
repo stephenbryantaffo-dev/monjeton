@@ -23,7 +23,7 @@ const DashboardLayout = ({ children, title, showBack, backTo, headerLeft }: Dash
       <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3">
         {shouldShowBack && (
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(backTo ?? -1)}
             className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 hover:bg-secondary/80 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 text-foreground" />
