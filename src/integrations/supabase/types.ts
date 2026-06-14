@@ -1208,7 +1208,6 @@ export type Database = {
           income_range: string | null
           living_situation: string | null
           main_expense: string | null
-          merchant_mode: boolean
           onboarding_completed: boolean
           phone: string | null
           profile_type: string | null
@@ -1232,7 +1231,6 @@ export type Database = {
           income_range?: string | null
           living_situation?: string | null
           main_expense?: string | null
-          merchant_mode?: boolean
           onboarding_completed?: boolean
           phone?: string | null
           profile_type?: string | null
@@ -1256,7 +1254,6 @@ export type Database = {
           income_range?: string | null
           living_situation?: string | null
           main_expense?: string | null
-          merchant_mode?: boolean
           onboarding_completed?: boolean
           phone?: string | null
           profile_type?: string | null
@@ -2087,7 +2084,6 @@ export type Database = {
           note: string | null
           original_amount: number | null
           original_currency: string | null
-          scope: string
           status: string
           type: string
           user_id: string
@@ -2109,7 +2105,6 @@ export type Database = {
           note?: string | null
           original_amount?: number | null
           original_currency?: string | null
-          scope?: string
           status?: string
           type: string
           user_id: string
@@ -2131,7 +2126,6 @@ export type Database = {
           note?: string | null
           original_amount?: number | null
           original_currency?: string | null
-          scope?: string
           status?: string
           type?: string
           user_id?: string

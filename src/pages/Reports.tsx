@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateMonthlyPdf } from "@/lib/generatePdf";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
-import { useMerchantMode } from "@/hooks/useMerchantMode";
 
 interface Leak {
   category: string;
@@ -26,12 +25,10 @@ const Reports = () => {
   const { user } = useAuth();
   const { formatAmount } = usePrivacy();
   const { toast } = useToast();
-  const merchantMode = useMerchantMode();
 
   const now = new Date();
   const [reportMonth, setReportMonth] = useState(now.getMonth());
   const [reportYear, setReportYear] = useState(now.getFullYear());
-  const [scopeFilter, setScopeFilter] = useState<"all" | "perso" | "business">("all");
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [leaks, setLeaks] = useState<Leak[]>([]);
@@ -59,7 +56,7 @@ const Reports = () => {
     setLoading(true);
     try {
       const sixMonthsAgo = new Date(reportYear, reportMonth - 5, 1).toISOString().split("T")[0];
-      const { data: rawTransactions, error } = await supabase
+      const { data: transactions, error } = await supabase
         .from("transactions")
         .select("*, categories(name, color)")
         .eq("user_id", user.id)
@@ -69,10 +66,7 @@ const Reports = () => {
         .limit(1000);
 
       if (error) throw error;
-      if (!rawTransactions) return;
-      const transactions = (!merchantMode || scopeFilter === "all")
-        ? rawTransactions
-        : rawTransactions.filter(t => ((t as any).scope || "perso") === scopeFilter);
+      if (!transactions) return;
       setAllTransactions(transactions);
 
       const startOfMonth = new Date(reportYear, reportMonth, 1).toISOString().split("T")[0];
@@ -133,7 +127,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, reportMonth, reportYear, toast, merchantMode, scopeFilter]);
+  }, [user, reportMonth, reportYear, toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -249,53 +243,10 @@ const Reports = () => {
         ))}
       </div>
 
-      {merchantMode && (
-        <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
-          {([
-            { v: "all", label: "Tout" },
-            { v: "perso", label: "👤 Perso" },
-            { v: "business", label: "🏪 Business" },
-          ] as const).map((opt) => (
-            <button
-              key={opt.v}
-              type="button"
-              onClick={() => setScopeFilter(opt.v)}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
-                scopeFilter === opt.v ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {loading ? (
         <div className="space-y-4"><CardSkeleton /><ChartSkeleton /><ChartSkeleton /></div>
       ) : activeTab === 0 ? (
         <>
-          {merchantMode && scopeFilter === "business" && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-5 mb-4">
-              <h2 className="text-sm font-semibold text-foreground mb-3">📊 Bilan Business (mois en cours)</h2>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">💰 CA</span>
-                  <span className="text-primary font-semibold">{formatAmount(totalIncome)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">💸 Dépenses</span>
-                  <span className="text-destructive font-semibold">{formatAmount(total)}</span>
-                </div>
-                <div className="flex items-end justify-between pt-2 border-t border-border">
-                  <span className="text-sm text-muted-foreground">📈 Bénéfice</span>
-                  <span className={`text-2xl font-bold ${totalIncome - total >= 0 ? "text-primary" : "text-destructive"}`}>
-                    {formatAmount(totalIncome - total)}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
           <div className="mb-4">
             <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
               <Download className="w-4 h-4" /> Exporter le rapport PDF

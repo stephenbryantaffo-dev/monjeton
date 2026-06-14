@@ -19,12 +19,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
-import { useMerchantMode } from "@/hooks/useMerchantMode";
 
 const Transactions = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const merchantMode = useMerchantMode();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
@@ -44,7 +42,6 @@ const Transactions = () => {
   const [filterMaxAmount, setFilterMaxAmount] = useState("");
   type SortOrder = "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
   const [sortOrder, setSortOrder] = useState<SortOrder>("date_desc");
-  const [scopeFilter, setScopeFilter] = useState<"all" | "perso" | "business">("all");
 
   const fetchData = async (pageNum = 0) => {
     if (!user) return;
@@ -137,11 +134,6 @@ const Transactions = () => {
       result = result.filter(t => t.wallet_id === filterWallet);
     }
 
-    // Scope filter (merchant mode)
-    if (merchantMode && scopeFilter !== "all") {
-      result = result.filter(t => (t.scope || "perso") === scopeFilter);
-    }
-
     // Period filter
     if (filterPeriod !== "all") {
       const now = new Date();
@@ -183,7 +175,7 @@ const Transactions = () => {
     }
 
     return result;
-  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder, scopeFilter, merchantMode]);
+  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder]);
 
   return (
     <DashboardLayout title="Transactions">
@@ -202,28 +194,6 @@ const Transactions = () => {
           <Filter className="w-4 h-4" />
         </Button>
       </div>
-
-      {merchantMode && (
-        <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
-          {([
-            { v: "all", label: "Tout" },
-            { v: "perso", label: "👤 Perso" },
-            { v: "business", label: "🏪 Business" },
-          ] as const).map((opt) => (
-            <button
-              key={opt.v}
-              type="button"
-              onClick={() => setScopeFilter(opt.v)}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
-                scopeFilter === opt.v ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-
 
       {showFilters && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass-card rounded-2xl p-4 mb-4 space-y-3">
@@ -320,12 +290,7 @@ const Transactions = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <span className="truncate">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</span>
-                  {merchantMode && t.scope === "business" && (
-                    <span title="Business" className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">🏪</span>
-                  )}
-                </p>
+                <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
               </div>
               <span className={`text-sm font-semibold whitespace-nowrap ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
                 {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))}

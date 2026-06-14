@@ -45,9 +45,7 @@ const menuItems = [
 ];
 
 const Settings = () => {
-  const { user, profile, signOut, refreshProfile } = useAuth();
-  const [merchantMode, setMerchantMode] = useState<boolean>(false);
-  const [merchantSaving, setMerchantSaving] = useState(false);
+  const { user, profile, signOut } = useAuth();
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
   const { country, setCountry } = useCountry();
   const { toast } = useToast();
@@ -162,31 +160,6 @@ const Settings = () => {
       return;
     }
     toast({ title: checked ? "Alertes activées ✅" : "Alertes désactivées" });
-  };
-
-  useEffect(() => {
-    if (profile && typeof (profile as any).merchant_mode === "boolean") {
-      setMerchantMode((profile as any).merchant_mode);
-    }
-  }, [profile]);
-
-  const toggleMerchantMode = async (checked: boolean) => {
-    if (!user || merchantSaving) return;
-    setMerchantSaving(true);
-    const previous = merchantMode;
-    setMerchantMode(checked);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ merchant_mode: checked } as any)
-      .eq("user_id", user.id);
-    setMerchantSaving(false);
-    if (error) {
-      setMerchantMode(previous);
-      toast({ title: "Erreur", description: "Préférence non sauvegardée", variant: "destructive" });
-      return;
-    }
-    await refreshProfile();
-    toast({ title: checked ? "Mode commerçant activé 🏪" : "Mode commerçant désactivé" });
   };
 
   useEffect(() => {
@@ -479,22 +452,6 @@ const Settings = () => {
           </div>
           <Switch checked={whatsappAlerts} onCheckedChange={toggleWhatsappAlerts} />
         </div>
-
-        {/* Merchant mode */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2 min-w-0 flex-1">
-            <span className="text-base leading-none mt-0.5">🏪</span>
-            <div className="min-w-0">
-              <p className="text-sm text-foreground">Mode commerçant</p>
-              <p className="text-xs text-muted-foreground">
-                Sépare tes finances perso et business. Un sélecteur Perso/Business apparaîtra quand tu enregistres une transaction.
-              </p>
-            </div>
-          </div>
-          <Switch checked={merchantMode} disabled={merchantSaving} onCheckedChange={toggleMerchantMode} />
-        </div>
-
-
 
 
         {/* PIN lock */}

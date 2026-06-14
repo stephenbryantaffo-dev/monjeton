@@ -18,14 +18,12 @@ import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES
 import { checkAndCreateNotifications } from "@/lib/notificationService";
 import { syncAutoBudget } from "@/lib/autoBudget";
 import { checkBudgetWhatsappAlerts } from "@/lib/budgetWhatsappAlerts";
-import { useMerchantMode } from "@/hooks/useMerchantMode";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const merchantMode = useMerchantMode();
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -35,9 +33,6 @@ const NewTransaction = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [scope, setScope] = useState<"perso" | "business">(
-    () => ((typeof window !== "undefined" && (localStorage.getItem("last_tx_scope") as any)) || "perso")
-  );
 
   // Voice states
   const [isRecording, setIsRecording] = useState(false);
@@ -373,8 +368,7 @@ const NewTransaction = () => {
       date,
       category_id: categoryId,
       wallet_id: walletId || null,
-      scope: merchantMode ? scope : "perso",
-    } as any);
+    });
 
     setLoading(false);
     if (error) {
@@ -545,29 +539,6 @@ const NewTransaction = () => {
       {/* Manual form */}
       {!voiceTransactions && (
         <>
-          {merchantMode && (
-            <div className="flex gap-1 p-1 glass-card rounded-xl mb-3">
-              {([
-                { v: "perso", label: "👤 Perso" },
-                { v: "business", label: "🏪 Business" },
-              ] as const).map((opt) => (
-                <button
-                  key={opt.v}
-                  type="button"
-                  onClick={() => {
-                    setScope(opt.v);
-                    try { localStorage.setItem("last_tx_scope", opt.v); } catch {}
-                  }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                    scope === opt.v ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-
           <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
             <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>
               Dépense
