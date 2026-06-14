@@ -8,6 +8,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
   title?: string;
   showBack?: boolean;
+  backTo?: string;
   headerLeft?: ReactNode;
 }
 
