@@ -12,7 +12,7 @@ interface DashboardLayoutProps {
   headerLeft?: ReactNode;
 }
 
-const DashboardLayout = ({ children, title, showBack, headerLeft }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, showBack, backTo, headerLeft }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
