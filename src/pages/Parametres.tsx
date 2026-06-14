@@ -167,7 +167,7 @@ const Parametres = () => {
   const activeCurrencyInfo = allCurrencies.find(c => c.code === currencyPref);
 
   return (
-    <DashboardLayout title="Paramètres" showBack>
+    <DashboardLayout title="Paramètres" showBack backTo="/settings">
       {/* Country & Language */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
