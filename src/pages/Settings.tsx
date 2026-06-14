@@ -78,7 +78,7 @@ const SettingsPage = () => {
 
       {/* Grille d'outils */}
       <div className="grid grid-cols-2 gap-2.5 mb-6">
-        {menuItems.filter((item) => item.path !== "/brvm" || activeCurrency === "XOF" || activeCurrency === "XAF").map((item) => {
+        {menuItems.map((item) => {
           const content = (
             <div className="flex flex-col items-start gap-2 h-full">
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
