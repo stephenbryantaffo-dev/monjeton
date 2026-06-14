@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Wallet, Tag, Target, CreditCard, ChevronRight, MessageCircle, Shield, Camera, PieChart, Users, Award, BarChart3, Settings } from "lucide-react";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveCurrency } from "@/lib/currencyStore";
