@@ -88,9 +88,6 @@ const SettingsPage = () => {
               </div>
               <div className="min-w-0">
                 <span className="block text-[13.5px] font-semibold text-foreground leading-tight">{item.label}</span>
-                {item.sublabel && (
-                  <span className="block text-[10px] text-muted-foreground mt-0.5 leading-tight">{item.sublabel}</span>
-                )}
               </div>
             </div>
           );
