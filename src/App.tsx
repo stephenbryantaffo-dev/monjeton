@@ -34,6 +34,7 @@ const Savings = lazy(() => import("./pages/Savings"));
 const Debts = lazy(() => import("./pages/Debts"));
 const Assistant = lazy(() => import("./pages/Assistant"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Parametres = lazy(() => import("./pages/Parametres"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Tontine = lazy(() => import("./pages/Tontine"));
@@ -87,6 +88,7 @@ const AppContent = () => {
         <Route path="/debts" element={<ProtectedRoute><OnboardingGuard><Debts /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/assistant" element={<ProtectedRoute><OnboardingGuard><Assistant /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><OnboardingGuard><Settings /></OnboardingGuard></ProtectedRoute>} />
+        <Route path="/parametres" element={<ProtectedRoute><OnboardingGuard><Parametres /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/settings/subscription" element={<ProtectedRoute><OnboardingGuard><SubscriptionManage /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/budgets" element={<ProtectedRoute><OnboardingGuard><Budgets /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/tontine" element={<ProtectedRoute><OnboardingGuard><Tontine /></OnboardingGuard></ProtectedRoute>} />
