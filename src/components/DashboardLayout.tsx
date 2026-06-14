@@ -8,10 +8,11 @@ interface DashboardLayoutProps {
   children: ReactNode;
   title?: string;
   showBack?: boolean;
+  backTo?: string;
   headerLeft?: ReactNode;
 }
 
-const DashboardLayout = ({ children, title, showBack, headerLeft }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, showBack, backTo, headerLeft }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
@@ -22,7 +23,7 @@ const DashboardLayout = ({ children, title, showBack, headerLeft }: DashboardLay
       <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3">
         {shouldShowBack && (
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => backTo ? navigate(backTo) : navigate(-1)}
             className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 hover:bg-secondary/80 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 text-foreground" />

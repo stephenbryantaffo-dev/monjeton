@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, Wallet, Tag, Target, CreditCard, ChevronRight, MessageCircle, Shield, Camera, PieChart, Users, Award, BarChart3, Settings } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useActiveCurrency } from "@/lib/currencyStore";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 
 const menuItems = [
@@ -22,7 +21,6 @@ const menuItems = [
 const SettingsPage = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const activeCurrency = useActiveCurrency();
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
 
   useEffect(() => {
@@ -80,7 +78,7 @@ const SettingsPage = () => {
 
       {/* Grille d'outils */}
       <div className="grid grid-cols-2 gap-2.5 mb-6">
-        {menuItems.filter((item) => item.path !== "/brvm" || activeCurrency === "XOF" || activeCurrency === "XAF").map((item) => {
+        {menuItems.map((item) => {
           const content = (
             <div className="flex flex-col items-start gap-2 h-full">
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
