@@ -34,6 +34,7 @@ const Savings = lazy(() => import("./pages/Savings"));
 const Debts = lazy(() => import("./pages/Debts"));
 const Assistant = lazy(() => import("./pages/Assistant"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Parametres = lazy(() => import("./pages/Parametres"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Tontine = lazy(() => import("./pages/Tontine"));
