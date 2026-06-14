@@ -21,7 +21,6 @@ const menuItems = [
 const SettingsPage = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const activeCurrency = useActiveCurrency();
   const [earnedBadges, setEarnedBadges] = useState<{ badge_id: string; month: number; year: number }[]>([]);
 
   useEffect(() => {
