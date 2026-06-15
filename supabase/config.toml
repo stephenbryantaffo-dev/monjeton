@@ -33,8 +33,6 @@ verify_jwt = false
 [functions.subscription-reminders]
 verify_jwt = false
 
-[functions.jeko-test-secret]
-verify_jwt = false
 
 
 
