@@ -493,7 +493,6 @@ const Dashboard = () => {
                 {blocksOrder.map((key, idx) => {
                   const meta: Record<BlockKey, { label: string; desc: string; checked?: boolean; onChange?: (v: boolean) => void; toggleable: boolean }> = {
                     wallets: { label: "Soldes (Revenus / Dépenses)", desc: "Toujours visible", toggleable: false },
-                    financial_score: { label: "Score financier IA", desc: "Score hebdomadaire et insights", checked: showFinancialScore, onChange: toggleFinancialScore, toggleable: true },
                     plan: { label: "Plan financier du mois", desc: "Alertes de budget et plan en cours", checked: showPlan, onChange: togglePlan, toggleable: true },
                     predictions: { label: "Prévisions IA", desc: "Tendances et projections de fin de mois", checked: showPredictions, onChange: togglePredictions, toggleable: true },
                     transactions: { label: "Transactions récentes", desc: "Dernières opérations enregistrées", checked: showTransactions, onChange: toggleTransactions, toggleable: true },
@@ -673,11 +672,6 @@ const Dashboard = () => {
                 </motion.div>
               </div>
             );
-            const financialScoreBlock = showFinancialScore ? (
-              <Suspense key="financial_score" fallback={<FinancialScoreSkeleton />}>
-                <FinancialScore />
-              </Suspense>
-            ) : null;
             const planBlock = showPlan ? (
               <BudgetAlertBanner key="plan" alerts={budgetAlerts} />
             ) : null;
@@ -737,7 +731,6 @@ const Dashboard = () => {
             ) : null;
             const blockMap: Record<BlockKey, React.ReactNode> = {
               wallets: walletsBlock,
-              financial_score: financialScoreBlock,
               plan: planBlock,
               predictions: predictionsBlock,
               transactions: transactionsBlock,
