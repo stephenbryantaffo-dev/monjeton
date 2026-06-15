@@ -3,14 +3,13 @@ import OnboardingInline from "@/components/Onboarding";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
-const FinancialScore = lazy(() => import("@/components/FinancialScore"));
+
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import SubscriptionRenewBanner from "@/components/SubscriptionRenewBanner";
 import DashboardPredictions from "@/components/DashboardPredictions";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
-import { FinancialScoreSkeleton } from "@/components/FinancialScore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic, SlidersHorizontal } from "lucide-react";
@@ -55,16 +54,11 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState<SpendingPrediction[]>([]);
   const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const DEFAULT_BLOCKS_ORDER = ["wallets", "financial_score", "plan", "predictions", "transactions", "tontines"] as const;
+  const DEFAULT_BLOCKS_ORDER = ["wallets", "plan", "predictions", "transactions", "tontines"] as const;
   type BlockKey = typeof DEFAULT_BLOCKS_ORDER[number];
   const [showPredictions, setShowPredictions] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("dashboard_show_predictions") !== "false";
-  });
-  // "financial_score" toggle (was previously labeled "Plan financier"); key kept for backward compat
-  const [showFinancialScore, setShowFinancialScore] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("dashboard_show_financial_plan") !== "false";
   });
   const [showPlan, setShowPlan] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -107,10 +101,6 @@ const Dashboard = () => {
     setShowPredictions(v);
     try { localStorage.setItem("dashboard_show_predictions", String(v)); } catch {}
   };
-  const toggleFinancialScore = (v: boolean) => {
-    setShowFinancialScore(v);
-    try { localStorage.setItem("dashboard_show_financial_plan", String(v)); } catch {}
-  };
   const togglePlan = (v: boolean) => {
     setShowPlan(v);
     try { localStorage.setItem("dashboard_show_plan", String(v)); } catch {}
@@ -125,13 +115,12 @@ const Dashboard = () => {
   };
   const resetCustomization = () => {
     togglePredictions(true);
-    toggleFinancialScore(true);
     togglePlan(true);
     toggleTransactions(true);
     toggleTontines(true);
     persistOrder([...DEFAULT_BLOCKS_ORDER]);
   };
-  const hiddenCount = [showPredictions, showFinancialScore, showPlan, showTransactions, showTontines].filter(v => !v).length;
+  const hiddenCount = [showPredictions, showPlan, showTransactions, showTontines].filter(v => !v).length;
 
   
 
