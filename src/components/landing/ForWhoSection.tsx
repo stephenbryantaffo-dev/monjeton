@@ -46,7 +46,7 @@ const profiles: {
     title: 'Construisez votre\navenir financier dès aujourd’hui.',
     subtitle:
       "Commencer à gérer son argent tôt, c’est la meilleure décision. Mon Jeton vous guide " +
-      "avec un score financier hebdomadaire, des objectifs d'épargne et un coach IA en franc CFA.",
+      "avec des objectifs d'épargne et un coach IA en franc CFA.",
     points: [
       'Score financier IA chaque semaine',
       'Objectifs d’épargne avec calcul quotidien',
