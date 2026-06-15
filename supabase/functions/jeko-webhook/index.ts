@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     });
 
     if (!userId) {
-      console.error('User NOT matched, phone:', phoneRaw);
+      console.error(`⚠️ PAIEMENT NON MATCHÉ - téléphone: ${phoneRaw} - à réconcilier manuellement (txn_id: ${txnId}, plan: ${planName}, montant: ${amountXof} XOF)`);
       return json({ received: true, note: 'logged, user unmatched: ' + phoneRaw });
     }
 
