@@ -682,6 +682,21 @@ export type Database = {
           },
         ]
       }
+      chariow_processed_sales: {
+        Row: {
+          processed_at: string
+          sale_id: string
+        }
+        Insert: {
+          processed_at?: string
+          sale_id: string
+        }
+        Update: {
+          processed_at?: string
+          sale_id?: string
+        }
+        Relationships: []
+      }
       daily_reminders: {
         Row: {
           date: string
@@ -1150,6 +1165,36 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pending_pro_emails: {
+        Row: {
+          applied_at: string | null
+          chariow_sale_id: string | null
+          created_at: string
+          email: string
+          id: string
+          plan_name: string
+          source: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          chariow_sale_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          plan_name?: string
+          source?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          chariow_sale_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          plan_name?: string
+          source?: string | null
         }
         Relationships: []
       }
