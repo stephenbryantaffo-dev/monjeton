@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import Navbar from "@/components/landing/Navbar";
+import Footer from "@/components/landing/Footer";
 import Hero from "@/components/landing/Hero";
 import SectionReveal from "@/components/landing/SectionReveal";
 import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
@@ -68,6 +69,8 @@ const Landing = () => {
       <AnimatedSectionBackground variant={0} glow glowBottom>
         <SectionReveal><Suspense fallback={<SectionFallback />}><FinalCTA /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
+
+      <Footer />
     </div>
   );
 };
