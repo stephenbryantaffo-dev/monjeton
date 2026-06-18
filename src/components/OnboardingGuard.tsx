@@ -9,6 +9,13 @@ const OnboardingGuard = ({ children }: { children: ReactNode }) => {
   if (loading) return null;
   if (user && !profile) return null;
 
+  let justCompleted = false;
+  try { justCompleted = sessionStorage.getItem("onboarding_just_completed") === "1"; } catch {}
+  if (justCompleted && location.pathname !== "/onboarding") {
+    try { sessionStorage.removeItem("onboarding_just_completed"); } catch {}
+    return <>{children}</>;
+  }
+
   if (
     user &&
     profile &&
