@@ -326,6 +326,10 @@ const Onboarding = () => {
 
       if (error) throw error;
 
+      // Optimistic local update to prevent OnboardingGuard race-redirect
+      updateProfileLocal({ ...profileUpdate });
+      try { sessionStorage.setItem("onboarding_just_completed", "1"); } catch {}
+
       await refreshProfile();
 
       // Create adapted categories based on profile
