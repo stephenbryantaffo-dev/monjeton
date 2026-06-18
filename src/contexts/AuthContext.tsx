@@ -12,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   refreshProfile: () => Promise<void>;
+  updateProfileLocal: (partial: Record<string, any>) => void;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -104,6 +105,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetchProfile(user.id);
   }, [user]);
 
+  const updateProfileLocal = useCallback((partial: Record<string, any>) => {
+    setProfile((prev: any) => (prev ? { ...prev, ...partial } : prev));
+  }, []);
+
   // Auto-logout on inactivity (30 min)
   useEffect(() => {
     if (!user) return;
@@ -114,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, signOut]);
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, isAdmin, refreshProfile, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, isAdmin, refreshProfile, updateProfileLocal, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -201,7 +201,7 @@ const slideVariants = {
 };
 
 const Onboarding = () => {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, updateProfileLocal } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [answers, setAnswers] = useState<Answers>({});
@@ -325,6 +325,10 @@ const Onboarding = () => {
         .eq("user_id", user.id);
 
       if (error) throw error;
+
+      // Optimistic local update to prevent OnboardingGuard race-redirect
+      updateProfileLocal({ ...profileUpdate });
+      try { sessionStorage.setItem("onboarding_just_completed", "1"); } catch {}
 
       await refreshProfile();
 
