@@ -639,6 +639,7 @@ const Dashboard = () => {
           </div>
         </>
       ) : !error && (
+        <>
           {allTimeEmpty && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6 mb-6 text-center">
               <p className="text-foreground font-medium mb-2">Bienvenue ! Commence par ajouter une dépense ou un revenu pour voir tes finances ici.</p>
