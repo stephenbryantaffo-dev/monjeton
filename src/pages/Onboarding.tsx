@@ -201,7 +201,7 @@ const slideVariants = {
 };
 
 const Onboarding = () => {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, updateProfileLocal } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [answers, setAnswers] = useState<Answers>({});
