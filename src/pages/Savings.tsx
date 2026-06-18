@@ -349,6 +349,14 @@ const Savings = () => {
 
   return (
     <DashboardLayout title="Épargne">
+      {!loading && goals.length > 0 && (
+        <div className="flex items-center justify-between mb-3 px-1">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Mes objectifs</p>
+          <Button size="sm" variant="ghost" onClick={openCreateModal} className="h-7 px-2 text-xs">
+            <Plus className="w-3.5 h-3.5 mr-1" /> Nouveau
+          </Button>
+        </div>
+      )}
       <div className="space-y-3 mb-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
@@ -517,16 +525,13 @@ const Savings = () => {
         )}
       </div>
 
-      {/* ─── SUGGESTIONS + CUSTOM CREATE ─── */}
-      {!loading && (
+      {!loading && goals.length === 0 && (
         <div className="space-y-3">
-          {goals.length === 0 && (
-            <div className="text-center py-4">
-              <p className="text-4xl mb-2">🎯</p>
-              <p className="font-semibold text-foreground mb-1">Commence à épargner</p>
-              <p className="text-sm text-muted-foreground">Choisis un objectif ou crée le tien</p>
-            </div>
-          )}
+          <div className="text-center py-4">
+            <p className="text-4xl mb-2">🎯</p>
+            <p className="font-semibold text-foreground mb-1">Commence à épargner</p>
+            <p className="text-sm text-muted-foreground">Choisis une suggestion ou crée le tien</p>
+          </div>
 
           <p className="text-xs uppercase tracking-wide text-muted-foreground px-1">
             Suggestions
