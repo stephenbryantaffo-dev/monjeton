@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
-import OnboardingInline from "@/components/Onboarding";
+
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
@@ -639,14 +639,17 @@ const Dashboard = () => {
           </div>
         </>
       ) : !error && (
-        <>
-          {allTimeEmpty ? (
-            <OnboardingInline onComplete={() => {
-              localStorage.setItem('onboarding_done', '1');
-              window.location.reload();
-            }} />
-          ) : (
-          <>
+          {allTimeEmpty && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6 mb-6 text-center">
+              <p className="text-foreground font-medium mb-2">Bienvenue ! Commence par ajouter une dépense ou un revenu pour voir tes finances ici.</p>
+              <button
+                onClick={() => navigate("/transactions/new")}
+                className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
+              >
+                Ajouter ma première transaction →
+              </button>
+            </motion.div>
+          )}
           {(() => {
             const walletsBlock = (
               <div key="wallets" className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
@@ -757,8 +760,6 @@ const Dashboard = () => {
               <p className="text-muted-foreground text-sm">Aucune transaction pour cette période.</p>
               <Link to="/transactions/new" className="text-primary text-sm mt-2 inline-block">Ajouter une transaction →</Link>
             </div>
-          )}
-          </>
           )}
         </>
       )}
