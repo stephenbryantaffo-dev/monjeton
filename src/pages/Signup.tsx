@@ -12,6 +12,7 @@ import logoImg from "@/assets/logo-monjeton.webp";
 import { lovable } from "@/integrations/lovable";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { checkAuthMethod, methodMismatchMessage } from "@/lib/auth-helpers";
 const Signup = () => {
   useDocumentMeta({
     title: "Créer un compte — Mon Jeton",

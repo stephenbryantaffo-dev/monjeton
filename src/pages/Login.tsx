@@ -16,6 +16,7 @@ import {
   OrbitingCircles,
 } from "@/components/ui/animated-login";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { checkAuthMethod, methodMismatchMessage } from "@/lib/auth-helpers";
 
 // Mobile money operator colors
 const operators = [
@@ -62,18 +63,31 @@ const Login = () => {
 
     setLoading(true);
     const { error } = await signIn(normalizedEmail, password);
-    setLoading(false);
 
     if (error) {
+      // Refine message: if account exists with Google, guide there
+      const info = await checkAuthMethod(normalizedEmail);
+      setLoading(false);
+      const mismatch = methodMismatchMessage(info.method, "email");
+      if (info.exists && mismatch) {
+        toast({
+          title: "Utilise Google pour ce compte",
+          description: mismatch,
+          variant: "destructive",
+          duration: 7000,
+        });
+        return;
+      }
       toast({
         title: "Email ou mot de passe incorrect",
-        description: "Si tu t'es déjà inscrit avec Google sur cet email, utilise “Continuer avec Google”. Sinon utilise “Mot de passe oublié ?”.",
+        description: "Vérifie ton mot de passe, ou utilise « Mot de passe oublié ? » si tu ne t'en souviens plus.",
         variant: "destructive",
       });
-    } else {
-      resetRateLimit(`login:${normalizedEmail}`);
-      navigate(searchParams.get("returnTo") || "/dashboard", { replace: true });
+      return;
     }
+    setLoading(false);
+    resetRateLimit(`login:${normalizedEmail}`);
+    navigate(searchParams.get("returnTo") || "/dashboard", { replace: true });
   };
 
   const handleForgotPassword = async () => {
@@ -102,6 +116,22 @@ const Login = () => {
 
   const handleGoogle = async () => {
     const returnTo = searchParams.get("returnTo") || "/dashboard";
+    // If the user already typed an email and it belongs to a password account,
+    // block the Google flow to prevent creating a duplicate account.
+    const typed = email.trim().toLowerCase();
+    if (typed) {
+      const info = await checkAuthMethod(typed);
+      const mismatch = methodMismatchMessage(info.method, "google");
+      if (info.exists && mismatch) {
+        toast({
+          title: "Utilise ton mot de passe pour ce compte",
+          description: mismatch,
+          variant: "destructive",
+          duration: 7000,
+        });
+        return;
+      }
+    }
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + returnTo,
     });
