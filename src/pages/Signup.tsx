@@ -12,6 +12,7 @@ import logoImg from "@/assets/logo-monjeton.webp";
 import { lovable } from "@/integrations/lovable";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { checkAuthMethod, methodMismatchMessage } from "@/lib/auth-helpers";
 const Signup = () => {
   useDocumentMeta({
     title: "Créer un compte — Mon Jeton",
@@ -73,6 +74,23 @@ const Signup = () => {
     setLoading(true);
     setExistingAccountEmail("");
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Pre-check: if an account already uses Google for this email,
+    // don't try to create a second email/password account.
+    const existing = await checkAuthMethod(normalizedEmail);
+    const mismatch = methodMismatchMessage(existing.method, "email");
+    if (existing.exists && mismatch) {
+      setLoading(false);
+      toast({
+        title: "Utilise Google pour ce compte",
+        description: mismatch,
+        variant: "destructive",
+        duration: 7000,
+      });
+      setExistingAccountEmail(normalizedEmail);
+      return;
+    }
+
     const { error } = await signUp(normalizedEmail, password, safeName);
     setLoading(false);
 
@@ -199,6 +217,20 @@ const Signup = () => {
             size="lg"
             className="w-full mt-4 gap-2"
             onClick={async () => {
+              const typed = email.trim().toLowerCase();
+              if (typed) {
+                const info = await checkAuthMethod(typed);
+                const mismatch = methodMismatchMessage(info.method, "google");
+                if (info.exists && mismatch) {
+                  toast({
+                    title: "Utilise ton mot de passe pour ce compte",
+                    description: mismatch,
+                    variant: "destructive",
+                    duration: 7000,
+                  });
+                  return;
+                }
+              }
               const result = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: window.location.origin + returnTo,
               });
