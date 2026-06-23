@@ -47,8 +47,9 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const rl = checkRateLimit(`login:${email}`, 5, 5 * 60 * 1000);
+    const rl = checkRateLimit(`login:${normalizedEmail}`, 5, 5 * 60 * 1000);
     if (!rl.allowed) {
       const seconds = Math.ceil(rl.retryAfterMs / 1000);
       toast({
@@ -60,23 +61,24 @@ const Login = () => {
     }
 
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(normalizedEmail, password);
     setLoading(false);
 
     if (error) {
       toast({
         title: "Email ou mot de passe incorrect",
-        description: "Si ce compte existe déjà mais que le mot de passe ne passe pas, utilise “Mot de passe oublié ?”.",
+        description: "Si tu t'es déjà inscrit avec Google sur cet email, utilise “Continuer avec Google”. Sinon utilise “Mot de passe oublié ?”.",
         variant: "destructive",
       });
     } else {
-      resetRateLimit(`login:${email}`);
+      resetRateLimit(`login:${normalizedEmail}`);
       navigate(searchParams.get("returnTo") || "/dashboard", { replace: true });
     }
   };
 
   const handleForgotPassword = async () => {
-    if (!email) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
       toast({
         title: "Entre ton email",
         description: "Remplis le champ email avant de réinitialiser.",
@@ -85,7 +87,7 @@ const Login = () => {
       return;
     }
     const { supabase } = await import("@/integrations/supabase/client");
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: window.location.origin + "/reset-password",
     });
     if (error) {
