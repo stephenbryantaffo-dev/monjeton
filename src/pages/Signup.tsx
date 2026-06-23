@@ -72,7 +72,8 @@ const Signup = () => {
 
     setLoading(true);
     setExistingAccountEmail("");
-    const { error } = await signUp(email, password, safeName);
+    const normalizedEmail = email.trim().toLowerCase();
+    const { error } = await signUp(normalizedEmail, password, safeName);
     setLoading(false);
 
     if (error) {
@@ -81,15 +82,15 @@ const Signup = () => {
 
       if (m.includes('already') || m.includes('registered')
           || m.includes('user already') || m.includes('exists')) {
-        const { error: loginError } = await signIn(email, password);
+        const { error: loginError } = await signIn(normalizedEmail, password);
         if (!loginError) {
           toast({ title: "Connexion réussie ✅", description: "Ce compte existait déjà, tu es connecté." });
           navigate(returnTo, { replace: true });
           return;
         }
 
-        desc = "Cet email existe déjà. Connecte-toi, ou réinitialise le mot de passe si tu ne l'as pas.";
-        setExistingAccountEmail(email.trim());
+        desc = "Un compte existe déjà avec cet email. Connecte-toi (email/mot de passe ou Google), ou utilise « Mot de passe oublié » si tu ne t'en souviens plus.";
+        setExistingAccountEmail(normalizedEmail);
       } else if (m.includes('rate') || m.includes('limit')
                  || m.includes('too many')) {
         desc = "Trop de tentatives. Patiente 5 minutes et réessaie.";
