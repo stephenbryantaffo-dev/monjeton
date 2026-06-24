@@ -134,6 +134,14 @@ const Dashboard = () => {
     };
   }, []);
 
+  // Pet reminder: check inactivity and (re)schedule the gentle local notif.
+  useEffect(() => {
+    if (!user) return;
+    import("@/lib/petReminders")
+      .then((m) => m.checkPetActivity({ userId: user.id }))
+      .catch(() => {});
+  }, [user]);
+
   // Daily reminder check
   useEffect(() => {
     const checkDailyReminder = async () => {
