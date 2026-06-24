@@ -315,6 +315,7 @@ const NewTransaction = () => {
       }
 
       toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       const today2 = new Date();
       const m2 = today2.getMonth() + 1;
       const y2 = today2.getFullYear();
@@ -376,6 +377,7 @@ const NewTransaction = () => {
     } else {
       toast({ title: "Transaction enregistrée ✅" });
       checkAndCreateNotifications(user.id, type, categoryId, walletId || null);
+      import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       // Auto-ajustement budget catégorie (fire-and-forget)
       if (type === "expense" && categoryId) {
         const d = new Date(date);
