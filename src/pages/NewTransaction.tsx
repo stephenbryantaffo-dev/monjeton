@@ -315,6 +315,7 @@ const NewTransaction = () => {
       }
 
       toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       const today2 = new Date();
       const m2 = today2.getMonth() + 1;
       const y2 = today2.getFullYear();
