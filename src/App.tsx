@@ -48,6 +48,7 @@ const Receipts = lazy(() => import("./pages/Receipts"));
 const PaymentPending = lazy(() => import("./pages/PaymentPending"));
 const SubscriptionManage = lazy(() => import("./pages/SubscriptionManage"));
 const RejoindreCaisse = lazy(() => import("./pages/RejoindreCaisse"));
+const ActivatePro = lazy(() => import("./pages/ActivatePro"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -96,6 +97,7 @@ const AppContent = () => {
         <Route path="/brvm" element={<ProtectedRoute><OnboardingGuard><BRVMSimulator /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/receipts" element={<ProtectedRoute><OnboardingGuard><Receipts /></OnboardingGuard></ProtectedRoute>} />
         <Route path="/rejoindre-caisse/:token" element={<RejoindreCaisse />} />
+        <Route path="/activer" element={<ActivatePro />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
