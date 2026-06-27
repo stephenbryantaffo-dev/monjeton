@@ -48,6 +48,7 @@ const Receipts = lazy(() => import("./pages/Receipts"));
 const PaymentPending = lazy(() => import("./pages/PaymentPending"));
 const SubscriptionManage = lazy(() => import("./pages/SubscriptionManage"));
 const RejoindreCaisse = lazy(() => import("./pages/RejoindreCaisse"));
+const ActivatePro = lazy(() => import("./pages/ActivatePro"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
