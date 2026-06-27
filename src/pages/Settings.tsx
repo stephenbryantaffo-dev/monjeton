@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Wallet, Tag, Target, CreditCard, ChevronRight, MessageCircle, Shield, Camera, PieChart, Users, Award, BarChart3, Settings } from "lucide-react";
+import { User, Wallet, Tag, Target, CreditCard, ChevronRight, MessageCircle, Shield, Camera, Receipt, PieChart, Users, Award, BarChart3, Settings } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 
 const menuItems = [
   { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
+  { icon: Receipt, label: "Mes reçus", path: "/receipts" },
   { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
   { icon: Tag, label: "Catégories", path: "/categories" },
   { icon: Target, label: "Épargne", path: "/savings" },
