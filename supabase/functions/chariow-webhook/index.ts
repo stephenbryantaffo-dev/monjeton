@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
       if (upErr) throw upErr;
 
       console.log(`✅ Chariow: Pro activé pour ${email} (user ${profile.user_id}, sale ${saleId})`);
-      return json({ success: true, action: 'activated', email, plan: planName });
+      return json({ success: true, action: 'activated', email, plan: planName, activation_token: activationToken });
     }
 
     // ── Cas B : email inconnu → file d'attente ──
