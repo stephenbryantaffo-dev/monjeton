@@ -1237,6 +1237,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_activation_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          plan: string
+          sale_id: string | null
+          token: string
+          used: boolean
+          used_at: string | null
+          used_by_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          plan?: string
+          sale_id?: string | null
+          token: string
+          used?: boolean
+          used_at?: string | null
+          used_by_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          plan?: string
+          sale_id?: string | null
+          token?: string
+          used?: boolean
+          used_at?: string | null
+          used_by_user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           beauty_budget_range: string | null

@@ -85,6 +85,25 @@ Deno.serve(async (req) => {
     const planName = 'Pro';
     const priceXof = 2000;
 
+    // ── Génération d'un token d'activation à usage unique ──
+    const activationToken = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '');
+    const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    try {
+      const { error: tokErr } = await supabase.from('pro_activation_tokens').insert({
+        token: activationToken,
+        email,
+        sale_id: saleId,
+        plan: 'pro',
+        used: false,
+        expires_at: tokenExpiresAt.toISOString(),
+      });
+      if (tokErr) {
+        console.warn('pro_activation_tokens insert failed (non-blocking):', tokErr.message);
+      }
+    } catch (e) {
+      console.warn('pro_activation_tokens insert exception (non-blocking):', e);
+    }
+
     // ── Chercher l'email dans profiles ──
     const { data: profile } = await supabase
       .from('profiles')
@@ -115,7 +134,7 @@ Deno.serve(async (req) => {
       if (upErr) throw upErr;
 
       console.log(`✅ Chariow: Pro activé pour ${email} (user ${profile.user_id}, sale ${saleId})`);
-      return json({ success: true, action: 'activated', email, plan: planName });
+      return json({ success: true, action: 'activated', email, plan: planName, activation_token: activationToken });
     }
 
     // ── Cas B : email inconnu → file d'attente ──
@@ -131,7 +150,7 @@ Deno.serve(async (req) => {
     if (pendErr) throw pendErr;
 
     console.log(`📥 Chariow: ${email} mis en attente (sale ${saleId})`);
-    return json({ success: true, action: 'pending', email, plan: planName });
+    return json({ success: true, action: 'pending', email, plan: planName, activation_token: activationToken });
   } catch (e) {
     console.error('Chariow webhook fatal:', e);
     return new Response(JSON.stringify({ error: String(e) }), {
