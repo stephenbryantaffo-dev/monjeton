@@ -317,12 +317,20 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           </div>
         )}
 
-        {/* ─── PROJECT flow ─── */}
+        {/* ─── PROJECT flow (simplifié : 2 étapes) ─── */}
         {caisseType === "project" && step === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Nom du projet</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Showcase Décembre" className="glass" />
+              <label className="text-sm text-muted-foreground mb-1 block">Nom de l'événement</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Mariage de Kouassi, Voyage Dakar..." className="glass" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Objectif à collecter (optionnel)</label>
+              <div className="relative">
+                <MoneyInput value={targetTotal} onChange={(n) => setTargetTotal(n ? String(n) : "")} placeholder="500 000" showCurrency={false} className="[&>input]:glass [&>input]:pr-14" />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">FCFA</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Tu peux laisser vide et fixer l'objectif plus tard.</p>
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement (optionnel)</label>
@@ -332,68 +340,19 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         )}
 
         {caisseType === "project" && step === 2 && (
-          <MembersStep
-            members={members} memberName={memberName} memberPhone={memberPhone} memberIsOwner={memberIsOwner}
-            setMemberName={setMemberName} setMemberPhone={setMemberPhone} setMemberIsOwner={setMemberIsOwner}
-            addMember={addMember} removeMember={removeMember}
-            min={1}
-          />
-        )}
-
-        {caisseType === "project" && step === 3 && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Comment veux-tu fixer la collecte ?</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => setTargetMode("total")}
-                className={`p-3 rounded-xl text-xs font-medium border transition-colors ${
-                  targetMode === "total" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary/50 text-muted-foreground"
-                }`}>
-                🎯 Montant cible TOTAL
-              </button>
-              <button onClick={() => setTargetMode("per_member")}
-                className={`p-3 rounded-xl text-xs font-medium border transition-colors ${
-                  targetMode === "per_member" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary/50 text-muted-foreground"
-                }`}>
-                👤 Par membre
-              </button>
-            </div>
-            {targetMode === "total" ? (
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Montant cible total (FCFA)</label>
-                <MoneyInput value={targetTotal} onChange={(n) => setTargetTotal(n ? String(n) : "")} placeholder="500 000" showCurrency={false} className="[&>input]:glass" />
-                {nbMembers > 0 && Number(targetTotal) > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Soit ≈ <span className="text-foreground font-semibold">{fmt(computedPerMember)}</span> par membre ({nbMembers} membres)
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Cotisation par membre (FCFA)</label>
-                <MoneyInput value={perMember} onChange={(n) => setPerMember(n ? String(n) : "")} placeholder="25 000" showCurrency={false} className="[&>input]:glass" />
-                {nbMembers > 0 && Number(perMember) > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Total cible : <span className="text-foreground font-semibold">{fmt(computedTotal)}</span>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {caisseType === "project" && step === 4 && (
           <div className="space-y-3">
-            <div className="glass-card rounded-xl p-4 space-y-2">
-              <p className="font-semibold text-foreground">📋 Résumé</p>
-              <p className="text-sm text-muted-foreground">
-                Projet <span className="text-foreground font-medium">{name}</span>
+            <p className="text-sm text-muted-foreground">Ajoute les participants (ceux qui vont contribuer).</p>
+            <MembersStep
+              members={members} memberName={memberName} memberPhone={memberPhone} memberIsOwner={memberIsOwner}
+              setMemberName={setMemberName} setMemberPhone={setMemberPhone} setMemberIsOwner={setMemberIsOwner}
+              addMember={addMember} removeMember={removeMember}
+              min={1}
+            />
+            {Number(targetTotal) > 0 && nbMembers > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Objectif : <span className="text-foreground font-semibold">{fmt(Number(targetTotal))}</span> · Soit ≈ <span className="text-foreground font-semibold">{fmt(Math.ceil(Number(targetTotal) / nbMembers))}</span> par participant.
               </p>
-              {eventDate && <p className="text-sm text-muted-foreground">📅 Événement : {new Date(eventDate).toLocaleDateString("fr-FR")}</p>}
-              <p className="text-sm text-muted-foreground">{nbMembers} membre(s)</p>
-              <p className="text-sm text-muted-foreground">
-                Cible : <span className="text-foreground font-bold">{fmt(computedTotal)}</span> ({fmt(computedPerMember)}/membre)
-              </p>
-            </div>
+            )}
           </div>
         )}
 
@@ -404,12 +363,12 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               <ArrowLeft className="w-4 h-4 mr-1" /> Retour
             </Button>
             <div className="flex-1" />
-            {step < 4 ? (
+            {step < totalSteps ? (
               <Button onClick={() => setStep(step + 1)} disabled={!canNext()}>
                 Suivant <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button onClick={caisseType === "project" ? createProject : createRecurring} disabled={creating}>
+              <Button onClick={caisseType === "project" ? createProject : createRecurring} disabled={creating || !canNext()}>
                 <Check className="w-4 h-4 mr-1" /> Créer
               </Button>
             )}
@@ -419,6 +378,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
     </Dialog>
   );
 };
+
 
 // Reusable members step UI
 const MembersStep = ({
