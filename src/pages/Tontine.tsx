@@ -658,43 +658,27 @@ const TontinePage = () => {
     setSearchParams(next, { replace: true });
   };
 
-  const tabToggle = (
-    <div className="flex gap-1 p-1 glass-card rounded-xl mb-4">
-      <button onClick={() => handleTabChange("tontine")}
-        className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "tontine" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
-        🔄 Tontine
-      </button>
-      <button onClick={() => handleTabChange("caisse")}
-        className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "caisse" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>
-        🏦 Caisse commune
-      </button>
-    </div>
-  );
-
   const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
 
-  // Filter list by current tab then by status
-  // Onglet "caisse" : projets + associations. Onglet "tontine" : recurring (ou legacy null).
-  const byTab = useMemo(
-    () => tontines.filter(t => activeTab === "caisse"
-      ? (t.caisse_type === "project" || t.caisse_type === "association")
-      : (t.caisse_type !== "project" && t.caisse_type !== "association")),
-    [tontines, activeTab]
+  // Liste unifiée : toutes les caisses (recurring + project + association), triées par activité récente.
+  const allCaisses = useMemo(
+    () => [...tontines].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [tontines]
   );
 
   const visibleTontines = useMemo(() => {
-    if (statusFilter === "active") return byTab.filter(t => !isCaisseClosed(t));
-    if (statusFilter === "closed") return byTab.filter(t => isCaisseClosed(t));
-    return byTab; // "all"
-  }, [byTab, statusFilter]);
+    if (statusFilter === "active") return allCaisses.filter(t => !isCaisseClosed(t));
+    if (statusFilter === "closed") return allCaisses.filter(t => isCaisseClosed(t));
+    return allCaisses;
+  }, [allCaisses, statusFilter]);
 
   const statusFilterBar = (
     <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
       {(["active", "closed", "all"] as const).map((f) => {
         const counts = {
-          active: byTab.filter(t => !isCaisseClosed(t)).length,
-          closed: byTab.filter(t => isCaisseClosed(t)).length,
-          all: byTab.length,
+          active: allCaisses.filter(t => !isCaisseClosed(t)).length,
+          closed: allCaisses.filter(t => isCaisseClosed(t)).length,
+          all: allCaisses.length,
         };
         const labels: Record<typeof f, string> = {
           active: "Actives",
@@ -715,15 +699,21 @@ const TontinePage = () => {
     </div>
   );
 
+  // Style + libellé par type de caisse (langage humain)
+  const typeMeta = (t: TontineData) => {
+    if (t.caisse_type === "project") return { emoji: "🎯", label: "Événement", cls: "bg-amber-500/15 text-amber-500" };
+    if (t.caisse_type === "association") return { emoji: "🏦", label: "Groupe", cls: "bg-sky-500/15 text-sky-500" };
+    return { emoji: "🔄", label: "Tournante", cls: "bg-primary/15 text-primary" };
+  };
+
 
   // ─── LIST VIEW ───
   if (!selectedId) {
     return (
-      <DashboardLayout title={activeTab === "tontine" ? "Tontines" : "Caisses communes"}>
-        {tabToggle}
+      <DashboardLayout title="Mes caisses">
         {statusFilterBar}
-        <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> {activeTab === "caisse" ? "Nouvelle caisse commune" : "Nouvelle tontine"}
+        <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground shadow-[0_0_24px_-8px_hsl(var(--primary))]">
+          <Plus className="w-4 h-4 mr-2" /> Créer une caisse
         </Button>
         <CreateTontineModal open={createOpen} onOpenChange={setCreateOpen} onCreated={loadTontines} />
 
@@ -732,55 +722,78 @@ const TontinePage = () => {
             Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
           ) : visibleTontines.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-4xl mb-3">{activeTab === "caisse" ? "🏦" : "🪙"}</p>
+              <p className="text-4xl mb-3">💰</p>
               <p className="font-semibold text-foreground mb-1">
-                {statusFilter === "active"
-                  ? "Aucune caisse active"
-                  : statusFilter === "closed"
-                    ? "Aucune caisse clôturée"
-                    : activeTab === "caisse"
-                      ? "Aucune caisse commune"
-                      : "Aucune tontine"}
+                {statusFilter === "closed" ? "Aucune caisse clôturée" : "Aucune caisse pour l'instant"}
               </p>
               <p className="text-sm text-muted-foreground">
-                {statusFilter === "active"
-                  ? "Toutes tes caisses sont clôturées ou en pause."
-                  : statusFilter === "closed"
-                    ? "Les caisses actives apparaissent sous l'onglet Actives."
-                    : activeTab === "caisse"
-                      ? "Crée ta première caisse de projet"
-                      : "Crée ta première tontine pour commencer"}
+                {statusFilter === "closed"
+                  ? "Les caisses actives apparaissent sous l'onglet Actives."
+                  : "Crée ta première caisse pour commencer"}
               </p>
             </div>
           ) : (
             visibleTontines.map((t, i) => {
               const cycle = cycleMap[t.id];
               const mc = memberCounts[t.id] || 0;
-              const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
-              const pct = mc > 0 ? Math.round((paidInCycle / mc) * 100) : 0;
               const myRole = roleMap[t.id] || (t.user_id === user?.id ? "owner" : "viewer");
               const canDelete = myRole === "owner";
+              const meta = typeMeta(t);
+
+              // Infos adaptées selon le type
+              let subline = "";
+              let progressPct = 0;
+              let progressLine: React.ReactNode = null;
+
+              if (t.caisse_type === "project") {
+                const target = Number(t.target_amount || 0);
+                const collected = Number(cycle?.total_collected || 0);
+                progressPct = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : 0;
+                subline = `${mc} participant${mc > 1 ? "s" : ""}`;
+                progressLine = (
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{fmt(collected)} / {fmt(target)}</span>
+                    <span>{progressPct}%</span>
+                  </div>
+                );
+              } else if (t.caisse_type === "association") {
+                const collected = Number(cycle?.total_collected || 0);
+                subline = `${mc} membre${mc > 1 ? "s" : ""}`;
+                progressPct = 0;
+                progressLine = (
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>💰 En caisse</span>
+                    <span className="text-foreground font-semibold">{fmt(collected)}</span>
+                  </div>
+                );
+              } else {
+                const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
+                progressPct = mc > 0 ? Math.min(100, Math.round((paidInCycle / mc) * 100)) : 0;
+                subline = `${fmt(t.contribution_amount)} par tour · ${mc} membre${mc > 1 ? "s" : ""}`;
+                progressLine = (
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{paidInCycle}/{mc} ont cotisé</span>
+                    <span>{progressPct}%</span>
+                  </div>
+                );
+              }
 
               return (
                 <motion.div
                   key={t.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * i }}
+                  transition={{ delay: 0.05 * i, duration: 0.3 }}
                   onClick={() => openDetail(t.id)}
-                  className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform"
+                  className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform border border-border/50 hover:border-primary/40"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <p className="font-bold text-foreground truncate">{t.name}</p>
-                        {t.caisse_type === "project" ? (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 flex-shrink-0">🎯 Projet</span>
-                        ) : t.caisse_type === "association" ? (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-500 flex-shrink-0">🤝 Association</span>
-                        ) : (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/15 text-primary flex-shrink-0">🔄 Tontine</span>
-                        )}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0 ${meta.cls}`}>
+                          {meta.emoji} {meta.label}
+                        </span>
                         {myRole !== "owner" && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 flex-shrink-0">
                             {myRole === "manager" ? "✏️ Co-gestion" : "👁 Observateur"}
@@ -788,30 +801,27 @@ const TontinePage = () => {
                         )}
                         {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t.caisse_type === "project"
-                          ? `Cible ${fmt(Number(t.target_amount || 0))} · ${mc} membres`
-                          : `${fmt(t.contribution_amount)}/cycle · ${mc} membres`}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{subline}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {canDelete && (
-                        <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
+                        <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette caisse ?">
                           <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
                         </ConfirmDeleteDialog>
                       )}
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
-                  {/* Progress bar */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{paidInCycle}/{mc} ont payé</span>
-                      <span>{Math.min(pct, 100)}%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-1.5">
-                      <div className="h-1.5 gradient-primary rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
-                    </div>
+                    {progressLine}
+                    {t.caisse_type !== "association" && (
+                      <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-1.5 rounded-full transition-all bg-gradient-to-r from-primary/80 to-primary shadow-[0_0_10px_-2px_hsl(var(--primary))]"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -821,6 +831,7 @@ const TontinePage = () => {
       </DashboardLayout>
     );
   }
+
 
   // ─── DETAIL VIEW ───
   // Si c'est une caisse de projet → vue dédiée (recettes/dépenses/solde)
