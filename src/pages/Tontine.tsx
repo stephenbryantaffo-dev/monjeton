@@ -648,12 +648,6 @@ const TontinePage = () => {
     "bg-purple-500/20 text-purple-400",
   ];
 
-  const handleTabChange = (tab: "tontine" | "caisse") => {
-    setActiveTab(tab);
-    const next = new URLSearchParams(searchParams);
-    if (tab === "caisse") next.set("tab", "caisse"); else next.delete("tab");
-    setSearchParams(next, { replace: true });
-  };
 
   const isCaisseClosed = (t: TontineData) => t.is_closed === true || t.status === "closed";
 
