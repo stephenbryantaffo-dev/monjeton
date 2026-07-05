@@ -195,7 +195,8 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
     } finally { setCreating(false); }
   };
 
-  const totalSteps = caisseType === "project" ? 4 : 4;
+  // Nombre total d'étapes selon le type
+  const totalSteps = caisseType === "project" ? 2 : 4;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -203,41 +204,37 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         <DialogHeader>
           <DialogTitle>
             {step === 0
-              ? "Choisir le type de caisse"
-              : `${caisseType === "project" ? "Caisse de projet" : caisseType === "association" ? "Caisse d'association" : "Tontine"} — Étape ${step}/${totalSteps - 1}`}
+              ? "Qu'est-ce que tu veux organiser ?"
+              : `${caisseType === "project" ? "Événement" : caisseType === "association" ? "Groupe" : "Tontine tournante"} — Étape ${step}/${totalSteps}`}
           </DialogTitle>
         </DialogHeader>
 
-        {/* ─── Step 0 : Type picker ─── */}
+        {/* ─── Step 0 : choix par besoin (langage humain) ─── */}
         {step === 0 && (
           <div className="space-y-3">
-            <button
-              onClick={() => { setCaisseType("recurring"); setStep(1); }}
-              className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
-            >
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                  <Repeat className="w-5 h-5 text-primary" />
-                </div>
-                <p className="font-bold text-foreground">📅 Tontine récurrente</p>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed pl-13">
-                Cotisation périodique entre membres, chacun reçoit la cagnotte à son tour.
-              </p>
-            </button>
-
             <button
               onClick={() => { setCaisseType("project"); setStep(1); }}
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-amber-500" />
-                </div>
-                <p className="font-bold text-foreground">🎯 Caisse de projet</p>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-xl">🎯</div>
+                <p className="font-bold text-foreground">Collecter pour un événement</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Collecte pour un objectif précis : événement, voyage, projet. Pas de cycle mensuel — on suit recettes et dépenses jusqu'à la réalisation.
+                Concert, tournoi, voyage, mariage. Suis qui a payé et tes dépenses.
+              </p>
+            </button>
+
+            <button
+              onClick={() => { setCaisseType("recurring"); setStep(1); }}
+              className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center text-xl">🔄</div>
+                <p className="font-bold text-foreground">Tontine tournante</p>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Chacun cotise, un membre reçoit la cagnotte à tour de rôle.
               </p>
             </button>
 
@@ -246,17 +243,16 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-sky-500" />
-                </div>
-                <p className="font-bold text-foreground">🤝 Caisse d'association</p>
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl">🏦</div>
+                <p className="font-bold text-foreground">Cotisations d'un groupe</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Cotisations mensuelles qui s'accumulent dans une caisse commune. Pas de bénéficiaire — l'argent sert au fonctionnement du groupe (association, club, équipe).
+                Club, association, équipe. L'argent s'accumule pour le groupe.
               </p>
             </button>
           </div>
         )}
+
 
         {/* ─── RECURRING flow (existant) ─── */}
         {(caisseType === "recurring" || caisseType === "association") && step === 1 && (
