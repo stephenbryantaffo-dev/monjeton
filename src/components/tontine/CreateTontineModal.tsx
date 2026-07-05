@@ -90,12 +90,9 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
       if (step === 2) return frequency && (frequency !== "custom" || Number(customDays) > 0);
       if (step === 3) return members.length >= 2;
     } else if (caisseType === "project") {
-      if (step === 1) return name.trim();
+      // Parcours simplifié : Étape 1 = nom (+ objectif optionnel), Étape 2 = participants.
+      if (step === 1) return !!name.trim();
       if (step === 2) return members.length >= 1;
-      if (step === 3) {
-        if (targetMode === "total") return Number(targetTotal) > 0;
-        return Number(perMember) > 0;
-      }
     }
     return true;
   };
@@ -198,7 +195,8 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
     } finally { setCreating(false); }
   };
 
-  const totalSteps = caisseType === "project" ? 4 : 4;
+  // Nombre total d'étapes selon le type
+  const totalSteps = caisseType === "project" ? 2 : 4;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -206,41 +204,37 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         <DialogHeader>
           <DialogTitle>
             {step === 0
-              ? "Choisir le type de caisse"
-              : `${caisseType === "project" ? "Caisse de projet" : caisseType === "association" ? "Caisse d'association" : "Tontine"} — Étape ${step}/${totalSteps - 1}`}
+              ? "Qu'est-ce que tu veux organiser ?"
+              : `${caisseType === "project" ? "Événement" : caisseType === "association" ? "Groupe" : "Tontine tournante"} — Étape ${step}/${totalSteps}`}
           </DialogTitle>
         </DialogHeader>
 
-        {/* ─── Step 0 : Type picker ─── */}
+        {/* ─── Step 0 : choix par besoin (langage humain) ─── */}
         {step === 0 && (
           <div className="space-y-3">
-            <button
-              onClick={() => { setCaisseType("recurring"); setStep(1); }}
-              className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
-            >
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                  <Repeat className="w-5 h-5 text-primary" />
-                </div>
-                <p className="font-bold text-foreground">📅 Tontine récurrente</p>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed pl-13">
-                Cotisation périodique entre membres, chacun reçoit la cagnotte à son tour.
-              </p>
-            </button>
-
             <button
               onClick={() => { setCaisseType("project"); setStep(1); }}
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-amber-500" />
-                </div>
-                <p className="font-bold text-foreground">🎯 Caisse de projet</p>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-xl">🎯</div>
+                <p className="font-bold text-foreground">Collecter pour un événement</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Collecte pour un objectif précis : événement, voyage, projet. Pas de cycle mensuel — on suit recettes et dépenses jusqu'à la réalisation.
+                Concert, tournoi, voyage, mariage. Suis qui a payé et tes dépenses.
+              </p>
+            </button>
+
+            <button
+              onClick={() => { setCaisseType("recurring"); setStep(1); }}
+              className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center text-xl">🔄</div>
+                <p className="font-bold text-foreground">Tontine tournante</p>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Chacun cotise, un membre reçoit la cagnotte à tour de rôle.
               </p>
             </button>
 
@@ -249,17 +243,16 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-sky-500" />
-                </div>
-                <p className="font-bold text-foreground">🤝 Caisse d'association</p>
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl">🏦</div>
+                <p className="font-bold text-foreground">Cotisations d'un groupe</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Cotisations mensuelles qui s'accumulent dans une caisse commune. Pas de bénéficiaire — l'argent sert au fonctionnement du groupe (association, club, équipe).
+                Club, association, équipe. L'argent s'accumule pour le groupe.
               </p>
             </button>
           </div>
         )}
+
 
         {/* ─── RECURRING flow (existant) ─── */}
         {(caisseType === "recurring" || caisseType === "association") && step === 1 && (
@@ -324,12 +317,20 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
           </div>
         )}
 
-        {/* ─── PROJECT flow ─── */}
+        {/* ─── PROJECT flow (simplifié : 2 étapes) ─── */}
         {caisseType === "project" && step === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Nom du projet</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Showcase Décembre" className="glass" />
+              <label className="text-sm text-muted-foreground mb-1 block">Nom de l'événement</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Mariage de Kouassi, Voyage Dakar..." className="glass" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Objectif à collecter (optionnel)</label>
+              <div className="relative">
+                <MoneyInput value={targetTotal} onChange={(n) => setTargetTotal(n ? String(n) : "")} placeholder="500 000" showCurrency={false} className="[&>input]:glass [&>input]:pr-14" />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">FCFA</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Tu peux laisser vide et fixer l'objectif plus tard.</p>
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement (optionnel)</label>
@@ -339,68 +340,19 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         )}
 
         {caisseType === "project" && step === 2 && (
-          <MembersStep
-            members={members} memberName={memberName} memberPhone={memberPhone} memberIsOwner={memberIsOwner}
-            setMemberName={setMemberName} setMemberPhone={setMemberPhone} setMemberIsOwner={setMemberIsOwner}
-            addMember={addMember} removeMember={removeMember}
-            min={1}
-          />
-        )}
-
-        {caisseType === "project" && step === 3 && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Comment veux-tu fixer la collecte ?</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => setTargetMode("total")}
-                className={`p-3 rounded-xl text-xs font-medium border transition-colors ${
-                  targetMode === "total" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary/50 text-muted-foreground"
-                }`}>
-                🎯 Montant cible TOTAL
-              </button>
-              <button onClick={() => setTargetMode("per_member")}
-                className={`p-3 rounded-xl text-xs font-medium border transition-colors ${
-                  targetMode === "per_member" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary/50 text-muted-foreground"
-                }`}>
-                👤 Par membre
-              </button>
-            </div>
-            {targetMode === "total" ? (
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Montant cible total (FCFA)</label>
-                <MoneyInput value={targetTotal} onChange={(n) => setTargetTotal(n ? String(n) : "")} placeholder="500 000" showCurrency={false} className="[&>input]:glass" />
-                {nbMembers > 0 && Number(targetTotal) > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Soit ≈ <span className="text-foreground font-semibold">{fmt(computedPerMember)}</span> par membre ({nbMembers} membres)
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Cotisation par membre (FCFA)</label>
-                <MoneyInput value={perMember} onChange={(n) => setPerMember(n ? String(n) : "")} placeholder="25 000" showCurrency={false} className="[&>input]:glass" />
-                {nbMembers > 0 && Number(perMember) > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Total cible : <span className="text-foreground font-semibold">{fmt(computedTotal)}</span>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {caisseType === "project" && step === 4 && (
           <div className="space-y-3">
-            <div className="glass-card rounded-xl p-4 space-y-2">
-              <p className="font-semibold text-foreground">📋 Résumé</p>
-              <p className="text-sm text-muted-foreground">
-                Projet <span className="text-foreground font-medium">{name}</span>
+            <p className="text-sm text-muted-foreground">Ajoute les participants (ceux qui vont contribuer).</p>
+            <MembersStep
+              members={members} memberName={memberName} memberPhone={memberPhone} memberIsOwner={memberIsOwner}
+              setMemberName={setMemberName} setMemberPhone={setMemberPhone} setMemberIsOwner={setMemberIsOwner}
+              addMember={addMember} removeMember={removeMember}
+              min={1}
+            />
+            {Number(targetTotal) > 0 && nbMembers > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Objectif : <span className="text-foreground font-semibold">{fmt(Number(targetTotal))}</span> · Soit ≈ <span className="text-foreground font-semibold">{fmt(Math.ceil(Number(targetTotal) / nbMembers))}</span> par participant.
               </p>
-              {eventDate && <p className="text-sm text-muted-foreground">📅 Événement : {new Date(eventDate).toLocaleDateString("fr-FR")}</p>}
-              <p className="text-sm text-muted-foreground">{nbMembers} membre(s)</p>
-              <p className="text-sm text-muted-foreground">
-                Cible : <span className="text-foreground font-bold">{fmt(computedTotal)}</span> ({fmt(computedPerMember)}/membre)
-              </p>
-            </div>
+            )}
           </div>
         )}
 
@@ -411,12 +363,12 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               <ArrowLeft className="w-4 h-4 mr-1" /> Retour
             </Button>
             <div className="flex-1" />
-            {step < 4 ? (
+            {step < totalSteps ? (
               <Button onClick={() => setStep(step + 1)} disabled={!canNext()}>
                 Suivant <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button onClick={caisseType === "project" ? createProject : createRecurring} disabled={creating}>
+              <Button onClick={caisseType === "project" ? createProject : createRecurring} disabled={creating || !canNext()}>
                 <Check className="w-4 h-4 mr-1" /> Créer
               </Button>
             )}
@@ -426,6 +378,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
     </Dialog>
   );
 };
+
 
 // Reusable members step UI
 const MembersStep = ({
