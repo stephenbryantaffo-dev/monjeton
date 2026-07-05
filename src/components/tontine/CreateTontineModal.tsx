@@ -90,12 +90,9 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
       if (step === 2) return frequency && (frequency !== "custom" || Number(customDays) > 0);
       if (step === 3) return members.length >= 2;
     } else if (caisseType === "project") {
-      if (step === 1) return name.trim();
+      // Parcours simplifié : Étape 1 = nom (+ objectif optionnel), Étape 2 = participants.
+      if (step === 1) return !!name.trim();
       if (step === 2) return members.length >= 1;
-      if (step === 3) {
-        if (targetMode === "total") return Number(targetTotal) > 0;
-        return Number(perMember) > 0;
-      }
     }
     return true;
   };
