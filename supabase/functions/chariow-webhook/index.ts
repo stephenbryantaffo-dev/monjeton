@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
     );
     if (pendErr) throw pendErr;
 
-    console.log(`📥 Chariow: ${email} mis en attente (sale ${saleId})`);
+    console.log(`📥 Chariow: pending activation queued (sale ${saleId})`);
     return json({ success: true, action: 'pending', email, plan: planName, activation_token: activationToken });
   } catch (e) {
     console.error('Chariow webhook fatal:', e);
