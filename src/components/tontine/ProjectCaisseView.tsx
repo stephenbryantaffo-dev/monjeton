@@ -674,24 +674,39 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* HÉRO — Cible / Collecté */}
       {target > 0 ? (
-        <div className="glass-card rounded-2xl p-5 mb-3 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: "radial-gradient(ellipse at top left, hsl(var(--primary) / 0.15), transparent 60%)" }} />
+        <div className="relative overflow-hidden rounded-2xl p-5 mb-4 border border-primary/[0.18] bg-gradient-to-br from-primary/10 to-primary/[0.02] shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.35)]">
+          <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 opacity-60 motion-reduce:hidden"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.28), transparent 70%)", filter: "blur(4px)" }} />
+          <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 opacity-40"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.18), transparent 70%)" }} />
           <div className="relative">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1">
+            <p className="text-[10px] uppercase tracking-widest text-primary/90 font-bold mb-2 flex items-center gap-1">
               <Target className="w-3 h-3" /> Objectif de collecte
             </p>
-            <div className="flex items-baseline gap-2 flex-wrap mb-3">
-              <span className="text-3xl font-black text-gradient">{fmt(recettes)}</span>
-              <span className="text-sm text-muted-foreground">/ {fmt(target)} FCFA</span>
-              <span className="ml-auto text-sm font-bold text-primary">{pctCollect}%</span>
+            <div className="flex items-baseline gap-2 flex-wrap mb-1">
+              <span className="text-4xl font-black text-gradient leading-none">{fmt(recettes)}</span>
+              <span className="text-xs text-muted-foreground">/ {fmt(target)} FCFA</span>
+              <span className="ml-auto text-sm font-black text-primary">{pctCollect}%</span>
             </div>
-            <Progress value={pctCollect} className="h-2.5" />
+            <p className="text-[11px] text-muted-foreground mb-3">Collecté sur la cible</p>
+            <div className="w-full bg-secondary/60 rounded-full h-2.5 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pctCollect}%` }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className="h-2.5 rounded-full bg-gradient-to-r from-primary/70 to-primary shadow-[0_0_14px_hsl(var(--primary)/0.55)] motion-reduce:transition-none"
+              />
+            </div>
           </div>
         </div>
       ) : (
-        <div className="glass-card rounded-2xl p-5 mb-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Collecté</p>
-          <p className="text-3xl font-black text-gradient">{fmt(recettes)} <span className="text-sm text-muted-foreground font-normal">FCFA</span></p>
+        <div className="relative overflow-hidden rounded-2xl p-5 mb-4 border border-primary/[0.18] bg-gradient-to-br from-primary/10 to-primary/[0.02] shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.35)]">
+          <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 opacity-60"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.28), transparent 70%)", filter: "blur(4px)" }} />
+          <div className="relative">
+            <p className="text-[10px] uppercase tracking-widest text-primary/90 font-bold mb-1">Collecté</p>
+            <p className="text-4xl font-black text-gradient leading-none">{fmt(recettes)} <span className="text-sm text-muted-foreground font-normal">FCFA</span></p>
+          </div>
         </div>
       )}
 
