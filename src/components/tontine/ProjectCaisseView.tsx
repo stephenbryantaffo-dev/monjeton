@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Lock, Target, Calendar, Users, FileText,
   TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
-  Search, ArrowUpDown,
+  Search, ArrowUpDown, MoreHorizontal,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -605,109 +606,173 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         <ChevronLeft className="w-4 h-4" /> Retour
       </button>
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div>
+      {/* Header — compact : badges + date + actions */}
+      <div className="flex items-start justify-between gap-2 mb-4">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-xs font-bold bg-amber-500/15 text-amber-500 px-2 py-0.5 rounded-full">🎯 Projet</span>
             <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${roleInfo.cls}`}>
               <RoleIcon className="w-3 h-3" /> {roleInfo.label}
             </span>
             {isClosed && <span className="text-xs font-bold bg-destructive/15 text-destructive px-2 py-0.5 rounded-full">Clôturé</span>}
+            {tontine.event_date && (
+              <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> {new Date(tontine.event_date).toLocaleDateString("fr-FR")}
+              </span>
+            )}
           </div>
-          {tontine.event_date && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="w-3 h-3" /> {new Date(tontine.event_date).toLocaleDateString("fr-FR")}
-            </p>
-          )}
         </div>
-        {!isClosed && (isOwner || canManage) && (
-          <div className="flex items-center gap-2">
-            {isOwner && (
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {!isClosed && isOwner && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+              title="Inviter à suivre la caisse"
+            >
+              <Link2 className="w-4 h-4 text-primary" />
+            </button>
+          )}
+          {!isClosed && isOwner && (
+            <button
+              onClick={() => setEditOpen(true)}
+              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
+              title="Modifier la caisse"
+            >
+              <Pencil className="w-4 h-4 text-primary" />
+            </button>
+          )}
+          <Popover>
+            <PopoverTrigger asChild>
               <button
-                onClick={() => setInviteOpen(true)}
-                className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-                title="Inviter à suivre la caisse"
+                className="p-2 rounded-xl glass-card hover:bg-muted/40 transition-colors"
+                title="Plus d'actions"
               >
-                <Link2 className="w-4 h-4 text-primary" />
+                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </button>
-            )}
-            {isOwner && (
-              <button
-                onClick={() => setEditOpen(true)}
-                className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-                title="Modifier la caisse"
-              >
-                <Pencil className="w-4 h-4 text-primary" />
-              </button>
-            )}
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 glass-card border-border p-2 space-y-2">
+              {isOwner && !isClosed && (
+                <Button
+                  onClick={() => setClotureOpen(true)}
+                  variant="outline"
+                  className="w-full glass border-destructive/30 text-destructive justify-start"
+                  size="sm"
+                >
+                  <Lock className="w-4 h-4 mr-2" /> Clôturer le projet
+                </Button>
+              )}
+              <LeaveCaisseButton
+                caisseId={tontine.id}
+                isOwner={isOwner}
+                onLeft={onBack}
+                className="w-full justify-start"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      {/* HÉRO — Cible / Collecté */}
+      {target > 0 ? (
+        <div className="glass-card rounded-2xl p-5 mb-3 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: "radial-gradient(ellipse at top left, hsl(var(--primary) / 0.15), transparent 60%)" }} />
+          <div className="relative">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1">
+              <Target className="w-3 h-3" /> Objectif de collecte
+            </p>
+            <div className="flex items-baseline gap-2 flex-wrap mb-3">
+              <span className="text-3xl font-black text-gradient">{fmt(recettes)}</span>
+              <span className="text-sm text-muted-foreground">/ {fmt(target)} FCFA</span>
+              <span className="ml-auto text-sm font-bold text-primary">{pctCollect}%</span>
+            </div>
+            <Progress value={pctCollect} className="h-2.5" />
           </div>
+        </div>
+      ) : (
+        <div className="glass-card rounded-2xl p-5 mb-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Collecté</p>
+          <p className="text-3xl font-black text-gradient">{fmt(recettes)} <span className="text-sm text-muted-foreground font-normal">FCFA</span></p>
+        </div>
+      )}
+
+      {/* Ligne compacte : recettes · dépenses · solde */}
+      <div className="glass-card rounded-xl px-3 py-2 mb-4 flex items-center justify-between text-xs">
+        <span className="flex items-center gap-1 text-muted-foreground">
+          <TrendingUp className="w-3 h-3 text-emerald-400" />
+          <span className="font-semibold text-foreground">{fmt(recettes)}</span>
+        </span>
+        <span className="text-muted-foreground/40">·</span>
+        <span className="flex items-center gap-1 text-muted-foreground">
+          <TrendingDown className="w-3 h-3 text-destructive" />
+          <span className="font-semibold text-foreground">{fmt(depenses)}</span>
+        </span>
+        <span className="text-muted-foreground/40">·</span>
+        <span className="flex items-center gap-1 text-muted-foreground">
+          Solde
+          <span className={`font-semibold ${solde >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+            {solde >= 0 ? "+" : ""}{fmt(solde)}
+          </span>
+        </span>
+      </div>
+
+      {/* Actions principales */}
+      {!isClosed && (
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          {canManage ? (
+            <Button onClick={() => setExpOpen(true)} variant="outline" className="glass" size="sm">
+              <TrendingDown className="w-4 h-4 mr-1" /> Dépense
+            </Button>
+          ) : <div />}
+          <Button onClick={() => setItemsViewOpen(true)} variant="outline" className="glass" size="sm">
+            <ListChecks className="w-4 h-4 mr-1" /> Postes{expenseItems.length > 0 ? ` (${expenseItems.length})` : ""}
+          </Button>
+          <Button onClick={exportPDF} variant="outline" className="glass" size="sm">
+            <FileText className="w-4 h-4 mr-1" /> Bilan PDF
+          </Button>
+        </div>
+      )}
+
+
+
+      {/* ─── Participants (membres + collaborateurs unifiés) ─── */}
+      <div className="flex items-center justify-between mb-2 mt-2">
+        <p className="text-sm font-bold text-foreground flex items-center gap-1">
+          <Users className="w-4 h-4" /> Participants ({members.length}{collaborators.length > 0 ? ` + ${collaborators.length}` : ""})
+        </p>
+        {canManage && !isClosed && (
+          <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
+            <Plus className="w-3.5 h-3.5 mr-1" /> Ajouter
+          </Button>
         )}
       </div>
 
-      {/* ─── Suivi par (collaborators) ─── */}
+      {/* Collaborateurs / gestionnaires — chips compactes */}
       {collaborators.length > 0 && (
-        <div className="glass-card rounded-2xl p-3 mb-4">
-          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-primary" /> Suivi par
-          </p>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="relative flex-1">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={collabSearch}
-                onChange={(e) => setCollabSearch(e.target.value)}
-                placeholder="Rechercher…"
-                className="glass pl-8 text-xs h-8"
-              />
-            </div>
-            <button
-              onClick={() => setCollabSort(s => s === "name" ? "role" : "name")}
-              className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground glass rounded-lg px-2 py-1.5 border border-border"
-              title={collabSort === "name" ? "Trier par rôle" : "Trier par nom"}
-            >
-              <ArrowUpDown className="w-3 h-3" />
-              {collabSort === "name" ? "Nom" : "Rôle"}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {(() => {
-              const query = collabSearch.trim().toLowerCase();
-              let list = collaborators.slice();
-              if (query) {
-                list = list.filter(c =>
-                  (c.full_name || "").toLowerCase().includes(query) ||
-                  (c.email || "").toLowerCase().includes(query) ||
-                  (ROLE_BADGE[c.role]?.label || "").toLowerCase().includes(query)
-                );
-              }
-              const roleOrder: Record<string, number> = { owner: 0, manager: 1, viewer: 2 };
-              list.sort((a, b) => {
-                if (collabSort === "role") {
-                  const ra = roleOrder[a.role] ?? 3;
-                  const rb = roleOrder[b.role] ?? 3;
-                  if (ra !== rb) return ra - rb;
-                }
-                const na = (a.full_name || a.email || "").toLowerCase();
-                const nb = (b.full_name || b.email || "").toLowerCase();
-                return na.localeCompare(nb);
-              });
-              return list.map((c) => {
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {(() => {
+            const roleOrder: Record<string, number> = { owner: 0, manager: 1, viewer: 2 };
+            const list = collaborators.slice().sort((a, b) => {
+              const ra = roleOrder[a.role] ?? 3;
+              const rb = roleOrder[b.role] ?? 3;
+              if (ra !== rb) return ra - rb;
+              return (a.full_name || a.email || "").localeCompare(b.full_name || b.email || "");
+            });
+            return list.map((c) => {
               const ri = ROLE_BADGE[c.role] || ROLE_BADGE.viewer;
               const Icon = ri.icon;
               const display = c.full_name || c.email || "Utilisateur";
               const initial = (c.full_name || c.email || "?").trim().charAt(0).toUpperCase();
               const isMe = c.user_id === user?.id;
               return (
-                <div key={c.user_id} className="flex items-center gap-1.5 glass rounded-full pl-1 pr-1.5 py-1 border border-border">
-                  <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-primary-foreground">{initial}</span>
+                <div key={c.user_id} className="flex items-center gap-1.5 glass rounded-full pl-1 pr-2 py-0.5 border border-border">
+                  <div className="w-5 h-5 rounded-full gradient-primary flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-primary-foreground">{initial}</span>
                   </div>
-                  <span className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                  <span className="text-[11px] font-medium text-foreground truncate max-w-[110px]">
                     {display}{isMe && " (toi)"}
                   </span>
-                  <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full ${ri.cls}`}>
-                    <Icon className="w-2.5 h-2.5" /> {ri.label}
+                  <span className={`inline-flex items-center gap-0.5 text-[9px] px-1 py-0.5 rounded-full ${ri.cls}`}>
+                    <Icon className="w-2.5 h-2.5" />
                   </span>
                   {canManage && !isMe && c.role !== "owner" && (
                     <>
@@ -716,7 +781,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           title="Promouvoir co-gestionnaire"
                           disabled={saving}
                           onClick={() => changeCollabRole(c.user_id, "manager")}
-                          className="text-muted-foreground hover:text-blue-400 p-1 disabled:opacity-50"
+                          className="text-muted-foreground hover:text-blue-400 disabled:opacity-50"
                         >
                           <ArrowUp className="w-3 h-3" />
                         </button>
@@ -725,7 +790,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           title="Passer observateur"
                           disabled={saving}
                           onClick={() => changeCollabRole(c.user_id, "viewer")}
-                          className="text-muted-foreground hover:text-amber-400 p-1 disabled:opacity-50"
+                          className="text-muted-foreground hover:text-amber-400 disabled:opacity-50"
                         >
                           <ArrowDown className="w-3 h-3" />
                         </button>
@@ -735,11 +800,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                         title={`Retirer ${display} de la caisse ?`}
                         description="Il n'aura plus accès à cette caisse."
                       >
-                        <button
-                          title="Retirer"
-                          className="text-muted-foreground hover:text-destructive p-1"
-                        >
-                      <UserMinus className="w-3 h-3" />
+                        <button title="Retirer" className="text-muted-foreground hover:text-destructive">
+                          <UserMinus className="w-3 h-3" />
                         </button>
                       </ConfirmDeleteDialog>
                     </>
@@ -747,76 +809,10 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                 </div>
               );
             });
-            })()}
-          </div>
+          })()}
         </div>
       )}
 
-
-      {/* ─── 3 KPIs ─── */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="glass-card rounded-2xl p-3 text-center">
-          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Recettes</p>
-          <p className="text-base font-bold text-foreground mt-1">{fmt(recettes)}</p>
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-400 mx-auto mt-1" />
-        </div>
-        <div className="glass-card rounded-2xl p-3 text-center">
-          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Dépenses</p>
-          <p className="text-base font-bold text-foreground mt-1">{fmt(depenses)}</p>
-          <TrendingDown className="w-3.5 h-3.5 text-destructive mx-auto mt-1" />
-        </div>
-        <div className={`glass-card rounded-2xl p-3 text-center border ${solde >= 0 ? "border-emerald-500/30" : "border-destructive/30"}`}>
-          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Solde</p>
-          <p className={`text-base font-bold mt-1 ${solde >= 0 ? "text-emerald-400" : "text-destructive"}`}>
-            {solde >= 0 ? "+" : ""}{fmt(solde)}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">{solde >= 0 ? "Bénéfice" : "Déficit"}</p>
-        </div>
-      </div>
-
-      {/* Progress to target */}
-      {target > 0 && (
-        <div className="glass-card rounded-2xl p-4 mb-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-            <span className="flex items-center gap-1"><Target className="w-3.5 h-3.5" /> Cible : {fmt(target)} FCFA</span>
-            <span className="font-bold text-primary">{pctCollect}%</span>
-          </div>
-          <Progress value={pctCollect} className="h-2.5" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {fmt(recettes)} / {fmt(target)} FCFA collectés
-          </p>
-        </div>
-      )}
-
-      {/* Action buttons */}
-      {!isClosed && (
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          {canManage ? (
-            <Button onClick={() => setExpOpen(true)} variant="outline" className="glass">
-              <TrendingDown className="w-4 h-4 mr-1" /> Dépense
-            </Button>
-          ) : <div />}
-          <Button onClick={() => setItemsViewOpen(true)} variant="outline" className="glass">
-            <ListChecks className="w-4 h-4 mr-1" /> Postes{expenseItems.length > 0 ? ` (${expenseItems.length})` : ""}
-          </Button>
-          <Button onClick={exportPDF} variant="outline" className="glass">
-            <FileText className="w-4 h-4 mr-1" /> Bilan PDF
-          </Button>
-        </div>
-      )}
-
-
-      {/* ─── Members + cotisations ─── */}
-      <div className="flex items-center justify-between mb-2 mt-4">
-        <p className="text-sm font-bold text-foreground flex items-center gap-1">
-          <Users className="w-4 h-4" /> Membres ({members.length})
-        </p>
-        {canManage && !isClosed && (
-          <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Membre
-          </Button>
-        )}
-      </div>
       <div className="flex items-center gap-2 mb-2">
         <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -1044,20 +1040,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
 
 
-      {/* Clôture button */}
-      {isOwner && !isClosed && (
-        <Button onClick={() => setClotureOpen(true)} variant="outline" className="w-full glass border-destructive/30 text-destructive mb-2">
-          <Lock className="w-4 h-4 mr-1" /> Clôturer le projet
-        </Button>
-      )}
+      {/* Actions rares (Clôturer / Quitter) déplacées dans le menu "…" du header */}
 
-      {/* Quitter la caisse (tous les collaborateurs) */}
-      <LeaveCaisseButton
-        caisseId={tontine.id}
-        isOwner={isOwner}
-        onLeft={onBack}
-        className="w-full"
-      />
 
 
       {/* ─── Payment Dialog ─── */}
