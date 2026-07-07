@@ -703,6 +703,22 @@ const TontinePage = () => {
   if (!selectedId) {
     return (
       <DashboardLayout title="Mes caisses">
+        {/* Halo ambiant */}
+        <div className="relative">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[520px] h-[260px] opacity-60 motion-reduce:hidden"
+            style={{
+              background:
+                "radial-gradient(closest-side, hsl(var(--primary) / 0.22), transparent 70%)",
+              filter: "blur(6px)",
+            }}
+          />
+          <p className="relative text-xs uppercase tracking-wider text-primary font-bold mb-2">
+            Tes collectes
+          </p>
+        </div>
+
         {statusFilterBar}
         <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground shadow-[0_0_24px_-8px_hsl(var(--primary))]">
           <Plus className="w-4 h-4 mr-2" /> Créer une caisse
@@ -732,40 +748,56 @@ const TontinePage = () => {
               const canDelete = myRole === "owner";
               const meta = typeMeta(t);
 
-              // Infos adaptées selon le type
+              // Infos adaptées selon le type + montant clé
               let subline = "";
               let progressPct = 0;
               let progressLine: React.ReactNode = null;
+              let keyAmount: React.ReactNode = null;
 
               if (t.caisse_type === "project") {
                 const target = Number(t.target_amount || 0);
                 const collected = Number(cycle?.total_collected || 0);
                 progressPct = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : 0;
                 subline = `${mc} participant${mc > 1 ? "s" : ""}`;
+                keyAmount = (
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-foreground font-bold text-base">{fmt(collected)}</span>
+                    <span className="text-xs text-muted-foreground">/ {fmt(target)}</span>
+                  </div>
+                );
                 progressLine = (
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{fmt(collected)} / {fmt(target)}</span>
-                    <span>{progressPct}%</span>
+                  <div className="flex justify-between items-baseline text-xs text-muted-foreground">
+                    {keyAmount}
+                    <span className="font-semibold text-primary">{progressPct}%</span>
                   </div>
                 );
               } else if (t.caisse_type === "association") {
                 const collected = Number(cycle?.total_collected || 0);
                 subline = `${mc} membre${mc > 1 ? "s" : ""}`;
-                progressPct = 0;
+                progressPct = 100;
+                keyAmount = (
+                  <span className="text-foreground font-bold text-base">{fmt(collected)}</span>
+                );
                 progressLine = (
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="flex justify-between items-baseline text-xs text-muted-foreground">
                     <span>💰 En caisse</span>
-                    <span className="text-foreground font-semibold">{fmt(collected)}</span>
+                    {keyAmount}
                   </div>
                 );
               } else {
                 const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
                 progressPct = mc > 0 ? Math.min(100, Math.round((paidInCycle / mc) * 100)) : 0;
                 subline = `${fmt(t.contribution_amount)} par tour · ${mc} membre${mc > 1 ? "s" : ""}`;
+                keyAmount = (
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-foreground font-bold text-base">{paidInCycle}</span>
+                    <span className="text-xs text-muted-foreground">/ {mc} ont cotisé</span>
+                  </div>
+                );
                 progressLine = (
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{paidInCycle}/{mc} ont cotisé</span>
-                    <span>{progressPct}%</span>
+                  <div className="flex justify-between items-baseline text-xs text-muted-foreground">
+                    {keyAmount}
+                    <span className="font-semibold text-primary">{progressPct}%</span>
                   </div>
                 );
               }
@@ -777,15 +809,12 @@ const TontinePage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.05 * i, duration: 0.3 }}
                   onClick={() => openDetail(t.id)}
-                  className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform border border-border/50 hover:border-primary/40"
+                  className="relative glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] border border-border/50 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 bg-gradient-to-br from-white/[0.04] to-transparent overflow-hidden"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-bold text-foreground truncate">{t.name}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0 ${meta.cls}`}>
-                          {meta.emoji} {meta.label}
-                        </span>
                         {myRole !== "owner" && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 flex-shrink-0">
                             {myRole === "manager" ? "✏️ Co-gestion" : "👁 Observateur"}
@@ -793,9 +822,17 @@ const TontinePage = () => {
                         )}
                         {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
                       </div>
-                      <p className="text-xs text-muted-foreground">{subline}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]" />
+                        <span className="font-semibold text-foreground/80">{meta.label}</span>
+                        <span className="opacity-40">·</span>
+                        <span className="truncate">{subline}</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border border-primary/15 ${meta.cls}`}>
+                        <span>{meta.emoji}</span>
+                      </div>
                       {canDelete && (
                         <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette caisse ?">
                           <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
@@ -804,16 +841,16 @@ const TontinePage = () => {
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {progressLine}
-                    {t.caisse_type !== "association" && (
-                      <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="h-1.5 rounded-full transition-all bg-gradient-to-r from-primary/80 to-primary shadow-[0_0_10px_-2px_hsl(var(--primary))]"
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
-                    )}
+                    <div className="w-full bg-secondary/60 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPct}%` }}
+                        transition={{ duration: 1.2, ease: "easeOut", delay: 0.05 * i }}
+                        className="h-2 rounded-full bg-gradient-to-r from-primary/70 to-primary shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
+                      />
+                    </div>
                   </div>
                 </motion.div>
               );
