@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     }
 
     const parsed = JSON.parse(rawBody);
-    console.log('Jèko webhook RAW:', rawBody);
+    console.log('Jèko webhook received, bytes:', rawBody.length);
 
     // La doc se contredit : tantôt champs à la racine, tantôt sous .data.
     const tx = parsed?.data ?? parsed;
