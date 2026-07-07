@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     const email: string = String(customer?.email ?? '').trim().toLowerCase();
 
     if (!saleId || !email) {
-      console.error('Missing saleId or email', { saleId, email });
+      console.error('Missing saleId or email', { saleId, hasEmail: !!email });
       return json({ error: 'Missing saleId or email' }, 400);
     }
 
