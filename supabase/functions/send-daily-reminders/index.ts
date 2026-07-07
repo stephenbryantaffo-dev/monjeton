@@ -53,8 +53,6 @@ Deno.serve(async (req) => {
   const slot = (url.searchParams.get("slot") || "evening") as "morning" | "evening";
   const msg = MESSAGES[slot] || MESSAGES.evening;
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
-
   // Abonnements actifs
   const { data: subs, error: subsErr } = await supabase
     .from("push_subscriptions")
