@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { getCurrencyCtx } from "../_shared/currency-context.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const ScanReceiptSchema = z.object({
   image: z.string().min(100, "Image trop petite").max(15_000_000, "Image trop volumineuse"),
@@ -9,15 +10,11 @@ const ScanReceiptSchema = z.object({
   mimeType: z.string().max(50).optional(),
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
 const MAX_BASE64_LENGTH = 7 * 1024 * 1024; // ~5MB decoded
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

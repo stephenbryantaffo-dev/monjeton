@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { loadUserCurrency } from "../_shared/currency-context.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const BudgetSuggestSchema = z.object({
   month: z.number().int().min(1).max(12).optional(),
@@ -11,13 +12,8 @@ const BudgetSuggestSchema = z.object({
   userCategories: z.array(z.string().trim().max(100)).max(50).optional(),
 }).partial();
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

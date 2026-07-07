@@ -2,19 +2,15 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 import { getCurrencyCtx } from '../_shared/currency-context.ts';
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const ScanReceiptsSchema = z.object({
   imageBase64: z.string().min(100, 'Image trop petite').max(15_000_000, 'Image > 10 Mo refusée'),
   mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/heic']).optional(),
 });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-};
-
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
