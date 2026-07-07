@@ -10,7 +10,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!;
 const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:contact@monjeton.app";
-const CRON_TOKEN = Deno.env.get("REMINDERS_CRON_TOKEN")!;
+const CRON_TOKEN_ENV = Deno.env.get("REMINDERS_CRON_TOKEN") || "";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
@@ -31,8 +31,19 @@ Deno.serve(async (req) => {
   }
 
   const url = new URL(req.url);
-  const token = url.searchParams.get("token") || req.headers.get("x-cron-token");
-  if (token !== CRON_TOKEN) {
+  const token = url.searchParams.get("token") || req.headers.get("x-cron-token") || "";
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // Récupère le token de référence (soit depuis system_config, soit depuis env)
+  const { data: cfg } = await supabase
+    .from("system_config")
+    .select("value")
+    .eq("key", "reminders_cron_token")
+    .maybeSingle();
+  const expected = cfg?.value || CRON_TOKEN_ENV;
+
+  if (!expected || token !== expected) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -41,8 +52,6 @@ Deno.serve(async (req) => {
 
   const slot = (url.searchParams.get("slot") || "evening") as "morning" | "evening";
   const msg = MESSAGES[slot] || MESSAGES.evening;
-
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
   // Abonnements actifs
   const { data: subs, error: subsErr } = await supabase
