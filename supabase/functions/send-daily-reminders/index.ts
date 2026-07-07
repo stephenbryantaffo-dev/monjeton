@@ -31,8 +31,19 @@ Deno.serve(async (req) => {
   }
 
   const url = new URL(req.url);
-  const token = url.searchParams.get("token") || req.headers.get("x-cron-token");
-  if (token !== CRON_TOKEN) {
+  const token = url.searchParams.get("token") || req.headers.get("x-cron-token") || "";
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // Récupère le token de référence (soit depuis system_config, soit depuis env)
+  const { data: cfg } = await supabase
+    .from("system_config")
+    .select("value")
+    .eq("key", "reminders_cron_token")
+    .maybeSingle();
+  const expected = cfg?.value || CRON_TOKEN_ENV;
+
+  if (!expected || token !== expected) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
