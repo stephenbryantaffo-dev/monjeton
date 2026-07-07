@@ -272,6 +272,14 @@ const Parametres = () => {
         )}
       </div>
 
+      {/* Notifications section */}
+      <div className="glass-card rounded-2xl p-4 mb-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+          <Bell className="w-4 h-4" /> Notifications
+        </h3>
+        <EnableNotificationsCard variant="row" />
+      </div>
+
       {/* Privacy section */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-4">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
