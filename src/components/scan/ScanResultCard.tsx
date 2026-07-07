@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { openJekoPro } from "@/lib/jeko";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 export interface ParsedResult {
   amount?: number;
@@ -101,7 +102,7 @@ const ScanResultCard = ({ result, categories, wallets, onConfirm, onReject, isPr
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Date</Label>
-            <Input type="date" value={editResult.date || ""} onChange={(e) => setEditResult({ ...editResult, date: e.target.value })} className="glass" />
+            <DatePickerField value={editResult.date || ""} onChange={(v) => setEditResult({ ...editResult, date: v })} className="glass" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Type</Label>

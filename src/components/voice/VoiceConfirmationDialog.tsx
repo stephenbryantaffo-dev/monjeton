@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { formatMoneySmart } from "@/lib/formatMoney";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 export interface ParsedTransaction {
   amount: number;
@@ -130,12 +131,7 @@ export default function VoiceConfirmationDialog({
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Input
-                    type="date"
-                    value={tx.date || ""}
-                    onChange={e => updateTx(i, { date: e.target.value || null })}
-                    className="bg-background border-border text-sm flex-[0.8]"
-                  />
+                  <DatePickerField value={tx.date || ""} onChange={v => updateTx(i, { date: v || null })} className="bg-background border-border text-sm flex-[0.8]" />
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)} className="text-primary text-xs">
                   ✓ Terminé

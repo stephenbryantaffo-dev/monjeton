@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { TontineData, TontineMember, TontineCycle, TontinePayment } from "./types";
 import { fmt, generateCycleInfo } from "./utils";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   tontines: TontineData[];
@@ -260,7 +261,7 @@ const CyclesTab = ({ tontines }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date du paiement</label>
-              <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="glass" />
+              <DatePickerField value={payDate} onChange=setPayDate className="glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>

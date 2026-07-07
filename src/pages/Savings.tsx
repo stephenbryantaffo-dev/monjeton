@@ -20,6 +20,7 @@ import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { CardSkeleton } from "@/components/DashboardSkeleton";
 import { formatMoneySmart } from "@/lib/formatMoney";
 import confetti from "canvas-confetti";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface SavingsGoal {
   id: string;
@@ -641,13 +642,7 @@ const Savings = () => {
 
               <div className="space-y-1.5">
                 <Label className="text-xs">Date d'échéance (optionnel)</Label>
-                <Input
-                  type="date"
-                  min={today}
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  className="bg-secondary border-border"
-                />
+                <DatePickerField value={deadline} onChange={(v) => setDeadline(v)} min={today} className="bg-secondary border-border" />
               </div>
 
               <div className="space-y-1.5">

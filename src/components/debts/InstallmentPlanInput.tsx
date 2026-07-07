@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { formatMoneySmart } from "@/lib/formatMoney";
 import { generateInstallments, InstallmentSeed } from "@/lib/debtHistory";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   totalAmount: number;
@@ -151,12 +152,7 @@ export const InstallmentPlanInput = ({
                 <Label className="text-[10px] text-muted-foreground">
                   Premier versement
                 </Label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-background border-border h-9"
-                />
+                <DatePickerField value={startDate} onChange={(v) => setStartDate(v)} className="bg-background border-border" />
               </div>
             </div>
           )}
@@ -173,12 +169,7 @@ export const InstallmentPlanInput = ({
                   </span>
                   {mode === "manual" ? (
                     <>
-                      <Input
-                        type="date"
-                        value={row.due_date}
-                        onChange={(e) => updateRow(i, { due_date: e.target.value })}
-                        className="h-8 text-xs flex-1 bg-secondary border-border"
-                      />
+                      <DatePickerField value={row.due_date} onChange={(v) => updateRow(i, { due_date: v })} className="flex-1 bg-secondary border-border" />
                       <MoneyInput
                         value={String(row.expected_amount)}
                         onChange={(n) => updateRow(i, { expected_amount: n || 0 })}

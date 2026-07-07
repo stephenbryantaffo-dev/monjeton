@@ -7,6 +7,7 @@ import { MoneyInput } from "@/components/ui/MoneyInput";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { DebtCardData } from "./DebtCard";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   debt: DebtCardData | null;
@@ -179,12 +180,7 @@ export const EditDebtModal = ({
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Date d'échéance
             </Label>
-            <Input
-              type="date"
-              value={editDueDate}
-              onChange={(e) => setEditDueDate(e.target.value)}
-              className="bg-secondary border-border"
-            />
+            <DatePickerField value={editDueDate} onChange={(v) => setEditDueDate(v)} className="bg-secondary border-border" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">

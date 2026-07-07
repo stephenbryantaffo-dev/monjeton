@@ -30,6 +30,7 @@ import { EditDebtModal } from "@/components/debts/EditDebtModal";
 import { PaymentModal } from "@/components/debts/PaymentModal";
 import { markOverdueInstallments } from "@/lib/debtHistory";
 import {
+import { DatePickerField } from "@/components/ui/DatePickerField";
   checkAndSendReminders,
   checkOverdueDebts,
 } from "@/lib/debtReminders";
@@ -864,12 +865,7 @@ const Debts = () => {
               <Label className="text-xs text-muted-foreground mb-1.5 block">
                 Date d'échéance
               </Label>
-              <Input
-                type="date"
-                value={newDueDate}
-                onChange={(e) => setNewDueDate(e.target.value)}
-                className="bg-secondary border-border"
-              />
+              <DatePickerField value={newDueDate} onChange={(v) => setNewDueDate(v)} className="bg-secondary border-border" />
             </div>
 
             {/* Note */}
@@ -941,12 +937,7 @@ const AddInstallmentRow = ({
   const [amount, setAmount] = useState<number>(0);
   return (
     <div className="flex items-end gap-2">
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className="flex-1 bg-secondary border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
-      />
+      <DatePickerField value={date} onChange={(v) => setDate(v)} className="flex-1" />
       <div className="flex-1">
         <MoneyInput
           value={amount}
