@@ -871,17 +871,31 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           const clickable = !isClosed && canManage;
           return (
             <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}>
-              <div className="glass-card rounded-xl p-3 flex items-center gap-3"
+              <div className={`glass-card rounded-xl p-3 flex items-center gap-3 border transition-all ${ok ? "border-primary/25" : "border-border/50"} hover:border-primary/40`}
                 onClick={() => clickable && openPay(m)}
                 style={{ cursor: clickable ? "pointer" : "default" }}>
-                <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
-                </div>
+                {ok ? (
+                  <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_hsl(var(--primary)/0.45)]">
+                    <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                ) : (
+                  <div className="w-9 h-9 rounded-full border border-dashed border-white/15 bg-white/[0.03] flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-muted-foreground">{m.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
-                    {m.name}
-                    {ok && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-foreground truncate">{m.name}</p>
+                    {expectedPerMember > 0 && (
+                      ok ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold inline-flex items-center gap-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5" /> Payé
+                        </span>
+                      ) : (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">En attente</span>
+                      )
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {fmt(paid)} {expectedPerMember > 0 ? `/ ${fmt(expectedPerMember)}` : ""} FCFA
                     {expectedPerMember > 0 && (
