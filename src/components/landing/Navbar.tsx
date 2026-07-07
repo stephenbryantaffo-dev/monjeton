@@ -135,8 +135,8 @@ const Navbar = () => {
                   key={item.label}
                   href={item.href}
                   onClick={(e) => {
-                    handleAnchorClick(e, item.href);
                     setMenuOpen(false);
+                    handleAnchorClick(e, item.href);
                   }}
                   className="flex items-center px-4 py-3 rounded-xl text-sm font-medium text-[rgba(234,251,234,0.72)] hover:text-[#7CFF3A] hover:bg-[rgba(124,255,58,0.08)] transition-all whitespace-nowrap"
                 >
