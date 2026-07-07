@@ -674,24 +674,39 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* HÉRO — Cible / Collecté */}
       {target > 0 ? (
-        <div className="glass-card rounded-2xl p-5 mb-3 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: "radial-gradient(ellipse at top left, hsl(var(--primary) / 0.15), transparent 60%)" }} />
+        <div className="relative overflow-hidden rounded-2xl p-5 mb-4 border border-primary/[0.18] bg-gradient-to-br from-primary/10 to-primary/[0.02] shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.35)]">
+          <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 opacity-60 motion-reduce:hidden"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.28), transparent 70%)", filter: "blur(4px)" }} />
+          <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 opacity-40"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.18), transparent 70%)" }} />
           <div className="relative">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1">
+            <p className="text-[10px] uppercase tracking-widest text-primary/90 font-bold mb-2 flex items-center gap-1">
               <Target className="w-3 h-3" /> Objectif de collecte
             </p>
-            <div className="flex items-baseline gap-2 flex-wrap mb-3">
-              <span className="text-3xl font-black text-gradient">{fmt(recettes)}</span>
-              <span className="text-sm text-muted-foreground">/ {fmt(target)} FCFA</span>
-              <span className="ml-auto text-sm font-bold text-primary">{pctCollect}%</span>
+            <div className="flex items-baseline gap-2 flex-wrap mb-1">
+              <span className="text-4xl font-black text-gradient leading-none">{fmt(recettes)}</span>
+              <span className="text-xs text-muted-foreground">/ {fmt(target)} FCFA</span>
+              <span className="ml-auto text-sm font-black text-primary">{pctCollect}%</span>
             </div>
-            <Progress value={pctCollect} className="h-2.5" />
+            <p className="text-[11px] text-muted-foreground mb-3">Collecté sur la cible</p>
+            <div className="w-full bg-secondary/60 rounded-full h-2.5 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pctCollect}%` }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className="h-2.5 rounded-full bg-gradient-to-r from-primary/70 to-primary shadow-[0_0_14px_hsl(var(--primary)/0.55)] motion-reduce:transition-none"
+              />
+            </div>
           </div>
         </div>
       ) : (
-        <div className="glass-card rounded-2xl p-5 mb-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Collecté</p>
-          <p className="text-3xl font-black text-gradient">{fmt(recettes)} <span className="text-sm text-muted-foreground font-normal">FCFA</span></p>
+        <div className="relative overflow-hidden rounded-2xl p-5 mb-4 border border-primary/[0.18] bg-gradient-to-br from-primary/10 to-primary/[0.02] shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.35)]">
+          <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 opacity-60"
+            style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.28), transparent 70%)", filter: "blur(4px)" }} />
+          <div className="relative">
+            <p className="text-[10px] uppercase tracking-widest text-primary/90 font-bold mb-1">Collecté</p>
+            <p className="text-4xl font-black text-gradient leading-none">{fmt(recettes)} <span className="text-sm text-muted-foreground font-normal">FCFA</span></p>
+          </div>
         </div>
       )}
 
@@ -719,14 +734,17 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {!isClosed && (
         <div className="grid grid-cols-3 gap-2 mb-6">
           {canManage ? (
-            <Button onClick={() => setExpOpen(true)} variant="outline" className="glass" size="sm">
+            <Button onClick={() => setExpOpen(true)} variant="outline" size="sm"
+              className="glass rounded-xl h-10 border-border/60 hover:border-primary/40 hover:bg-primary/5 shadow-sm transition-all">
               <TrendingDown className="w-4 h-4 mr-1" /> Dépense
             </Button>
           ) : <div />}
-          <Button onClick={() => setItemsViewOpen(true)} variant="outline" className="glass" size="sm">
+          <Button onClick={() => setItemsViewOpen(true)} variant="outline" size="sm"
+            className="glass rounded-xl h-10 border-border/60 hover:border-primary/40 hover:bg-primary/5 shadow-sm transition-all">
             <ListChecks className="w-4 h-4 mr-1" /> Postes{expenseItems.length > 0 ? ` (${expenseItems.length})` : ""}
           </Button>
-          <Button onClick={exportPDF} variant="outline" className="glass" size="sm">
+          <Button onClick={exportPDF} variant="outline" size="sm"
+            className="glass rounded-xl h-10 border-border/60 hover:border-primary/40 hover:bg-primary/5 shadow-sm transition-all">
             <FileText className="w-4 h-4 mr-1" /> Bilan PDF
           </Button>
         </div>
@@ -853,17 +871,31 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           const clickable = !isClosed && canManage;
           return (
             <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}>
-              <div className="glass-card rounded-xl p-3 flex items-center gap-3"
+              <div className={`glass-card rounded-xl p-3 flex items-center gap-3 border transition-all ${ok ? "border-primary/25" : "border-border/50"} hover:border-primary/40`}
                 onClick={() => clickable && openPay(m)}
                 style={{ cursor: clickable ? "pointer" : "default" }}>
-                <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
-                </div>
+                {ok ? (
+                  <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_hsl(var(--primary)/0.45)]">
+                    <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                ) : (
+                  <div className="w-9 h-9 rounded-full border border-dashed border-white/15 bg-white/[0.03] flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-muted-foreground">{m.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
-                    {m.name}
-                    {ok && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-foreground truncate">{m.name}</p>
+                    {expectedPerMember > 0 && (
+                      ok ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold inline-flex items-center gap-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5" /> Payé
+                        </span>
+                      ) : (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">En attente</span>
+                      )
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {fmt(paid)} {expectedPerMember > 0 ? `/ ${fmt(expectedPerMember)}` : ""} FCFA
                     {expectedPerMember > 0 && (
