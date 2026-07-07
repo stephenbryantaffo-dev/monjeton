@@ -912,7 +912,7 @@ const CaisseView = () => {
             </div>
             <div>
               <Label>Date</Label>
-              <DatePickerField value={cotisationDate} onChange=setCotisationDate className="bg-secondary border-border mt-1" />
+              <DatePickerField value={cotisationDate} onChange={setCotisationDate} className="bg-secondary border-border mt-1" />
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowCotisation(false)} className="flex-1 glass">Annuler</Button>
@@ -955,7 +955,7 @@ const CaisseView = () => {
             </div>
             <div>
               <Label>Date</Label>
-              <DatePickerField value={depenseDate} onChange=setDepenseDate className="bg-secondary border-border mt-1" />
+              <DatePickerField value={depenseDate} onChange={setDepenseDate} className="bg-secondary border-border mt-1" />
             </div>
             <div>
               <Label>Note (optionnel)</Label>

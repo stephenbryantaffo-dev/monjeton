@@ -268,7 +268,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de début</label>
-              <DatePickerField value={startDate} onChange=setStartDate className="glass" />
+              <DatePickerField value={startDate} onChange={setStartDate} className="glass" />
             </div>
           </div>
         )}
@@ -335,7 +335,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement (optionnel)</label>
-              <DatePickerField value={eventDate} onChange=setEventDate className="glass" />
+              <DatePickerField value={eventDate} onChange={setEventDate} className="glass" />
             </div>
           </div>
         )}

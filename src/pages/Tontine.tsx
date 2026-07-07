@@ -1589,7 +1589,7 @@ const TontinePage = () => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date du paiement</label>
-              <DatePickerField value={payDate} onChange=setPayDate className="bg-secondary border-border" />
+              <DatePickerField value={payDate} onChange={setPayDate} className="bg-secondary border-border" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>

@@ -172,7 +172,7 @@ const EditCaisseModal = ({ open, onClose, tontine, onUpdated }: Props) => {
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement</label>
-                <DatePickerField value={eventDate} onChange=setEventDate className="glass" />
+                <DatePickerField value={eventDate} onChange={setEventDate} className="glass" />
               </div>
             </>
           )}

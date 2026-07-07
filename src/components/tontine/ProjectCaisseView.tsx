@@ -1071,7 +1071,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
-              <DatePickerField value={payDate} onChange=setPayDate className="glass" />
+              <DatePickerField value={payDate} onChange={setPayDate} className="glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
@@ -1187,7 +1187,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
-              <DatePickerField value={expDate} onChange=setExpDate className="glass" />
+              <DatePickerField value={expDate} onChange={setExpDate} className="glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>
