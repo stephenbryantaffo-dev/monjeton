@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     }
 
     const rawBody = await req.text();
-    console.log('Chariow webhook RAW:', rawBody);
+    console.log('Chariow webhook received, bytes:', rawBody.length);
 
     let payload: any;
     try {
