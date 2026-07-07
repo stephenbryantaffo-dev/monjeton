@@ -36,23 +36,24 @@ const EnableNotificationsCard = ({ variant = "card" }: Props) => {
     setLoading(true);
     const res = await enableDailyReminders();
     setLoading(false);
-    if (res.ok) {
+    if (res.ok === true) {
       setActive(true);
       toast({ title: "Rappels activés ✅", description: "Tu recevras un rappel matin et soir." });
-    } else {
-      const map: Record<string, string> = {
-        permission_denied: "Autorisation refusée. Active les notifications dans ton navigateur.",
-        unsupported: "Ton navigateur ne supporte pas les notifications.",
-        preview_disabled: "Disponible uniquement sur l'app publiée, pas dans l'aperçu.",
-        not_authenticated: "Connecte-toi pour activer les rappels.",
-        missing_vapid_key: "Configuration serveur incomplète.",
-      };
-      toast({
-        title: "Impossible d'activer",
-        description: map[res.error] || res.error,
-        variant: "destructive",
-      });
+      return;
     }
+    const map: Record<string, string> = {
+      permission_denied: "Autorisation refusée. Active les notifications dans ton navigateur.",
+      unsupported: "Ton navigateur ne supporte pas les notifications.",
+      preview_disabled: "Disponible uniquement sur l'app publiée, pas dans l'aperçu.",
+      not_authenticated: "Connecte-toi pour activer les rappels.",
+      missing_vapid_key: "Configuration serveur incomplète.",
+    };
+    const err = res.error;
+    toast({
+      title: "Impossible d'activer",
+      description: map[err] || err,
+      variant: "destructive",
+    });
   };
 
   const handleDisable = async () => {
