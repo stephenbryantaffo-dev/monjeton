@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     const rawAmount = Number(tx?.amount?.amount ?? 0);
     const amountXof = rawAmount >= 100000 ? Math.round(rawAmount / 100) : rawAmount;
 
-    console.log('Parsed →', { status, txType, phoneRaw, rawAmount, amountXof, paymentLinkId });
+    console.log('Parsed →', { status, txType, hasPhone: !!phoneRaw, paymentLinkId });
 
     if (!isPayment || status !== 'success') {
       return json({ received: true, action: 'ignored', status, txType });
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     });
 
     if (!userId) {
-      console.error(`⚠️ PAIEMENT NON MATCHÉ - téléphone: ${phoneRaw} - à réconcilier manuellement (txn_id: ${txnId}, plan: ${planName}, montant: ${amountXof} XOF)`);
+      console.error(`⚠️ PAIEMENT NON MATCHÉ - à réconcilier manuellement (txn_id: ${txnId}, plan: ${planName})`);
       return json({ received: true, note: 'logged, user unmatched: ' + phoneRaw });
     }
 
@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
     );
     if (upErr) throw upErr;
 
-    console.log(`✅ Activated ${planName} for user ${userId} (${phoneRaw})`);
+    console.log(`✅ Activated ${planName} (txn_id: ${txnId})`);
     return json({ success: true, plan: planName, userId });
   } catch (e) {
     console.error('Webhook fatal:', e);
