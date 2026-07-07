@@ -596,7 +596,7 @@ const NewTransaction = () => {
 
             <div className="space-y-2">
               <Label>Date</Label>
-              <DatePickerField value={date} onChange=setDate className="bg-secondary border-border" />
+              <DatePickerField value={date} onChange={setDate} className="bg-secondary border-border" />
             </div>
 
           </form>

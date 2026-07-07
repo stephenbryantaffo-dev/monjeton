@@ -30,10 +30,10 @@ import { EditDebtModal } from "@/components/debts/EditDebtModal";
 import { PaymentModal } from "@/components/debts/PaymentModal";
 import { markOverdueInstallments } from "@/lib/debtHistory";
 import {
-import { DatePickerField } from "@/components/ui/DatePickerField";
   checkAndSendReminders,
   checkOverdueDebts,
 } from "@/lib/debtReminders";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 type StatusFilter = "all" | "pending" | "overdue" | "paid";
 type DebtType = "owed_to_me" | "i_owe";
