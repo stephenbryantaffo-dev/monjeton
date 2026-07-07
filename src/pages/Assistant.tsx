@@ -155,14 +155,10 @@ const initialMessages: Message[] = [{
 }];
 
 const QUICK_ACTIONS = [
-  { emoji: "🛒", label: "Marché", text: "J'ai dépensé au marché " },
-  { emoji: "🚕", label: "Transport", text: "Transport " },
   { emoji: "🍛", label: "Repas", text: "Repas " },
   { emoji: "📱", label: "Recharge", text: "Recharge téléphone " },
-  { emoji: "💸", label: "Envoi argent", text: "J'ai envoyé " },
   { emoji: "💰", label: "Reçu argent", text: "J'ai reçu " },
   { emoji: "🤝", label: "Tontine", text: "Qui n'a pas payé la tontine ?" },
-  { emoji: "🎯", label: "Épargne", text: "Je veux économiser " },
   { emoji: "💭", label: "Dilemme", text: "J'hésite entre deux options : " },
 ];
 
