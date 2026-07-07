@@ -18,6 +18,7 @@ import {
   SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Screen } from '@/components/layout/Screen';
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface DetectedTransaction {
   id: string;
@@ -492,12 +493,7 @@ export const MultiReceiptValidator = ({
               <div>
                 <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Date</p>
                 {item.editing ? (
-                  <input
-                    type="date"
-                    value={item.date}
-                    onChange={(e) => updateItem(item.id, { date: e.target.value })}
-                    className="w-full h-8 px-2 bg-secondary border border-border rounded-lg text-xs text-foreground focus:outline-none"
-                  />
+                  <DatePickerField value={item.date} onChange={(v) => updateItem(item.id, { date: v })} className="w-full bg-secondary border-border text-xs" />
                 ) : (
                   <div className="text-xs text-foreground h-8 flex items-center px-2 bg-secondary/50 rounded-lg">
                     {new Date(item.date).toLocaleDateString('fr-FR', {

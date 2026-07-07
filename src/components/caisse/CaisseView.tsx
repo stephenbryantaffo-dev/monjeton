@@ -17,6 +17,7 @@ import CreateCaisseModal from "./CreateCaisseModal";
 import InviteCaisseModal from "./InviteCaisseModal";
 import { CaisseData, CaisseMember, CaisseCotisation, CaisseDepense, CaisseMemberHistory, DEPENSE_CATEGORIES, DEPENSE_CAT_LABELS } from "./types";
 import { generateCaissePdf } from "./generateCaissePdf";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 type CollaboratorEntry = {
   user_id: string;
@@ -911,7 +912,7 @@ const CaisseView = () => {
             </div>
             <div>
               <Label>Date</Label>
-              <Input type="date" value={cotisationDate} onChange={(e) => setCotisationDate(e.target.value)} className="bg-secondary border-border mt-1" />
+              <DatePickerField value={cotisationDate} onChange=setCotisationDate className="bg-secondary border-border mt-1" />
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowCotisation(false)} className="flex-1 glass">Annuler</Button>
@@ -954,7 +955,7 @@ const CaisseView = () => {
             </div>
             <div>
               <Label>Date</Label>
-              <Input type="date" value={depenseDate} onChange={(e) => setDepenseDate(e.target.value)} className="bg-secondary border-border mt-1" />
+              <DatePickerField value={depenseDate} onChange=setDepenseDate className="bg-secondary border-border mt-1" />
             </div>
             <div>
               <Label>Note (optionnel)</Label>

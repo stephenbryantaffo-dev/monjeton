@@ -32,6 +32,7 @@ import ProjectCaisseView from "@/components/tontine/ProjectCaisseView";
 import LeaveCaisseButton from "@/components/tontine/LeaveCaisseButton";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, FREQ_LABELS, FREQ_BADGE_CLASSES } from "@/components/tontine/types";
 import { fmt, generateCycleInfo } from "@/components/tontine/utils";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 type MemberStatus = {
   member: TontineMember;
@@ -1551,7 +1552,7 @@ const TontinePage = () => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date du paiement</label>
-              <Input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className="bg-secondary border-border" />
+              <DatePickerField value={payDate} onChange=setPayDate className="bg-secondary border-border" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>

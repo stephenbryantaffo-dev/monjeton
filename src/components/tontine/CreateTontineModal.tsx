@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { FREQ_LABELS, FREQ_ICONS, CaisseType } from "./types";
 import { generateCycleInfo, fmt } from "./utils";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   open: boolean;
@@ -267,7 +268,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de début</label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="glass" />
+              <DatePickerField value={startDate} onChange=setStartDate className="glass" />
             </div>
           </div>
         )}
@@ -334,7 +335,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement (optionnel)</label>
-              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="glass" />
+              <DatePickerField value={eventDate} onChange=setEventDate className="glass" />
             </div>
           </div>
         )}

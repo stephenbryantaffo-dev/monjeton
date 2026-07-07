@@ -18,6 +18,7 @@ import { validateAmount, sanitizeNote, validatePayloadSize, MAX_AUDIO_SIZE_BYTES
 import { checkAndCreateNotifications } from "@/lib/notificationService";
 import { syncAutoBudget } from "@/lib/autoBudget";
 import { checkBudgetWhatsappAlerts } from "@/lib/budgetWhatsappAlerts";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 const NewTransaction = () => {
   const navigate = useNavigate();
@@ -595,7 +596,7 @@ const NewTransaction = () => {
 
             <div className="space-y-2">
               <Label>Date</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-secondary border-border" />
+              <DatePickerField value={date} onChange=setDate className="bg-secondary border-border" />
             </div>
 
           </form>

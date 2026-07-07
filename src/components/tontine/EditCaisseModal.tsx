@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { TontineData } from "./types";
 import { fmt } from "./utils";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   open: boolean;
@@ -171,7 +172,7 @@ const EditCaisseModal = ({ open, onClose, tontine, onUpdated }: Props) => {
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement</label>
-                <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="glass" />
+                <DatePickerField value={eventDate} onChange=setEventDate className="glass" />
               </div>
             </>
           )}

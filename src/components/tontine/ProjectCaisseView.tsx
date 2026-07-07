@@ -21,6 +21,7 @@ import InviteCaisseModal from "@/components/caisse/InviteCaisseModal";
 import { TontineData, TontineMember, TontineCycle, TontinePayment, TontineExpense } from "./types";
 import { fmt } from "./utils";
 import { logNotification } from "@/lib/tontineNotifications";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   tontine: TontineData;
@@ -1070,7 +1071,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
-              <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="glass" />
+              <DatePickerField value={payDate} onChange=setPayDate className="glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Motif (optionnel)</label>
@@ -1186,7 +1187,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date</label>
-              <Input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} className="glass" />
+              <DatePickerField value={expDate} onChange=setExpDate className="glass" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Note (optionnel)</label>

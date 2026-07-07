@@ -7,6 +7,7 @@ import { MoneyInput } from "@/components/ui/MoneyInput";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { logDebtChange } from "@/lib/debtHistory";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface DebtRow {
   id: string;
@@ -127,12 +128,7 @@ export const EditDebtDialog = ({ debt, userId, open, onClose, onSaved }: Props) 
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Date d'échéance
             </Label>
-            <Input
-              type="date"
-              value={form.date_echeance}
-              onChange={(e) => setForm((f) => ({ ...f, date_echeance: e.target.value }))}
-              className="bg-secondary border-border"
-            />
+            <DatePickerField value={form.date_echeance} onChange={(v) => setForm((f) => ({ ...f, date_echeance: v }))} className="bg-secondary border-border" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">WhatsApp</Label>

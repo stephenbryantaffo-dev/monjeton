@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { applyPaymentToInstallments } from "@/lib/debtHistory";
 import type { DebtCardData } from "./DebtCard";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 
 interface Props {
   debt: DebtCardData | null;
@@ -216,12 +217,7 @@ export const PaymentModal = ({
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Date
             </Label>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="bg-secondary border-border"
-            />
+            <DatePickerField value={date} onChange={(v) => setDate(v)} className="bg-secondary border-border" />
           </div>
 
           <div>
