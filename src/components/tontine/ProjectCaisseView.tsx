@@ -734,17 +734,85 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
 
 
-      {/* ─── Members + cotisations ─── */}
-      <div className="flex items-center justify-between mb-2 mt-4">
+      {/* ─── Participants (membres + collaborateurs unifiés) ─── */}
+      <div className="flex items-center justify-between mb-2 mt-2">
         <p className="text-sm font-bold text-foreground flex items-center gap-1">
-          <Users className="w-4 h-4" /> Membres ({members.length})
+          <Users className="w-4 h-4" /> Participants ({members.length}{collaborators.length > 0 ? ` + ${collaborators.length}` : ""})
         </p>
         {canManage && !isClosed && (
           <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Membre
+            <Plus className="w-3.5 h-3.5 mr-1" /> Ajouter
           </Button>
         )}
       </div>
+
+      {/* Collaborateurs / gestionnaires — chips compactes */}
+      {collaborators.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {(() => {
+            const roleOrder: Record<string, number> = { owner: 0, manager: 1, viewer: 2 };
+            const list = collaborators.slice().sort((a, b) => {
+              const ra = roleOrder[a.role] ?? 3;
+              const rb = roleOrder[b.role] ?? 3;
+              if (ra !== rb) return ra - rb;
+              return (a.full_name || a.email || "").localeCompare(b.full_name || b.email || "");
+            });
+            return list.map((c) => {
+              const ri = ROLE_BADGE[c.role] || ROLE_BADGE.viewer;
+              const Icon = ri.icon;
+              const display = c.full_name || c.email || "Utilisateur";
+              const initial = (c.full_name || c.email || "?").trim().charAt(0).toUpperCase();
+              const isMe = c.user_id === user?.id;
+              return (
+                <div key={c.user_id} className="flex items-center gap-1.5 glass rounded-full pl-1 pr-2 py-0.5 border border-border">
+                  <div className="w-5 h-5 rounded-full gradient-primary flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-primary-foreground">{initial}</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-foreground truncate max-w-[110px]">
+                    {display}{isMe && " (toi)"}
+                  </span>
+                  <span className={`inline-flex items-center gap-0.5 text-[9px] px-1 py-0.5 rounded-full ${ri.cls}`}>
+                    <Icon className="w-2.5 h-2.5" />
+                  </span>
+                  {canManage && !isMe && c.role !== "owner" && (
+                    <>
+                      {c.role === "viewer" ? (
+                        <button
+                          title="Promouvoir co-gestionnaire"
+                          disabled={saving}
+                          onClick={() => changeCollabRole(c.user_id, "manager")}
+                          className="text-muted-foreground hover:text-blue-400 disabled:opacity-50"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                      ) : c.role === "manager" ? (
+                        <button
+                          title="Passer observateur"
+                          disabled={saving}
+                          onClick={() => changeCollabRole(c.user_id, "viewer")}
+                          className="text-muted-foreground hover:text-amber-400 disabled:opacity-50"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      ) : null}
+                      <ConfirmDeleteDialog
+                        onConfirm={() => removeCollaborator(c.user_id)}
+                        title={`Retirer ${display} de la caisse ?`}
+                        description="Il n'aura plus accès à cette caisse."
+                      >
+                        <button title="Retirer" className="text-muted-foreground hover:text-destructive">
+                          <UserMinus className="w-3 h-3" />
+                        </button>
+                      </ConfirmDeleteDialog>
+                    </>
+                  )}
+                </div>
+              );
+            });
+          })()}
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-2">
         <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
