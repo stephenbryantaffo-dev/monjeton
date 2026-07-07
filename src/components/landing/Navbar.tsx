@@ -13,11 +13,25 @@ const navItems = [
   { label: "FAQ", href: "#faq" },
 ];
 
-const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+const NAVBAR_OFFSET = 72;
+
+const scrollToAnchor = (href: string) => {
+  const el = document.querySelector(href) as HTMLElement | null;
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - NAVBAR_OFFSET;
+  window.scrollTo({ top, behavior: "smooth" });
+};
+
+const handleAnchorClick = (
+  e: React.MouseEvent<HTMLAnchorElement>,
+  href: string,
+  onDone?: () => void,
+) => {
   if (href.startsWith("#")) {
     e.preventDefault();
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: "smooth" });
+    onDone?.();
+    // Defer scroll until after the mobile menu collapses to avoid interference
+    window.setTimeout(() => scrollToAnchor(href), 60);
   }
 };
 
