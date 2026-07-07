@@ -2,6 +2,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.25.76';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 import { loadUserCurrency } from '../_shared/currency-context.ts';
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const RebalanceSchema = z.object({
   modifiedCategory: z.string().trim().min(1).max(100),
@@ -16,13 +17,8 @@ const RebalanceSchema = z.object({
   validatedCategories: z.array(z.string().max(100)).max(100).optional(),
 });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

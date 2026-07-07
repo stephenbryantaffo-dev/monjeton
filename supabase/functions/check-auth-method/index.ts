@@ -2,8 +2,9 @@
 // Rate-limited by IP to prevent email enumeration abuse.
 // Never returns sensitive data — only { exists, method }.
 
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -11,7 +12,9 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 type Method = "email" | "google" | "other" | null;
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
 
   try {
     if (req.method !== "POST") {

@@ -1,16 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const AudioMetaSchema = z.object({
   size: z.number().int().min(1).max(10 * 1024 * 1024),
   type: z.string().max(100).optional(),
 });
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
 const MIN_AUDIO_SIZE = 8000;
@@ -34,6 +30,7 @@ function isHallucination(text: string): boolean {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

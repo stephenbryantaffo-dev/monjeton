@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const ParseVoiceSchema = z.object({
   transcript: z.string().trim().min(1).max(10_000),
@@ -13,15 +14,11 @@ const ParseVoiceSchema = z.object({
   }).passthrough()).max(100).optional(),
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
 const ALLOWED_CURRENCIES = ["XOF", "USD", "EUR", "GBP", "NGN", "GHS", "MAD", "TND", "XAF", "CVE"];
 const MAX_TRANSCRIPT_LENGTH = 2000;
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
