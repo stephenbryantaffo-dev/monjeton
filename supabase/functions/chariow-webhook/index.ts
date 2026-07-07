@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     }
 
     const rawBody = await req.text();
-    console.log('Chariow webhook RAW:', rawBody);
+    console.log('Chariow webhook received, bytes:', rawBody.length);
 
     let payload: any;
     try {
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     const email: string = String(customer?.email ?? '').trim().toLowerCase();
 
     if (!saleId || !email) {
-      console.error('Missing saleId or email', { saleId, email });
+      console.error('Missing saleId or email', { saleId, hasEmail: !!email });
       return json({ error: 'Missing saleId or email' }, 400);
     }
 
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
       );
       if (upErr) throw upErr;
 
-      console.log(`✅ Chariow: Pro activé pour ${email} (user ${profile.user_id}, sale ${saleId})`);
+      console.log(`✅ Chariow: Pro activated (sale ${saleId})`);
       return json({ success: true, action: 'activated', email, plan: planName, activation_token: activationToken });
     }
 
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
     );
     if (pendErr) throw pendErr;
 
-    console.log(`📥 Chariow: ${email} mis en attente (sale ${saleId})`);
+    console.log(`📥 Chariow: pending activation queued (sale ${saleId})`);
     return json({ success: true, action: 'pending', email, plan: planName, activation_token: activationToken });
   } catch (e) {
     console.error('Chariow webhook fatal:', e);
