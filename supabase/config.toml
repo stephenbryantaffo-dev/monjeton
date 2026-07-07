@@ -39,6 +39,9 @@ verify_jwt = false
 [functions.check-auth-method]
 verify_jwt = false
 
+[functions.send-daily-reminders]
+verify_jwt = false
+
 
 
 

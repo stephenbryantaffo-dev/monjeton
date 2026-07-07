@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CreditCard, LogOut, ChevronRight, MessageCircle, Lock, EyeOff, Download, Trash2, FileText, ShieldCheck, Globe, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import { CreditCard, LogOut, ChevronRight, MessageCircle, Lock, EyeOff, Download, Trash2, FileText, ShieldCheck, Globe, AlertTriangle, Loader2, CheckCircle2, Bell } from "lucide-react";
+import EnableNotificationsCard from "@/components/EnableNotificationsCard";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCountry } from "@/contexts/CountryContext";
@@ -270,6 +271,14 @@ const Parametres = () => {
             </button>
           </>
         )}
+      </div>
+
+      {/* Notifications section */}
+      <div className="glass-card rounded-2xl p-4 mb-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+          <Bell className="w-4 h-4" /> Notifications
+        </h3>
+        <EnableNotificationsCard variant="row" />
       </div>
 
       {/* Privacy section */}
