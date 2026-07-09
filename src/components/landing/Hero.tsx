@@ -32,7 +32,7 @@ const ParticleCanvas = ({ isMobile }: { isMobile: boolean }) => {
     const ctx = canvas.getContext("2d")!;
     let animId: number;
     const particles: { x: number; y: number; vx: number; vy: number; r: number; a: number }[] = [];
-    const count = isMobile ? 20 : 60;
+    const count = isMobile ? 16 : 36;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -92,25 +92,6 @@ const ParticleCanvas = ({ isMobile }: { isMobile: boolean }) => {
 
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
 };
-
-const Scanline = () => (
-  <div className="absolute inset-0 z-[3] pointer-events-none overflow-hidden">
-    <motion.div
-      className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[rgba(124,255,58,0.25)] to-transparent"
-      animate={{ y: ["0vh", "100vh"] }}
-      transition={{ duration: 7, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-    />
-  </div>
-);
-
-const FilmGrain = () => (
-  <div
-    className="absolute inset-0 z-[4] pointer-events-none opacity-[0.03]"
-    style={{
-      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-    }}
-  />
-);
 
 const badges = [
   { icon: Zap, text: "Conversion automatique des devises" },
@@ -179,9 +160,6 @@ const Hero = () => {
       </div>
 
       <ParticleCanvas isMobile={isMobile} />
-      {/* Scanline + FilmGrain disabled on mobile — extra repaint cost, low visual value */}
-      {!isMobile && <Scanline />}
-      {!isMobile && <FilmGrain />}
 
       {/* Content with parallax (desktop only) */}
       <motion.div
