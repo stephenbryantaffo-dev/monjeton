@@ -10,6 +10,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Stats = lazy(() => import("@/components/landing/Stats"));
 const Features = lazy(() => import("@/components/landing/Features"));
+const FeatureShowcase = lazy(() => import("@/components/landing/FeatureShowcase"));
 const ForWhoSection = lazy(() => import("@/components/landing/ForWhoSection"));
 const AIScan = lazy(() => import("@/components/landing/AIScan"));
 const Enterprise = lazy(() => import("@/components/landing/Enterprise"));
