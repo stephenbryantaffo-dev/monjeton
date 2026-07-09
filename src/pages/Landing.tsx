@@ -39,6 +39,7 @@ const Landing = () => {
       <FloatingFCFA />
       <Navbar />
       <Hero />
+      <PaymentMarquee />
       {/* Seamless transition handled by gradient overlay on Hero bottom */}
 
 
