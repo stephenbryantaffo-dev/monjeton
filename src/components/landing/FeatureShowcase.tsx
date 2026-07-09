@@ -1,515 +1,595 @@
-import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
   Mic,
-  Coins,
   Check,
-  Clock,
   FileText,
-  Calendar,
   Download,
   Target,
-  Plus,
-  TrendingUp,
   Wallet,
   ArrowUp,
-  ArrowDown,
   Bell,
-  LineChart,
-  type LucideIcon,
+  ScanLine,
 } from "lucide-react";
+import MarkerText from "./MarkerText";
 
 const LIME = "#7CFF3A";
 const TEXT = "#EAFBEA";
+const BG = "#04060A";
 
-/* --------------------------------- Hooks --------------------------------- */
+/* ---------- Shared phone frame ---------- */
+const PhoneFrame = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    animate={{ y: [0, -10, 0] }}
+    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+    className="relative mx-auto"
+    style={{
+      width: "min(280px, 72vw)",
+      aspectRatio: "9 / 19",
+      borderRadius: 46,
+      padding: 8,
+      background:
+        "linear-gradient(160deg, #3a3d42 0%, #17191c 40%, #2a2d31 70%, #101215 100%)",
+      boxShadow:
+        "0 40px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.05)",
+    }}
+  >
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{ borderRadius: 38, background: BG, color: TEXT }}
+    >
+      <div
+        className="absolute left-1/2 -translate-x-1/2 z-10"
+        style={{ top: 10, width: 90, height: 26, borderRadius: 20, background: "#000" }}
+      />
+      <div className="w-full h-full pt-10 px-3 pb-3 flex flex-col gap-2 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  </motion.div>
+);
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 820px)");
-    const on = () => setIsMobile(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return isMobile;
-}
-
-/* ------------------------------ Sub components --------------------------- */
-
-type CardData = {
-  icon: LucideIcon;
+/* ---------- Floating card ---------- */
+interface FloatCardProps {
+  icon: React.ReactNode;
   label: string;
   value: string;
-  valueClass?: string;
-  extra?: ReactNode;
-};
-
-const positions = [
-  { top: "8%", left: "-6%", rotate: -4 },
-  { top: "58%", left: "-10%", rotate: 3 },
-  { top: "8%", right: "-6%", rotate: 4 },
-  { top: "58%", right: "-10%", rotate: -3 },
-] as const;
-
-function FloatingCard({
-  data,
-  index,
-  isMobile,
-}: {
-  data: CardData;
-  index: number;
-  isMobile: boolean;
-}) {
-  const Icon = data.icon;
-  const pos = positions[index];
-  const duration = 5 + (index % 3);
-  const delay = index * 0.4;
-
-  const style: React.CSSProperties = isMobile
-    ? { position: "relative", transform: "none" }
-    : {
-        position: "absolute",
-        top: pos.top,
-        left: (pos as any).left,
-        right: (pos as any).right,
-        transform: `rotate(${pos.rotate}deg)`,
-      };
-
-  return (
-    <motion.div
-      style={style}
-      animate={isMobile ? undefined : { y: [0, -10, 0] }}
-      transition={{ duration, delay, repeat: Infinity, ease: "easeInOut" }}
-      className="w-[200px] rounded-2xl border backdrop-blur-md p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
-    >
-      <div
-        className="absolute inset-0 rounded-2xl pointer-events-none"
-        style={{
-          background: "rgba(13,21,18,0.9)",
-          border: `1px solid ${LIME}26`,
-          borderRadius: "1rem",
-        }}
-      />
-      <div className="relative flex items-start gap-3">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: `${LIME}1A`, border: `1px solid ${LIME}33` }}
-        >
-          <Icon size={16} color={LIME} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-[11px] uppercase tracking-wide text-white/50">
-            {data.label}
-          </div>
-          <div className={`text-sm font-bold mt-0.5 ${data.valueClass ?? ""}`} style={data.valueClass ? undefined : { color: TEXT }}>
-            {data.value}
-          </div>
-          {data.extra}
-        </div>
-      </div>
-    </motion.div>
-  );
+  progress?: number;
+  rotate: number;
+  delay: number;
+  className: string;
+  valueColor?: string;
 }
-
-function Phone({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      animate={{ y: [0, -12, 0] }}
-      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      className="relative shrink-0"
-      style={{ width: 280, height: 570 }}
-    >
-      {/* Titanium frame */}
-      <div
-        className="absolute inset-0 rounded-[48px] p-[3px]"
-        style={{
-          background:
-            "linear-gradient(145deg, #c8ccd1 0%, #6b7076 25%, #2a2d31 55%, #8a8f95 80%, #d8dce0 100%)",
-          boxShadow:
-            "0 30px 60px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
-        }}
-      >
-        <div
-          className="relative w-full h-full rounded-[45px] overflow-hidden"
-          style={{
-            background:
-              "radial-gradient(120% 80% at 50% 0%, #0d1512 0%, #05070A 60%, #05070A 100%)",
-          }}
-        >
-          {/* Dynamic Island */}
-          <div
-            className="absolute top-2.5 left-1/2 -translate-x-1/2 w-[95px] h-[28px] rounded-full z-20"
-            style={{ background: "#000" }}
-          />
-          {/* Screen content */}
-          <div className="absolute inset-0 pt-14 px-5 pb-6 flex flex-col">
-            {children}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function Stage({
-  cards,
-  isMobile,
-  children,
-}: {
-  cards: CardData[];
-  isMobile: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div className="relative w-full flex justify-center items-center py-10">
-      {/* Radar rings */}
-      {!isMobile && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {[560, 720, 900].map((s) => (
-            <div
-              key={s}
-              className="absolute rounded-full"
-              style={{
-                width: s,
-                height: s,
-                border: `1px solid ${LIME}12`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {isMobile ? (
-        <div className="flex flex-col items-center gap-6 w-full">
-          {children}
-          <div className="flex flex-col items-center gap-3">
-            {cards.map((c, i) => (
-              <FloatingCard key={i} data={c} index={i} isMobile />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="relative" style={{ width: 720 }}>
-          <div className="flex justify-center">{children}</div>
-          {cards.map((c, i) => (
-            <FloatingCard key={i} data={c} index={i} isMobile={false} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SectionHeader({
-  title,
-  gradientPart,
-  subtitle,
-}: {
-  title: string;
-  gradientPart: string;
-  subtitle: string;
-}) {
-  const [before, after] = title.split(gradientPart);
-  return (
-    <div className="text-center max-w-2xl mx-auto mb-4 px-4">
-      <div
-        className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4"
-        style={{
-          background: `${LIME}1A`,
-          border: `1px solid ${LIME}40`,
-          color: LIME,
-        }}
-      >
-        Fonctionnalité
-      </div>
-      <h2 className="text-3xl md:text-5xl font-black tracking-tight" style={{ color: TEXT }}>
-        {before}
-        <span
-          style={{
-            background: `linear-gradient(90deg, ${LIME} 0%, #37B24D 100%)`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          {gradientPart}
-        </span>
-        {after}
-      </h2>
-      <p className="mt-4 text-white/60 text-base md:text-lg">{subtitle}</p>
-    </div>
-  );
-}
-
-function ScreenTitle({ children }: { children: ReactNode }) {
-  return (
-    <div className="text-white/90 text-sm font-semibold mb-3 text-center">
-      {children}
-    </div>
-  );
-}
-
-function DetectedRow({
+const FloatCard = ({
+  icon,
   label,
   value,
-  valueClass,
-}: {
-  label: string;
-  value: string;
-  valueClass?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between text-xs py-1.5">
-      <span className="text-white/70">{label}</span>
-      <span className={`font-semibold ${valueClass ?? "text-white"}`}>{value}</span>
+  progress,
+  rotate,
+  delay,
+  className,
+  valueColor,
+}: FloatCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: [20, -8, 0, -8, 0] }}
+    viewport={{ once: true, amount: 0.4 }}
+    transition={{
+      duration: 5 + delay,
+      repeat: Infinity,
+      repeatType: "loop",
+      ease: "easeInOut",
+      delay,
+    }}
+    className={`absolute ${className}`}
+    style={{
+      transform: `rotate(${rotate}deg)`,
+      background: "rgba(13,21,18,0.92)",
+      border: "1px solid rgba(124,255,58,0.16)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      borderRadius: 16,
+      padding: "10px 12px",
+      minWidth: 140,
+      boxShadow: "0 10px 30px -10px rgba(0,0,0,0.6)",
+      color: TEXT,
+      zIndex: 5,
+    }}
+  >
+    <div className="flex items-center gap-2 mb-1">
+      <div className="shrink-0">{icon}</div>
+      <div className="text-[10px] text-white/55 leading-tight">{label}</div>
     </div>
-  );
-}
-
-/* ------------------------------- Screens -------------------------------- */
-
-function VoiceScreen() {
-  return (
-    <>
-      <ScreenTitle>Saisie vocale</ScreenTitle>
-      <div className="flex-1 flex flex-col items-center justify-center gap-4">
-        <motion.div
-          animate={{ scale: [1, 1.08, 1], boxShadow: [`0 0 0 0 ${LIME}66`, `0 0 0 20px ${LIME}00`, `0 0 0 0 ${LIME}00`] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-20 h-20 rounded-full flex items-center justify-center"
-          style={{ background: LIME, boxShadow: `0 0 40px ${LIME}80` }}
-        >
-          <Mic size={32} color="#05070A" />
-        </motion.div>
-        <div className="flex items-end gap-1 h-10">
-          {[0.4, 0.8, 0.5, 1, 0.6, 0.9, 0.3, 0.7, 0.5, 0.9, 0.4].map((h, i) => (
-            <motion.div
-              key={i}
-              className="w-1 rounded-full"
-              style={{ background: LIME, height: `${h * 100}%` }}
-              animate={{ scaleY: [h, 1, h] }}
-              transition={{ duration: 0.8 + i * 0.05, repeat: Infinity, delay: i * 0.05 }}
-            />
-          ))}
-        </div>
-        <p className="text-[11px] italic text-white/50 text-center px-2">
-          « J'ai dépensé 3 000 au marché et payé 15 000 de taxi »
-        </p>
+    <div className="text-xs font-bold leading-tight" style={{ color: valueColor || TEXT }}>
+      {value}
+    </div>
+    {typeof progress === "number" && (
+      <div className="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${progress}%`, background: LIME }} />
       </div>
-      <div
-        className="rounded-xl p-3 mt-2"
-        style={{ background: "rgba(124,255,58,0.05)", border: `1px solid ${LIME}26` }}
+    )}
+  </motion.div>
+);
+
+/* ---------- Screen chip helper ---------- */
+const Chip = ({ children, tone = "lime" }: { children: React.ReactNode; tone?: "lime" | "amber" }) => (
+  <span
+    className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
+    style={{
+      background: tone === "lime" ? "rgba(124,255,58,0.14)" : "rgba(245,179,1,0.15)",
+      color: tone === "lime" ? LIME : "#F5B301",
+      border: `1px solid ${tone === "lime" ? "rgba(124,255,58,0.25)" : "rgba(245,179,1,0.3)"}`,
+    }}
+  >
+    {children}
+  </span>
+);
+
+const ScreenHeader = ({ title, chip, chipTone }: { title: string; chip: string; chipTone?: "lime" | "amber" }) => (
+  <div className="flex items-center justify-between">
+    <div className="text-xs font-bold">{title}</div>
+    <Chip tone={chipTone}>{chip}</Chip>
+  </div>
+);
+
+/* ---------- Screens ---------- */
+const VoiceScreen = () => (
+  <>
+    <ScreenHeader title="Saisie vocale" chip="IA" />
+    <div className="flex flex-col items-center justify-center gap-3 py-3">
+      <motion.div
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+        className="rounded-full flex items-center justify-center"
+        style={{
+          width: 68,
+          height: 68,
+          background: LIME,
+          boxShadow: "0 0 40px rgba(124,255,58,0.6), 0 0 80px rgba(124,255,58,0.3)",
+        }}
       >
-        <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">Détecté</div>
-        <DetectedRow label="Marché · Alimentation" value="-3 000 F" valueClass="text-red-400" />
-        <DetectedRow label="Taxi · Transport" value="-15 000 F" valueClass="text-red-400" />
-      </div>
-    </>
-  );
-}
-
-function ScanScreen() {
-  return (
-    <>
-      <ScreenTitle>Scan de facture</ScreenTitle>
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="relative w-full aspect-[3/4] max-h-[240px] rounded-lg overflow-hidden" style={{ background: "rgba(255,255,255,0.02)" }}>
-          {/* Corners */}
-          {[
-            { top: 0, left: 0, borderTop: `2px solid ${LIME}`, borderLeft: `2px solid ${LIME}` },
-            { top: 0, right: 0, borderTop: `2px solid ${LIME}`, borderRight: `2px solid ${LIME}` },
-            { bottom: 0, left: 0, borderBottom: `2px solid ${LIME}`, borderLeft: `2px solid ${LIME}` },
-            { bottom: 0, right: 0, borderBottom: `2px solid ${LIME}`, borderRight: `2px solid ${LIME}` },
-          ].map((s, i) => (
-            <div key={i} className="absolute w-5 h-5" style={s as React.CSSProperties} />
-          ))}
-          {/* Scan line */}
+        <Mic size={28} color="#04060A" />
+      </motion.div>
+      <div className="flex items-end gap-1 h-6">
+        {[30, 60, 90, 50, 80, 40, 70, 55, 85, 35].map((h, i) => (
           <motion.div
-            className="absolute left-0 right-0 h-[2px]"
-            style={{ background: LIME, boxShadow: `0 0 12px ${LIME}` }}
-            animate={{ top: ["0%", "100%", "0%"] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+            key={i}
+            animate={{ height: [`${h * 0.3}%`, `${h}%`, `${h * 0.4}%`] }}
+            transition={{ duration: 0.8 + (i % 3) * 0.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.05 }}
+            className="w-1 rounded-full"
+            style={{ background: LIME }}
           />
-        </div>
-        <p className="text-[11px] italic text-white/50 text-center mt-2">
-          Cadrez le reçu, l'IA fait le reste
-        </p>
+        ))}
       </div>
-      <div
-        className="rounded-xl p-3 mt-2"
-        style={{ background: "rgba(124,255,58,0.05)", border: `1px solid ${LIME}26` }}
-      >
-        <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">Détecté</div>
-        <DetectedRow label="Commerçant" value="Burger King" />
-        <DetectedRow label="Montant" value="-14 500 F" valueClass="text-red-400" />
-        <DetectedRow label="Catégorie" value="Alimentation" valueClass="text-emerald-400" />
-      </div>
-    </>
-  );
-}
-
-function GoalRow({ name, current, target, pct }: { name: string; current: string; target: string; pct: number }) {
-  return (
+    </div>
+    <div className="text-[9px] italic text-white/50 text-center px-1 leading-snug">
+      « J'ai dépensé 3 000 au marché et payé 15 000 de taxi »
+    </div>
     <div
-      className="rounded-xl p-3 mb-2"
-      style={{ background: "rgba(124,255,58,0.05)", border: `1px solid ${LIME}1F` }}
+      className="rounded-xl p-2 flex flex-col gap-1.5"
+      style={{ background: "rgba(124,255,58,0.06)", border: "1px solid rgba(124,255,58,0.2)" }}
     >
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs font-semibold text-white/90">{name}</span>
-        <span className="text-xs font-bold" style={{ color: LIME }}>{pct}%</span>
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-white/70">Marché · Alimentation</span>
+        <span className="font-bold text-red-400">-3 000 F</span>
       </div>
-      <div className="text-[10px] text-white/50 mb-1.5">{current} / {target} FCFA</div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${LIME}, #37B24D)` }} />
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-white/70">Taxi · Transport</span>
+        <span className="font-bold text-red-400">-15 000 F</span>
       </div>
     </div>
-  );
-}
+    <button
+      className="mt-auto py-2 rounded-xl text-[11px] font-bold"
+      style={{ background: LIME, color: "#04060A" }}
+    >
+      Confirmer les 2
+    </button>
+  </>
+);
 
-function SavingsScreen() {
+const ScanScreen = () => (
+  <>
+    <ScreenHeader title="Scan de facture" chip="Prêt" />
+    <div
+      className="relative rounded-xl overflow-hidden flex-1 min-h-[130px]"
+      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+    >
+      {/* Corner viewfinder */}
+      {[
+        { top: 6, left: 6, br: "0", bl: "0", tr: "0" },
+        { top: 6, right: 6, bl: "0", br: "0", tl: "0" },
+        { bottom: 6, left: 6, tr: "0", tl: "0", br: "0" },
+        { bottom: 6, right: 6, tl: "0", tr: "0", bl: "0" },
+      ].map((s, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            width: 18,
+            height: 18,
+            borderTop: i < 2 ? `2px solid ${LIME}` : undefined,
+            borderBottom: i >= 2 ? `2px solid ${LIME}` : undefined,
+            borderLeft: i % 2 === 0 ? `2px solid ${LIME}` : undefined,
+            borderRight: i % 2 === 1 ? `2px solid ${LIME}` : undefined,
+            ...(s as React.CSSProperties),
+          }}
+        />
+      ))}
+      {/* Scan line */}
+      <motion.div
+        animate={{ top: ["8%", "88%", "8%"] }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute left-2 right-2 h-[2px]"
+        style={{
+          background: LIME,
+          boxShadow: `0 0 12px ${LIME}, 0 0 24px rgba(124,255,58,0.6)`,
+        }}
+      />
+      <ScanLine size={40} color="rgba(124,255,58,0.25)" className="absolute inset-0 m-auto" />
+    </div>
+    <div
+      className="rounded-xl p-2 flex flex-col gap-1"
+      style={{ background: "rgba(124,255,58,0.06)", border: "1px solid rgba(124,255,58,0.2)" }}
+    >
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-white/60">Commerçant</span>
+        <span className="font-bold">Burger King</span>
+      </div>
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-white/60">Montant</span>
+        <span className="font-bold text-red-400">-14 500 F</span>
+      </div>
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-white/60">Catégorie</span>
+        <span className="font-bold" style={{ color: LIME }}>Alimentation</span>
+      </div>
+    </div>
+    <button className="py-2 rounded-xl text-[11px] font-bold" style={{ background: LIME, color: "#04060A" }}>
+      Enregistrer
+    </button>
+  </>
+);
+
+const SavingsScreen = () => {
+  const goals = [
+    { name: "Voyage Dakar", cur: "320 000", tot: "500 000", pct: 64 },
+    { name: "Fonds d'urgence", cur: "150 000", tot: "300 000", pct: 50 },
+    { name: "Nouveau tel", cur: "80 000", tot: "250 000", pct: 32 },
+  ];
   return (
     <>
-      <ScreenTitle>Mes objectifs</ScreenTitle>
-      <div className="flex-1 flex flex-col justify-center">
-        <GoalRow name="Voyage Dakar" current="320 000" target="500 000" pct={64} />
-        <GoalRow name="Fonds d'urgence" current="150 000" target="300 000" pct={50} />
-        <GoalRow name="Nouveau téléphone" current="80 000" target="250 000" pct={32} />
+      <ScreenHeader title="Mes objectifs" chip="3 actifs" />
+      <div
+        className="rounded-xl p-3"
+        style={{
+          background: "linear-gradient(160deg, rgba(124,255,58,0.18) 0%, rgba(124,255,58,0.04) 100%)",
+          border: "1px solid rgba(124,255,58,0.28)",
+        }}
+      >
+        <div className="text-[10px] text-white/60">Épargne totale</div>
+        <div className="text-lg font-extrabold">
+          550 000 <span className="text-[10px] text-white/50">FCFA</span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        {goals.map((g) => (
+          <div
+            key={g.name}
+            className="rounded-xl p-2"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="font-semibold">{g.name}</span>
+              <span className="font-bold" style={{ color: LIME }}>{g.pct}%</span>
+            </div>
+            <div className="text-[9px] text-white/50">
+              {g.cur} / {g.tot} FCFA
+            </div>
+            <div className="mt-1 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-full rounded-full" style={{ width: `${g.pct}%`, background: LIME }} />
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );
-}
+};
 
-function DebtRow({ initial, name, date, amount }: { initial: string; name: string; date: string; amount: string }) {
-  return (
-    <div className="flex items-center gap-3 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-      <div
-        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-        style={{ background: `${LIME}1A`, color: LIME, border: `1px solid ${LIME}33` }}
-      >
-        {initial}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold text-white/90 truncate">{name}</div>
-        <div className="text-[10px] text-white/40">{date}</div>
-      </div>
-      <div className="text-xs font-bold text-emerald-400">{amount}</div>
-    </div>
-  );
-}
-
-function DebtScreen() {
+const DebtsScreen = () => {
+  const items = [
+    { init: "K", name: "Koffi", date: "12/06", amount: "+45 000" },
+    { init: "A", name: "Aya", date: "28/06", amount: "+25 000" },
+    { init: "M", name: "Moussa", date: "02/07", amount: "+15 000" },
+  ];
   return (
     <>
-      <ScreenTitle>Dettes</ScreenTitle>
-      <div className="flex gap-2 mb-3">
+      <ScreenHeader title="Dettes" chip="Net +55 000" />
+      <div className="flex gap-1.5 mt-1">
         <div
-          className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-center"
-          style={{ background: `${LIME}1A`, color: LIME, border: `1px solid ${LIME}40` }}
+          className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-bold"
+          style={{ background: "rgba(124,255,58,0.15)", color: LIME, border: `1px solid ${LIME}` }}
         >
           On me doit
         </div>
-        <div className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-center text-white/50" style={{ background: "rgba(255,255,255,0.03)" }}>
+        <div
+          className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-semibold text-white/60"
+          style={{ background: "rgba(255,255,255,0.03)" }}
+        >
           Je dois
         </div>
       </div>
-      <div className="flex-1">
-        <DebtRow initial="K" name="Koffi" date="Prêt du 12/06" amount="+45 000 F" />
-        <DebtRow initial="A" name="Aya" date="Prêt du 28/06" amount="+25 000 F" />
-        <DebtRow initial="M" name="Moussa" date="Prêt du 02/07" amount="+15 000 F" />
+      <div className="flex flex-col gap-1.5 mt-1">
+        {items.map((it) => (
+          <div
+            key={it.name}
+            className="flex items-center gap-2 rounded-xl p-2"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+              style={{ background: "rgba(124,255,58,0.15)", color: LIME }}
+            >
+              {it.init}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold truncate">{it.name}</div>
+              <div className="text-[9px] text-white/50">Prêté le {it.date}</div>
+            </div>
+            <div className="text-[11px] font-bold" style={{ color: LIME }}>{it.amount}</div>
+          </div>
+        ))}
       </div>
+      <button className="mt-auto py-2 rounded-xl text-[11px] font-bold" style={{ background: LIME, color: "#04060A" }}>
+        Relancer Koffi
+      </button>
     </>
   );
+};
+
+/* ---------- Section shell ---------- */
+interface FeatureSectionProps {
+  badge: string;
+  titleBefore: string;
+  markerWord: string;
+  markerVariant: "lime" | "dark";
+  titleAfter?: string;
+  paragraph: string;
+  points: string[];
+  reverse: boolean;
+  phone: React.ReactNode;
+  cards: [React.ReactNode, React.ReactNode];
 }
+const FeatureSection = ({
+  badge,
+  titleBefore,
+  markerWord,
+  markerVariant,
+  titleAfter,
+  paragraph,
+  points,
+  reverse,
+  phone,
+  cards,
+}: FeatureSectionProps) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-8 items-center py-16 md:py-24">
+    {/* Text */}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={reverse ? "md:order-2" : "md:order-1"}
+    >
+      <span
+        className="inline-block text-[11px] font-semibold px-3 py-1 rounded-full mb-4"
+        style={{
+          background: "rgba(124,255,58,0.12)",
+          color: LIME,
+          border: "1px solid rgba(124,255,58,0.25)",
+        }}
+      >
+        {badge}
+      </span>
+      <h2
+        className="font-display uppercase font-extrabold"
+        style={{
+          fontSize: "clamp(30px, 5.5vw, 52px)",
+          lineHeight: 1,
+          letterSpacing: "-0.02em",
+          color: TEXT,
+        }}
+      >
+        {titleBefore}{" "}
+        <MarkerText variant={markerVariant}>{markerWord}</MarkerText>
+        {titleAfter}
+      </h2>
+      <p className="mt-5 text-base md:text-lg max-w-lg" style={{ color: "rgba(234,251,234,0.7)" }}>
+        {paragraph}
+      </p>
+      <ul className="mt-6 flex flex-col gap-3">
+        {points.map((p) => (
+          <li key={p} className="flex items-center gap-3">
+            <span
+              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: "rgba(124,255,58,0.15)", border: `1px solid ${LIME}` }}
+            >
+              <Check size={13} color={LIME} strokeWidth={3} />
+            </span>
+            <span className="text-sm" style={{ color: TEXT }}>{p}</span>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
 
-/* -------------------------------- Cards --------------------------------- */
+    {/* Phone */}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
+      className={`relative mx-auto w-full ${reverse ? "md:order-1" : "md:order-2"}`}
+      style={{ minHeight: 520 }}
+    >
+      <PhoneFrame>{phone}</PhoneFrame>
+      {cards[0]}
+      {cards[1]}
+    </motion.div>
+  </div>
+);
 
-const voiceCards: CardData[] = [
-  { icon: Mic, label: "Multi-transactions", value: "2 détectées" },
-  { icon: Coins, label: "Devises auto", value: "FCFA · € · $" },
-  { icon: Check, label: "Catégorie auto", value: "Détectée" },
-  { icon: Clock, label: "Gain de temps", value: "2 s" },
-];
-
-const scanCards: CardData[] = [
-  { icon: FileText, label: "Montant lu", value: "-14 500 F", valueClass: "text-red-400" },
-  { icon: Calendar, label: "Date détectée", value: "30/06/2026" },
-  { icon: Check, label: "Catégorie auto", value: "Alimentation" },
-  { icon: Download, label: "Reçu archivé", value: "Mes reçus" },
-];
-
-const savingsCards: CardData[] = [
-  {
-    icon: Target,
-    label: "Objectif",
-    value: "Voyage Dakar",
-    extra: (
-      <div className="h-1 rounded-full overflow-hidden mt-1.5" style={{ background: "rgba(255,255,255,0.08)" }}>
-        <div className="h-full" style={{ width: "64%", background: LIME }} />
-      </div>
-    ),
-  },
-  { icon: Plus, label: "Versement", value: "+25 000 F", valueClass: "text-emerald-400" },
-  { icon: TrendingUp, label: "Progression", value: "64%" },
-  { icon: Wallet, label: "Reste à épargner", value: "180 000 F" },
-];
-
-const debtCards: CardData[] = [
-  { icon: ArrowUp, label: "On me doit", value: "+85 000 F", valueClass: "text-emerald-400" },
-  { icon: ArrowDown, label: "Je dois", value: "-30 000 F", valueClass: "text-red-400" },
-  { icon: Bell, label: "Rappels auto", value: "Actifs" },
-  { icon: LineChart, label: "Solde net", value: "+55 000 F", valueClass: "text-emerald-400" },
-];
-
-/* -------------------------------- Root ---------------------------------- */
-
-export default function FeatureShowcase() {
-  const isMobile = useIsMobile();
-
-  const blocks = [
-    {
-      title: "Parlez, Mon Jeton note tout.",
-      gradient: "note tout",
-      subtitle:
-        "Dites « J'ai dépensé 3 000 au marché et payé 15 000 de taxi » — l'IA détecte chaque transaction, le montant et la catégorie.",
-      screen: <VoiceScreen />,
-      cards: voiceCards,
-    },
-    {
-      title: "Photographiez un reçu, c'est enregistré.",
-      gradient: "c'est enregistré",
-      subtitle: "Le scan IA lit le montant, la date et le commerçant, puis crée la transaction toute seule.",
-      screen: <ScanScreen />,
-      cards: scanCards,
-    },
-    {
-      title: "Fixez un objectif, atteignez-le.",
-      gradient: "atteignez-le",
-      subtitle: "Créez un objectif d'épargne, versez à votre rythme et suivez votre progression jusqu'au but.",
-      screen: <SavingsScreen />,
-      cards: savingsCards,
-    },
-    {
-      title: "Qui vous doit quoi, enfin clair.",
-      gradient: "enfin clair",
-      subtitle:
-        "Suivez ce qu'on vous doit et ce que vous devez, avec rappels automatiques. Fini les dettes oubliées.",
-      screen: <DebtScreen />,
-      cards: debtCards,
-    },
-  ];
-
+/* ---------- FeatureShowcase ---------- */
+const FeatureShowcase = () => {
   return (
-    <section id="demo" className="relative" style={{ background: "#05070A", color: TEXT }}>
-      {blocks.map((b, i) => (
-        <div key={i} className="py-20 md:py-28">
-          <SectionHeader title={b.title} gradientPart={b.gradient} subtitle={b.subtitle} />
-          <Stage cards={b.cards} isMobile={isMobile}>
-            <Phone>{b.screen}</Phone>
-          </Stage>
-        </div>
-      ))}
+    <section id="demo" className="relative" style={{ background: BG, color: TEXT }}>
+      <div className="container mx-auto px-4">
+        {/* 1 — Voice */}
+        <FeatureSection
+          badge="Fonctionnalité"
+          titleBefore="Parlez, on"
+          markerWord="note tout"
+          markerVariant="lime"
+          paragraph={`Dites "J'ai dépensé 3 000 au marché et payé 15 000 de taxi" — l'IA détecte chaque transaction, le montant et la catégorie.`}
+          points={[
+            "Plusieurs transactions en une phrase",
+            "Devises détectées (FCFA, €, $)",
+            "Catégorie assignée automatiquement",
+          ]}
+          reverse={false}
+          phone={<VoiceScreen />}
+          cards={[
+            <FloatCard
+              key="v1"
+              icon={<Mic size={14} color={LIME} />}
+              label="Multi-transactions"
+              value="2 détectées"
+              rotate={-5}
+              delay={0.1}
+              className="top-4 -left-2 md:-left-8"
+            />,
+            <FloatCard
+              key="v2"
+              icon={<Check size={14} color={LIME} />}
+              label="Catégorie auto"
+              value="Alimentation"
+              rotate={5}
+              delay={0.4}
+              className="bottom-8 -right-2 md:-right-6"
+            />,
+          ]}
+        />
+
+        {/* 2 — Scan */}
+        <FeatureSection
+          badge="Fonctionnalité"
+          titleBefore="Photographiez, c'est"
+          markerWord="enregistré"
+          markerVariant="lime"
+          paragraph="Le scan IA lit le montant, la date et le commerçant sur le reçu, puis crée la transaction toute seule."
+          points={[
+            "Montant & date lus automatiquement",
+            "Commerçant reconnu",
+            "Reçu archivé et retrouvable",
+          ]}
+          reverse={true}
+          phone={<ScanScreen />}
+          cards={[
+            <FloatCard
+              key="s1"
+              icon={<FileText size={14} color={LIME} />}
+              label="Montant lu"
+              value="-14 500 F"
+              valueColor="#FF6B6B"
+              rotate={-6}
+              delay={0.15}
+              className="top-6 -left-2 md:-left-8"
+            />,
+            <FloatCard
+              key="s2"
+              icon={<Download size={14} color={LIME} />}
+              label="Reçu archivé"
+              value="Mes reçus"
+              rotate={5}
+              delay={0.45}
+              className="bottom-6 -right-2 md:-right-6"
+            />,
+          ]}
+        />
+
+        {/* 3 — Savings */}
+        <FeatureSection
+          badge="Fonctionnalité"
+          titleBefore="Fixez un objectif,"
+          markerWord="atteignez-le"
+          markerVariant="dark"
+          paragraph="Créez un objectif d'épargne, versez à votre rythme et suivez votre progression jusqu'au but."
+          points={[
+            "Objectifs illimités",
+            "Progression en temps réel",
+            "Versements à votre rythme",
+          ]}
+          reverse={false}
+          phone={<SavingsScreen />}
+          cards={[
+            <FloatCard
+              key="e1"
+              icon={<Target size={14} color={LIME} />}
+              label="Objectif Dakar"
+              value="64%"
+              progress={64}
+              rotate={-5}
+              delay={0.1}
+              className="top-4 -left-2 md:-left-8"
+            />,
+            <FloatCard
+              key="e2"
+              icon={<Wallet size={14} color={LIME} />}
+              label="Reste"
+              value="180 000 F"
+              rotate={6}
+              delay={0.4}
+              className="bottom-8 -right-2 md:-right-6"
+            />,
+          ]}
+        />
+
+        {/* 4 — Debts */}
+        <FeatureSection
+          badge="Fonctionnalité"
+          titleBefore="Qui vous doit quoi,"
+          markerWord="enfin clair"
+          markerVariant="lime"
+          paragraph="Suivez ce qu'on vous doit et ce que vous devez, avec rappels automatiques. Fini les dettes oubliées."
+          points={[
+            "Vues « On me doit » / « Je dois »",
+            "Rappels automatiques",
+            "Solde net calculé",
+          ]}
+          reverse={true}
+          phone={<DebtsScreen />}
+          cards={[
+            <FloatCard
+              key="d1"
+              icon={<ArrowUp size={14} color={LIME} />}
+              label="On me doit"
+              value="+85 000 F"
+              valueColor={LIME}
+              rotate={-6}
+              delay={0.1}
+              className="top-6 -left-2 md:-left-8"
+            />,
+            <FloatCard
+              key="d2"
+              icon={<Bell size={14} color="#F5B301" />}
+              label="Rappel auto"
+              value="dans 3 jours"
+              rotate={5}
+              delay={0.4}
+              className="bottom-6 -right-2 md:-right-6"
+            />,
+          ]}
+        />
+      </div>
     </section>
   );
-}
+};
+
+export default FeatureShowcase;
