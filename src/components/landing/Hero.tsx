@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
-import { ArrowRight, Play, Zap, ScanLine, Building2 } from "lucide-react";
+import { ArrowRight, Play, Wallet, ArrowUp, Users, Target, BarChart3, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroPlanet from "@/assets/hero-planet.webp";
@@ -20,6 +20,14 @@ const useIsMobile = () => {
     return () => mq.removeEventListener("change", handler);
   }, []);
   return isMobile;
+};
+
+const scrollToId = (id: string, fallbackId?: string) => {
+  const el = document.getElementById(id) || (fallbackId ? document.getElementById(fallbackId) : null);
+  if (el) {
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: "smooth" });
+  }
 };
 
 /* ── Particle canvas — count adapts to device ── */
@@ -93,11 +101,121 @@ const ParticleCanvas = ({ isMobile }: { isMobile: boolean }) => {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
 };
 
-const badges = [
-  { icon: Zap, text: "Conversion automatique des devises" },
-  { icon: ScanLine, text: "Scan AI des factures" },
-  { icon: Building2, text: "Mode Entreprise (équipe + chat)" },
+/* ── Floating glass cards around the phone stage ── */
+const floatingCards = [
+  {
+    id: "wallet",
+    icon: Wallet,
+    label: "Portefeuille du mois",
+    value: "210 000 FCFA",
+    bar: 68,
+    position: "top-[8%] left-[2%] md:left-[4%]",
+    rotation: "-6deg",
+    delay: 0,
+    duration: 5.5,
+  },
+  {
+    id: "income",
+    icon: ArrowUp,
+    label: "Revenu — Jose M.",
+    value: "+50 000 FCFA",
+    valueColor: "#7CFF3A",
+    position: "top-[28%] left-[-2%] md:left-[0%]",
+    rotation: "-3deg",
+    delay: 0.4,
+    duration: 6.2,
+  },
+  {
+    id: "tontine",
+    icon: Users,
+    label: "Tontine Bureau",
+    value: "7/10 à jour",
+    bar: 70,
+    position: "top-[12%] right-[2%] md:right-[4%]",
+    rotation: "5deg",
+    delay: 0.8,
+    duration: 6.0,
+  },
+  {
+    id: "budget",
+    icon: Target,
+    label: "Budget Transport",
+    value: "Reste 12 000 FCFA",
+    valueColor: "#FFB020",
+    position: "top-[34%] right-[-1%] md:right-[1%]",
+    rotation: "3deg",
+    delay: 1.2,
+    duration: 5.8,
+  },
+  {
+    id: "brvm",
+    icon: BarChart3,
+    label: "Simulateur BRVM",
+    value: "Sonatel +2,4%",
+    position: "top-[50%] left-[0%] md:left-[2%]",
+    rotation: "-4deg",
+    delay: 1.6,
+    duration: 6.5,
+  },
 ];
+
+const FloatingCard = ({
+  card,
+  isMobile,
+}: {
+  card: (typeof floatingCards)[number];
+  isMobile: boolean;
+}) => {
+  // On mobile, only the first two cards (wallet + tontine) stay visible.
+  const mobileIndex = floatingCards.findIndex((c) => c.id === card.id);
+  const hiddenOnMobile = isMobile && mobileIndex >= 2;
+
+  return (
+    <motion.div
+      className={`absolute ${card.position} ${hiddenOnMobile ? "hidden" : "block"} z-20`}
+      initial={{ opacity: 0, y: 20, rotate: 0 }}
+      animate={{
+        opacity: 1,
+        y: [0, -10, 0],
+        rotate: card.rotation,
+      }}
+      transition={{
+        opacity: { duration: 0.6, delay: 0.6 + card.delay },
+        y: {
+          duration: card.duration,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: card.delay,
+        },
+        rotate: { duration: 0.6, delay: 0.6 + card.delay },
+      }}
+    >
+      <div className="px-3 py-2.5 rounded-xl bg-[rgba(13,21,18,0.9)] border border-[rgba(124,255,58,0.15)] backdrop-blur-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.35)] max-w-[180px] md:max-w-[200px]">
+        <div className="flex items-center gap-2 mb-1">
+          <card.icon
+            className="w-4 h-4 md:w-5 md:h-5 shrink-0"
+            style={{ color: card.valueColor ?? "#7CFF3A" }}
+          />
+          <span className="text-[10px] md:text-xs text-[rgba(234,251,234,0.6)] truncate">{card.label}</span>
+        </div>
+        <p
+          className="text-sm md:text-base font-bold leading-tight"
+          style={{ color: card.valueColor ?? "#EAFBEA" }}
+        >
+          {card.value}
+        </p>
+        {typeof card.bar === "number" && (
+          <div className="mt-1.5 h-1 w-full rounded-full bg-[rgba(124,255,58,0.12)] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[#7CFF3A]"
+              style={{ width: `${card.bar}%` }}
+            />
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -163,7 +281,7 @@ const Hero = () => {
 
       {/* Content with parallax (desktop only) */}
       <motion.div
-        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-5 pt-24 sm:pt-28 pb-16 sm:pb-20 text-center"
+        className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-5 pt-24 sm:pt-28 pb-10 sm:pb-14 text-center"
         style={{ y: contentY, opacity: contentOpacity, willChange: isMobile ? "auto" : "transform, opacity" }}
       >
         <motion.div
@@ -185,7 +303,7 @@ const Hero = () => {
             Mon Jeton vous aide à suivre vos dépenses en Franc CFA, analyser vos transactions, et convertir automatiquement les devises.
           </p>
 
-          <div className="relative z-20 flex flex-col sm:flex-row gap-4 justify-center mb-12 pointer-events-auto">
+          <div className="relative z-20 flex flex-col sm:flex-row gap-3 justify-center mb-10 sm:mb-12 pointer-events-auto">
             <Button
               onClick={() => navigate("/signup")}
               className="w-full sm:w-auto bg-[#7CFF3A] text-[#05070A] font-bold text-base px-8 h-12 hover:bg-[#7CFF3A]/90 shadow-[0_0_30px_rgba(124,255,58,0.3)] transition-shadow hover:shadow-[0_0_40px_rgba(124,255,58,0.5)]"
@@ -195,45 +313,50 @@ const Hero = () => {
             </Button>
             <Button
               variant="outline"
-              className="w-full sm:w-auto h-12 px-8 text-base border-[rgba(124,255,58,0.18)] text-[#EAFBEA] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.1)] backdrop-blur-[18px]"
-              onClick={() => {
-                const el = document.getElementById("demo") || document.getElementById("features");
-                if (el) {
-                  const top = el.getBoundingClientRect().top + window.scrollY - 80;
-                  window.scrollTo({ top, behavior: "smooth" });
-                } else {
-                  navigate("/signup");
-                }
-              }}
+              className="w-full sm:w-auto h-12 px-6 text-base border-[rgba(124,255,58,0.25)] text-[#EAFBEA] bg-[rgba(124,255,58,0.06)] hover:bg-[rgba(124,255,58,0.12)] backdrop-blur-[18px]"
+              onClick={() => scrollToId("pricing")}
             >
-              <Play className="w-4 h-4 mr-1" />
+              <Crown className="w-4 h-4 mr-1.5 text-[#7CFF3A]" />
+              Prendre le plan Pro
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto h-12 px-6 text-base text-[rgba(234,251,234,0.65)] hover:text-[#EAFBEA] hover:bg-[rgba(234,251,234,0.05)]"
+              onClick={() => scrollToId("demo", "features")}
+            >
+              <Play className="w-4 h-4 mr-1.5" />
               Voir la démo
             </Button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3 mb-6">
-            {badges.map((b, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + i * 0.15 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(124,255,58,0.06)] border border-[rgba(124,255,58,0.18)] backdrop-blur-[18px] text-xs text-[rgba(234,251,234,0.72)]"
-              >
-                <b.icon className="w-3.5 h-3.5 text-[#7CFF3A]" />
-                {b.text}
-              </motion.div>
+          {/* Phone-in-hand stage */}
+          <div className="relative mx-auto max-w-[820px] h-[280px] sm:h-[360px] md:h-[460px] lg:h-[520px] overflow-hidden z-10 pointer-events-none">
+            {/* Floating glass cards */}
+            {floatingCards.map((card) => (
+              <FloatingCard key={card.id} card={card} isMobile={isMobile} />
             ))}
-          </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.3 }}
-            className="text-sm text-[rgba(234,251,234,0.5)] text-center"
-          >
-            ⭐ Rejoins <span className="font-semibold text-[rgba(234,251,234,0.72)]">2 500+</span> utilisateurs qui gèrent leurs finances avec Mon Jeton
-          </motion.p>
+            {/* Hand + phone image */}
+            <motion.div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10"
+              animate={{ y: [0, -12, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <img
+                src="/hand-phone.webp"
+                alt="Mon Jeton sur mobile"
+                width={640}
+                height={950}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="w-[280px] sm:w-[360px] md:w-[460px] lg:w-[520px] h-auto object-contain"
+              />
+            </motion.div>
+
+            {/* Bottom fade to blend the wrist into the background */}
+            <div className="absolute inset-x-0 bottom-0 h-[100px] sm:h-[140px] bg-gradient-to-t from-[#05070A] via-[#05070A]/80 to-transparent z-20 pointer-events-none" />
+          </div>
         </motion.div>
       </motion.div>
     </section>
