@@ -266,3 +266,22 @@ input:-webkit-autofill:active {
   content-visibility: auto;
   contain-intrinsic-size: auto 600px;
 }
+
+/* Display font for headings/hero */
+.font-display {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Faint green grid with radial fade — apply as a fixed layer behind content */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(124, 255, 58, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 255, 58, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px, 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 0%, transparent 80%);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 0%, transparent 80%);
+}
