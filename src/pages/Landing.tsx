@@ -10,6 +10,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Stats = lazy(() => import("@/components/landing/Stats"));
 const Features = lazy(() => import("@/components/landing/Features"));
+const FeatureShowcase = lazy(() => import("@/components/landing/FeatureShowcase"));
 const ForWhoSection = lazy(() => import("@/components/landing/ForWhoSection"));
 const AIScan = lazy(() => import("@/components/landing/AIScan"));
 const Enterprise = lazy(() => import("@/components/landing/Enterprise"));
@@ -45,6 +46,11 @@ const Landing = () => {
       <AnimatedSectionBackground variant={1} glow>
         <SectionReveal><Suspense fallback={<SectionFallback />}><Features /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
+
+      <AnimatedSectionBackground variant={0} glow>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><FeatureShowcase /></Suspense></SectionReveal>
+      </AnimatedSectionBackground>
+
 
       <AnimatedSectionBackground variant={0} glow>
         <SectionReveal><Suspense fallback={<SectionFallback />}><ForWhoSection /></Suspense></SectionReveal>
