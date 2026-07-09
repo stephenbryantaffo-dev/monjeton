@@ -113,6 +113,63 @@ const Navbar = () => {
           >
             Se connecter
           </Link>
+
+          {/* Sélecteur de langue */}
+          <div ref={langRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setLangOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={langOpen}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-[#EAFBEA] border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.10)] transition"
+            >
+              <Globe className="w-4 h-4 text-[#7CFF3A]" />
+              <span className="uppercase">{lang}</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            <AnimatePresence>
+              {langOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  role="menu"
+                  className="absolute right-0 mt-2 min-w-[160px] rounded-xl overflow-hidden z-50"
+                  style={{
+                    background: "#0d1512",
+                    border: "1px solid rgba(124,255,58,0.3)",
+                  }}
+                >
+                  {([
+                    { code: "fr", label: "Français" },
+                    { code: "en", label: "English" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.code}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        // TODO: brancher i18n pour la traduction réelle
+                        setLang(opt.code);
+                        setLangOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        lang === opt.code
+                          ? "text-[#7CFF3A] bg-[rgba(124,255,58,0.08)]"
+                          : "text-[#EAFBEA] hover:bg-[rgba(124,255,58,0.06)]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Link
             to="/signup"
             className="bg-[#7CFF3A] text-[#05070A] font-bold text-sm px-4 py-2 rounded-full hover:scale-105 transition-transform whitespace-nowrap shadow-[0_0_25px_rgba(124,255,58,0.3)]"
