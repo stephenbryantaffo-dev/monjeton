@@ -79,6 +79,7 @@ const Landing = () => {
       </AnimatedSectionBackground>
 
       <Footer />
+      </div>
     </div>
   );
 };
