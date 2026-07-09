@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Lock, Target, Calendar, Users, FileText,
   TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
-  Search, ArrowUpDown, MoreHorizontal,
+  Search, ArrowUpDown, MoreHorizontal, UserPlus, AlertCircle, Receipt,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [collaborators, setCollaborators] = useState<CollabRow[]>([]);
   const [loadedRole, setLoadedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<"members" | "items">("members");
 
   // Expense items (postes) UI
   const [itemsViewOpen, setItemsViewOpen] = useState(false);
@@ -608,38 +611,30 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* Header — compact : badges + date + actions */}
       <div className="flex items-start justify-between gap-2 mb-4">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="text-xs font-bold bg-amber-500/15 text-amber-500 px-2 py-0.5 rounded-full">🎯 Projet</span>
-            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${roleInfo.cls}`}>
-              <RoleIcon className="w-3 h-3" /> {roleInfo.label}
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg font-bold text-foreground truncate mb-1">{tontine.name}</h1>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-bold bg-amber-500/15 text-amber-500 px-1.5 py-0.5 rounded-full">🎯 Projet</span>
+            <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${roleInfo.cls}`}>
+              <RoleIcon className="w-2.5 h-2.5" /> {roleInfo.label}
             </span>
-            {isClosed && <span className="text-xs font-bold bg-destructive/15 text-destructive px-2 py-0.5 rounded-full">Clôturé</span>}
+            {isClosed && <span className="text-[10px] font-bold bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full">Clôturé</span>}
             {tontine.event_date && (
-              <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                <Calendar className="w-3 h-3" /> {new Date(tontine.event_date).toLocaleDateString("fr-FR")}
+              <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
+                <Calendar className="w-2.5 h-2.5" /> {new Date(tontine.event_date).toLocaleDateString("fr-FR")}
               </span>
             )}
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {!isClosed && isOwner && (
-            <button
+          {!isClosed && canManage && (
+            <Button
               onClick={() => setInviteOpen(true)}
-              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-              title="Inviter à suivre la caisse"
+              size="sm"
+              className="h-9 rounded-xl gradient-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.35)]"
             >
-              <Link2 className="w-4 h-4 text-primary" />
-            </button>
-          )}
-          {!isClosed && isOwner && (
-            <button
-              onClick={() => setEditOpen(true)}
-              className="p-2 rounded-xl glass-card hover:bg-primary/10 transition-colors"
-              title="Modifier la caisse"
-            >
-              <Pencil className="w-4 h-4 text-primary" />
-            </button>
+              <UserPlus className="w-4 h-4 mr-1" /> Inviter
+            </Button>
           )}
           <Popover>
             <PopoverTrigger asChild>
@@ -650,7 +645,35 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 glass-card border-border p-2 space-y-2">
+            <PopoverContent align="end" className="w-64 glass-card border-border p-2 space-y-1.5">
+              <Button
+                onClick={exportPDF}
+                variant="outline"
+                size="sm"
+                className="w-full glass justify-start"
+              >
+                <FileText className="w-4 h-4 mr-2" /> Bilan PDF
+              </Button>
+              {!isClosed && isOwner && (
+                <Button
+                  onClick={() => setEditOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full glass justify-start"
+                >
+                  <Pencil className="w-4 h-4 mr-2" /> Modifier la caisse
+                </Button>
+              )}
+              {!isClosed && canManage && (
+                <Button
+                  onClick={() => setInviteOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full glass justify-start"
+                >
+                  <Link2 className="w-4 h-4 mr-2" /> Copier le lien de partage
+                </Button>
+              )}
               {isOwner && !isClosed && (
                 <Button
                   onClick={() => setClotureOpen(true)}
@@ -681,14 +704,14 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
             style={{ background: "radial-gradient(closest-side, hsl(var(--primary) / 0.18), transparent 70%)" }} />
           <div className="relative">
             <p className="text-[10px] uppercase tracking-widest text-primary/90 font-bold mb-2 flex items-center gap-1">
-              <Target className="w-3 h-3" /> Objectif de collecte
+              <Target className="w-3 h-3" /> Collecté
             </p>
             <div className="flex items-baseline gap-2 flex-wrap mb-1">
               <span className="text-4xl font-black text-gradient leading-none">{fmt(recettes)}</span>
               <span className="text-xs text-muted-foreground">/ {fmt(target)} FCFA</span>
               <span className="ml-auto text-sm font-black text-primary">{pctCollect}%</span>
             </div>
-            <p className="text-[11px] text-muted-foreground mb-3">Collecté sur la cible</p>
+            <p className="text-[11px] text-muted-foreground mb-3">sur l'objectif</p>
             <div className="w-full bg-secondary/60 rounded-full h-2.5 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
@@ -730,43 +753,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         </span>
       </div>
 
-      {/* Actions principales */}
-      {!isClosed && (
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          {canManage ? (
-            <Button onClick={() => setExpOpen(true)} variant="outline" size="sm"
-              className="glass rounded-xl h-10 border-border/60 hover:border-primary/40 hover:bg-primary/5 shadow-sm transition-all">
-              <TrendingDown className="w-4 h-4 mr-1" /> Dépense
-            </Button>
-          ) : <div />}
-          <Button onClick={() => setItemsViewOpen(true)} variant="outline" size="sm"
-            className="glass rounded-xl h-10 border-border/60 hover:border-primary/40 hover:bg-primary/5 shadow-sm transition-all">
-            <ListChecks className="w-4 h-4 mr-1" /> Postes{expenseItems.length > 0 ? ` (${expenseItems.length})` : ""}
-          </Button>
-          <Button onClick={exportPDF} variant="outline" size="sm"
-            className="glass rounded-xl h-10 border-border/60 hover:border-primary/40 hover:bg-primary/5 shadow-sm transition-all">
-            <FileText className="w-4 h-4 mr-1" /> Bilan PDF
-          </Button>
-        </div>
-      )}
-
-
-
-      {/* ─── Participants (membres + collaborateurs unifiés) ─── */}
-      <div className="flex items-center justify-between mb-2 mt-2">
-        <p className="text-sm font-bold text-foreground flex items-center gap-1">
-          <Users className="w-4 h-4" /> Participants ({members.length}{collaborators.length > 0 ? ` + ${collaborators.length}` : ""})
-        </p>
-        {canManage && !isClosed && (
-          <Button size="sm" variant="outline" className="glass" onClick={() => setAddMemberOpen(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Ajouter
-          </Button>
-        )}
-      </div>
-
-      {/* Collaborateurs / gestionnaires — chips compactes */}
+      {/* Collaborateurs — chips compactes (si présents) */}
       {collaborators.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {(() => {
             const roleOrder: Record<string, number> = { owner: 0, manager: 1, viewer: 2 };
             const list = collaborators.slice().sort((a, b) => {
@@ -831,248 +820,501 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-2">
-        <div className="relative flex-1">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={memberSearch}
-            onChange={(e) => setMemberSearch(e.target.value)}
-            placeholder="Rechercher un membre…"
-            className="glass pl-8 text-xs h-8"
-          />
-        </div>
-        <button
-          onClick={() => setMemberSort(s => s === "name" ? "paid" : "name")}
-          className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground glass rounded-lg px-2 py-1.5 border border-border"
-          title={memberSort === "name" ? "Trier par cotisation" : "Trier par nom"}
-        >
-          <ArrowUpDown className="w-3 h-3" />
-          {memberSort === "name" ? "Nom" : "Cotisé"}
-        </button>
-      </div>
-      <div className="space-y-2 mb-4">
-        {(() => {
-          const query = memberSearch.trim().toLowerCase();
-          let list = members.slice();
-          if (query) {
-            list = list.filter(m => m.name.toLowerCase().includes(query));
-          }
-          list.sort((a, b) => {
-            if (memberSort === "paid") {
-              const pa = memberPaid(a.id);
-              const pb = memberPaid(b.id);
-              if (pb !== pa) return pb - pa;
-            }
-            return a.name.localeCompare(b.name);
-          });
-          return list.map((m, i) => {
-          const paid = memberPaid(m.id);
-          const ok = expectedPerMember > 0 && paid >= expectedPerMember;
-          const clickable = !isClosed && canManage;
-          return (
-            <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}>
-              <div className={`glass-card rounded-xl p-3 flex items-center gap-3 border transition-all ${ok ? "border-primary/25" : "border-border/50"} hover:border-primary/40`}
-                onClick={() => clickable && openPay(m)}
-                style={{ cursor: clickable ? "pointer" : "default" }}>
-                {ok ? (
-                  <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_hsl(var(--primary)/0.45)]">
-                    <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
-                  </div>
-                ) : (
-                  <div className="w-9 h-9 rounded-full border border-dashed border-white/15 bg-white/[0.03] flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-muted-foreground">{m.name.charAt(0).toUpperCase()}</span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-foreground truncate">{m.name}</p>
-                    {expectedPerMember > 0 && (
-                      ok ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold inline-flex items-center gap-0.5">
-                          <CheckCircle2 className="w-2.5 h-2.5" /> Payé
-                        </span>
-                      ) : (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">En attente</span>
-                      )
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {fmt(paid)} {expectedPerMember > 0 ? `/ ${fmt(expectedPerMember)}` : ""} FCFA
-                    {expectedPerMember > 0 && (
-                      <span className="ml-1 font-medium text-emerald-400">
-                        {Math.min(100, Math.round((paid / expectedPerMember) * 100))}%
-                      </span>
-                    )}
-                  </p>
-                  {expectedPerMember > 0 && (
-                    <div className="mt-1.5">
-                      <Progress
-                        value={Math.min(100, Math.round((paid / expectedPerMember) * 100))}
-                        className="h-1.5"
-                      />
-                    </div>
-                  )}
-                </div>
-                {canManage && !isClosed && (
-                  <ConfirmDeleteDialog
-                    onConfirm={() => removeMember(m.id)}
-                    title={`Retirer ${m.name} de la liste ?`}
-                    description="Ses cotisations seront aussi supprimées."
-                  >
-                    <button
-                      className="text-muted-foreground hover:text-destructive p-1 flex-shrink-0"
-                      onClick={(e) => e.stopPropagation()}
-                      title="Retirer ce membre"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </ConfirmDeleteDialog>
-                )}
-              </div>
-            </motion.div>
-          );
-          });
-          })()
-        }
-        {(() => {
-          const query = memberSearch.trim().toLowerCase();
-          const list = query ? members.filter(m => m.name.toLowerCase().includes(query)) : members;
-          if (list.length === 0) {
-            return query
-              ? <p className="text-xs text-muted-foreground text-center py-4">Aucun membre ne correspond à « {memberSearch} »</p>
-              : <p className="text-xs text-muted-foreground text-center py-4">Aucun membre — ajoutez-en pour commencer</p>;
-          }
-          return null;
-        })()}
-      </div>
-
-      {/* ─── Expenses list ─── */}
-      {expenses.length > 0 && (
-        <>
-          <p className="text-sm font-bold text-foreground mb-2 flex items-center gap-1">
-            <TrendingDown className="w-4 h-4" /> Dépenses
-          </p>
-          <div className="space-y-2 mb-4">
-            {expenses.map((e) => {
-              const itemLabel = (e as any).expense_item_id
-                ? expenseItems.find(i => i.id === (e as any).expense_item_id)?.label
-                : null;
-              return (
-              <div key={e.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{e.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(e.expense_date).toLocaleDateString("fr-FR")}
-                    {e.beneficiaire && ` · ${e.beneficiaire}`}
-                  </p>
-                  {itemLabel ? (
-                    <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
-                      📌 {itemLabel}
-                    </span>
-                  ) : (
-                    <span className="inline-block mt-1 text-[10px] text-muted-foreground/70">hors poste</span>
-                  )}
-                </div>
-                <span className="text-sm font-bold text-destructive flex-shrink-0">-{fmt(Number(e.amount))}</span>
-                {canManage && !isClosed && (
-                  <ConfirmDeleteDialog onConfirm={() => deleteExpense(e.id)} title="Supprimer cette dépense ?">
-                    <button className="text-muted-foreground hover:text-destructive p-1">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </ConfirmDeleteDialog>
-                )}
-              </div>
-              );
-            })}
+      {/* ─── Tabs : Membres / Postes ─── */}
+      {(() => {
+        const paidCount = members.filter(m => expectedPerMember > 0 && memberPaid(m.id) >= expectedPerMember).length;
+        const unpaidCount = expectedPerMember > 0 ? members.length - paidCount : 0;
+        return (
+          <div className="flex gap-1 mb-4 glass-card rounded-2xl p-1">
+            <button
+              onClick={() => setActiveTab("members")}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-xl transition-all ${
+                activeTab === "members"
+                  ? "bg-primary/15 text-primary shadow-[0_0_10px_hsl(var(--primary)/0.25)]"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              Membres
+              {expectedPerMember > 0 && members.length > 0 && (
+                <span className="text-[10px] opacity-80">({paidCount}/{members.length})</span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("items")}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-xl transition-all ${
+                activeTab === "items"
+                  ? "bg-primary/15 text-primary shadow-[0_0_10px_hsl(var(--primary)/0.25)]"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              Postes & dépenses
+              {expenseItems.length > 0 && (
+                <span className="text-[10px] opacity-80">({expenseItems.length})</span>
+              )}
+            </button>
           </div>
+        );
+      })()}
+
+      {/* ─── Onglet Membres ─── */}
+      {activeTab === "members" && (
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-muted-foreground">
+              {expectedPerMember > 0
+                ? `${members.filter(m => memberPaid(m.id) >= expectedPerMember).length}/${members.length} ont cotisé`
+                : `${members.length} membre${members.length > 1 ? "s" : ""}`}
+            </p>
+            {canManage && !isClosed && (
+              <Button size="sm" variant="outline" className="glass h-8" onClick={() => setAddMemberOpen(true)}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Ajouter
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                placeholder="Rechercher un membre…"
+                className="glass pl-8 text-xs h-8"
+              />
+            </div>
+            <button
+              onClick={() => setMemberSort(s => s === "name" ? "paid" : "name")}
+              className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground glass rounded-lg px-2 py-1.5 border border-border"
+              title={memberSort === "name" ? "Trier par cotisation" : "Trier par nom"}
+            >
+              <ArrowUpDown className="w-3 h-3" />
+              {memberSort === "name" ? "Nom" : "Cotisé"}
+            </button>
+          </div>
+
+          <div className="space-y-2 mb-3">
+            {(() => {
+              const query = memberSearch.trim().toLowerCase();
+              let list = members.slice();
+              if (query) list = list.filter(m => m.name.toLowerCase().includes(query));
+              // Impayés en haut, payés en bas
+              list.sort((a, b) => {
+                const pa = memberPaid(a.id);
+                const pb = memberPaid(b.id);
+                const oka = expectedPerMember > 0 && pa >= expectedPerMember;
+                const okb = expectedPerMember > 0 && pb >= expectedPerMember;
+                if (oka !== okb) return oka ? 1 : -1;
+                if (memberSort === "paid" && pb !== pa) return pb - pa;
+                return a.name.localeCompare(b.name);
+              });
+              if (list.length === 0) {
+                return query
+                  ? <p className="text-xs text-muted-foreground text-center py-4">Aucun membre ne correspond à « {memberSearch} »</p>
+                  : <p className="text-xs text-muted-foreground text-center py-4">Aucun membre — ajoutez-en pour commencer</p>;
+              }
+              return list.map((m, i) => {
+                const paid = memberPaid(m.id);
+                const ok = expectedPerMember > 0 && paid >= expectedPerMember;
+                const due = Math.max(0, expectedPerMember - paid);
+                return (
+                  <motion.div key={m.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.02 * i }}>
+                    <div className={`glass-card rounded-xl p-3 flex items-center gap-3 border transition-all ${
+                      ok ? "border-border/40 opacity-70" : "border-amber-500/30"
+                    }`}>
+                      {ok ? (
+                        <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_hsl(var(--primary)/0.4)]">
+                          <span className="text-xs font-bold text-primary-foreground">{m.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                      ) : (
+                        <div className="w-9 h-9 rounded-full border border-dashed border-amber-500/40 bg-amber-500/[0.05] flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-amber-400">{m.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{m.name}</p>
+                        {ok ? (
+                          <p className="text-[11px] text-emerald-400 font-medium inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> A cotisé · {fmt(paid)} FCFA
+                          </p>
+                        ) : expectedPerMember > 0 ? (
+                          <p className="text-[11px] text-amber-400 font-medium">
+                            En attente · doit {fmt(due)} FCFA
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground">{fmt(paid)} FCFA cotisé</p>
+                        )}
+                      </div>
+                      {canManage && !isClosed && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => openPay(m)}
+                            className={`h-8 px-3 text-xs flex-shrink-0 ${
+                              ok
+                                ? "glass border border-border/60 text-foreground bg-transparent hover:bg-primary/10"
+                                : "gradient-primary text-primary-foreground shadow-[0_0_10px_hsl(var(--primary)/0.35)]"
+                            }`}
+                          >
+                            Cotiser
+                          </Button>
+                          <ConfirmDeleteDialog
+                            onConfirm={() => removeMember(m.id)}
+                            title={`Retirer ${m.name} de la liste ?`}
+                            description="Ses cotisations seront aussi supprimées."
+                          >
+                            <button
+                              className="text-muted-foreground hover:text-destructive p-1 flex-shrink-0"
+                              title="Retirer ce membre"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </ConfirmDeleteDialog>
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              });
+            })()}
+          </div>
+
+          {/* Alerte impayés — discrète, EN BAS de la liste */}
+          {(() => {
+            if (expectedPerMember <= 0 || members.length === 0) return null;
+            const unpaid = members.filter(m => memberPaid(m.id) < expectedPerMember).length;
+            if (unpaid === 0) return null;
+            return (
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2 mb-4 bg-amber-500/[0.08] border border-amber-500/25 text-amber-400">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <p className="text-[11px] font-medium">
+                  {unpaid} membre{unpaid > 1 ? "s" : ""} n'{unpaid > 1 ? "ont" : "a"} pas encore cotisé
+                </p>
+              </div>
+            );
+          })()}
+
+          {/* ─── Historique des cotisations ─── */}
+          {payments.length > 0 && (
+            <>
+              <button
+                onClick={() => setHistoryOpen((v) => !v)}
+                className="w-full text-sm font-bold text-foreground mb-2 mt-4 flex items-center gap-1"
+              >
+                {historyOpen ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                )}
+                <FileText className="w-4 h-4" />
+                Historique des cotisations ({payments.length})
+              </button>
+              {historyOpen && (
+              <div className="space-y-2 mb-4">
+                {[...payments]
+                  .sort((a, b) => {
+                    const da = new Date(a.payment_date || 0).getTime();
+                    const db = new Date(b.payment_date || 0).getTime();
+                    return db - da;
+                  })
+                  .map((p) => {
+                    const member = members.find(m => m.id === p.member_id);
+                    const note = (p as any).note as string | null | undefined;
+                    return (
+                      <div key={p.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] font-bold text-primary-foreground">
+                            {(member?.name || "?").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {member?.name || "Membre supprimé"} · <span className="text-emerald-400">{fmt(Number(p.amount_paid))} FCFA</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {p.payment_date ? new Date(p.payment_date).toLocaleDateString("fr-FR") : "—"}
+                            {note ? ` · ${note}` : ""}
+                          </p>
+                          {(p as any).expense_item_id && (() => {
+                            const lbl = expenseItems.find(i => i.id === (p as any).expense_item_id)?.label;
+                            return lbl ? (
+                              <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                                🎯 {lbl}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                        {canManage && !isClosed && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              className="text-muted-foreground hover:text-primary p-1"
+                              onClick={() => {
+                                setEditingPayment(p);
+                                setEditPayAmount(String(p.amount_paid));
+                                setEditPayNote(((p as any).note ?? "") as string);
+                                setEditPayItemId(((p as any).expense_item_id ?? null));
+                                setEditPayOpen(true);
+                              }}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <ConfirmDeleteDialog
+                              onConfirm={() => deletePayment(p.id)}
+                              title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
+                            >
+                              <button className="text-muted-foreground hover:text-destructive p-1">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </ConfirmDeleteDialog>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+              )}
+            </>
+          )}
         </>
       )}
 
-      {/* ─── Historique des cotisations ─── */}
-      {payments.length > 0 && (
+      {/* ─── Onglet Postes & dépenses ─── */}
+      {activeTab === "items" && (
         <>
-          <button
-            onClick={() => setHistoryOpen((v) => !v)}
-            className="w-full text-sm font-bold text-foreground mb-2 mt-4 flex items-center gap-1"
-          >
-            {historyOpen ? (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <ListChecks className="w-4 h-4 text-primary" /> Postes budgétés
+            </p>
+            {canManage && !isClosed && (
+              <Button size="sm" onClick={() => setExpOpen(true)} variant="outline" className="glass h-8">
+                <TrendingDown className="w-3.5 h-3.5 mr-1" /> Dépense
+              </Button>
             )}
-            <FileText className="w-4 h-4" />
-            Historique des cotisations ({payments.length})
-          </button>
-          {historyOpen && (
-          <div className="space-y-2 mb-4">
-            {[...payments]
-              .sort((a, b) => {
-                const da = new Date(a.payment_date || 0).getTime();
-                const db = new Date(b.payment_date || 0).getTime();
-                return db - da;
-              })
-              .map((p) => {
-                const member = members.find(m => m.id === p.member_id);
-                const note = (p as any).note as string | null | undefined;
-                return (
-                  <div key={p.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-                      <span className="text-[10px] font-bold text-primary-foreground">
-                        {(member?.name || "?").charAt(0).toUpperCase()}
-                      </span>
+          </div>
+
+          {expenseItems.length > 0 && (
+            <div className="flex items-center justify-end gap-2 mb-2">
+              <span className="text-[11px] text-muted-foreground">Trier</span>
+              <select
+                value={itemSort}
+                onChange={(e) => setItemSort(e.target.value)}
+                className="glass rounded-lg border border-input bg-background px-2.5 py-1 text-[11px] text-foreground"
+              >
+                <option value="created">Par défaut</option>
+                <option value="budget_desc">Budget (grand → petit)</option>
+                <option value="budget_asc">Budget (petit → grand)</option>
+                <option value="paid_desc">Payé (grand → petit)</option>
+                <option value="collected_desc">Collecté (grand → petit)</option>
+                <option value="reste_desc">Reste à payer (grand → petit)</option>
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-2 mb-3">
+            {sortedItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Aucun poste. Ajoute la salle, le traiteur, la déco…
+              </p>
+            ) : sortedItems.map((it) => {
+              const planned = Number(it.planned_amount || 0);
+              const paid = paidByItem[it.id] || 0;
+              const collected = collectedByItem[it.id] || 0;
+              const pct = planned > 0 ? Math.min(100, Math.round((paid / planned) * 100)) : (paid > 0 ? 100 : 0);
+              const reste = Math.max(planned - paid, 0);
+              const resteCollect = Math.max(planned - collected, 0);
+              const finance = planned > 0 && collected >= planned;
+              const isEditing = editingItemId === it.id;
+              return (
+                <div key={it.id} className="glass-card rounded-xl p-3">
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={editItemLabel}
+                        onChange={(e) => setEditItemLabel(e.target.value)}
+                        placeholder="Nom du poste"
+                        className="glass"
+                      />
+                      <MoneyInput
+                        value={editItemPlanned}
+                        onChange={(n) => setEditItemPlanned(n ? String(n) : "")}
+                        showCurrency={false}
+                        className="[&>input]:glass"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="flex-1 glass" onClick={() => setEditingItemId(null)}>Annuler</Button>
+                        <Button size="sm" className="flex-1" onClick={updateExpenseItem} disabled={saving || !editItemLabel.trim()}>Enregistrer</Button>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">
-                        {member?.name || "Membre supprimé"} · <span className="text-emerald-400">{fmt(Number(p.amount_paid))} FCFA</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {p.payment_date ? new Date(p.payment_date).toLocaleDateString("fr-FR") : "—"}
-                        {note ? ` · ${note}` : ""}
-                      </p>
-                      {(p as any).expense_item_id && (() => {
-                        const lbl = expenseItems.find(i => i.id === (p as any).expense_item_id)?.label;
-                        return lbl ? (
-                          <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
-                            🎯 {lbl}
-                          </span>
-                        ) : null;
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-semibold text-foreground flex-1 truncate">{it.label}</p>
+                        {canManage && !isClosed && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button className="text-muted-foreground hover:text-primary p-1" onClick={() => startEditItem(it)} title="Modifier">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <ConfirmDeleteDialog
+                              onConfirm={() => deleteExpenseItem(it.id)}
+                              title="Supprimer ce poste ?"
+                              description="Les dépenses déjà enregistrées seront conservées (sans poste)."
+                            >
+                              <button className="text-muted-foreground hover:text-destructive p-1" title="Supprimer">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </ConfirmDeleteDialog>
+                          </div>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mb-2">
+                        <div className="text-center">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Collecté</p>
+                          <p className="text-xs font-semibold text-emerald-400">{fmt(collected)}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Payé</p>
+                          <p className="text-xs font-semibold text-destructive">{fmt(paid)}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Budget</p>
+                          <p className="text-xs font-semibold text-foreground">{fmt(planned)}</p>
+                        </div>
+                      </div>
+                      <Progress value={pct} className={`h-2 ${paid >= planned && planned > 0 ? "[&>div]:bg-emerald-500" : ""}`} />
+                      <div className="flex items-center justify-between mt-1.5 gap-2">
+                        <p className={`text-[11px] font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                          {planned > 0 && paid >= planned ? "✅ Soldé" : `Reste à payer : ${fmt(reste)}`}
+                        </p>
+                        <p className={`text-[11px] font-medium ${finance ? "text-emerald-400" : "text-muted-foreground"}`}>
+                          {finance ? "✅ Financé" : `À collecter : ${fmt(resteCollect)}`}
+                        </p>
+                      </div>
+                      {canManage && !isClosed && collected > paid && (planned === 0 || paid < planned) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-2 h-8 text-xs glass border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                          onClick={() => openPayItem(it)}
+                          disabled={saving}
+                        >
+                          Marquer comme payé
+                        </Button>
+                      )}
+                      {(() => {
+                        const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
+                        if (linked.length === 0) return null;
+                        const expanded = expandedItemId === it.id;
+                        return (
+                          <div className="mt-2">
+                            <button onClick={() => setExpandedItemId(expanded ? null : it.id)} className="text-[11px] text-primary hover:underline">
+                              {expanded ? "▾ Masquer" : "▸ Voir"} les dépenses ({linked.length})
+                            </button>
+                            {expanded && (
+                              <div className="mt-2 space-y-1 pl-2 border-l border-border">
+                                {linked.map((e: any) => (
+                                  <div key={e.id} className="flex items-center justify-between text-xs">
+                                    <span className="truncate text-foreground/80">
+                                      {new Date(e.expense_date).toLocaleDateString("fr-FR")} · {e.label}
+                                    </span>
+                                    <span className="text-destructive font-semibold ml-2 flex-shrink-0">-{fmt(Number(e.amount))}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
                       })()}
-                    </div>
-                    {canManage && !isClosed && (
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <button
-                          className="text-muted-foreground hover:text-primary p-1"
-                          onClick={() => {
-                            setEditingPayment(p);
-                            setEditPayAmount(String(p.amount_paid));
-                            setEditPayNote(((p as any).note ?? "") as string);
-                            setEditPayItemId(((p as any).expense_item_id ?? null));
-                            setEditPayOpen(true);
-                          }}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <ConfirmDeleteDialog
-                          onConfirm={() => deletePayment(p.id)}
-                          title={`Supprimer cette cotisation de ${fmt(Number(p.amount_paid))} FCFA ?`}
-                        >
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* + Nouveau poste */}
+          {canManage && !isClosed && (
+            <div className="glass-card rounded-xl p-3 space-y-2 border border-primary/20 mb-4">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1">
+                <Plus className="w-3.5 h-3.5 text-primary" /> Nouveau poste de dépense
+              </p>
+              <Input
+                value={newItemLabel}
+                onChange={(e) => setNewItemLabel(e.target.value)}
+                placeholder="Nom du poste (ex: Salle, Traiteur…)"
+                className="glass"
+              />
+              <MoneyInput
+                value={newItemPlanned}
+                onChange={(n) => setNewItemPlanned(n ? String(n) : "")}
+                showCurrency={false}
+                className="[&>input]:glass"
+              />
+              <Button onClick={addExpenseItem} disabled={saving || !newItemLabel.trim()} className="w-full" size="sm">
+                {saving ? "Enregistrement…" : "Ajouter le poste"}
+              </Button>
+            </div>
+          )}
+
+          {expenseItems.length > 0 && (
+            <div className="glass-card rounded-xl p-3 mb-4 border border-primary/25">
+              <p className="text-xs text-muted-foreground mb-1">Récapitulatif postes</p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total prévu</span>
+                <span className="font-bold text-foreground">{fmt(totalPlanned)} FCFA</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-muted-foreground">Total payé</span>
+                <span className="font-bold text-emerald-400">{fmt(totalPaidOnItems)} FCFA</span>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Dépenses (toutes) ─── */}
+          {expenses.length > 0 && (
+            <>
+              <p className="text-sm font-bold text-foreground mb-2 flex items-center gap-1">
+                <TrendingDown className="w-4 h-4 text-destructive" /> Dépenses ({expenses.length})
+              </p>
+              <div className="space-y-2 mb-4">
+                {expenses.map((e) => {
+                  const itemLabel = (e as any).expense_item_id
+                    ? expenseItems.find(i => i.id === (e as any).expense_item_id)?.label
+                    : null;
+                  return (
+                    <div key={e.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{e.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(e.expense_date).toLocaleDateString("fr-FR")}
+                          {e.beneficiaire && ` · ${e.beneficiaire}`}
+                        </p>
+                        {itemLabel ? (
+                          <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                            📌 {itemLabel}
+                          </span>
+                        ) : (
+                          <span className="inline-block mt-1 text-[10px] text-muted-foreground/70">hors poste</span>
+                        )}
+                      </div>
+                      <span className="text-sm font-bold text-destructive flex-shrink-0">-{fmt(Number(e.amount))}</span>
+                      {canManage && !isClosed && (
+                        <ConfirmDeleteDialog onConfirm={() => deleteExpense(e.id)} title="Supprimer cette dépense ?">
                           <button className="text-muted-foreground hover:text-destructive p-1">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </ConfirmDeleteDialog>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </>
       )}
 
 
-
-      {/* Actions rares (Clôturer / Quitter) déplacées dans le menu "…" du header */}
 
 
 
