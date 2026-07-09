@@ -4,6 +4,7 @@ import Footer from "@/components/landing/Footer";
 import Hero from "@/components/landing/Hero";
 import SectionReveal from "@/components/landing/SectionReveal";
 import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
+import PaymentMarquee from "@/components/landing/PaymentMarquee";
 import FloatingFCFA from "@/components/landing/FloatingFCFA";
 import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
