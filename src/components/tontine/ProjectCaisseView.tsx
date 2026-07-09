@@ -66,6 +66,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [loadedRole, setLoadedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Tabs
+  const [activeTab, setActiveTab] = useState<"members" | "items">("members");
+
   // Expense items (postes) UI
   const [itemsViewOpen, setItemsViewOpen] = useState(false);
   const [newItemLabel, setNewItemLabel] = useState("");
