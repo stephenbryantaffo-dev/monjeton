@@ -3,11 +3,6 @@ import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { ArrowRight, Play, Wallet, ArrowUp, Users, Target, BarChart3, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import heroPlanet from "@/assets/hero-planet.webp";
-
-// Tiny blurred placeholder (20px webp) — instantly visible while real image loads
-const HERO_PLACEHOLDER =
-  "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAABwBACdASoUAA4APxFysVAsJqSisAgBgCIJZACdMoLT9AuEZh8KxVuA4wm0AAD+ePcTTK9+gosaN/WHSR4nBhjODvceMglljSwfHlu4MKIZ3JHgcMqz+uqgZYXTAAAA";
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState<boolean>(() =>
@@ -30,7 +25,7 @@ const scrollToId = (id: string, fallbackId?: string) => {
   }
 };
 
-/* ── Particle canvas — count adapts to device ── */
+/* ── Particle canvas — light, 36 particles on desktop ── */
 const ParticleCanvas = ({ isMobile }: { isMobile: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -101,59 +96,59 @@ const ParticleCanvas = ({ isMobile }: { isMobile: boolean }) => {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
 };
 
-/* ── Floating glass cards around the phone stage ── */
+/* ── Floating glass cards around the top of the phone ── */
 const floatingCards = [
   {
-    id: "wallet",
+    id: "c-wallet",
     icon: Wallet,
     label: "Portefeuille du mois",
     value: "210 000 FCFA",
     bar: 68,
-    position: "top-[8%] left-[2%] md:left-[4%]",
-    rotation: "-6deg",
+    position: { top: 20, left: -6, rotate: -7 },
+    hiddenOnMobile: true,
     delay: 0,
     duration: 5.5,
   },
   {
-    id: "income",
+    id: "c-income",
     icon: ArrowUp,
     label: "Revenu — Jose M.",
     value: "+50 000 FCFA",
     valueColor: "#7CFF3A",
-    position: "top-[28%] left-[-2%] md:left-[0%]",
-    rotation: "-3deg",
+    position: { top: 210, left: -16, rotate: 5 },
+    positionMobile: { top: 170, left: -8, rotate: 5 },
     delay: 0.4,
     duration: 6.2,
   },
   {
-    id: "tontine",
+    id: "c-tontine",
     icon: Users,
     label: "Tontine Bureau",
     value: "7/10 à jour",
     bar: 70,
-    position: "top-[12%] right-[2%] md:right-[4%]",
-    rotation: "5deg",
+    position: { top: 14, right: -8, rotate: 6 },
+    hiddenOnMobile: true,
     delay: 0.8,
     duration: 6.0,
   },
   {
-    id: "budget",
+    id: "c-budget",
     icon: Target,
     label: "Budget Transport",
     value: "Reste 12 000 FCFA",
     valueColor: "#FFB020",
-    position: "top-[34%] right-[-1%] md:right-[1%]",
-    rotation: "3deg",
+    position: { top: 150, right: -20, rotate: -5 },
+    positionMobile: { top: 90, right: -8, rotate: -5 },
     delay: 1.2,
     duration: 5.8,
   },
   {
-    id: "brvm",
+    id: "c-brvm",
     icon: BarChart3,
     label: "Simulateur BRVM",
     value: "Sonatel +2,4%",
-    position: "top-[50%] left-[0%] md:left-[2%]",
-    rotation: "-4deg",
+    position: { top: 300, right: 10, rotate: 4 },
+    hiddenOnMobile: true,
     delay: 1.6,
     duration: 6.5,
   },
@@ -166,18 +161,21 @@ const FloatingCard = ({
   card: (typeof floatingCards)[number];
   isMobile: boolean;
 }) => {
-  // On mobile, only the first two cards (wallet + tontine) stay visible.
-  const mobileIndex = floatingCards.findIndex((c) => c.id === card.id);
-  const hiddenOnMobile = isMobile && mobileIndex >= 2;
+  const hiddenOnMobile = isMobile && card.hiddenOnMobile;
+  const pos = isMobile && card.positionMobile ? card.positionMobile : card.position;
 
   return (
     <motion.div
-      className={`absolute ${card.position} ${hiddenOnMobile ? "hidden" : "block"} z-20`}
-      initial={{ opacity: 0, y: 20, rotate: 0 }}
+      className={`absolute z-20 ${hiddenOnMobile ? "hidden" : "block"}`}
+      style={{
+        top: pos.top,
+        ...(pos.left !== undefined ? { left: pos.left } : { right: pos.right }),
+        rotate: pos.rotate,
+      }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{
         opacity: 1,
         y: [0, -10, 0],
-        rotate: card.rotation,
       }}
       transition={{
         opacity: { duration: 0.6, delay: 0.6 + card.delay },
@@ -187,10 +185,9 @@ const FloatingCard = ({
           ease: "easeInOut",
           delay: card.delay,
         },
-        rotate: { duration: 0.6, delay: 0.6 + card.delay },
       }}
     >
-      <div className="px-3 py-2.5 rounded-xl bg-[rgba(13,21,18,0.9)] border border-[rgba(124,255,58,0.15)] backdrop-blur-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.35)] max-w-[180px] md:max-w-[200px]">
+      <div className="px-3 py-2.5 rounded-2xl bg-[rgba(13,21,18,0.9)] border border-[rgba(124,255,58,0.15)] backdrop-blur-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.35)] max-w-[180px] md:max-w-[200px]">
         <div className="flex items-center gap-2 mb-1">
           <card.icon
             className="w-4 h-4 md:w-5 md:h-5 shrink-0"
@@ -221,54 +218,28 @@ const Hero = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
-  const [heroLoaded, setHeroLoaded] = useState(false);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
 
-  // Parallax: image moves slower than scroll — disabled on mobile for smoother scrolling
-  const bgYRaw = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const bgScaleRaw = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
   const contentYRaw = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
   const contentOpacityRaw = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const bgY: MotionValue<string> | string = isMobile ? "0%" : bgYRaw;
-  const bgScale: MotionValue<number> | number = isMobile ? 1 : bgScaleRaw;
   const contentY: MotionValue<string> | string = isMobile ? "0%" : contentYRaw;
   const contentOpacity: MotionValue<number> | number = isMobile ? 1 : contentOpacityRaw;
 
   return (
     <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* BG image with parallax (desktop only). Blur-up: tiny base64 placeholder shown instantly, real image fades in. */}
-      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, scale: bgScale, willChange: isMobile ? "auto" : "transform" }}>
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url(${HERO_PLACEHOLDER})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "blur(20px)",
-            transform: "scale(1.1)",
-          }}
-        />
-        {/* Explicit dimensions prevent CLS */}
-        <img
-          src={heroPlanet}
-          alt=""
-          width={1536}
-          height={1024}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          onLoad={() => setHeroLoaded(true)}
-          className="relative w-full h-full object-cover"
-          style={{ opacity: heroLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#05070A]/80 via-[#05070A]/60 to-[#05070A]" />
-      </motion.div>
+      {/* Clean gradient background — planet image removed */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 800px 600px at 50% 38%, rgba(124,255,58,0.10) 0%, transparent 62%), linear-gradient(180deg, #05070A 0%, #070B0A 55%, #05070A 100%)",
+        }}
+      />
 
-      {/* Halo */}
+      {/* Pulsing lime halo */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] z-[1] pointer-events-none">
         <motion.div
           className="w-full h-full rounded-full bg-[radial-gradient(circle,rgba(124,255,58,0.12)_0%,transparent_70%)]"
@@ -329,17 +300,18 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Phone-in-hand stage */}
-          <div className="relative mx-auto max-w-[820px] h-[280px] sm:h-[360px] md:h-[460px] lg:h-[520px] overflow-hidden z-10 pointer-events-none">
+          {/* Hand + phone stage */}
+          <div className="relative mx-auto max-w-[820px] h-[320px] sm:h-[380px] md:h-[440px] overflow-hidden z-10 pointer-events-none">
             {/* Floating glass cards */}
             {floatingCards.map((card) => (
               <FloatingCard key={card.id} card={card} isMobile={isMobile} />
             ))}
 
-            {/* Hand + phone image */}
+            {/* Hand + phone image — pushed down so only the top half shows */}
             <motion.div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10"
-              animate={{ y: [0, -12, 0] }}
+              className="absolute left-1/2 z-10"
+              style={{ bottom: -150, x: "-50%" }}
+              animate={{ y: [0, -14, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             >
               <img
@@ -350,12 +322,12 @@ const Hero = () => {
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                className="w-[280px] sm:w-[360px] md:w-[460px] lg:w-[520px] h-auto object-contain"
+                className="w-[260px] md:w-[300px] h-auto object-contain"
               />
             </motion.div>
 
-            {/* Bottom fade to blend the wrist into the background */}
-            <div className="absolute inset-x-0 bottom-0 h-[100px] sm:h-[140px] bg-gradient-to-t from-[#05070A] via-[#05070A]/80 to-transparent z-20 pointer-events-none" />
+            {/* Bottom fade to blend the cut-off into the background */}
+            <div className="absolute inset-x-0 bottom-0 h-[120px] bg-gradient-to-t from-[#05070A] via-[#05070A]/80 to-transparent z-20 pointer-events-none" />
           </div>
         </motion.div>
       </motion.div>
