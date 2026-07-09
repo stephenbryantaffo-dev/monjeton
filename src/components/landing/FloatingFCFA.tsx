@@ -1,9 +1,20 @@
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 const FloatingFCFA = () => {
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   const items = useMemo(() => {
-    return Array.from({ length: 14 }, (_, i) => ({
+    const count = isMobile ? 6 : 14;
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       x: `${5 + Math.random() * 85}%`,
       y: `${Math.random() * 100}%`,
@@ -15,7 +26,7 @@ const FloatingFCFA = () => {
       drift: 20 + Math.random() * 40,
       text: i % 3 === 0 ? "XOF" : "FCFA",
     }));
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-[1]" style={{ willChange: "transform" }}>
