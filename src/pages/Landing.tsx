@@ -48,6 +48,11 @@ const Landing = () => {
       </AnimatedSectionBackground>
 
       <AnimatedSectionBackground variant={0} glow>
+        <SectionReveal><Suspense fallback={<SectionFallback />}><FeatureShowcase /></Suspense></SectionReveal>
+      </AnimatedSectionBackground>
+
+
+      <AnimatedSectionBackground variant={0} glow>
         <SectionReveal><Suspense fallback={<SectionFallback />}><ForWhoSection /></Suspense></SectionReveal>
       </AnimatedSectionBackground>
 
