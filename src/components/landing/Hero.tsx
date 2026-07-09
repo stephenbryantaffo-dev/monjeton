@@ -106,6 +106,8 @@ const floatingCards = [
     bar: 68,
     position: { top: 20, left: -6, rotate: -7 },
     hiddenOnMobile: true,
+    delay: 0,
+    duration: 5.5,
   },
   {
     id: "c-income",
@@ -115,6 +117,8 @@ const floatingCards = [
     valueColor: "#7CFF3A",
     position: { top: 210, left: -16, rotate: 5 },
     positionMobile: { top: 170, left: -8, rotate: 5 },
+    delay: 0.4,
+    duration: 6.2,
   },
   {
     id: "c-tontine",
@@ -124,6 +128,8 @@ const floatingCards = [
     bar: 70,
     position: { top: 14, right: -8, rotate: 6 },
     hiddenOnMobile: true,
+    delay: 0.8,
+    duration: 6.0,
   },
   {
     id: "c-budget",
@@ -133,6 +139,8 @@ const floatingCards = [
     valueColor: "#FFB020",
     position: { top: 150, right: -20, rotate: -5 },
     positionMobile: { top: 90, right: -8, rotate: -5 },
+    delay: 1.2,
+    duration: 5.8,
   },
   {
     id: "c-brvm",
@@ -141,6 +149,8 @@ const floatingCards = [
     value: "Sonatel +2,4%",
     position: { top: 300, right: 10, rotate: 4 },
     hiddenOnMobile: true,
+    delay: 1.6,
+    duration: 6.5,
   },
 ];
 
