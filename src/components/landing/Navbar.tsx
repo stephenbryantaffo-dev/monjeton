@@ -111,7 +111,7 @@ const Navbar = () => {
             to="/login"
             className="text-sm font-medium text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] transition px-3 py-2 whitespace-nowrap"
           >
-            Se connecter
+            {lt.nav_login}
           </Link>
 
           {/* Sélecteur de langue */}
@@ -152,8 +152,7 @@ const Navbar = () => {
                       type="button"
                       role="menuitem"
                       onClick={() => {
-                        // TODO: brancher i18n pour la traduction réelle
-                        setLang(opt.code);
+                        setLang(opt.code as Lang);
                         setLangOpen(false);
                       }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
