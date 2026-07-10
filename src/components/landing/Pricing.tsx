@@ -160,7 +160,7 @@ const Pricing = () => {
             >
               {plan.popular && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A] shadow-[0_0_20px_rgba(124,255,58,0.5)]">
-                  Recommandé
+                  {lt.pricing_recommended}
                 </Badge>
               )}
 
