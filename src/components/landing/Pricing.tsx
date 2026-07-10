@@ -8,68 +8,60 @@ import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { useState } from "react";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { useLandingT } from "@/hooks/useLandingT";
+import type { LandingStrings } from "@/lib/landingI18n";
 
 type PlanAction = { kind: "link"; to: string } | { kind: "jeko"; plan: "pro" | "max" };
 
-const plans: Array<{
+const buildPlans = (lt: LandingStrings): Array<{
   name: string;
   description: string;
   price: number;
   yearlyPrice: number;
   buttonText: string;
   popular: boolean;
-  includes: string[];
+  includes: readonly string[];
   action: PlanAction;
-}> = [
+}> => [
   {
-    name: "Gratuit",
-    description: "Pour découvrir Mon Jeton et commencer à suivre vos finances.",
+    name: lt.plan_free_name,
+    description: lt.plan_free_desc,
     price: 0,
     yearlyPrice: 0,
-    buttonText: "S'inscrire",
+    buttonText: lt.plan_free_cta,
     popular: false,
-    includes: [
-      "1 portefeuille",
-      "50 transactions / mois",
-      "Catégorisation automatique",
-      "Rapports basiques",
-    ],
+    includes: lt.plan_free_features,
     action: { kind: "link", to: "/signup" },
   },
   {
-    name: "Pro",
-    description: "Pour les utilisateurs réguliers qui veulent aller plus loin.",
+    name: lt.plan_pro_name,
+    description: lt.plan_pro_desc,
     price: 2000,
     yearlyPrice: 19900,
-    buttonText: "S'abonner",
+    buttonText: lt.plan_pro_cta,
     popular: true,
-    includes: [
-      "Transactions illimitées",
-      "Scan IA des reçus (50/mois)",
-      "Assistant IA financier",
-      "Rapports avancés & export PDF",
-      "Tontines & dettes",
-    ],
+    includes: lt.plan_pro_features,
     action: { kind: "jeko", plan: "pro" },
   },
   {
-    name: "Ultra Pro",
-    description: "L'expérience complète pour les pros et les heavy users.",
+    name: lt.plan_max_name,
+    description: lt.plan_max_desc,
     price: 5000,
     yearlyPrice: 49900,
-    buttonText: "S'abonner",
+    buttonText: lt.plan_max_cta,
     popular: false,
-    includes: [
-      "Tout le plan Pro",
-      "Scan IA illimité",
-      "Support prioritaire",
-      "Accès anticipé aux nouvelles features",
-    ],
+    includes: lt.plan_max_features,
     action: { kind: "jeko", plan: "max" },
   },
 ];
 
-const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
+const PricingSwitch = ({
+  onSwitch,
+  labels,
+}: {
+  onSwitch: (value: string) => void;
+  labels: { monthly: string; yearly: string };
+}) => {
   const [selected, setSelected] = useState("0");
 
   const handleSwitch = (value: string) => {
@@ -94,7 +86,7 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             />
           )}
-          <span className="relative z-10">Mensuel</span>
+          <span className="relative z-10">{labels.monthly}</span>
         </button>
         <button
           onClick={() => handleSwitch("1")}
@@ -110,7 +102,7 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             />
           )}
-          <span className="relative z-10">Annuel</span>
+          <span className="relative z-10">{labels.yearly}</span>
         </button>
       </div>
     </div>
@@ -119,6 +111,8 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
 
 const Pricing = () => {
   const [isYearly, setIsYearly] = useState(false);
+  const { lt } = useLandingT();
+  const plans = buildPlans(lt);
 
   const togglePricingPeriod = (value: string) =>
     setIsYearly(Number.parseInt(value) === 1);
@@ -136,14 +130,17 @@ const Pricing = () => {
           className="text-center mb-8"
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#EAFBEA] mb-4">
-            Tarifs simples et transparents
+            {lt.pricing_title}
           </h2>
           <p className="text-[rgba(234,251,234,0.72)] max-w-lg mx-auto">
-            Choisissez le plan qui vous convient. Changez ou annulez à tout moment.
+            {lt.pricing_subtitle}
           </p>
         </motion.div>
 
-        <PricingSwitch onSwitch={togglePricingPeriod} />
+        <PricingSwitch
+          onSwitch={togglePricingPeriod}
+          labels={{ monthly: lt.pricing_monthly, yearly: lt.pricing_yearly }}
+        />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan, i) => (
@@ -163,7 +160,7 @@ const Pricing = () => {
             >
               {plan.popular && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#7CFF3A] text-[#05070A] font-bold hover:bg-[#7CFF3A] shadow-[0_0_20px_rgba(124,255,58,0.5)]">
-                  Recommandé
+                  {lt.pricing_recommended}
                 </Badge>
               )}
 
@@ -185,7 +182,7 @@ const Pricing = () => {
                     transformTiming={{ duration: 400, easing: "ease-out" }}
                   />
                   <span className="text-sm text-[rgba(234,251,234,0.55)] ml-1">
-                    FCFA /{isYearly ? "an" : "mois"}
+                    FCFA /{isYearly ? lt.pricing_per_year : lt.pricing_per_month}
                   </span>
                 </div>
               </div>

@@ -11,6 +11,8 @@ import {
   ScanLine,
 } from "lucide-react";
 import MarkerText from "./MarkerText";
+import { useLandingT } from "@/hooks/useLandingT";
+import type { LandingStrings } from "@/lib/landingI18n";
 
 const LIME = "#7CFF3A";
 const TEXT = "#EAFBEA";
@@ -110,7 +112,6 @@ const FloatCard = ({
   </motion.div>
 );
 
-/* ---------- Screen chip helper ---------- */
 const Chip = ({ children, tone = "lime" }: { children: React.ReactNode; tone?: "lime" | "amber" }) => (
   <span
     className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
@@ -132,9 +133,9 @@ const ScreenHeader = ({ title, chip, chipTone }: { title: string; chip: string; 
 );
 
 /* ---------- Screens ---------- */
-const VoiceScreen = () => (
+const VoiceScreen = ({ lt }: { lt: LandingStrings }) => (
   <>
-    <ScreenHeader title="Saisie vocale" chip="IA" />
+    <ScreenHeader title={lt.voice_header} chip={lt.voice_ai} />
     <div className="flex flex-col items-center justify-center gap-3 py-3">
       <motion.div
         animate={{ scale: [1, 1.08, 1] }}
@@ -162,18 +163,18 @@ const VoiceScreen = () => (
       </div>
     </div>
     <div className="text-[9px] italic text-white/50 text-center px-1 leading-snug">
-      « J'ai dépensé 3 000 au marché et payé 15 000 de taxi »
+      {lt.voice_quote}
     </div>
     <div
       className="rounded-xl p-2 flex flex-col gap-1.5"
       style={{ background: "rgba(124,255,58,0.06)", border: "1px solid rgba(124,255,58,0.2)" }}
     >
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-white/70">Marché · Alimentation</span>
+        <span className="text-white/70">{lt.voice_market}</span>
         <span className="font-bold text-red-400">-3 000 F</span>
       </div>
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-white/70">Taxi · Transport</span>
+        <span className="text-white/70">{lt.voice_taxi}</span>
         <span className="font-bold text-red-400">-15 000 F</span>
       </div>
     </div>
@@ -181,24 +182,23 @@ const VoiceScreen = () => (
       className="mt-auto py-2 rounded-xl text-[11px] font-bold"
       style={{ background: LIME, color: "#04060A" }}
     >
-      Confirmer les 2
+      {lt.voice_confirm}
     </button>
   </>
 );
 
-const ScanScreen = () => (
+const ScanScreen = ({ lt }: { lt: LandingStrings }) => (
   <>
-    <ScreenHeader title="Scan de facture" chip="Prêt" />
+    <ScreenHeader title={lt.scan_header} chip={lt.scan_ready} />
     <div
       className="relative rounded-xl overflow-hidden flex-1 min-h-[130px]"
       style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
     >
-      {/* Corner viewfinder */}
       {[
-        { top: 6, left: 6, br: "0", bl: "0", tr: "0" },
-        { top: 6, right: 6, bl: "0", br: "0", tl: "0" },
-        { bottom: 6, left: 6, tr: "0", tl: "0", br: "0" },
-        { bottom: 6, right: 6, tl: "0", tr: "0", bl: "0" },
+        { top: 6, left: 6 },
+        { top: 6, right: 6 },
+        { bottom: 6, left: 6 },
+        { bottom: 6, right: 6 },
       ].map((s, i) => (
         <div
           key={i}
@@ -214,7 +214,6 @@ const ScanScreen = () => (
           }}
         />
       ))}
-      {/* Scan line */}
       <motion.div
         animate={{ top: ["8%", "88%", "8%"] }}
         transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
@@ -231,33 +230,33 @@ const ScanScreen = () => (
       style={{ background: "rgba(124,255,58,0.06)", border: "1px solid rgba(124,255,58,0.2)" }}
     >
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-white/60">Commerçant</span>
+        <span className="text-white/60">{lt.scan_merchant}</span>
         <span className="font-bold">Burger King</span>
       </div>
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-white/60">Montant</span>
+        <span className="text-white/60">{lt.scan_amount}</span>
         <span className="font-bold text-red-400">-14 500 F</span>
       </div>
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-white/60">Catégorie</span>
-        <span className="font-bold" style={{ color: LIME }}>Alimentation</span>
+        <span className="text-white/60">{lt.scan_category}</span>
+        <span className="font-bold" style={{ color: LIME }}>{lt.scan_food}</span>
       </div>
     </div>
     <button className="py-2 rounded-xl text-[11px] font-bold" style={{ background: LIME, color: "#04060A" }}>
-      Enregistrer
+      {lt.scan_save}
     </button>
   </>
 );
 
-const SavingsScreen = () => {
+const SavingsScreen = ({ lt }: { lt: LandingStrings }) => {
   const goals = [
-    { name: "Voyage Dakar", cur: "320 000", tot: "500 000", pct: 64 },
-    { name: "Fonds d'urgence", cur: "150 000", tot: "300 000", pct: 50 },
-    { name: "Nouveau tel", cur: "80 000", tot: "250 000", pct: 32 },
+    { name: lt.savings_goal_dakar, cur: "320 000", tot: "500 000", pct: 64 },
+    { name: lt.savings_goal_emergency, cur: "150 000", tot: "300 000", pct: 50 },
+    { name: lt.savings_goal_phone, cur: "80 000", tot: "250 000", pct: 32 },
   ];
   return (
     <>
-      <ScreenHeader title="Mes objectifs" chip="3 actifs" />
+      <ScreenHeader title={lt.savings_header} chip={lt.savings_active} />
       <div
         className="rounded-xl p-3"
         style={{
@@ -265,7 +264,7 @@ const SavingsScreen = () => {
           border: "1px solid rgba(124,255,58,0.28)",
         }}
       >
-        <div className="text-[10px] text-white/60">Épargne totale</div>
+        <div className="text-[10px] text-white/60">{lt.savings_total}</div>
         <div className="text-lg font-extrabold">
           550 000 <span className="text-[10px] text-white/50">FCFA</span>
         </div>
@@ -294,7 +293,7 @@ const SavingsScreen = () => {
   );
 };
 
-const DebtsScreen = () => {
+const DebtsScreen = ({ lt }: { lt: LandingStrings }) => {
   const items = [
     { init: "K", name: "Koffi", date: "12/06", amount: "+45 000" },
     { init: "A", name: "Aya", date: "28/06", amount: "+25 000" },
@@ -302,19 +301,19 @@ const DebtsScreen = () => {
   ];
   return (
     <>
-      <ScreenHeader title="Dettes" chip="Net +55 000" />
+      <ScreenHeader title={lt.debts_header} chip={lt.debts_net} />
       <div className="flex gap-1.5 mt-1">
         <div
           className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-bold"
           style={{ background: "rgba(124,255,58,0.15)", color: LIME, border: `1px solid ${LIME}` }}
         >
-          On me doit
+          {lt.debts_owed_to_me}
         </div>
         <div
           className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-semibold text-white/60"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
-          Je dois
+          {lt.debts_i_owe}
         </div>
       </div>
       <div className="flex flex-col gap-1.5 mt-1">
@@ -332,14 +331,14 @@ const DebtsScreen = () => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[11px] font-semibold truncate">{it.name}</div>
-              <div className="text-[9px] text-white/50">Prêté le {it.date}</div>
+              <div className="text-[9px] text-white/50">{lt.debts_lent_on} {it.date}</div>
             </div>
             <div className="text-[11px] font-bold" style={{ color: LIME }}>{it.amount}</div>
           </div>
         ))}
       </div>
       <button className="mt-auto py-2 rounded-xl text-[11px] font-bold" style={{ background: LIME, color: "#04060A" }}>
-        Relancer Koffi
+        {lt.debts_remind}
       </button>
     </>
   );
@@ -353,7 +352,7 @@ interface FeatureSectionProps {
   markerVariant: "lime" | "dark";
   titleAfter?: string;
   paragraph: string;
-  points: string[];
+  points: readonly string[];
   reverse: boolean;
   phone: React.ReactNode;
   cards: [React.ReactNode, React.ReactNode];
@@ -371,7 +370,6 @@ const FeatureSection = ({
   cards,
 }: FeatureSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-8 items-center py-16 md:py-24">
-    {/* Text */}
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -420,7 +418,6 @@ const FeatureSection = ({
       </ul>
     </motion.div>
 
-    {/* Phone */}
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -436,31 +433,27 @@ const FeatureSection = ({
   </div>
 );
 
-/* ---------- FeatureShowcase ---------- */
 const FeatureShowcase = () => {
+  const { lt } = useLandingT();
   return (
     <section id="demo" className="relative" style={{ background: "#14171C", color: TEXT }}>
       <div className="container mx-auto px-4">
         {/* 1 — Voice */}
         <FeatureSection
-          badge="Fonctionnalité"
-          titleBefore="Parlez, on"
-          markerWord="note tout"
+          badge={lt.feat_badge}
+          titleBefore={lt.feat_voice_before}
+          markerWord={lt.feat_voice_word}
           markerVariant="lime"
-          paragraph={`Dites "J'ai dépensé 3 000 au marché et payé 15 000 de taxi" — l'IA détecte chaque transaction, le montant et la catégorie.`}
-          points={[
-            "Plusieurs transactions en une phrase",
-            "Devises détectées (FCFA, €, $)",
-            "Catégorie assignée automatiquement",
-          ]}
+          paragraph={lt.feat_voice_p}
+          points={lt.feat_voice_pts}
           reverse={false}
-          phone={<VoiceScreen />}
+          phone={<VoiceScreen lt={lt} />}
           cards={[
             <FloatCard
               key="v1"
               icon={<Mic size={14} color={LIME} />}
-              label="Multi-transactions"
-              value="2 détectées"
+              label={lt.fc_voice_multi}
+              value={lt.fc_voice_multi_val}
               rotate={-5}
               delay={0.1}
               className="top-4 -left-2 md:-left-8"
@@ -468,8 +461,8 @@ const FeatureShowcase = () => {
             <FloatCard
               key="v2"
               icon={<Check size={14} color={LIME} />}
-              label="Catégorie auto"
-              value="Alimentation"
+              label={lt.fc_voice_cat}
+              value={lt.fc_voice_cat_val}
               rotate={5}
               delay={0.4}
               className="bottom-8 -right-2 md:-right-6"
@@ -479,23 +472,19 @@ const FeatureShowcase = () => {
 
         {/* 2 — Scan */}
         <FeatureSection
-          badge="Fonctionnalité"
-          titleBefore="Photographiez, c'est"
-          markerWord="enregistré"
+          badge={lt.feat_badge}
+          titleBefore={lt.feat_scan_before}
+          markerWord={lt.feat_scan_word}
           markerVariant="lime"
-          paragraph="Le scan IA lit le montant, la date et le commerçant sur le reçu, puis crée la transaction toute seule."
-          points={[
-            "Montant & date lus automatiquement",
-            "Commerçant reconnu",
-            "Reçu archivé et retrouvable",
-          ]}
+          paragraph={lt.feat_scan_p}
+          points={lt.feat_scan_pts}
           reverse={true}
-          phone={<ScanScreen />}
+          phone={<ScanScreen lt={lt} />}
           cards={[
             <FloatCard
               key="s1"
               icon={<FileText size={14} color={LIME} />}
-              label="Montant lu"
+              label={lt.fc_scan_amount}
               value="-14 500 F"
               valueColor="#FF6B6B"
               rotate={-6}
@@ -505,8 +494,8 @@ const FeatureShowcase = () => {
             <FloatCard
               key="s2"
               icon={<Download size={14} color={LIME} />}
-              label="Reçu archivé"
-              value="Mes reçus"
+              label={lt.fc_scan_archived}
+              value={lt.fc_scan_archived_val}
               rotate={5}
               delay={0.45}
               className="bottom-6 -right-2 md:-right-6"
@@ -516,23 +505,19 @@ const FeatureShowcase = () => {
 
         {/* 3 — Savings */}
         <FeatureSection
-          badge="Fonctionnalité"
-          titleBefore="Fixez un objectif,"
-          markerWord="atteignez-le"
+          badge={lt.feat_badge}
+          titleBefore={lt.feat_savings_before}
+          markerWord={lt.feat_savings_word}
           markerVariant="dark"
-          paragraph="Créez un objectif d'épargne, versez à votre rythme et suivez votre progression jusqu'au but."
-          points={[
-            "Objectifs illimités",
-            "Progression en temps réel",
-            "Versements à votre rythme",
-          ]}
+          paragraph={lt.feat_savings_p}
+          points={lt.feat_savings_pts}
           reverse={false}
-          phone={<SavingsScreen />}
+          phone={<SavingsScreen lt={lt} />}
           cards={[
             <FloatCard
               key="e1"
               icon={<Target size={14} color={LIME} />}
-              label="Objectif Dakar"
+              label={lt.fc_savings_goal}
               value="64%"
               progress={64}
               rotate={-5}
@@ -542,8 +527,8 @@ const FeatureShowcase = () => {
             <FloatCard
               key="e2"
               icon={<Wallet size={14} color={LIME} />}
-              label="Reste"
-              value="180 000 F"
+              label={lt.fc_savings_remain}
+              value={lt.fc_savings_remain_val}
               rotate={6}
               delay={0.4}
               className="bottom-8 -right-2 md:-right-6"
@@ -553,24 +538,20 @@ const FeatureShowcase = () => {
 
         {/* 4 — Debts */}
         <FeatureSection
-          badge="Fonctionnalité"
-          titleBefore="Qui vous doit quoi,"
-          markerWord="enfin clair"
+          badge={lt.feat_badge}
+          titleBefore={lt.feat_debts_before}
+          markerWord={lt.feat_debts_word}
           markerVariant="lime"
-          paragraph="Suivez ce qu'on vous doit et ce que vous devez, avec rappels automatiques. Fini les dettes oubliées."
-          points={[
-            "Vues « On me doit » / « Je dois »",
-            "Rappels automatiques",
-            "Solde net calculé",
-          ]}
+          paragraph={lt.feat_debts_p}
+          points={lt.feat_debts_pts}
           reverse={true}
-          phone={<DebtsScreen />}
+          phone={<DebtsScreen lt={lt} />}
           cards={[
             <FloatCard
               key="d1"
               icon={<ArrowUp size={14} color={LIME} />}
-              label="On me doit"
-              value="+85 000 F"
+              label={lt.fc_debts_owed}
+              value={lt.fc_debts_owed_val}
               valueColor={LIME}
               rotate={-6}
               delay={0.1}
@@ -579,8 +560,8 @@ const FeatureShowcase = () => {
             <FloatCard
               key="d2"
               icon={<Bell size={14} color="#F5B301" />}
-              label="Rappel auto"
-              value="dans 3 jours"
+              label={lt.fc_debts_reminder}
+              value={lt.fc_debts_reminder_val}
               rotate={5}
               delay={0.4}
               className="bottom-6 -right-2 md:-right-6"

@@ -3,12 +3,9 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import logoImg from "@/assets/logo-monjeton.webp";
-
-const navItems = [
-  { label: "Fonctionnalités", href: "#demo" },
-  { label: "Tarifs", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
-];
+import { useLandingT } from "@/hooks/useLandingT";
+import { useCountry } from "@/contexts/CountryContext";
+import type { Lang } from "@/lib/i18n";
 
 const NAVBAR_OFFSET = 72;
 
@@ -35,6 +32,15 @@ const handleAnchorClick = (
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { lt } = useLandingT();
+  const { country, setLang } = useCountry();
+  const lang = country.lang;
+
+  const navItems = [
+    { label: lt.nav_features, href: "#demo" },
+    { label: lt.nav_pricing, href: "#pricing" },
+    { label: lt.nav_faq, href: "#faq" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -42,9 +48,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Sélecteur de langue (état local uniquement)
-  // TODO: brancher i18n pour la traduction réelle
-  const [lang, setLang] = useState<"fr" | "en">("fr");
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement | null>(null);
 
@@ -108,7 +111,7 @@ const Navbar = () => {
             to="/login"
             className="text-sm font-medium text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] transition px-3 py-2 whitespace-nowrap"
           >
-            Se connecter
+            {lt.nav_login}
           </Link>
 
           {/* Sélecteur de langue */}
@@ -149,8 +152,7 @@ const Navbar = () => {
                       type="button"
                       role="menuitem"
                       onClick={() => {
-                        // TODO: brancher i18n pour la traduction réelle
-                        setLang(opt.code);
+                        setLang(opt.code as Lang);
                         setLangOpen(false);
                       }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
@@ -171,7 +173,7 @@ const Navbar = () => {
             to="/signup"
             className="bg-[#7CFF3A] text-[#05070A] font-bold text-sm px-4 py-2 rounded-full hover:scale-105 transition-transform whitespace-nowrap shadow-[0_0_25px_rgba(124,255,58,0.3)]"
           >
-            S'inscrire →
+            {lt.nav_signup}
           </Link>
         </div>
 
@@ -219,14 +221,14 @@ const Navbar = () => {
                   onClick={() => setMenuOpen(false)}
                   className="text-center py-3 rounded-xl border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] text-sm font-medium text-[#EAFBEA]"
                 >
-                  Se connecter
+                  {lt.nav_login}
                 </Link>
                 <Link
                   to="/signup"
                   onClick={() => setMenuOpen(false)}
                   className="text-center py-3 rounded-xl bg-[#7CFF3A] text-[#05070A] font-bold text-sm shadow-[0_0_25px_rgba(124,255,58,0.3)]"
                 >
-                  S'inscrire →
+                  {lt.nav_signup}
                 </Link>
               </div>
             </div>

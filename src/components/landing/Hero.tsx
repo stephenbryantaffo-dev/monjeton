@@ -10,6 +10,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 import MarkerText from "./MarkerText";
+import { useLandingT } from "@/hooks/useLandingT";
+import type { LandingStrings } from "@/lib/landingI18n";
 
 const LIME = "#7CFF3A";
 const TEXT = "#EAFBEA";
@@ -25,7 +27,7 @@ const scrollToId = (id: string, fallback?: string) => {
 };
 
 /* ---------- Phone screen (HTML rebuild) ---------- */
-const PhoneScreen = () => {
+const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
   const bars = [40, 65, 30, 80, 55, 95, 45];
   return (
     <div
@@ -40,7 +42,7 @@ const PhoneScreen = () => {
       {/* Header */}
       <div className="flex items-start justify-between pt-6">
         <div>
-          <div className="text-[10px] text-white/50">Bonjour</div>
+          <div className="text-[10px] text-white/50">{lt.phone_hello}</div>
           <div className="text-sm font-bold">Bryan</div>
         </div>
         <div
@@ -51,7 +53,7 @@ const PhoneScreen = () => {
             border: "1px solid rgba(124,255,58,0.25)",
           }}
         >
-          <ArrowDown size={10} /> 12% vs juin
+          <ArrowDown size={10} /> {lt.phone_vs_month}
         </div>
       </div>
 
@@ -64,7 +66,7 @@ const PhoneScreen = () => {
           border: "1px solid rgba(124,255,58,0.28)",
         }}
       >
-        <div className="text-[10px] text-white/60">Dépenses de juillet</div>
+        <div className="text-[10px] text-white/60">{lt.phone_expenses_july}</div>
         <div className="text-lg font-extrabold mt-0.5" style={{ color: TEXT }}>
           128 500 <span className="text-[10px] text-white/50">FCFA</span>
         </div>
@@ -91,7 +93,7 @@ const PhoneScreen = () => {
             border: "1px solid rgba(124,255,58,0.18)",
           }}
         >
-          <div className="text-[9px] text-white/50">Revenus</div>
+          <div className="text-[9px] text-white/50">{lt.phone_income}</div>
           <div className="text-xs font-bold" style={{ color: LIME }}>
             210 000
           </div>
@@ -103,7 +105,7 @@ const PhoneScreen = () => {
             border: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <div className="text-[9px] text-white/50">Dépenses</div>
+          <div className="text-[9px] text-white/50">{lt.phone_expenses}</div>
           <div className="text-xs font-bold">128 500</div>
         </div>
       </div>
@@ -114,7 +116,7 @@ const PhoneScreen = () => {
           className="flex items-center justify-between rounded-lg px-2.5 py-1.5"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
-          <span className="text-[10px] text-white/70">Freelance</span>
+          <span className="text-[10px] text-white/70">{lt.phone_freelance}</span>
           <span className="text-[10px] font-bold" style={{ color: LIME }}>
             +50 000
           </span>
@@ -123,7 +125,7 @@ const PhoneScreen = () => {
           className="flex items-center justify-between rounded-lg px-2.5 py-1.5"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
-          <span className="text-[10px] text-white/70">Restaurant</span>
+          <span className="text-[10px] text-white/70">{lt.phone_restaurant}</span>
           <span className="text-[10px] font-bold text-red-400">-8 500</span>
         </div>
       </div>
@@ -132,7 +134,7 @@ const PhoneScreen = () => {
 };
 
 /* ---------- Phone frame ---------- */
-const Phone = () => (
+const Phone = ({ lt }: { lt: LandingStrings }) => (
   <motion.div
     animate={{ y: [0, -12, 0] }}
     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -163,7 +165,7 @@ const Phone = () => (
           background: "#000",
         }}
       />
-      <PhoneScreen />
+      <PhoneScreen lt={lt} />
     </div>
   </motion.div>
 );
@@ -232,6 +234,7 @@ const FloatCard = ({
 /* ---------- Hero ---------- */
 const Hero = () => {
   const navigate = useNavigate();
+  const { lt } = useLandingT();
 
   return (
     <section
@@ -261,9 +264,9 @@ const Hero = () => {
                 letterSpacing: "-0.02em",
               }}
             >
-              <span className="block">Suivez vos</span>
+              <span className="block">{lt.hero_line1}</span>
               <span className="block mt-1">
-                <MarkerText variant="lime">dépenses</MarkerText>
+                <MarkerText variant="lime">{lt.hero_word_expenses}</MarkerText>
               </span>
               <span
                 className="block mt-1"
@@ -272,10 +275,10 @@ const Hero = () => {
                   WebkitTextStroke: "2px rgba(234,251,234,0.5)",
                 }}
               >
-                revenus
+                {lt.hero_word_income}
               </span>
               <span className="block mt-1">
-                <MarkerText variant="dark">épargne</MarkerText>
+                <MarkerText variant="dark">{lt.hero_word_savings}</MarkerText>
               </span>
             </h1>
 
@@ -283,8 +286,7 @@ const Hero = () => {
               className="mt-6 max-w-xl text-base md:text-lg"
               style={{ color: "rgba(234,251,234,0.7)" }}
             >
-              Mon Jeton suit vos dépenses en FCFA, gère vos tontines et scanne
-              vos reçus par IA. Sans stocker un centime chez nous.
+              {lt.hero_subtitle}
             </p>
 
             {/* Buttons */}
@@ -294,7 +296,7 @@ const Hero = () => {
                 className="font-display font-bold px-6 py-3 rounded-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: LIME, color: "#04060A" }}
               >
-                S'inscrire
+                {lt.hero_cta_signup}
               </button>
               <button
                 onClick={() => scrollToId("pricing")}
@@ -305,14 +307,14 @@ const Hero = () => {
                   border: `1px solid ${LIME}`,
                 }}
               >
-                Prendre le plan Pro
+                {lt.hero_cta_pro}
               </button>
               <button
                 onClick={() => scrollToId("demo", "features")}
                 className="font-display font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition-colors hover:bg-white/5"
                 style={{ color: TEXT }}
               >
-                <Play size={16} /> Voir la démo
+                <Play size={16} /> {lt.hero_cta_demo}
               </button>
             </div>
 
@@ -330,7 +332,7 @@ const Hero = () => {
                 ))}
               </div>
               <span className="text-xs" style={{ color: "rgba(234,251,234,0.65)" }}>
-                Rejoins 2 500+ utilisateurs
+                {lt.hero_trust}
               </span>
             </div>
           </div>
@@ -340,31 +342,31 @@ const Hero = () => {
             className="relative mx-auto w-full"
             style={{ minHeight: 500 }}
           >
-            <Phone />
+            <Phone lt={lt} />
 
             {/* Floating cards */}
             <FloatCard
               hideOnMobile
               icon={<AlertTriangle size={16} color="#FF5A5A" />}
-              label="Alerte dépense"
+              label={lt.fc_alert}
               value="-32 000 F"
-              sub="resto ce mois-ci"
+              sub={lt.fc_alert_sub}
               rotate={-5}
               delay={0.1}
               className="top-4 -left-2 md:-left-6"
             />
             <FloatCard
               icon={<ScanLine size={16} color={LIME} />}
-              label="Scan AI"
-              value="Reçu en 2 s"
+              label={lt.fc_scan}
+              value={lt.fc_scan_val}
               rotate={6}
               delay={0.35}
               className="top-8 -right-2 md:-right-4"
             />
             <FloatCard
               icon={<Users size={16} color={LIME} />}
-              label="Tontine Bureau"
-              value="7/10 à jour"
+              label={lt.fc_tontine}
+              value={lt.fc_tontine_val}
               progress={70}
               rotate={-4}
               delay={0.6}
@@ -372,8 +374,8 @@ const Hero = () => {
             />
             <FloatCard
               icon={<Target size={16} color="#F5B301" />}
-              label="Budget Transport"
-              value="Reste 12 000 F"
+              label={lt.fc_budget}
+              value={lt.fc_budget_val}
               rotate={5}
               delay={0.85}
               className="bottom-10 -right-2 md:-right-6"
