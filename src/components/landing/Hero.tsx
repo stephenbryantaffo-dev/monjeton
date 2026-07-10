@@ -42,7 +42,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
       {/* Header */}
       <div className="flex items-start justify-between pt-6">
         <div>
-          <div className="text-[10px] text-white/50">Bonjour</div>
+          <div className="text-[10px] text-white/50">{lt.phone_hello}</div>
           <div className="text-sm font-bold">Bryan</div>
         </div>
         <div
@@ -53,7 +53,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
             border: "1px solid rgba(124,255,58,0.25)",
           }}
         >
-          <ArrowDown size={10} /> 12% vs juin
+          <ArrowDown size={10} /> {lt.phone_vs_month}
         </div>
       </div>
 
