@@ -236,7 +236,7 @@ const Hero = () => {
   return (
     <section
       className="relative overflow-hidden"
-      style={{ background: BG, color: TEXT }}
+      style={{ background: "#14171C", color: TEXT }}
     >
       {/* Ambient lime glow */}
       <div

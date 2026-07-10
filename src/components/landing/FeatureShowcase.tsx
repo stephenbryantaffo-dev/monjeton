@@ -439,7 +439,7 @@ const FeatureSection = ({
 /* ---------- FeatureShowcase ---------- */
 const FeatureShowcase = () => {
   return (
-    <section id="demo" className="relative" style={{ background: BG, color: TEXT }}>
+    <section id="demo" className="relative" style={{ background: "#14171C", color: TEXT }}>
       <div className="container mx-auto px-4">
         {/* 1 — Voice */}
         <FeatureSection
