@@ -10,6 +10,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 import MarkerText from "./MarkerText";
+import { useLandingT } from "@/hooks/useLandingT";
+import type { LandingStrings } from "@/lib/landingI18n";
 
 const LIME = "#7CFF3A";
 const TEXT = "#EAFBEA";
@@ -25,7 +27,7 @@ const scrollToId = (id: string, fallback?: string) => {
 };
 
 /* ---------- Phone screen (HTML rebuild) ---------- */
-const PhoneScreen = () => {
+const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
   const bars = [40, 65, 30, 80, 55, 95, 45];
   return (
     <div
