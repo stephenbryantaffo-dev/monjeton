@@ -8,63 +8,49 @@ import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { useState } from "react";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { useLandingT } from "@/hooks/useLandingT";
+import type { LandingStrings } from "@/lib/landingI18n";
 
 type PlanAction = { kind: "link"; to: string } | { kind: "jeko"; plan: "pro" | "max" };
 
-const plans: Array<{
+const buildPlans = (lt: LandingStrings): Array<{
   name: string;
   description: string;
   price: number;
   yearlyPrice: number;
   buttonText: string;
   popular: boolean;
-  includes: string[];
+  includes: readonly string[];
   action: PlanAction;
-}> = [
+}> => [
   {
-    name: "Gratuit",
-    description: "Pour découvrir Mon Jeton et commencer à suivre vos finances.",
+    name: lt.plan_free_name,
+    description: lt.plan_free_desc,
     price: 0,
     yearlyPrice: 0,
-    buttonText: "S'inscrire",
+    buttonText: lt.plan_free_cta,
     popular: false,
-    includes: [
-      "1 portefeuille",
-      "50 transactions / mois",
-      "Catégorisation automatique",
-      "Rapports basiques",
-    ],
+    includes: lt.plan_free_features,
     action: { kind: "link", to: "/signup" },
   },
   {
-    name: "Pro",
-    description: "Pour les utilisateurs réguliers qui veulent aller plus loin.",
+    name: lt.plan_pro_name,
+    description: lt.plan_pro_desc,
     price: 2000,
     yearlyPrice: 19900,
-    buttonText: "S'abonner",
+    buttonText: lt.plan_pro_cta,
     popular: true,
-    includes: [
-      "Transactions illimitées",
-      "Scan IA des reçus (50/mois)",
-      "Assistant IA financier",
-      "Rapports avancés & export PDF",
-      "Tontines & dettes",
-    ],
+    includes: lt.plan_pro_features,
     action: { kind: "jeko", plan: "pro" },
   },
   {
-    name: "Ultra Pro",
-    description: "L'expérience complète pour les pros et les heavy users.",
+    name: lt.plan_max_name,
+    description: lt.plan_max_desc,
     price: 5000,
     yearlyPrice: 49900,
-    buttonText: "S'abonner",
+    buttonText: lt.plan_max_cta,
     popular: false,
-    includes: [
-      "Tout le plan Pro",
-      "Scan IA illimité",
-      "Support prioritaire",
-      "Accès anticipé aux nouvelles features",
-    ],
+    includes: lt.plan_max_features,
     action: { kind: "jeko", plan: "max" },
   },
 ];
