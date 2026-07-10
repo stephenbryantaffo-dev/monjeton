@@ -5,10 +5,7 @@ import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import logoImg from "@/assets/logo-monjeton.webp";
 
 const navItems = [
-  { label: "Fonctionnalités", href: "#features" },
-  { label: "Pour qui ?", href: "#for-who" },
-  { label: "Scan AI", href: "#ai-scan" },
-  { label: "Sécurité", href: "#enterprise" },
+  { label: "Fonctionnalités", href: "#demo" },
   { label: "Tarifs", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
