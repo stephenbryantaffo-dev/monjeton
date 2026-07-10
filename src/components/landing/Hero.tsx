@@ -234,6 +234,7 @@ const FloatCard = ({
 /* ---------- Hero ---------- */
 const Hero = () => {
   const navigate = useNavigate();
+  const { lt } = useLandingT();
 
   return (
     <section
@@ -263,9 +264,9 @@ const Hero = () => {
                 letterSpacing: "-0.02em",
               }}
             >
-              <span className="block">Suivez vos</span>
+              <span className="block">{lt.hero_line1}</span>
               <span className="block mt-1">
-                <MarkerText variant="lime">dépenses</MarkerText>
+                <MarkerText variant="lime">{lt.hero_word_expenses}</MarkerText>
               </span>
               <span
                 className="block mt-1"
@@ -274,10 +275,10 @@ const Hero = () => {
                   WebkitTextStroke: "2px rgba(234,251,234,0.5)",
                 }}
               >
-                revenus
+                {lt.hero_word_income}
               </span>
               <span className="block mt-1">
-                <MarkerText variant="dark">épargne</MarkerText>
+                <MarkerText variant="dark">{lt.hero_word_savings}</MarkerText>
               </span>
             </h1>
 
@@ -285,8 +286,7 @@ const Hero = () => {
               className="mt-6 max-w-xl text-base md:text-lg"
               style={{ color: "rgba(234,251,234,0.7)" }}
             >
-              Mon Jeton suit vos dépenses en FCFA, gère vos tontines et scanne
-              vos reçus par IA. Sans stocker un centime chez nous.
+              {lt.hero_subtitle}
             </p>
 
             {/* Buttons */}
@@ -296,7 +296,7 @@ const Hero = () => {
                 className="font-display font-bold px-6 py-3 rounded-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: LIME, color: "#04060A" }}
               >
-                S'inscrire
+                {lt.hero_cta_signup}
               </button>
               <button
                 onClick={() => scrollToId("pricing")}
@@ -307,14 +307,14 @@ const Hero = () => {
                   border: `1px solid ${LIME}`,
                 }}
               >
-                Prendre le plan Pro
+                {lt.hero_cta_pro}
               </button>
               <button
                 onClick={() => scrollToId("demo", "features")}
                 className="font-display font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition-colors hover:bg-white/5"
                 style={{ color: TEXT }}
               >
-                <Play size={16} /> Voir la démo
+                <Play size={16} /> {lt.hero_cta_demo}
               </button>
             </div>
 
@@ -332,7 +332,7 @@ const Hero = () => {
                 ))}
               </div>
               <span className="text-xs" style={{ color: "rgba(234,251,234,0.65)" }}>
-                Rejoins 2 500+ utilisateurs
+                {lt.hero_trust}
               </span>
             </div>
           </div>
@@ -342,31 +342,31 @@ const Hero = () => {
             className="relative mx-auto w-full"
             style={{ minHeight: 500 }}
           >
-            <Phone />
+            <Phone lt={lt} />
 
             {/* Floating cards */}
             <FloatCard
               hideOnMobile
               icon={<AlertTriangle size={16} color="#FF5A5A" />}
-              label="Alerte dépense"
+              label={lt.fc_alert}
               value="-32 000 F"
-              sub="resto ce mois-ci"
+              sub={lt.fc_alert_sub}
               rotate={-5}
               delay={0.1}
               className="top-4 -left-2 md:-left-6"
             />
             <FloatCard
               icon={<ScanLine size={16} color={LIME} />}
-              label="Scan AI"
-              value="Reçu en 2 s"
+              label={lt.fc_scan}
+              value={lt.fc_scan_val}
               rotate={6}
               delay={0.35}
               className="top-8 -right-2 md:-right-4"
             />
             <FloatCard
               icon={<Users size={16} color={LIME} />}
-              label="Tontine Bureau"
-              value="7/10 à jour"
+              label={lt.fc_tontine}
+              value={lt.fc_tontine_val}
               progress={70}
               rotate={-4}
               delay={0.6}
@@ -374,8 +374,8 @@ const Hero = () => {
             />
             <FloatCard
               icon={<Target size={16} color="#F5B301" />}
-              label="Budget Transport"
-              value="Reste 12 000 F"
+              label={lt.fc_budget}
+              value={lt.fc_budget_val}
               rotate={5}
               delay={0.85}
               className="bottom-10 -right-2 md:-right-6"
