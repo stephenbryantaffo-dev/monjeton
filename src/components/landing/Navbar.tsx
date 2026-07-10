@@ -32,6 +32,15 @@ const handleAnchorClick = (
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { lt } = useLandingT();
+  const { country, setLang } = useCountry();
+  const lang = country.lang;
+
+  const navItems = [
+    { label: lt.nav_features, href: "#demo" },
+    { label: lt.nav_pricing, href: "#pricing" },
+    { label: lt.nav_faq, href: "#faq" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -39,9 +48,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Sélecteur de langue (état local uniquement)
-  // TODO: brancher i18n pour la traduction réelle
-  const [lang, setLang] = useState<"fr" | "en">("fr");
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement | null>(null);
 
