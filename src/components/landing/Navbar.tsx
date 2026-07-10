@@ -173,7 +173,7 @@ const Navbar = () => {
             to="/signup"
             className="bg-[#7CFF3A] text-[#05070A] font-bold text-sm px-4 py-2 rounded-full hover:scale-105 transition-transform whitespace-nowrap shadow-[0_0_25px_rgba(124,255,58,0.3)]"
           >
-            S'inscrire →
+            {lt.nav_signup}
           </Link>
         </div>
 
@@ -221,14 +221,14 @@ const Navbar = () => {
                   onClick={() => setMenuOpen(false)}
                   className="text-center py-3 rounded-xl border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] text-sm font-medium text-[#EAFBEA]"
                 >
-                  Se connecter
+                  {lt.nav_login}
                 </Link>
                 <Link
                   to="/signup"
                   onClick={() => setMenuOpen(false)}
                   className="text-center py-3 rounded-xl bg-[#7CFF3A] text-[#05070A] font-bold text-sm shadow-[0_0_25px_rgba(124,255,58,0.3)]"
                 >
-                  S'inscrire →
+                  {lt.nav_signup}
                 </Link>
               </div>
             </div>
