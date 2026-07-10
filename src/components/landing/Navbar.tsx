@@ -3,12 +3,9 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import logoImg from "@/assets/logo-monjeton.webp";
-
-const navItems = [
-  { label: "Fonctionnalités", href: "#demo" },
-  { label: "Tarifs", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
-];
+import { useLandingT } from "@/hooks/useLandingT";
+import { useCountry } from "@/contexts/CountryContext";
+import type { Lang } from "@/lib/i18n";
 
 const NAVBAR_OFFSET = 72;
 
