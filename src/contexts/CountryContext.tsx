@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { CountryConfig, detectCountry, DEFAULT_COUNTRY, TRANSLATIONS, COUNTRIES } from "@/lib/i18n";
+import { CountryConfig, detectCountry, DEFAULT_COUNTRY, TRANSLATIONS, COUNTRIES, Lang } from "@/lib/i18n";
 
 interface CountryContextType {
   country: CountryConfig;
   setCountry: (c: CountryConfig) => void;
+  setLang: (lang: Lang) => void;
   t: (typeof TRANSLATIONS)["fr"] | (typeof TRANSLATIONS)["en"];
   formatLocalAmount: (amount: number) => string;
 }
@@ -34,6 +35,12 @@ export const CountryProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("monjeton_country", c.code);
   };
 
+  const setLang = (lang: Lang) => {
+    if (country.lang === lang) return;
+    const next = COUNTRIES.find((c) => c.lang === lang);
+    if (next) setCountry(next);
+  };
+
   const t = TRANSLATIONS[country.lang];
 
   const formatLocalAmount = (amount: number) => {
@@ -44,7 +51,7 @@ export const CountryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CountryContext.Provider value={{ country, setCountry, t, formatLocalAmount }}>
+    <CountryContext.Provider value={{ country, setCountry, setLang, t, formatLocalAmount }}>
       {children}
     </CountryContext.Provider>
   );
