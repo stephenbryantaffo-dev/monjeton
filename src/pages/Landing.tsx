@@ -10,9 +10,9 @@ import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const FeatureShowcase = lazy(() => import("@/components/landing/FeatureShowcase"));
+const Personas = lazy(() => import("@/components/landing/Personas"));
+const TestimonialsBlock = lazy(() => import("@/components/landing/TestimonialsBlock"));
 const Pricing = lazy(() => import("@/components/landing/Pricing"));
-const FAQ = lazy(() => import("@/components/landing/FAQ"));
-const FinalCTA = lazy(() => import("@/components/landing/FinalCTA"));
 
 const SectionFallback = () => (
   <div className="min-h-[200px] flex items-center justify-center">
@@ -40,16 +40,16 @@ const Landing = () => {
           <SectionReveal><Suspense fallback={<SectionFallback />}><FeatureShowcase /></Suspense></SectionReveal>
         </AnimatedSectionBackground>
 
-        <AnimatedSectionBackground variant={1} glow glowBottom>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><Pricing /></Suspense></SectionReveal>
+        <AnimatedSectionBackground variant={1} glow>
+          <SectionReveal><Suspense fallback={<SectionFallback />}><Personas /></Suspense></SectionReveal>
         </AnimatedSectionBackground>
 
         <AnimatedSectionBackground variant={2} glow>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><FAQ /></Suspense></SectionReveal>
+          <SectionReveal><Suspense fallback={<SectionFallback />}><TestimonialsBlock /></Suspense></SectionReveal>
         </AnimatedSectionBackground>
 
         <AnimatedSectionBackground variant={0} glow glowBottom>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><FinalCTA /></Suspense></SectionReveal>
+          <SectionReveal><Suspense fallback={<SectionFallback />}><Pricing /></Suspense></SectionReveal>
         </AnimatedSectionBackground>
 
         <Footer />
