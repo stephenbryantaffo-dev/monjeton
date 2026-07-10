@@ -27,7 +27,7 @@ const Landing = () => {
     path: "/",
   });
   return (
-    <div className="min-h-screen bg-[#05070A] relative" style={{ isolation: "isolate" }}>
+    <div className="min-h-screen bg-[#14171C] relative" style={{ isolation: "isolate" }}>
       <div className="grid-bg" aria-hidden="true" />
       <div className="relative" style={{ zIndex: 1 }}>
         <GlobalDigitalEffects />

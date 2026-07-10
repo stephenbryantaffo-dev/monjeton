@@ -34,7 +34,7 @@ const PaymentMarquee = () => {
     <section
       className="relative w-full py-10"
       style={{
-        background: "#04060A",
+        background: "#14171C",
         borderTop: "1px solid rgba(124,255,58,0.07)",
         borderBottom: "1px solid rgba(124,255,58,0.07)",
       }}
@@ -51,12 +51,12 @@ const PaymentMarquee = () => {
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10"
-          style={{ background: "linear-gradient(to right, #04060A, transparent)" }}
+          style={{ background: "linear-gradient(to right, #14171C, transparent)" }}
         />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10"
-          style={{ background: "linear-gradient(to left, #04060A, transparent)" }}
+          style={{ background: "linear-gradient(to left, #14171C, transparent)" }}
         />
 
         <div
