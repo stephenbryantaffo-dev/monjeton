@@ -66,7 +66,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
           border: "1px solid rgba(124,255,58,0.28)",
         }}
       >
-        <div className="text-[10px] text-white/60">Dépenses de juillet</div>
+        <div className="text-[10px] text-white/60">{lt.phone_expenses_july}</div>
         <div className="text-lg font-extrabold mt-0.5" style={{ color: TEXT }}>
           128 500 <span className="text-[10px] text-white/50">FCFA</span>
         </div>
@@ -93,7 +93,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
             border: "1px solid rgba(124,255,58,0.18)",
           }}
         >
-          <div className="text-[9px] text-white/50">Revenus</div>
+          <div className="text-[9px] text-white/50">{lt.phone_income}</div>
           <div className="text-xs font-bold" style={{ color: LIME }}>
             210 000
           </div>
@@ -105,7 +105,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
             border: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <div className="text-[9px] text-white/50">Dépenses</div>
+          <div className="text-[9px] text-white/50">{lt.phone_expenses}</div>
           <div className="text-xs font-bold">128 500</div>
         </div>
       </div>
@@ -116,7 +116,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
           className="flex items-center justify-between rounded-lg px-2.5 py-1.5"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
-          <span className="text-[10px] text-white/70">Freelance</span>
+          <span className="text-[10px] text-white/70">{lt.phone_freelance}</span>
           <span className="text-[10px] font-bold" style={{ color: LIME }}>
             +50 000
           </span>
@@ -125,7 +125,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
           className="flex items-center justify-between rounded-lg px-2.5 py-1.5"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
-          <span className="text-[10px] text-white/70">Restaurant</span>
+          <span className="text-[10px] text-white/70">{lt.phone_restaurant}</span>
           <span className="text-[10px] font-bold text-red-400">-8 500</span>
         </div>
       </div>
@@ -134,7 +134,7 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
 };
 
 /* ---------- Phone frame ---------- */
-const Phone = () => (
+const Phone = ({ lt }: { lt: LandingStrings }) => (
   <motion.div
     animate={{ y: [0, -12, 0] }}
     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
