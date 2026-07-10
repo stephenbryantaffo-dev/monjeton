@@ -1,3 +1,5 @@
+import { useLandingT } from "@/hooks/useLandingT";
+
 const items = [
   { initials: "OM", name: "Orange Money" },
   { initials: "WA", name: "Wave" },
@@ -29,6 +31,7 @@ const Pill = ({ initials, name }: { initials: string; name: string }) => (
 );
 
 const PaymentMarquee = () => {
+  const { lt } = useLandingT();
   const loop = [...items, ...items];
   return (
     <section
@@ -43,7 +46,7 @@ const PaymentMarquee = () => {
         className="text-center text-[11px] font-semibold uppercase mb-6"
         style={{ letterSpacing: "0.22em", color: "rgba(234,251,234,0.4)" }}
       >
-        Compatible avec vos moyens de paiement
+        {lt.marquee_title}
       </p>
 
       <div className="relative overflow-hidden group">
