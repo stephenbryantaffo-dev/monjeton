@@ -165,7 +165,7 @@ const Phone = ({ lt }: { lt: LandingStrings }) => (
           background: "#000",
         }}
       />
-      <PhoneScreen />
+      <PhoneScreen lt={lt} />
     </div>
   </motion.div>
 );
