@@ -182,7 +182,7 @@ const Pricing = () => {
                     transformTiming={{ duration: 400, easing: "ease-out" }}
                   />
                   <span className="text-sm text-[rgba(234,251,234,0.55)] ml-1">
-                    FCFA /{isYearly ? "an" : "mois"}
+                    FCFA /{isYearly ? lt.pricing_per_year : lt.pricing_per_month}
                   </span>
                 </div>
               </div>
