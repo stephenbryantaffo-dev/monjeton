@@ -55,7 +55,13 @@ const buildPlans = (lt: LandingStrings): Array<{
   },
 ];
 
-const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
+const PricingSwitch = ({
+  onSwitch,
+  labels,
+}: {
+  onSwitch: (value: string) => void;
+  labels: { monthly: string; yearly: string };
+}) => {
   const [selected, setSelected] = useState("0");
 
   const handleSwitch = (value: string) => {
@@ -80,7 +86,7 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             />
           )}
-          <span className="relative z-10">Mensuel</span>
+          <span className="relative z-10">{labels.monthly}</span>
         </button>
         <button
           onClick={() => handleSwitch("1")}
@@ -96,7 +102,7 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             />
           )}
-          <span className="relative z-10">Annuel</span>
+          <span className="relative z-10">{labels.yearly}</span>
         </button>
       </div>
     </div>
@@ -105,6 +111,8 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
 
 const Pricing = () => {
   const [isYearly, setIsYearly] = useState(false);
+  const { lt } = useLandingT();
+  const plans = buildPlans(lt);
 
   const togglePricingPeriod = (value: string) =>
     setIsYearly(Number.parseInt(value) === 1);
@@ -122,14 +130,17 @@ const Pricing = () => {
           className="text-center mb-8"
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#EAFBEA] mb-4">
-            Tarifs simples et transparents
+            {lt.pricing_title}
           </h2>
           <p className="text-[rgba(234,251,234,0.72)] max-w-lg mx-auto">
-            Choisissez le plan qui vous convient. Changez ou annulez à tout moment.
+            {lt.pricing_subtitle}
           </p>
         </motion.div>
 
-        <PricingSwitch onSwitch={togglePricingPeriod} />
+        <PricingSwitch
+          onSwitch={togglePricingPeriod}
+          labels={{ monthly: lt.pricing_monthly, yearly: lt.pricing_yearly }}
+        />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan, i) => (
