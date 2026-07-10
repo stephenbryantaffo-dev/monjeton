@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 
 interface MarkerTextProps {
   children: string;
@@ -6,6 +7,9 @@ interface MarkerTextProps {
 }
 
 const MarkerText = ({ children, variant = "lime" }: MarkerTextProps) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.3, margin: "0px 0px -5% 0px" });
+
   const fillStyle =
     variant === "lime"
       ? { background: "#7CFF3A", color: "#04060A" }
@@ -17,6 +21,7 @@ const MarkerText = ({ children, variant = "lime" }: MarkerTextProps) => {
 
   return (
     <span
+      ref={ref}
       className="relative inline-block"
       style={{ padding: "0 0.25em", whiteSpace: "nowrap" }}
     >
@@ -26,8 +31,7 @@ const MarkerText = ({ children, variant = "lime" }: MarkerTextProps) => {
       <motion.span
         aria-hidden="true"
         initial={{ clipPath: "inset(0 100% 0 0)" }}
-        whileInView={{ clipPath: "inset(0 0 0 0)" }}
-        viewport={{ once: true, amount: 0.6 }}
+        animate={{ clipPath: inView ? "inset(0 0 0 0)" : "inset(0 100% 0 0)" }}
         transition={{ duration: 0.75, ease: [0.65, 0, 0.35, 1] }}
         style={{
           position: "absolute",
