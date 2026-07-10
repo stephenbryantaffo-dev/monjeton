@@ -23,8 +23,8 @@ const Footer = () => (
         <div>
           <h4 className="text-sm font-semibold text-[#D5D7D6] mb-3">Contact</h4>
           <ul className="space-y-2 text-sm text-[#79847E]">
-            <li>contact@track-emoney.com</li>
-            <li>+225 00 00 00 00</li>
+            <li>brentgroup1@gmail.com</li>
+            <li>+225 07 78 36 19 88</li>
             <li>🌍 Côte d'Ivoire</li>
           </ul>
         </div>
@@ -36,7 +36,6 @@ const Footer = () => (
           <a href="/privacy" className="text-xs text-[#79847E] hover:text-[#8DD621] transition-colors">Confidentialité</a>
           <a href="/terms" className="text-xs text-[#79847E] hover:text-[#8DD621] transition-colors">CGU</a>
         </div>
-        <p className="text-xs text-[#79847E]">Fait avec 💚 en Côte d'Ivoire</p>
       </div>
     </div>
   </footer>
