@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { isIOSNative } from "@/lib/platform";
 
 const proFeatures = [
   "Transactions illimitées",
