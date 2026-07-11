@@ -402,9 +402,14 @@ const SubscriptionManage = () => {
                 current={aiMsgsThisMonth}
                 limit={Infinity}
               />
-              {isFree && scansThisMonth >= scanLimit && (
+              {isFree && scansThisMonth >= scanLimit && !iosHide && (
                 <div className="text-xs text-destructive bg-destructive/10 rounded-lg p-3 border border-destructive/30">
                   Tu as atteint la limite de scans gratuits ce mois. Passe à Pro pour continuer.
+                </div>
+              )}
+              {isFree && scansThisMonth >= scanLimit && iosHide && (
+                <div className="text-xs text-destructive bg-destructive/10 rounded-lg p-3 border border-destructive/30">
+                  Tu as atteint la limite de scans gratuits ce mois.
                 </div>
               )}
             </motion.div>
@@ -471,7 +476,7 @@ const SubscriptionManage = () => {
                     ])}
                   </div>
 
-                  {!isUltra && (
+                  {!isUltra && !iosHide && (
                     <div className="mt-4 flex gap-2">
                       {isFree && (
                         <Button onClick={openJekoPro} variant="hero" size="sm" className="flex-1">
