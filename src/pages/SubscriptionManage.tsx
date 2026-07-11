@@ -288,12 +288,14 @@ const SubscriptionManage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-black text-foreground">
-                    {isFree ? "0 F" : fmtXof(sub!.price_xof)}
+                {!iosHide && (
+                  <div className="text-right">
+                    <div className="text-2xl font-black text-foreground">
+                      {isFree ? "0 F" : fmtXof(sub!.price_xof)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">/ mois</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">/ mois</div>
-                </div>
+                )}
               </div>
 
               <ul className="space-y-2 text-sm text-foreground">
