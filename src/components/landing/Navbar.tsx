@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import logoImg from "@/assets/logo-monjeton.webp";
@@ -7,7 +7,7 @@ import { useLandingT } from "@/hooks/useLandingT";
 import { useCountry } from "@/contexts/CountryContext";
 import type { Lang } from "@/lib/i18n";
 
-const NAVBAR_OFFSET = 72;
+const NAVBAR_OFFSET = 80;
 
 const scrollToAnchor = (href: string) => {
   const el = document.querySelector(href) as HTMLElement | null;
@@ -24,7 +24,6 @@ const handleAnchorClick = (
   if (href.startsWith("#")) {
     e.preventDefault();
     onDone?.();
-    // Defer scroll until after the mobile menu collapses to avoid interference
     window.setTimeout(() => scrollToAnchor(href), 60);
   }
 };
@@ -32,20 +31,48 @@ const handleAnchorClick = (
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string>("hero");
   const { lt } = useLandingT();
   const { country, setLang } = useCountry();
   const lang = country.lang;
+  const navigate = useNavigate();
 
   const navItems = [
-    { label: lt.nav_features, href: "#demo" },
-    { label: lt.nav_pricing, href: "#pricing" },
-    { label: lt.nav_faq, href: "#faq" },
+    { label: lt.nav_home ?? "Accueil", href: "#hero", id: "hero" },
+    { label: lt.nav_features, href: "#demo", id: "demo" },
+    { label: lt.nav_pricing, href: "#pricing", id: "pricing" },
+    { label: lt.nav_testimonials ?? "Témoignages", href: "#testimonials", id: "testimonials" },
+    { label: lt.nav_contact ?? "Contact", href: "#footer", id: "footer" },
   ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Active section tracking via IntersectionObserver
+  useEffect(() => {
+    const ids = navItems.map((n) => n.id);
+    const elements = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]?.target.id) setActiveId(visible[0].target.id);
+      },
+      { rootMargin: "-40% 0px -50% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [langOpen, setLangOpen] = useState(false);
@@ -63,57 +90,64 @@ const Navbar = () => {
 
   return (
     <motion.nav
-      initial={{ y: -80 }}
-      animate={{ y: 0 }}
+      initial={{ y: -80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${
-        scrolled
-          ? "border-[rgba(124,255,58,0.12)]"
-          : "border-transparent"
-      }`}
-      style={{
-        background: scrolled ? "rgba(5,7,10,0.85)" : "rgba(5,7,10,0.4)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-      }}
+      className="fixed top-3 sm:top-4 left-0 right-0 z-50 px-3 sm:px-5"
     >
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4 flex-nowrap">
+      <div
+        className="mx-auto flex items-center justify-between gap-3 rounded-full transition-all duration-300"
+        style={{
+          maxWidth: "1120px",
+          padding: "10px 14px 10px 18px",
+          background: scrolled ? "rgba(20,23,28,0.85)" : "rgba(20,23,28,0.7)",
+          border: "1px solid rgba(124,255,58,0.12)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          boxShadow: scrolled
+            ? "0 10px 30px rgba(0,0,0,0.35)"
+            : "0 6px 20px rgba(0,0,0,0.25)",
+        }}
+      >
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
           <img
             src={logoImg}
             alt="Mon Jeton"
-            className="h-9 w-auto rounded-lg flex-shrink-0"
+            className="h-8 w-auto rounded-lg flex-shrink-0"
             loading="lazy"
           />
-          <span className="font-black text-lg text-[#EAFBEA] whitespace-nowrap hidden sm:block">
+          <span className="font-display font-black text-base sm:text-lg text-[#EAFBEA] whitespace-nowrap hidden sm:block">
             Mon Jeton
           </span>
         </Link>
 
-        {/* Liens desktop (>= lg) */}
-        <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-center flex-nowrap overflow-hidden">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              onClick={(e) => handleAnchorClick(e, item.href)}
-              className="whitespace-nowrap px-3 py-2 rounded-lg text-xs xl:text-sm font-medium text-[rgba(234,251,234,0.72)] hover:text-[#7CFF3A] hover:bg-[rgba(124,255,58,0.08)] transition-all duration-200"
-            >
-              {item.label}
-            </a>
-          ))}
+        {/* Liens desktop */}
+        <div className="hidden lg:flex items-center gap-1 flex-1 justify-center flex-nowrap">
+          {navItems.map((item) => {
+            const isActive = activeId === item.id;
+            return (
+              <a
+                key={item.id}
+                href={item.href}
+                onClick={(e) => {
+                  setActiveId(item.id);
+                  handleAnchorClick(e, item.href);
+                }}
+                className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                  isActive
+                    ? "bg-[#7CFF3A] text-[#14171C] shadow-[0_0_20px_rgba(124,255,58,0.35)]"
+                    : "text-[rgba(234,251,234,0.75)] hover:text-[#7CFF3A]"
+                }`}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </div>
 
-        {/* CTA desktop */}
+        {/* Actions desktop */}
         <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-          <Link
-            to="/login"
-            className="text-sm font-medium text-[rgba(234,251,234,0.72)] hover:text-[#EAFBEA] transition px-3 py-2 whitespace-nowrap"
-          >
-            {lt.nav_login}
-          </Link>
-
           {/* Sélecteur de langue */}
           <div ref={langRef} className="relative">
             <button
@@ -121,7 +155,7 @@ const Navbar = () => {
               onClick={() => setLangOpen((o) => !o)}
               aria-haspopup="menu"
               aria-expanded={langOpen}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-[#EAFBEA] border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.10)] transition"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold text-[#EAFBEA] border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] hover:bg-[rgba(124,255,58,0.10)] transition"
             >
               <Globe className="w-4 h-4 text-[#7CFF3A]" />
               <span className="uppercase">{lang}</span>
@@ -137,7 +171,7 @@ const Navbar = () => {
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
                   role="menu"
-                  className="absolute right-0 mt-2 min-w-[160px] rounded-xl overflow-hidden z-50"
+                  className="absolute right-0 mt-2 min-w-[160px] rounded-2xl overflow-hidden z-50"
                   style={{
                     background: "#0d1512",
                     border: "1px solid rgba(124,255,58,0.3)",
@@ -169,19 +203,25 @@ const Navbar = () => {
             </AnimatePresence>
           </div>
 
-          <Link
-            to="/signup"
-            className="bg-[#7CFF3A] text-[#05070A] font-bold text-sm px-4 py-2 rounded-full hover:scale-105 transition-transform whitespace-nowrap shadow-[0_0_25px_rgba(124,255,58,0.3)]"
+          <button
+            type="button"
+            onClick={() => navigate("/signup")}
+            className="px-5 py-2 rounded-full text-sm font-bold text-white whitespace-nowrap transition-transform hover:scale-105"
+            style={{
+              background: "#0d1512",
+              border: "1px solid rgba(124,255,58,0.35)",
+              boxShadow: "0 0 20px rgba(124,255,58,0.15)",
+            }}
           >
             {lt.nav_signup}
-          </Link>
+          </button>
         </div>
 
         {/* Hamburger (< lg) */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          className="lg:hidden w-10 h-10 rounded-xl border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] flex items-center justify-center flex-shrink-0"
+          className="lg:hidden w-10 h-10 rounded-full border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] flex items-center justify-center flex-shrink-0"
         >
           {menuOpen ? (
             <X className="w-5 h-5 text-[#EAFBEA]" />
@@ -191,45 +231,84 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Menu mobile/tablette déroulant */}
+      {/* Menu mobile */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden border-t border-[rgba(124,255,58,0.12)] overflow-hidden"
-            style={{ background: "rgba(5,7,10,0.97)" }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden mx-auto mt-3 rounded-3xl overflow-hidden"
+            style={{
+              maxWidth: "1120px",
+              background: "rgba(20,23,28,0.95)",
+              border: "1px solid rgba(124,255,58,0.12)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
           >
-            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => {
-                    setMenuOpen(false);
-                    handleAnchorClick(e, item.href);
-                  }}
-                  className="flex items-center px-4 py-3 rounded-xl text-sm font-medium text-[rgba(234,251,234,0.72)] hover:text-[#7CFF3A] hover:bg-[rgba(124,255,58,0.08)] transition-all whitespace-nowrap"
-                >
-                  {item.label}
-                </a>
-              ))}
+            <div className="px-4 py-4 flex flex-col gap-1.5">
+              {navItems.map((item) => {
+                const isActive = activeId === item.id;
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    onClick={(e) => {
+                      setActiveId(item.id);
+                      setMenuOpen(false);
+                      handleAnchorClick(e, item.href);
+                    }}
+                    className={`px-4 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
+                      isActive
+                        ? "bg-[#7CFF3A] text-[#14171C]"
+                        : "text-[rgba(234,251,234,0.75)] hover:text-[#7CFF3A] hover:bg-[rgba(124,255,58,0.08)]"
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+
               <div className="border-t border-[rgba(124,255,58,0.12)] pt-3 mt-2 flex flex-col gap-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="text-center py-3 rounded-xl border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)] text-sm font-medium text-[#EAFBEA]"
-                >
-                  {lt.nav_login}
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setMenuOpen(false)}
-                  className="text-center py-3 rounded-xl bg-[#7CFF3A] text-[#05070A] font-bold text-sm shadow-[0_0_25px_rgba(124,255,58,0.3)]"
+                {/* Sélecteur de langue mobile */}
+                <div className="flex items-center justify-center gap-2">
+                  {([
+                    { code: "fr", label: "FR" },
+                    { code: "en", label: "EN" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.code}
+                      type="button"
+                      onClick={() => setLang(opt.code as Lang)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full text-sm font-bold transition ${
+                        lang === opt.code
+                          ? "bg-[rgba(124,255,58,0.12)] text-[#7CFF3A] border border-[rgba(124,255,58,0.35)]"
+                          : "text-[#EAFBEA] border border-[rgba(124,255,58,0.18)] bg-[rgba(124,255,58,0.04)]"
+                      }`}
+                    >
+                      <Globe className="w-4 h-4" />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/signup");
+                  }}
+                  className="text-center py-3 rounded-full text-sm font-bold text-white"
+                  style={{
+                    background: "#0d1512",
+                    border: "1px solid rgba(124,255,58,0.35)",
+                    boxShadow: "0 0 20px rgba(124,255,58,0.15)",
+                  }}
                 >
                   {lt.nav_signup}
-                </Link>
+                </button>
               </div>
             </div>
           </motion.div>
