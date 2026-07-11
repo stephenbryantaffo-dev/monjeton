@@ -1,7 +1,7 @@
 // Helpers to detect the existing auth method for an email, to prevent
 // the same person from creating duplicate accounts via email vs Google.
 
-export type AuthMethod = "email" | "google" | "other" | null;
+export type AuthMethod = "email" | "google" | "apple" | "other" | null;
 
 export interface AuthMethodResult {
   exists: boolean;
@@ -42,13 +42,17 @@ export async function checkAuthMethod(email: string): Promise<AuthMethodResult> 
 }
 
 /** Human message guiding the user to the correct method. */
-export function methodMismatchMessage(method: AuthMethod, attempted: "email" | "google"): string | null {
+export function methodMismatchMessage(method: AuthMethod, attempted: "email" | "google" | "apple"): string | null {
   if (!method) return null;
-  if (attempted === "google" && method === "email") {
+  if (method === attempted) return null;
+  if (method === "email") {
     return "Ce compte a été créé avec un email et un mot de passe. Connecte-toi avec ton mot de passe, ou utilise « Mot de passe oublié » si besoin.";
   }
-  if (attempted === "email" && method === "google") {
+  if (method === "google") {
     return "Ce compte utilise la connexion Google. Clique sur « Continuer avec Google » pour te connecter.";
+  }
+  if (method === "apple") {
+    return "Ce compte utilise la connexion Apple. Clique sur « Continuer avec Apple » pour te connecter.";
   }
   return null;
 }
