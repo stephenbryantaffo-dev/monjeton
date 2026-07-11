@@ -143,6 +143,33 @@ const Login = () => {
     navigate(returnTo, { replace: true });
   };
 
+  const handleApple = async () => {
+    const returnTo = searchParams.get("returnTo") || "/dashboard";
+    const typed = email.trim().toLowerCase();
+    if (typed) {
+      const info = await checkAuthMethod(typed);
+      const mismatch = methodMismatchMessage(info.method, "apple");
+      if (info.exists && mismatch) {
+        toast({
+          title: "Méthode différente pour ce compte",
+          description: mismatch,
+          variant: "destructive",
+          duration: 7000,
+        });
+        return;
+      }
+    }
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin + returnTo,
+    });
+    if (result.error) {
+      toast({ title: "Connexion Apple échouée", description: (result.error as any)?.message || "Réessaie.", variant: "destructive" });
+      return;
+    }
+    if (result.redirected) return;
+    navigate(returnTo, { replace: true });
+  };
+
   return (
     <div className="min-h-screen flex bg-background">
       {/* ── Left: Orbital animation (hidden on mobile) ── */}
