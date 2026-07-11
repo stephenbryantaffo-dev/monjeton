@@ -224,6 +224,9 @@ export const LANDING_STRINGS = {
     nav_features: "Features",
     nav_pricing: "Pricing",
     nav_faq: "FAQ",
+    nav_home: "Home",
+    nav_testimonials: "Testimonials",
+    nav_contact: "Contact",
     nav_login: "Sign in",
     nav_signup: "Sign up →",
 
