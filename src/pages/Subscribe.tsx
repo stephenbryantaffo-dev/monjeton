@@ -9,6 +9,7 @@ import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { isIOSNative } from "@/lib/platform";
 
 const Subscribe = () => {
   useDocumentMeta({
