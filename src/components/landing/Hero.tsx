@@ -238,6 +238,7 @@ const Hero = () => {
 
   return (
     <section
+      id="hero"
       className="relative overflow-hidden"
       style={{ background: "#14171C", color: TEXT }}
     >
