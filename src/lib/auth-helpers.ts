@@ -1,7 +1,7 @@
 // Helpers to detect the existing auth method for an email, to prevent
 // the same person from creating duplicate accounts via email vs Google.
 
-export type AuthMethod = "email" | "google" | "other" | null;
+export type AuthMethod = "email" | "google" | "apple" | "other" | null;
 
 export interface AuthMethodResult {
   exists: boolean;
