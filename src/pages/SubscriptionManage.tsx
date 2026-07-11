@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { isIOSNative } from "@/lib/platform";
 
 type PlanName = "Gratuit" | "Pro" | "Ultra Pro";
 
@@ -211,6 +212,7 @@ const SubscriptionManage = () => {
   const isFree = !isActive;
   const scanLimit = PLAN_SCAN_LIMITS[plan];
   const renewalDate = sub?.updated_at ? nextRenewal(sub.updated_at) : null;
+  const iosHide = isIOSNative();
   const lastPayment = payments[0];
 
   const planBadge = () => {
