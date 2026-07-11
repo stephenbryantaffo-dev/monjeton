@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { isIOSNative } from "@/lib/platform";
 
 type PlanName = "Gratuit" | "Pro" | "Ultra Pro";
 
@@ -211,6 +212,7 @@ const SubscriptionManage = () => {
   const isFree = !isActive;
   const scanLimit = PLAN_SCAN_LIMITS[plan];
   const renewalDate = sub?.updated_at ? nextRenewal(sub.updated_at) : null;
+  const iosHide = isIOSNative();
   const lastPayment = payments[0];
 
   const planBadge = () => {
@@ -286,12 +288,14 @@ const SubscriptionManage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-black text-foreground">
-                    {isFree ? "0 F" : fmtXof(sub!.price_xof)}
+                {!iosHide && (
+                  <div className="text-right">
+                    <div className="text-2xl font-black text-foreground">
+                      {isFree ? "0 F" : fmtXof(sub!.price_xof)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">/ mois</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">/ mois</div>
-                </div>
+                )}
               </div>
 
               <ul className="space-y-2 text-sm text-foreground">
@@ -303,52 +307,54 @@ const SubscriptionManage = () => {
                 ))}
               </ul>
 
-              <div className="space-y-2 pt-1">
-                {isFree && (
-                  <>
-                    <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
-                      <Sparkles className="w-4 h-4 mr-2" /> Passer à Pro
-                    </Button>
-                    <Button
-                      onClick={openJekoMax}
-                      size="lg"
-                      className="w-full bg-foreground text-background hover:bg-foreground/90"
-                    >
-                      <Crown className="w-4 h-4 mr-2" /> Passer à Ultra Pro
-                    </Button>
-                  </>
-                )}
+              {!iosHide && (
+                <div className="space-y-2 pt-1">
+                  {isFree && (
+                    <>
+                      <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
+                        <Sparkles className="w-4 h-4 mr-2" /> Passer à Pro
+                      </Button>
+                      <Button
+                        onClick={openJekoMax}
+                        size="lg"
+                        className="w-full bg-foreground text-background hover:bg-foreground/90"
+                      >
+                        <Crown className="w-4 h-4 mr-2" /> Passer à Ultra Pro
+                      </Button>
+                    </>
+                  )}
 
-                {isActive && (
-                  <>
-                    <Button
-                      onClick={() => (isUltra ? openJekoMax() : openJekoPro())}
-                      variant="hero"
-                      size="lg"
-                      className="w-full"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Renouveler ({fmtXof(sub!.price_xof)})
-                    </Button>
+                  {isActive && (
+                    <>
+                      <Button
+                        onClick={() => (isUltra ? openJekoMax() : openJekoPro())}
+                        variant="hero"
+                        size="lg"
+                        className="w-full"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Renouveler ({fmtXof(sub!.price_xof)})
+                      </Button>
 
-                    {isPro && (
-                      <>
-                        <Button
-                          onClick={openJekoMax}
-                          size="lg"
-                          className="w-full bg-foreground text-background hover:bg-foreground/90"
-                        >
-                          <ArrowUpRight className="w-4 h-4 mr-2" />
-                          Passer à Ultra Pro
-                        </Button>
-                        <p className="text-xs text-muted-foreground text-center pt-1">
-                          Ton cycle redémarre pour 30 jours en Ultra Pro.
-                        </p>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
+                      {isPro && (
+                        <>
+                          <Button
+                            onClick={openJekoMax}
+                            size="lg"
+                            className="w-full bg-foreground text-background hover:bg-foreground/90"
+                          >
+                            <ArrowUpRight className="w-4 h-4 mr-2" />
+                            Passer à Ultra Pro
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center pt-1">
+                            Ton cycle redémarre pour 30 jours en Ultra Pro.
+                          </p>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </motion.div>
 
             {/* Renouvellement (si actif) */}
@@ -396,9 +402,14 @@ const SubscriptionManage = () => {
                 current={aiMsgsThisMonth}
                 limit={Infinity}
               />
-              {isFree && scansThisMonth >= scanLimit && (
+              {isFree && scansThisMonth >= scanLimit && !iosHide && (
                 <div className="text-xs text-destructive bg-destructive/10 rounded-lg p-3 border border-destructive/30">
                   Tu as atteint la limite de scans gratuits ce mois. Passe à Pro pour continuer.
+                </div>
+              )}
+              {isFree && scansThisMonth >= scanLimit && iosHide && (
+                <div className="text-xs text-destructive bg-destructive/10 rounded-lg p-3 border border-destructive/30">
+                  Tu as atteint la limite de scans gratuits ce mois.
                 </div>
               )}
             </motion.div>
@@ -465,7 +476,7 @@ const SubscriptionManage = () => {
                     ])}
                   </div>
 
-                  {!isUltra && (
+                  {!isUltra && !iosHide && (
                     <div className="mt-4 flex gap-2">
                       {isFree && (
                         <Button onClick={openJekoPro} variant="hero" size="sm" className="flex-1">
@@ -486,58 +497,62 @@ const SubscriptionManage = () => {
             </motion.div>
 
             {/* Historique paiements */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="glass-card rounded-2xl p-5 space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-foreground">Historique des paiements</h3>
-                <span className="text-xs text-muted-foreground">{payments.length}</span>
-              </div>
+            {!iosHide && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="glass-card rounded-2xl p-5 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground">Historique des paiements</h3>
+                  <span className="text-xs text-muted-foreground">{payments.length}</span>
+                </div>
 
-              {payments.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Aucun paiement enregistré pour le moment.
-                </p>
-              ) : (
-                <ul className="divide-y divide-border/60">
-                  {payments.map((p) => (
-                    <li key={p.id} className="py-3 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground truncate">
-                            {p.plan_name ?? "Paiement"}
-                          </p>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-semibold">
-                            Reçu
-                          </span>
+                {payments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Aucun paiement enregistré pour le moment.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border/60">
+                    {payments.map((p) => (
+                      <li key={p.id} className="py-3 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                          <CreditCard className="w-4 h-4 text-primary" />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {fmtDate(p.created_at)} · {maskPhone(p.phone)}
-                        </p>
-                      </div>
-                      <div className="text-sm font-bold text-foreground flex-shrink-0">
-                        {fmtXof(p.amount)}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground truncate">
+                              {p.plan_name ?? "Paiement"}
+                            </p>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-semibold">
+                              Reçu
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {fmtDate(p.created_at)} · {maskPhone(p.phone)}
+                          </p>
+                        </div>
+                        <div className="text-sm font-bold text-foreground flex-shrink-0">
+                          {fmtXof(p.amount)}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </motion.div>
+            )}
 
             {/* Support */}
-            <a
-              href="mailto:support@monjeton.app?subject=Probl%C3%A8me%20de%20paiement%20J%C3%A8ko"
-              className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors py-2"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              Un problème de paiement ? Contacter le support
-            </a>
+            {!iosHide && (
+              <a
+                href="mailto:support@monjeton.app?subject=Probl%C3%A8me%20de%20paiement%20J%C3%A8ko"
+                className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors py-2"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                Un problème de paiement ? Contacter le support
+              </a>
+            )}
           </>
         )}
       </div>

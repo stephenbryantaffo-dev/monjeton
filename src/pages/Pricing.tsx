@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { isIOSNative } from "@/lib/platform";
 
 const proFeatures = [
   "Transactions illimitées",
@@ -47,6 +48,33 @@ const Pricing = () => {
   }, [user]);
   const isPro = currentPlan === "Pro";
   const isUltra = currentPlan === "Ultra Pro";
+
+  if (isIOSNative()) {
+    return (
+      <div className="min-h-screen gradient-bg flex flex-col">
+        <header className="flex items-center justify-between px-5 py-4">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
+            <span className="text-xl font-bold text-gradient">Mon Jeton</span>
+          </Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-5 py-12">
+          <div className="w-full max-w-md text-center space-y-5">
+            <h1 className="text-3xl font-bold text-foreground">Mon Jeton Pro</h1>
+            <p className="text-muted-foreground">
+              Avec Mon Jeton Pro, profite du scan illimité de tes reçus, de la saisie vocale de tes
+              dépenses, d'objectifs d'épargne illimités et de rapports détaillés pour mieux
+              comprendre ton argent.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Votre abonnement se gère depuis votre compte.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">

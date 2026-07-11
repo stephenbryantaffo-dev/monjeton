@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { openJekoPro } from "@/lib/jeko";
+import { isIOSNative } from "@/lib/platform";
 import { motion } from "framer-motion";
 import { ChevronRight, Camera, Upload, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -395,7 +396,7 @@ const Scan = () => {
               ? `📷 ${scansRemaining} scan${scansRemaining > 1 ? "s" : ""} restant${scansRemaining > 1 ? "s" : ""} ce mois`
               : "📷 Limite de scans atteinte ce mois"}
           </span>
-          {scansRemaining <= 0 && (
+          {scansRemaining <= 0 && !isIOSNative() && (
             <Button onClick={() => openJekoPro()} size="sm" className="gradient-primary text-primary-foreground">
               Passer à PRO
             </Button>
