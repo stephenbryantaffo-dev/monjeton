@@ -307,52 +307,54 @@ const SubscriptionManage = () => {
                 ))}
               </ul>
 
-              <div className="space-y-2 pt-1">
-                {isFree && (
-                  <>
-                    <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
-                      <Sparkles className="w-4 h-4 mr-2" /> Passer à Pro
-                    </Button>
-                    <Button
-                      onClick={openJekoMax}
-                      size="lg"
-                      className="w-full bg-foreground text-background hover:bg-foreground/90"
-                    >
-                      <Crown className="w-4 h-4 mr-2" /> Passer à Ultra Pro
-                    </Button>
-                  </>
-                )}
+              {!iosHide && (
+                <div className="space-y-2 pt-1">
+                  {isFree && (
+                    <>
+                      <Button onClick={openJekoPro} variant="hero" size="lg" className="w-full">
+                        <Sparkles className="w-4 h-4 mr-2" /> Passer à Pro
+                      </Button>
+                      <Button
+                        onClick={openJekoMax}
+                        size="lg"
+                        className="w-full bg-foreground text-background hover:bg-foreground/90"
+                      >
+                        <Crown className="w-4 h-4 mr-2" /> Passer à Ultra Pro
+                      </Button>
+                    </>
+                  )}
 
-                {isActive && (
-                  <>
-                    <Button
-                      onClick={() => (isUltra ? openJekoMax() : openJekoPro())}
-                      variant="hero"
-                      size="lg"
-                      className="w-full"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Renouveler ({fmtXof(sub!.price_xof)})
-                    </Button>
+                  {isActive && (
+                    <>
+                      <Button
+                        onClick={() => (isUltra ? openJekoMax() : openJekoPro())}
+                        variant="hero"
+                        size="lg"
+                        className="w-full"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Renouveler ({fmtXof(sub!.price_xof)})
+                      </Button>
 
-                    {isPro && (
-                      <>
-                        <Button
-                          onClick={openJekoMax}
-                          size="lg"
-                          className="w-full bg-foreground text-background hover:bg-foreground/90"
-                        >
-                          <ArrowUpRight className="w-4 h-4 mr-2" />
-                          Passer à Ultra Pro
-                        </Button>
-                        <p className="text-xs text-muted-foreground text-center pt-1">
-                          Ton cycle redémarre pour 30 jours en Ultra Pro.
-                        </p>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
+                      {isPro && (
+                        <>
+                          <Button
+                            onClick={openJekoMax}
+                            size="lg"
+                            className="w-full bg-foreground text-background hover:bg-foreground/90"
+                          >
+                            <ArrowUpRight className="w-4 h-4 mr-2" />
+                            Passer à Ultra Pro
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center pt-1">
+                            Ton cycle redémarre pour 30 jours en Ultra Pro.
+                          </p>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </motion.div>
 
             {/* Renouvellement (si actif) */}
