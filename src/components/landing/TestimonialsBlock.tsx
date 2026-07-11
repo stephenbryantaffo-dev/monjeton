@@ -23,7 +23,7 @@ const testimonials = [
 ];
 
 const TestimonialsBlock = () => (
-  <section className="py-16 sm:py-20 px-4 sm:px-5 border-t border-[rgba(124,255,58,0.06)] relative z-10">
+  <section id="testimonials" className="py-16 sm:py-20 px-4 sm:px-5 border-t border-[rgba(124,255,58,0.06)] relative z-10">
     <div className="max-w-6xl mx-auto">
       <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#7CFF3A] bg-[rgba(124,255,58,0.08)] border border-[rgba(124,255,58,0.2)] px-3.5 py-1.5 rounded-full mb-4">

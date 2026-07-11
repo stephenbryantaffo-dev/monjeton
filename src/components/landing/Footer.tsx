@@ -5,7 +5,7 @@ import { useLandingT } from "@/hooks/useLandingT";
 const Footer = () => {
   const { lt } = useLandingT();
   return (
-    <footer className="py-12 px-5 border-t border-[rgba(255,255,255,0.08)]">
+    <footer id="footer" className="py-12 px-5 border-t border-[rgba(255,255,255,0.08)]">
       <div className="max-w-6xl mx-auto">
         <div className="grid sm:grid-cols-3 gap-8 mb-8">
           <div>
