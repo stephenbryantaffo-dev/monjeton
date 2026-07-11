@@ -35,6 +35,33 @@ const Subscribe = () => {
 
   if (isAdmin) return <Navigate to="/dashboard" replace />;
 
+  if (isIOSNative()) {
+    return (
+      <div className="min-h-screen gradient-bg flex flex-col">
+        <header className="flex items-center justify-between px-5 py-4">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
+            <span className="text-xl font-bold text-gradient">Mon Jeton</span>
+          </Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-5 py-12">
+          <div className="w-full max-w-md text-center space-y-5">
+            <h1 className="text-2xl font-bold text-foreground">Mon Jeton Pro</h1>
+            <p className="text-muted-foreground text-sm">
+              Avec Mon Jeton Pro, profite du scan illimité de tes reçus, de la saisie vocale de
+              tes dépenses, d'objectifs d'épargne illimités et de rapports détaillés pour mieux
+              comprendre ton argent.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Votre abonnement se gère depuis votre compte.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+
   const handleSubscribe = (plan: "pro" | "max") => {
     if (!user) {
       // Forcer signup d'abord pour que l'email Jèko corresponde au compte
