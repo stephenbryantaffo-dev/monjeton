@@ -6,6 +6,9 @@ export const LANDING_STRINGS = {
     nav_features: "Fonctionnalités",
     nav_pricing: "Tarifs",
     nav_faq: "FAQ",
+    nav_home: "Accueil",
+    nav_testimonials: "Témoignages",
+    nav_contact: "Contact",
     nav_login: "Se connecter",
     nav_signup: "S'inscrire →",
 
