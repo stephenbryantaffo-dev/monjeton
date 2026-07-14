@@ -119,8 +119,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [memberSearch, setMemberSearch] = useState("");
   const [memberSort, setMemberSort] = useState<"name" | "paid">("name");
 
-  // Expense items sort
+  // Expense items (postes) sort & filter
   const [itemSort, setItemSort] = useState("created");
+  const [itemFilter, setItemFilter] = useState<"all" | "todo" | "done">("all");
 
   // Collaborators search & sort
   const [collabSearch, setCollabSearch] = useState("");
