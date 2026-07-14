@@ -8,14 +8,14 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import MarkerText from "@/components/landing/MarkerText";
 import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { useLandingT } from "@/hooks/useLandingT";
 
 interface Plan {
   id: string;
   name: string;
   price: number;
-  yearlyPrice: number;
   yearlyLabel: string;
-  features: string[];
+  features: readonly string[];
   buttonText: string;
   popular: boolean;
   action: () => void;
@@ -23,55 +23,36 @@ interface Plan {
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const { lt } = useLandingT();
 
   const plans: Plan[] = [
     {
       id: "free",
-      name: "Gratuit",
+      name: lt.pl_free_name,
       price: 0,
-      yearlyPrice: 0,
-      yearlyLabel: "pour toujours",
-      features: [
-        "Suivi dépenses & revenus",
-        "Tontines & caisses de base",
-        "1 objectif d'épargne",
-        "Historique 30 jours",
-      ],
-      buttonText: "S'inscrire",
+      yearlyLabel: lt.pl_free_yearly,
+      features: lt.pl_free_features,
+      buttonText: lt.pl_free_button,
       popular: false,
       action: () => navigate("/signup"),
     },
     {
       id: "pro",
-      name: "Pro",
+      name: lt.pl_pro_name,
       price: 2000,
-      yearlyPrice: 19900,
-      yearlyLabel: "ou 19 900 FCFA / an",
-      features: [
-        "Tout le plan Gratuit",
-        "Scan de factures IA illimité",
-        "Saisie vocale intelligente",
-        "Objectifs d'épargne illimités",
-        "Rapports détaillés & dettes",
-      ],
-      buttonText: "Prendre Pro",
+      yearlyLabel: lt.pl_pro_yearly,
+      features: lt.pl_pro_features,
+      buttonText: lt.pl_pro_button,
       popular: true,
       action: () => openJekoPro(),
     },
     {
       id: "ultra",
-      name: "Ultra Pro",
+      name: lt.pl_ultra_name,
       price: 5000,
-      yearlyPrice: 49900,
-      yearlyLabel: "ou 49 900 FCFA / an",
-      features: [
-        "Tout le plan Pro",
-        "Mode entreprise",
-        "Multi-comptes",
-        "Export comptable",
-        "Support prioritaire",
-      ],
-      buttonText: "Prendre Ultra Pro",
+      yearlyLabel: lt.pl_ultra_yearly,
+      features: lt.pl_ultra_features,
+      buttonText: lt.pl_ultra_button,
       popular: false,
       action: () => openJekoMax(),
     },
@@ -97,16 +78,16 @@ const Pricing = () => {
             variant="secondary"
             className="mb-5 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase bg-[rgba(124,255,58,0.10)] text-[#7CFF3A] border border-[rgba(124,255,58,0.18)] hover:bg-[rgba(124,255,58,0.14)]"
           >
-            Abonnements
+            {lt.pricing_landing_badge}
           </Badge>
 
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-[#EAFBEA] mb-4 uppercase tracking-tight">
-            Choisissez votre{" "}
-            <MarkerText variant="dark">plan</MarkerText>
+            {lt.pricing_landing_title_before}{" "}
+            <MarkerText variant="dark">{lt.pricing_landing_title_word}</MarkerText>
           </h2>
 
           <p className="text-[rgba(234,251,234,0.72)] max-w-lg mx-auto text-base sm:text-lg">
-            Commencez gratuitement, passez au Pro quand vous êtes prêt.
+            {lt.pricing_landing_subtitle}
           </p>
         </motion.div>
 
@@ -128,7 +109,7 @@ const Pricing = () => {
             >
               {plan.popular && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#7CFF3A] text-[#0d1512] text-xs font-bold hover:bg-[#7CFF3A] shadow-[0_0_20px_rgba(124,255,58,0.4)]">
-                  Le plus populaire
+                  {lt.pricing_landing_popular}
                 </Badge>
               )}
 
@@ -142,7 +123,7 @@ const Pricing = () => {
                     {formatPrice(plan.price)}
                   </span>
                   <span className="text-sm text-[rgba(234,251,234,0.55)] font-medium">
-                    FCFA / mois
+                    {lt.pricing_landing_per_month}
                   </span>
                 </div>
 
@@ -188,7 +169,7 @@ const Pricing = () => {
           transition={{ delay: 0.4, duration: 0.5 }}
           className="text-center text-sm text-[rgba(234,251,234,0.45)] mt-10"
         >
-          Paiement sécurisé via Jèko
+          {lt.pricing_landing_secure_note}
         </motion.p>
       </div>
     </section>

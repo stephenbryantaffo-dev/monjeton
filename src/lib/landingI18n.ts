@@ -172,6 +172,70 @@ export const LANDING_STRINGS = {
       "Accès anticipé aux nouvelles features",
     ],
 
+    // Testimonials
+    testi_badge: "Témoignages",
+    testi_title_before: "Ils gèrent mieux leur",
+    testi_title_word: "argent",
+    testi_items: [
+      {
+        quote: "Depuis Mon Jeton, je sais enfin où part mon argent chaque mois. Les tontines gérées toutes seules, un vrai soulagement.",
+        initial: "A",
+        name: "Aminata K.",
+        role: "Maman, Abidjan",
+      },
+      {
+        quote: "Je note mes ventes à la voix pendant que je sers les clients. Le scan des factures me fait gagner un temps fou.",
+        initial: "Y",
+        name: "Yao B.",
+        role: "Commerçant, Adjamé",
+      },
+      {
+        quote: "J'ai atteint mon objectif d'épargne pour mon téléphone en 4 mois. L'appli me motive vraiment à mettre de côté.",
+        initial: "F",
+        name: "Fatou D.",
+        role: "Étudiante, Cocody",
+      },
+    ],
+
+    // Landing pricing block
+    pricing_landing_badge: "Abonnements",
+    pricing_landing_title_before: "Choisissez votre",
+    pricing_landing_title_word: "plan",
+    pricing_landing_subtitle: "Commencez gratuitement, passez au Pro quand vous êtes prêt.",
+    pricing_landing_popular: "Le plus populaire",
+    pricing_landing_per_month: "FCFA / mois",
+    pricing_landing_secure_note: "Paiement sécurisé via Jèko",
+    pl_free_name: "Gratuit",
+    pl_free_yearly: "pour toujours",
+    pl_free_features: [
+      "Suivi dépenses & revenus",
+      "Tontines & caisses de base",
+      "1 objectif d'épargne",
+      "Historique 30 jours",
+    ],
+    pl_free_button: "S'inscrire",
+    pl_pro_name: "Pro",
+    pl_pro_yearly: "ou 19 900 FCFA / an",
+    pl_pro_features: [
+      "Tout le plan Gratuit",
+      "Scan de factures IA illimité",
+      "Saisie vocale intelligente",
+      "Objectifs d'épargne illimités",
+      "Rapports détaillés & dettes",
+    ],
+    pl_pro_button: "Prendre Pro",
+    pl_ultra_name: "Ultra Pro",
+    pl_ultra_yearly: "ou 49 900 FCFA / an",
+    pl_ultra_features: [
+      "Tout le plan Pro",
+      "Mode entreprise",
+      "Multi-comptes",
+      "Export comptable",
+      "Support prioritaire",
+    ],
+    pl_ultra_button: "Prendre Ultra Pro",
+
+
     // FAQ
     faq_title: "Questions fréquentes",
     faqs: [
@@ -382,6 +446,71 @@ export const LANDING_STRINGS = {
       "Priority support",
       "Early access to new features",
     ],
+
+    // Testimonials
+    testi_badge: "Testimonials",
+    testi_title_before: "They manage their",
+    testi_title_word: "money",
+    testi_items: [
+      {
+        quote: "Since Mon Jeton, I finally know where my money goes every month. Tontines run themselves — a huge relief.",
+        initial: "A",
+        name: "Aminata K.",
+        role: "Mom, Abidjan",
+      },
+      {
+        quote: "I log my sales by voice while serving customers. The receipt scan saves me a ton of time.",
+        initial: "Y",
+        name: "Yao B.",
+        role: "Shopkeeper, Adjamé",
+      },
+      {
+        quote: "I hit my savings goal for a new phone in 4 months. The app really motivates me to set money aside.",
+        initial: "F",
+        name: "Fatou D.",
+        role: "Student, Cocody",
+      },
+    ],
+
+    // Landing pricing block
+    pricing_landing_badge: "Plans",
+    pricing_landing_title_before: "Choose your",
+    pricing_landing_title_word: "plan",
+    pricing_landing_subtitle: "Start free, upgrade to Pro when you're ready.",
+    pricing_landing_popular: "Most popular",
+    pricing_landing_per_month: "FCFA / month",
+    pricing_landing_secure_note: "Secure payment via Jèko",
+    pl_free_name: "Free",
+    pl_free_yearly: "forever",
+    pl_free_features: [
+      "Track expenses & income",
+      "Basic tontines & pools",
+      "1 savings goal",
+      "30-day history",
+    ],
+    pl_free_button: "Sign up",
+    pl_pro_name: "Pro",
+    pl_pro_yearly: "or 19,900 FCFA / year",
+    pl_pro_features: [
+      "Everything in Free",
+      "Unlimited AI receipt scan",
+      "Smart voice entry",
+      "Unlimited savings goals",
+      "Detailed reports & debts",
+    ],
+    pl_pro_button: "Get Pro",
+    pl_ultra_name: "Ultra Pro",
+    pl_ultra_yearly: "or 49,900 FCFA / year",
+    pl_ultra_features: [
+      "Everything in Pro",
+      "Business mode",
+      "Multi-accounts",
+      "Accounting export",
+      "Priority support",
+    ],
+    pl_ultra_button: "Get Ultra Pro",
+
+
 
     // FAQ
     faq_title: "Frequently asked questions",
