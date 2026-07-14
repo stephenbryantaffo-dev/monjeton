@@ -240,7 +240,7 @@ const Hero = () => {
     <section
       id="hero"
       className="relative overflow-hidden"
-      style={{ background: "#14171C", color: TEXT }}
+      style={{ background: "linear-gradient(180deg, #14171C 0%, #101318 100%)", color: TEXT }}
     >
       {/* Ambient lime glow */}
       <div
