@@ -10,7 +10,7 @@ export const LANDING_STRINGS = {
     nav_testimonials: "Témoignages",
     nav_contact: "Contact",
     nav_login: "Se connecter",
-    nav_signup: "S'inscrire →",
+    nav_signup: "S'inscrire",
 
     // Hero
     hero_line1: "Suivez vos",
@@ -228,7 +228,7 @@ export const LANDING_STRINGS = {
     nav_testimonials: "Testimonials",
     nav_contact: "Contact",
     nav_login: "Sign in",
-    nav_signup: "Sign up →",
+    nav_signup: "Sign up",
 
     // Hero
     hero_line1: "Track your",

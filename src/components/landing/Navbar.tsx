@@ -99,7 +99,7 @@ const Navbar = () => {
         className="mx-auto flex items-center justify-between gap-3 rounded-full transition-all duration-300"
         style={{
           maxWidth: "1120px",
-          padding: "10px 14px 10px 18px",
+          padding: "12px 20px",
           background: scrolled ? "rgba(20,23,28,0.85)" : "rgba(20,23,28,0.7)",
           border: "1px solid rgba(124,255,58,0.12)",
           backdropFilter: "blur(20px)",
