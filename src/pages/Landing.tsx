@@ -31,28 +31,31 @@ const Landing = () => {
       <div className="grid-bg" aria-hidden="true" />
       <div className="relative" style={{ zIndex: 1 }}>
         <GlobalDigitalEffects />
-        <FloatingFCFA />
         <Navbar />
         <Hero />
-        <PaymentMarquee />
 
-        <AnimatedSectionBackground variant={0} glow>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><FeatureShowcase /></Suspense></SectionReveal>
-        </AnimatedSectionBackground>
+        <div className="relative">
+          <FloatingFCFA />
+          <PaymentMarquee />
 
-        <AnimatedSectionBackground variant={1} glow>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><Personas /></Suspense></SectionReveal>
-        </AnimatedSectionBackground>
+          <AnimatedSectionBackground variant={0} glow>
+            <SectionReveal><Suspense fallback={<SectionFallback />}><FeatureShowcase /></Suspense></SectionReveal>
+          </AnimatedSectionBackground>
 
-        <AnimatedSectionBackground variant={2} glow>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><TestimonialsBlock /></Suspense></SectionReveal>
-        </AnimatedSectionBackground>
+          <AnimatedSectionBackground variant={1} glow>
+            <SectionReveal><Suspense fallback={<SectionFallback />}><Personas /></Suspense></SectionReveal>
+          </AnimatedSectionBackground>
 
-        <AnimatedSectionBackground variant={0} glow glowBottom>
-          <SectionReveal><Suspense fallback={<SectionFallback />}><Pricing /></Suspense></SectionReveal>
-        </AnimatedSectionBackground>
+          <AnimatedSectionBackground variant={2} glow>
+            <SectionReveal><Suspense fallback={<SectionFallback />}><TestimonialsBlock /></Suspense></SectionReveal>
+          </AnimatedSectionBackground>
 
-        <Footer />
+          <AnimatedSectionBackground variant={0} glow glowBottom>
+            <SectionReveal><Suspense fallback={<SectionFallback />}><Pricing /></Suspense></SectionReveal>
+          </AnimatedSectionBackground>
+
+          <Footer />
+        </div>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ const FloatingFCFA = () => {
       x: `${5 + Math.random() * 85}%`,
       y: `${Math.random() * 100}%`,
       size: 14 + Math.random() * 32,
-      opacity: 0.04 + Math.random() * 0.07,
+      opacity: 0.025 + Math.random() * 0.04,
       blur: 1 + Math.random() * 2.5,
       duration: 12 + Math.random() * 18,
       delay: Math.random() * 8,
@@ -29,7 +29,7 @@ const FloatingFCFA = () => {
   }, [isMobile]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-[1]" style={{ willChange: "transform" }}>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]" style={{ willChange: "transform" }}>
       {items.map((item) => (
         <motion.span
           key={item.id}
