@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Lock, Target, Calendar, Users, FileText,
   TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
-  Search, ArrowUpDown, MoreHorizontal, UserPlus, AlertCircle, Receipt,
+  Search, ArrowUpDown, MoreHorizontal, UserPlus, AlertCircle, Receipt, Bell,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
