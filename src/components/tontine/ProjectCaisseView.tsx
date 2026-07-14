@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Lock, Target, Calendar, Users, FileText,
   TrendingUp, TrendingDown, Trash2, CheckCircle2, Pencil, Link2, Eye, Crown, Wrench, ListChecks, ArrowUp, ArrowDown, UserMinus,
-  Search, ArrowUpDown, MoreHorizontal, UserPlus, AlertCircle, Receipt,
+  Search, ArrowUpDown, MoreHorizontal, UserPlus, AlertCircle, Receipt, Bell,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -119,8 +119,9 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
   const [memberSearch, setMemberSearch] = useState("");
   const [memberSort, setMemberSort] = useState<"name" | "paid">("name");
 
-  // Expense items sort
+  // Expense items (postes) sort & filter
   const [itemSort, setItemSort] = useState("created");
+  const [itemFilter, setItemFilter] = useState<"all" | "todo" | "done">("all");
 
   // Collaborators search & sort
   const [collabSearch, setCollabSearch] = useState("");
@@ -1082,6 +1083,61 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {/* ─── Onglet Postes & dépenses ─── */}
       {activeTab === "items" && (
         <>
+          {/* ─── Trésorerie de la caisse ─── */}
+          <div
+            className="rounded-2xl p-4 mb-3"
+            style={{
+              background: "rgba(20,23,28,0.7)",
+              border: "1px solid rgba(124,255,58,0.14)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Trésorerie de la caisse</p>
+            <p
+              className="text-3xl font-bold font-display"
+              style={{ color: solde >= 0 ? "#3DFF9A" : "#FF6B6B" }}
+            >
+              {fmt(solde)} FCFA
+            </p>
+            <p className="text-[11px] text-muted-foreground mb-3">disponible après dépenses</p>
+            <Progress
+              value={recettes > 0 ? Math.min(100, Math.round((depenses / recettes) * 100)) : 0}
+              className="h-2 [&>div]:bg-[#7CFF3A]"
+            />
+            <div className="flex items-center justify-between mt-2 text-[11px]">
+              <span style={{ color: "#8FF2B0" }}>Collecté (membres) : {fmt(recettes)}</span>
+              <span style={{ color: "#FFB0B0" }}>Payé (postes) : {fmt(depenses)}</span>
+            </div>
+          </div>
+
+          {/* ─── Rappel de cotisations ─── */}
+          {(() => {
+            if (expectedPerMember <= 0) return null;
+            const unpaid = members.filter((m) => memberPaid(m.id) < expectedPerMember);
+            if (unpaid.length === 0) return null;
+            const remaining = unpaid.reduce(
+              (s, m) => s + Math.max(0, expectedPerMember - memberPaid(m.id)),
+              0
+            );
+            return (
+              <button
+                type="button"
+                onClick={() => setActiveTab("members")}
+                className="w-full flex items-center gap-3 rounded-xl p-3 mb-3 text-left transition-colors hover:bg-amber-500/15"
+                style={{
+                  background: "rgba(245,158,11,0.10)",
+                  border: "1px solid rgba(245,158,11,0.35)",
+                }}
+              >
+                <Bell className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <p className="text-xs flex-1 text-amber-100">
+                  <span className="font-bold">{unpaid.length}</span> membre{unpaid.length > 1 ? "s" : ""} n'{unpaid.length > 1 ? "ont" : "a"} pas encore cotisé · <span className="font-bold">{fmt(remaining)} F</span> attendus
+                </p>
+                <ChevronRight className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              </button>
+            );
+          })()}
+
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
               <ListChecks className="w-4 h-4 text-primary" /> Postes budgétés
@@ -1094,39 +1150,102 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
           </div>
 
           {expenseItems.length > 0 && (
-            <div className="flex items-center justify-end gap-2 mb-2">
-              <span className="text-[11px] text-muted-foreground">Trier</span>
-              <select
-                value={itemSort}
-                onChange={(e) => setItemSort(e.target.value)}
-                className="glass rounded-lg border border-input bg-background px-2.5 py-1 text-[11px] text-foreground"
-              >
-                <option value="created">Par défaut</option>
-                <option value="budget_desc">Budget (grand → petit)</option>
-                <option value="budget_asc">Budget (petit → grand)</option>
-                <option value="paid_desc">Payé (grand → petit)</option>
-                <option value="collected_desc">Collecté (grand → petit)</option>
-                <option value="reste_desc">Reste à payer (grand → petit)</option>
-              </select>
-            </div>
+            <>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {([
+                  { id: "all", label: "Tous" },
+                  { id: "todo", label: "À payer" },
+                  { id: "done", label: "Soldés" },
+                ] as const).map((chip) => {
+                  const active = itemFilter === chip.id;
+                  return (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={() => setItemFilter(chip.id)}
+                      className="text-[11px] font-medium px-3 py-1 rounded-full transition-colors"
+                      style={{
+                        background: active ? "rgba(124,255,58,0.15)" : "rgba(255,255,255,0.03)",
+                        border: active ? "1px solid rgba(124,255,58,0.45)" : "1px solid rgba(255,255,255,0.08)",
+                        color: active ? "#7CFF3A" : "#EAFBEA",
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+                <div className="flex-1" />
+                <span className="text-[11px] text-muted-foreground">Trier</span>
+                <select
+                  value={itemSort}
+                  onChange={(e) => setItemSort(e.target.value)}
+                  className="glass rounded-lg border border-input bg-background px-2.5 py-1 text-[11px] text-foreground"
+                >
+                  <option value="created">Par défaut</option>
+                  <option value="budget_desc">Budget (grand → petit)</option>
+                  <option value="budget_asc">Budget (petit → grand)</option>
+                  <option value="paid_desc">Payé (grand → petit)</option>
+                  <option value="collected_desc">Collecté (grand → petit)</option>
+                  <option value="reste_desc">Reste à payer (grand → petit)</option>
+                </select>
+              </div>
+            </>
           )}
 
           <div className="space-y-2 mb-3">
-            {sortedItems.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                Aucun poste. Ajoute la salle, le traiteur, la déco…
-              </p>
-            ) : sortedItems.map((it) => {
+            {(() => {
+              const filtered = sortedItems.filter((it) => {
+                const planned = Number(it.planned_amount || 0);
+                const paid = paidByItem[it.id] || 0;
+                const reste = Math.max(planned - paid, 0);
+                const depassement = Math.max(paid - planned, 0);
+                if (itemFilter === "todo") return reste > 0 && depassement === 0;
+                if (itemFilter === "done") return planned > 0 && reste === 0 && depassement === 0;
+                return true;
+              });
+              if (filtered.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    {sortedItems.length === 0
+                      ? "Aucun poste. Ajoute la salle, le traiteur, la déco…"
+                      : "Aucun poste dans cette catégorie."}
+                  </p>
+                );
+              }
+              return filtered.map((it) => {
               const planned = Number(it.planned_amount || 0);
               const paid = paidByItem[it.id] || 0;
               const collected = collectedByItem[it.id] || 0;
               const pct = planned > 0 ? Math.min(100, Math.round((paid / planned) * 100)) : (paid > 0 ? 100 : 0);
               const reste = Math.max(planned - paid, 0);
-              const resteCollect = Math.max(planned - collected, 0);
-              const finance = planned > 0 && collected >= planned;
+              const depassement = Math.max(paid - planned, 0);
+              const isOver = depassement > 0;
+              const isSolded = !isOver && planned > 0 && reste === 0;
               const isEditing = editingItemId === it.id;
+              const linkedCount = expenses.filter((e: any) => e.expense_item_id === it.id).length;
+              const expanded = expandedItemId === it.id;
+
+              const cardBorder = isOver
+                ? "1px solid rgba(239,68,68,0.45)"
+                : isSolded
+                ? "1px solid rgba(61,255,154,0.35)"
+                : "1px solid rgba(255,255,255,0.06)";
+
+              const barClass = isOver
+                ? "[&>div]:bg-red-500"
+                : isSolded
+                ? "[&>div]:bg-emerald-500"
+                : "[&>div]:bg-[#7CFF3A]";
+
               return (
-                <div key={it.id} className="glass-card rounded-xl p-3">
+                <div
+                  key={it.id}
+                  className="rounded-xl p-3"
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: cardBorder,
+                  }}
+                >
                   {isEditing ? (
                     <div className="space-y-2">
                       <Input
@@ -1148,8 +1267,18 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <p className="text-sm font-semibold text-foreground flex-1 truncate">{it.label}</p>
+                        {isOver && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-400">
+                            Dépassé
+                          </span>
+                        )}
+                        {isSolded && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                            Soldé
+                          </span>
+                        )}
                         {canManage && !isClosed && (
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <button className="text-muted-foreground hover:text-primary p-1" onClick={() => startEditItem(it)} title="Modifier">
@@ -1167,29 +1296,39 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           </div>
                         )}
                       </div>
-                      <div className="grid grid-cols-3 gap-2 mb-2">
-                        <div className="text-center">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Collecté</p>
-                          <p className="text-xs font-semibold text-emerald-400">{fmt(collected)}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Payé</p>
-                          <p className="text-xs font-semibold text-destructive">{fmt(paid)}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Budget</p>
-                          <p className="text-xs font-semibold text-foreground">{fmt(planned)}</p>
-                        </div>
-                      </div>
-                      <Progress value={pct} className={`h-2 ${paid >= planned && planned > 0 ? "[&>div]:bg-emerald-500" : ""}`} />
-                      <div className="flex items-center justify-between mt-1.5 gap-2">
-                        <p className={`text-[11px] font-medium ${paid >= planned && planned > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
-                          {planned > 0 && paid >= planned ? "✅ Soldé" : `Reste à payer : ${fmt(reste)}`}
+
+                      <div className="mb-2">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          {isOver ? "Dépassement" : "Reste à payer"}
                         </p>
-                        <p className={`text-[11px] font-medium ${finance ? "text-emerald-400" : "text-muted-foreground"}`}>
-                          {finance ? "✅ Financé" : `À collecter : ${fmt(resteCollect)}`}
+                        <p
+                          className="text-xl font-bold font-display"
+                          style={{
+                            color: isOver ? "#FF6B6B" : isSolded ? "#3DFF9A" : "#EAFBEA",
+                          }}
+                        >
+                          {isOver ? `+ ${fmt(depassement)}` : fmt(reste)} FCFA
                         </p>
                       </div>
+
+                      <Progress value={pct} className={`h-2 ${barClass}`} />
+
+                      <div className="flex items-center justify-between mt-2 gap-2">
+                        <p className="text-[11px] text-muted-foreground">
+                          Payé {fmt(paid)} / {fmt(planned)}
+                        </p>
+                        {linkedCount > 0 ? (
+                          <button
+                            onClick={() => setExpandedItemId(expanded ? null : it.id)}
+                            className="text-[11px] font-medium text-primary hover:underline"
+                          >
+                            Dépenses ({linkedCount})
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground/60">Aucune dépense</span>
+                        )}
+                      </div>
+
                       {canManage && !isClosed && collected > paid && (planned === 0 || paid < planned) && (
                         <Button
                           size="sm"
@@ -1201,36 +1340,27 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           Marquer comme payé
                         </Button>
                       )}
-                      {(() => {
-                        const linked = expenses.filter((e: any) => e.expense_item_id === it.id);
-                        if (linked.length === 0) return null;
-                        const expanded = expandedItemId === it.id;
-                        return (
-                          <div className="mt-2">
-                            <button onClick={() => setExpandedItemId(expanded ? null : it.id)} className="text-[11px] text-primary hover:underline">
-                              {expanded ? "▾ Masquer" : "▸ Voir"} les dépenses ({linked.length})
-                            </button>
-                            {expanded && (
-                              <div className="mt-2 space-y-1 pl-2 border-l border-border">
-                                {linked.map((e: any) => (
-                                  <div key={e.id} className="flex items-center justify-between text-xs">
-                                    <span className="truncate text-foreground/80">
-                                      {new Date(e.expense_date).toLocaleDateString("fr-FR")} · {e.label}
-                                    </span>
-                                    <span className="text-destructive font-semibold ml-2 flex-shrink-0">-{fmt(Number(e.amount))}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
+
+                      {expanded && linkedCount > 0 && (
+                        <div className="mt-2 space-y-1 pl-2 border-l border-border">
+                          {expenses.filter((e: any) => e.expense_item_id === it.id).map((e: any) => (
+                            <div key={e.id} className="flex items-center justify-between text-xs">
+                              <span className="truncate text-foreground/80">
+                                {new Date(e.expense_date).toLocaleDateString("fr-FR")} · {e.label}
+                              </span>
+                              <span className="text-destructive font-semibold ml-2 flex-shrink-0">-{fmt(Number(e.amount))}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
               );
-            })}
+              });
+            })()}
           </div>
+
 
           {/* + Nouveau poste */}
           {canManage && !isClosed && (
