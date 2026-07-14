@@ -447,6 +447,71 @@ export const LANDING_STRINGS = {
       "Early access to new features",
     ],
 
+    // Testimonials
+    testi_badge: "Testimonials",
+    testi_title_before: "They manage their",
+    testi_title_word: "money",
+    testi_items: [
+      {
+        quote: "Since Mon Jeton, I finally know where my money goes every month. Tontines run themselves — a huge relief.",
+        initial: "A",
+        name: "Aminata K.",
+        role: "Mom, Abidjan",
+      },
+      {
+        quote: "I log my sales by voice while serving customers. The receipt scan saves me a ton of time.",
+        initial: "Y",
+        name: "Yao B.",
+        role: "Shopkeeper, Adjamé",
+      },
+      {
+        quote: "I hit my savings goal for a new phone in 4 months. The app really motivates me to set money aside.",
+        initial: "F",
+        name: "Fatou D.",
+        role: "Student, Cocody",
+      },
+    ],
+
+    // Landing pricing block
+    pricing_landing_badge: "Plans",
+    pricing_landing_title_before: "Choose your",
+    pricing_landing_title_word: "plan",
+    pricing_landing_subtitle: "Start free, upgrade to Pro when you're ready.",
+    pricing_landing_popular: "Most popular",
+    pricing_landing_per_month: "FCFA / month",
+    pricing_landing_secure_note: "Secure payment via Jèko",
+    pl_free_name: "Free",
+    pl_free_yearly: "forever",
+    pl_free_features: [
+      "Track expenses & income",
+      "Basic tontines & pools",
+      "1 savings goal",
+      "30-day history",
+    ],
+    pl_free_button: "Sign up",
+    pl_pro_name: "Pro",
+    pl_pro_yearly: "or 19,900 FCFA / year",
+    pl_pro_features: [
+      "Everything in Free",
+      "Unlimited AI receipt scan",
+      "Smart voice entry",
+      "Unlimited savings goals",
+      "Detailed reports & debts",
+    ],
+    pl_pro_button: "Get Pro",
+    pl_ultra_name: "Ultra Pro",
+    pl_ultra_yearly: "or 49,900 FCFA / year",
+    pl_ultra_features: [
+      "Everything in Pro",
+      "Business mode",
+      "Multi-accounts",
+      "Accounting export",
+      "Priority support",
+    ],
+    pl_ultra_button: "Get Ultra Pro",
+
+
+
     // FAQ
     faq_title: "Frequently asked questions",
     faqs: [
