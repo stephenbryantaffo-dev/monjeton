@@ -172,6 +172,70 @@ export const LANDING_STRINGS = {
       "Accès anticipé aux nouvelles features",
     ],
 
+    // Testimonials
+    testi_badge: "Témoignages",
+    testi_title_before: "Ils gèrent mieux leur",
+    testi_title_word: "argent",
+    testi_items: [
+      {
+        quote: "Depuis Mon Jeton, je sais enfin où part mon argent chaque mois. Les tontines gérées toutes seules, un vrai soulagement.",
+        initial: "A",
+        name: "Aminata K.",
+        role: "Maman, Abidjan",
+      },
+      {
+        quote: "Je note mes ventes à la voix pendant que je sers les clients. Le scan des factures me fait gagner un temps fou.",
+        initial: "Y",
+        name: "Yao B.",
+        role: "Commerçant, Adjamé",
+      },
+      {
+        quote: "J'ai atteint mon objectif d'épargne pour mon téléphone en 4 mois. L'appli me motive vraiment à mettre de côté.",
+        initial: "F",
+        name: "Fatou D.",
+        role: "Étudiante, Cocody",
+      },
+    ],
+
+    // Landing pricing block
+    pricing_landing_badge: "Abonnements",
+    pricing_landing_title_before: "Choisissez votre",
+    pricing_landing_title_word: "plan",
+    pricing_landing_subtitle: "Commencez gratuitement, passez au Pro quand vous êtes prêt.",
+    pricing_landing_popular: "Le plus populaire",
+    pricing_landing_per_month: "FCFA / mois",
+    pricing_landing_secure_note: "Paiement sécurisé via Jèko",
+    pl_free_name: "Gratuit",
+    pl_free_yearly: "pour toujours",
+    pl_free_features: [
+      "Suivi dépenses & revenus",
+      "Tontines & caisses de base",
+      "1 objectif d'épargne",
+      "Historique 30 jours",
+    ],
+    pl_free_button: "S'inscrire",
+    pl_pro_name: "Pro",
+    pl_pro_yearly: "ou 19 900 FCFA / an",
+    pl_pro_features: [
+      "Tout le plan Gratuit",
+      "Scan de factures IA illimité",
+      "Saisie vocale intelligente",
+      "Objectifs d'épargne illimités",
+      "Rapports détaillés & dettes",
+    ],
+    pl_pro_button: "Prendre Pro",
+    pl_ultra_name: "Ultra Pro",
+    pl_ultra_yearly: "ou 49 900 FCFA / an",
+    pl_ultra_features: [
+      "Tout le plan Pro",
+      "Mode entreprise",
+      "Multi-comptes",
+      "Export comptable",
+      "Support prioritaire",
+    ],
+    pl_ultra_button: "Prendre Ultra Pro",
+
+
     // FAQ
     faq_title: "Questions fréquentes",
     faqs: [

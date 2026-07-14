@@ -1,74 +1,62 @@
+## Problème
 
-## Objectif
+Deux sections de la landing sont écrites en français en dur et ne changent pas quand on bascule en anglais :
 
-Adopter fidèlement le design du fichier `landing_anthracite.html` sur la landing React (Hero + 4 sections split), retirer les sections devenues redondantes, garder les sections commerciales (Pricing, FAQ, FinalCTA), et câbler tous les boutons.
+- `src/components/landing/TestimonialsBlock.tsx` — badge "Témoignages", titre "Ils gèrent mieux leur argent", les 3 citations, noms, rôles.
+- `src/components/landing/Pricing.tsx` — badge "Abonnements", titre "Choisissez votre plan", sous-titre, "FCFA / mois", labels annuels ("ou 19 900 FCFA / an", "pour toujours"), features de chaque plan, textes des boutons ("S'inscrire", "Prendre Pro", "Prendre Ultra Pro"), badge "Le plus populaire", note "Paiement sécurisé via Jèko".
 
-## 1. `src/pages/Landing.tsx` — nettoyage du rendu
+Le reste de la landing (Hero, FAQ, Footer, etc.) utilise déjà `useLandingT()` → `LANDING_STRINGS` dans `src/lib/landingI18n.ts`. Il faut faire pareil pour ces deux composants.
 
-- Retirer du rendu : `Stats`, `ForWhoSection`, `AIScan`, `Enterprise` (et leurs `AnimatedSectionBackground` wrappers). Les imports lazy correspondants sont supprimés.
-- Ordre final :
-  1. `Navbar`
-  2. `Hero` (réécrit)
-  3. `PaymentMarquee`
-  4. `FeatureShowcase` (réécrit — 4 sections split)
-  5. `Pricing`
-  6. `FAQ`
-  7. `FinalCTA`
-  8. `Footer`
-- Conserver `GlobalDigitalEffects`, `FloatingFCFA`, `.grid-bg`.
+## Plan
 
-## 2. `src/components/landing/Hero.tsx` — refonte
+### 1. Ajouter les clés FR + EN dans `src/lib/landingI18n.ts`
 
-Reproduire fidèlement le HTML fourni (grille 1.05fr / 0.95fr, headline UPPERCASE 4 lignes avec `MarkerText` lime + outline + `MarkerText` dark, sous-titre, 3 boutons, ligne trust étoiles).
+Sous les deux langues, ajouter :
 
-Téléphone à droite (frame gris métal, Dynamic Island, écran dashboard avec header Bryan / chip -12%, hero card 128 500 FCFA + barres semaine, 2 mini-cartes Revenus/Dépenses, 2 lignes de transactions Freelance +50 000 et Restaurant -8 500).
+**Testimonials**
+- `testi_badge` : "Témoignages" / "Testimonials"
+- `testi_title_before` : "Ils gèrent mieux leur" / "They manage their"
+- `testi_title_word` : "argent" / "money" (mot mis en surbrillance via `MarkerText`)
+- `testi_items` : tableau de 3 objets `{ quote, name, role }` traduits.
 
-4 cartes flottantes autour du téléphone (positions `h1c`..`h4c`, rotations, animations flottantes) :
-- Alerte dépense -32 000 F (masquée sur mobile)
-- Scan AI — Reçu en 2 s
-- Tontine Bureau — 7/10 à jour + barre 70%
-- Budget Transport — Reste 12 000 F
+**Pricing (landing)**
+- `pricing_landing_badge` : "Abonnements" / "Plans"
+- `pricing_landing_title_before` : "Choisissez votre" / "Choose your"
+- `pricing_landing_title_word` : "plan" / "plan"
+- `pricing_landing_subtitle` : "Commencez gratuitement, passez au Pro quand vous êtes prêt." / "Start free, upgrade to Pro when you're ready."
+- `pricing_landing_popular` : "Le plus populaire" / "Most popular"
+- `pricing_landing_per_month` : "FCFA / mois" / "FCFA / month"
+- `pricing_landing_secure_note` : "Paiement sécurisé via Jèko" / "Secure payment via Jèko"
+- Pour chaque plan (`free`, `pro`, `ultra`) : `name`, `yearlyLabel`, `features` (tableau), `buttonText`.
+  - Free : "Gratuit"/"Free", "pour toujours"/"forever", features, "S'inscrire"/"Sign up"
+  - Pro : "Pro", "ou 19 900 FCFA / an"/"or 19,900 FCFA / year", features, "Prendre Pro"/"Get Pro"
+  - Ultra : "Ultra Pro", "ou 49 900 FCFA / an"/"or 49,900 FCFA / year", features, "Prendre Ultra Pro"/"Get Ultra Pro"
 
-Boutons câblés :
-- **S'inscrire** → `navigate("/signup")`
-- **Prendre le plan Pro** → scroll ancre `#pricing`
-- **Voir la démo** → scroll ancre `#demo` (fallback `#features`)
+Les tableaux typés `as const` posent parfois problème pour l'inférence — s'assurer que `LandingStrings` reste dérivé du `fr` uniquement (déjà le cas). Utiliser des types compatibles (arrays de strings, arrays d'objets simples).
 
-Les 3 sections split conservent le id `demo` sur le conteneur racine du FeatureShowcase (déjà en place).
+### 2. Réécrire `TestimonialsBlock.tsx`
+- Importer `useLandingT`.
+- Remplacer le tableau `testimonials` codé en dur par `lt.testi_items`.
+- Remplacer "Témoignages" par `lt.testi_badge`.
+- Remplacer le titre par `{lt.testi_title_before} <MarkerText…>{lt.testi_title_word}</MarkerText>`.
 
-## 3. `src/components/landing/FeatureShowcase.tsx` — 4 sections
+### 3. Réécrire `src/components/landing/Pricing.tsx`
+- Importer `useLandingT`.
+- Construire `plans` à partir de `lt` (nom, yearlyLabel, features, buttonText) au lieu de littéraux FR.
+- Remplacer "Abonnements", le titre, le sous-titre, "FCFA / mois", "Le plus populaire", "Paiement sécurisé via Jèko" par les clés correspondantes.
+- Conserver toute la logique : `openJekoPro`, `openJekoMax`, `navigate("/signup")`, styles, animations, prix affichés en chiffres (2000/5000/0), `formatPrice`.
+- Le `MarkerText` reste sur le mot "plan"/"plan".
 
-Le composant existe déjà avec ce schéma ; on l'aligne strictement sur les 4 sections du HTML :
-
-1. **Vocal — « Parlez, on note tout »** (texte gauche / tel droite) — écran Saisie vocale, orbe micro, barres audio, phrase « 3 000 marché / 15 000 taxi », détail 2 transactions, bouton « Confirmer les 2 ». Cartes : Multi-transactions (2 détectées), Catégorie auto (Alimentation).
-2. **Scan — « Photographiez, c'est enregistré »** (inversée) — cadre scan animé (lignes lime + scanline), détail Burger King / -14 500 F / Alimentation, bouton « Enregistrer ». Cartes : Montant lu -14 500 F, Reçu archivé.
-3. **Épargne — « Fixez un objectif, atteignez-le »** (texte gauche / tel droite) — Épargne totale 550 000 FCFA, 3 objectifs (Dakar 64%, Fonds urgence 50%, Nouveau tel 32%). Cartes : Objectif Dakar 64%, Reste 180 000 F.
-4. **Dettes — « Qui vous doit quoi, enfin clair »** (inversée) — chip Net +55 000, onglets « On me doit » (actif) / « Je dois », 3 lignes Koffi/Aya/Moussa, bouton « Relancer Koffi ». Cartes : On me doit +85 000 F, Rappel auto dans 3 jours.
-
-`<section id="demo">` conservé comme conteneur pour la cible « Voir la démo ». Titres avec `MarkerText`.
-
-## 4. `src/components/landing/Navbar.tsx` — liens
-
-Réduire les liens nav aux sections qui existent encore :
-
-```
-Fonctions → #demo
-Tarifs    → #pricing
-Sécurité  → #faq (fallback ; la section Enterprise est retirée)
-FAQ       → #faq
-```
-
-`S'inscrire` → `/signup` (déjà OK). Le sélecteur FR/EN et « Se connecter » restent inchangés.
-
-## 5. Vérifications finales
-
-- Tsgo sur les 3 fichiers modifiés.
-- Ancres présentes : `#demo` (FeatureShowcase), `#pricing` (Pricing), `#faq` (FAQ). Confirmer en `rg 'id="pricing"|id="faq"|id="demo"' src/components/landing`.
-- Aucun autre composant modifié.
+### 4. Vérifications
+- `npx tsgo --noEmit` doit passer sans erreur.
+- Basculer FR ↔ EN via le sélecteur : témoignages, titres, features, boutons, note Jèko, tout doit changer.
+- Aucun autre fichier ne bouge. Comportement web/Android/iOS strictement identique côté logique (seuls les libellés changent).
 
 ## Détails techniques
 
-- Palette : `#04060A`, `#7CFF3A`, `#EAFBEA` (charte inchangée).
-- Framer Motion pour reveal + float ; `useInView` sur `MarkerText` (déjà fait).
-- Icônes lucide uniquement, zéro émoji.
-- Responsive : sur `< md`, la grille passe en 1 colonne, 3 cartes visibles autour du téléphone Hero (Alerte masquée), 2 cartes conservées sur chaque section split.
+Fichiers modifiés :
+- `src/lib/landingI18n.ts` (ajout de clés dans `fr` et `en`)
+- `src/components/landing/TestimonialsBlock.tsx`
+- `src/components/landing/Pricing.tsx`
+
+Aucun changement de logique métier, aucune modif de `jeko.ts`, `CountryContext`, ou d'autres composants landing.
