@@ -1,24 +1,19 @@
 import { lazy, Suspense } from "react";
-import Navbar from "@/components/landing/Navbar";
-import Footer from "@/components/landing/Footer";
 import Hero from "@/components/landing/Hero";
-import SectionReveal from "@/components/landing/SectionReveal";
-import AnimatedSectionBackground from "@/components/landing/AnimatedSectionBackground";
-import PaymentMarquee from "@/components/landing/PaymentMarquee";
-import FloatingFCFA from "@/components/landing/FloatingFCFA";
-import GlobalDigitalEffects from "@/components/landing/GlobalDigitalEffects";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+
+const Navbar = lazy(() => import("@/components/landing/Navbar"));
+const Footer = lazy(() => import("@/components/landing/Footer"));
+const SectionReveal = lazy(() => import("@/components/landing/SectionReveal"));
+const AnimatedSectionBackground = lazy(() => import("@/components/landing/AnimatedSectionBackground"));
+const PaymentMarquee = lazy(() => import("@/components/landing/PaymentMarquee"));
+const FloatingFCFA = lazy(() => import("@/components/landing/FloatingFCFA"));
+const GlobalDigitalEffects = lazy(() => import("@/components/landing/GlobalDigitalEffects"));
 
 const FeatureShowcase = lazy(() => import("@/components/landing/FeatureShowcase"));
 const Personas = lazy(() => import("@/components/landing/Personas"));
 const TestimonialsBlock = lazy(() => import("@/components/landing/TestimonialsBlock"));
 const Pricing = lazy(() => import("@/components/landing/Pricing"));
-
-const SectionFallback = () => (
-  <div className="min-h-[200px] flex items-center justify-center">
-    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-  </div>
-);
 
 const Landing = () => {
   useDocumentMeta({
@@ -30,31 +25,37 @@ const Landing = () => {
     <div className="min-h-screen bg-[#14171C] relative" style={{ isolation: "isolate" }}>
       <div className="grid-bg" aria-hidden="true" />
       <div className="relative" style={{ zIndex: 1 }}>
-        <GlobalDigitalEffects />
-        <Navbar />
+        <Suspense fallback={null}>
+          <GlobalDigitalEffects />
+        </Suspense>
+        <Suspense fallback={null}>
+          <Navbar />
+        </Suspense>
         <Hero />
 
         <div className="relative">
-          <FloatingFCFA />
-          <PaymentMarquee />
+          <Suspense fallback={null}>
+            <FloatingFCFA />
+            <PaymentMarquee />
 
-          <AnimatedSectionBackground variant={0} glow>
-            <SectionReveal><Suspense fallback={<SectionFallback />}><FeatureShowcase /></Suspense></SectionReveal>
-          </AnimatedSectionBackground>
+            <AnimatedSectionBackground variant={0} glow>
+              <SectionReveal><FeatureShowcase /></SectionReveal>
+            </AnimatedSectionBackground>
 
-          <AnimatedSectionBackground variant={1} glow>
-            <SectionReveal><Suspense fallback={<SectionFallback />}><Personas /></Suspense></SectionReveal>
-          </AnimatedSectionBackground>
+            <AnimatedSectionBackground variant={1} glow>
+              <SectionReveal><Personas /></SectionReveal>
+            </AnimatedSectionBackground>
 
-          <AnimatedSectionBackground variant={2} glow>
-            <SectionReveal><Suspense fallback={<SectionFallback />}><TestimonialsBlock /></Suspense></SectionReveal>
-          </AnimatedSectionBackground>
+            <AnimatedSectionBackground variant={2} glow>
+              <SectionReveal><TestimonialsBlock /></SectionReveal>
+            </AnimatedSectionBackground>
 
-          <AnimatedSectionBackground variant={0} glow glowBottom>
-            <SectionReveal><Suspense fallback={<SectionFallback />}><Pricing /></Suspense></SectionReveal>
-          </AnimatedSectionBackground>
+            <AnimatedSectionBackground variant={0} glow glowBottom>
+              <SectionReveal><Pricing /></SectionReveal>
+            </AnimatedSectionBackground>
 
-          <Footer />
+            <Footer />
+          </Suspense>
         </div>
       </div>
     </div>

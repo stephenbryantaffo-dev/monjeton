@@ -56,9 +56,6 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id: string) => {
           if (!id.includes("node_modules")) return;
-          // Keep React + React-DOM + Router + Query together to avoid
-          // "__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED" errors
-          // caused by react-dom loading before react when split apart.
           if (
             id.includes("/react/") ||
             id.includes("/react-dom/") ||
@@ -69,12 +66,15 @@ export default defineConfig(({ mode }) => ({
             return "vendor-react";
           }
           if (id.includes("framer-motion")) return "vendor-motion";
-          if (id.includes("@radix-ui") || id.includes("lucide-react")) return "vendor-ui";
           if (id.includes("recharts")) return "vendor-charts";
           if (id.includes("@supabase")) return "vendor-supabase";
+          if (id.includes("jspdf") || id.includes("canvas-confetti")) return "vendor-heavy";
+          if (id.includes("date-fns")) return "vendor-datefns";
+          if (id.includes("embla-carousel")) return "vendor-carousel";
           if (id.includes("react-hook-form") || id.includes("zod") || id.includes("@hookform")) {
             return "vendor-forms";
           }
+          if (id.includes("@radix-ui")) return "vendor-radix";
         },
       },
     },
