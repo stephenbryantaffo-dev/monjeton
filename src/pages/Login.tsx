@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ScanLine, Users, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,23 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { checkRateLimit, resetRateLimit } from "@/lib/security";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { lovable } from "@/integrations/lovable";
-import {
-  AnimatedInput,
-  AnimatedForm,
-  BoxReveal,
-  Ripple,
-  OrbitingCircles,
-} from "@/components/ui/animated-login";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { checkAuthMethod, methodMismatchMessage } from "@/lib/auth-helpers";
-
-// Mobile money operator colors
-const operators = [
-  { name: "Wave", color: "#1BA8F0", emoji: "🌊" },
-  { name: "Orange Money", color: "#FF6600", emoji: "🟠" },
-  { name: "MTN", color: "#FFCC00", emoji: "🟡" },
-  { name: "Moov Money", color: "#0066CC", emoji: "🔵" },
-];
 
 const Login = () => {
   useDocumentMeta({
@@ -65,7 +50,6 @@ const Login = () => {
     const { error } = await signIn(normalizedEmail, password);
 
     if (error) {
-      // Refine message: if account exists with Google, guide there
       const info = await checkAuthMethod(normalizedEmail);
       setLoading(false);
       const mismatch = methodMismatchMessage(info.method, "email");
@@ -108,7 +92,7 @@ const Login = () => {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: "Email envoyé ✅",
+        title: "Email envoyé",
         description: "Vérifie ta boîte mail pour réinitialiser ton mot de passe.",
       });
     }
@@ -116,8 +100,6 @@ const Login = () => {
 
   const handleGoogle = async () => {
     const returnTo = searchParams.get("returnTo") || "/dashboard";
-    // If the user already typed an email and it belongs to a password account,
-    // block the Google flow to prevent creating a duplicate account.
     const typed = email.trim().toLowerCase();
     if (typed) {
       const info = await checkAuthMethod(typed);
@@ -171,198 +153,240 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* ── Left: Orbital animation (hidden on mobile) ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden"
-           style={{ background: "linear-gradient(135deg, hsl(240 20% 8%), hsl(150 20% 6%))" }}>
-        <Ripple />
+    <div className="min-h-screen flex bg-[#14171C] text-[#EAFBEA]">
+      {/* ── Gauche : panneau marketing (masqué sur mobile) ── */}
+      <div
+        className="hidden lg:flex lg:w-1/2 relative flex-col justify-center px-14 py-12 overflow-hidden"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 30% 20%, rgba(124,255,58,0.10), transparent 60%), linear-gradient(160deg, #14171C 0%, #101318 100%)",
+        }}
+      >
+        <div className="relative z-10 max-w-md">
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-10">
+            <img src={logoImg} alt="Mon Jeton" className="w-11 h-11 rounded-xl" />
+            <span className="text-lg font-extrabold font-display">Mon Jeton</span>
+          </div>
 
-        {/* Central logo */}
-        <motion.div
-          className="relative z-10 flex flex-col items-center"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <img
-            src={logoImg}
-            alt="Mon Jeton"
-            className="w-20 h-20 rounded-2xl shadow-lg"
-          />
-          <span className="mt-3 text-lg font-bold text-foreground">Mon Jeton</span>
-        </motion.div>
+          {/* Pastille */}
+          <span className="inline-flex items-center gap-2 text-xs font-bold text-[#7CFF3A] bg-[#7CFF3A]/10 border border-[#7CFF3A]/25 px-3 py-1.5 rounded-full mb-6">
+            FCFA · Mobile money · Reçus IA
+          </span>
 
-        {/* Orbiting operator circles */}
-        {operators.map((op, i) => (
-          <OrbitingCircles
-            key={op.name}
-            radius={140 + (i % 2) * 60}
-            duration={18 + i * 4}
-            delay={i * 1.5}
-            reverse={i % 2 === 1}
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-lg border border-white/10"
-              style={{ background: op.color }}
-              title={op.name}
-            >
-              {op.emoji}
+          {/* Titre */}
+          <h1 className="font-display font-extrabold text-4xl xl:text-5xl leading-[1.05] tracking-tight mb-4">
+            Reprends le contrôle de ton jeton.
+          </h1>
+          <p className="text-sm text-[#EAFBEA]/60 leading-relaxed mb-8">
+            Un accès plus rassurant, plus premium, et directement relié à la
+            promesse : suivre ses dépenses, revenus, tontines et objectifs sans
+            confusion.
+          </p>
+
+          {/* Aperçu produit */}
+          <div className="rounded-2xl border border-white/10 bg-[#0d1512]/70 backdrop-blur p-4 shadow-2xl">
+            <div className="flex items-center justify-between text-[11px] text-[#EAFBEA]/45 mb-3">
+              <span>Tableau de bord</span>
+              <span>Juillet 2026</span>
             </div>
-          </OrbitingCircles>
-        ))}
 
-        {/* Decorative glow */}
-        <div className="absolute w-72 h-72 rounded-full bg-primary/5 blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            {/* Héro : Dépenses du mois (pas de solde total) */}
+            <div className="rounded-xl border border-[#7CFF3A]/25 bg-[#7CFF3A]/[0.06] p-3 mb-3">
+              <div className="text-[11px] text-[#EAFBEA]/55">Dépenses de juillet</div>
+              <div className="font-display text-2xl font-extrabold">
+                128 500 <span className="text-xs font-semibold text-[#EAFBEA]/50">FCFA</span>
+              </div>
+              <div className="text-[11px] font-semibold text-[#7CFF3A] mt-0.5">↓ 12% vs juin</div>
+            </div>
+
+            {/* Revenus / Dépenses */}
+            <div className="flex gap-2 mb-3">
+              <div className="flex-1 rounded-lg bg-white/[0.03] border border-white/[0.06] p-2.5">
+                <div className="text-[10px] text-[#EAFBEA]/50">Revenus</div>
+                <div className="text-sm font-extrabold text-[#7CFF3A]">410 000</div>
+              </div>
+              <div className="flex-1 rounded-lg bg-white/[0.03] border border-white/[0.06] p-2.5">
+                <div className="text-[10px] text-[#EAFBEA]/50">Dépenses</div>
+                <div className="text-sm font-extrabold">128 500</div>
+              </div>
+            </div>
+
+            {/* Lignes récentes */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.02] p-2">
+                <div className="w-7 h-7 rounded-lg bg-[#7CFF3A]/14 flex items-center justify-center shrink-0">
+                  <ScanLine className="w-3.5 h-3.5 text-[#7CFF3A]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-semibold">Orange Money</div>
+                  <div className="text-[9px] text-[#EAFBEA]/45">Reçu détecté par IA</div>
+                </div>
+                <div className="text-[11px] font-bold text-[#ff6b6b]">-14 500</div>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.02] p-2">
+                <div className="w-7 h-7 rounded-lg bg-[#7CFF3A]/14 flex items-center justify-center shrink-0">
+                  <Users className="w-3.5 h-3.5 text-[#7CFF3A]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-semibold">Tontine Bureau</div>
+                  <div className="text-[9px] text-[#EAFBEA]/45">7 membres à jour</div>
+                </div>
+                <div className="text-[11px] font-bold text-[#7CFF3A]">+50 000</div>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.02] p-2">
+                <div className="w-7 h-7 rounded-lg bg-[#7CFF3A]/14 flex items-center justify-center shrink-0">
+                  <Target className="w-3.5 h-3.5 text-[#7CFF3A]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-semibold">Budget Transport</div>
+                  <div className="text-[9px] text-[#EAFBEA]/45">Reste disponible</div>
+                </div>
+                <div className="text-[11px] font-bold">12 000</div>
+              </div>
+            </div>
+
+            {/* Opérateurs */}
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/[0.06]">
+              <div className="flex gap-1">
+                {["OM", "WA", "DJ"].map((o) => (
+                  <span key={o} className="w-6 h-6 rounded-md bg-[#7CFF3A]/12 text-[#7CFF3A] text-[9px] font-bold flex items-center justify-center">
+                    {o}
+                  </span>
+                ))}
+              </div>
+              <span className="text-[10px] text-[#EAFBEA]/45">Orange Money, Wave, Djamo et FCFA au même endroit</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── Right: Login form ── */}
+      {/* ── Droite : formulaire ── */}
       <div className="flex-1 flex items-center justify-center px-5 py-10">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <motion.div
-            className="flex items-center gap-2 mb-8 lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Link to="/" className="flex items-center gap-2">
-              <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
-              <span className="text-xl font-bold text-primary">Mon Jeton</span>
+        <motion.div
+          className="w-full max-w-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Logo mobile */}
+          <Link to="/" className="flex lg:hidden items-center gap-2 mb-8">
+            <img src={logoImg} alt="Mon Jeton" className="h-9 w-auto rounded-lg" />
+            <span className="text-xl font-extrabold font-display text-[#7CFF3A]">Mon Jeton</span>
+          </Link>
+
+          {/* Onglets Connexion / Inscription */}
+          <div className="flex gap-1 p-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-8">
+            <span className="flex-1 text-center text-sm font-bold py-2.5 rounded-full bg-[#7CFF3A] text-[#14171C]">
+              Connexion
+            </span>
+            <Link
+              to="/signup"
+              className="flex-1 text-center text-sm font-bold py-2.5 rounded-full text-[#EAFBEA]/60 hover:text-[#EAFBEA] transition-colors"
+            >
+              Inscription
             </Link>
-          </motion.div>
+          </div>
 
-          {/* Glass card */}
-          <motion.div
-            className="glass rounded-2xl p-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="mb-8">
-              <BoxReveal delay={0.1}>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Bienvenue sur Mon Jeton
-                </h1>
-              </BoxReveal>
-              <BoxReveal delay={0.25}>
-                <p className="text-muted-foreground mt-2">
-                  Gérez votre argent mobile money
-                </p>
-              </BoxReveal>
+          <h2 className="font-display text-3xl font-extrabold mb-2">Heureux de te revoir.</h2>
+          <p className="text-sm text-[#EAFBEA]/60 mb-7">
+            Connecte-toi pour retrouver tes dépenses, tes objectifs et tes derniers reçus scannés.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold text-[#EAFBEA]/70 mb-1.5">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#EAFBEA]/40" />
+                <input
+                  type="email"
+                  placeholder="ton@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/10 pl-10 pr-3 py-3 text-sm text-[#EAFBEA] placeholder-[#EAFBEA]/35 outline-none focus:border-[#7CFF3A]/50 focus:bg-white/[0.06] transition-colors"
+                />
+              </div>
             </div>
 
-            <AnimatedForm onSubmit={handleSubmit}>
-              <AnimatedInput
-                label="Email"
-                type="email"
-                placeholder="ton@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail className="w-4 h-4" />}
-                required
-              />
-
-              <AnimatedInput
-                label="Mot de passe"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                icon={<Lock className="w-4 h-4" />}
-                endIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="hover:text-foreground transition-colors"
-                    aria-label="Afficher/Masquer le mot de passe"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                }
-                required
-              />
-
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  type="submit"
-                  variant="hero"
-                  size="lg"
-                  className="w-full"
-                  disabled={loading}
+            {/* Mot de passe */}
+            <div>
+              <label className="block text-xs font-semibold text-[#EAFBEA]/70 mb-1.5">Mot de passe</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#EAFBEA]/40" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/10 pl-10 pr-10 py-3 text-sm text-[#EAFBEA] placeholder-[#EAFBEA]/35 outline-none focus:border-[#7CFF3A]/50 focus:bg-white/[0.06] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#EAFBEA]/40 hover:text-[#EAFBEA] transition-colors"
+                  aria-label="Afficher/Masquer le mot de passe"
+                  tabIndex={-1}
                 >
-                  {loading ? "Connexion..." : "Se connecter"}
-                </Button>
-              </motion.div>
-            </AnimatedForm>
-
-            <div className="mt-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs text-muted-foreground">ou</span>
-              <div className="h-px flex-1 bg-border" />
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="w-full mt-4 gap-2"
-              onClick={handleGoogle}
-            >
-              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
-                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41.2 36 44 30.5 44 24c0-1.3-.1-2.4-.4-3.5z"/>
-              </svg>
-              Continuer avec Google
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="w-full mt-3 gap-2"
-              onClick={handleApple}
-            >
-              <svg width="18" height="18" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true">
-                <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
-              </svg>
-              Continuer avec Apple
-            </Button>
-
-            <motion.div
-              className="mt-5 space-y-3 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
+            {/* Ligne sécurité / oubli */}
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-[#EAFBEA]/50">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#7CFF3A]" /> Session sécurisée
+              </span>
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-sm text-primary hover:underline"
+                className="text-[12px] font-semibold text-[#7CFF3A] hover:underline"
               >
                 Mot de passe oublié ?
               </button>
-              <p className="text-sm text-muted-foreground">
-                Pas encore de compte ?{" "}
-                <Link
-                  to="/signup"
-                  className="text-primary hover:underline font-medium"
-                >
-                  S'inscrire
-                </Link>
-              </p>
-            </motion.div>
-          </motion.div>
-        </div>
+            </div>
+
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+              {loading ? "Connexion..." : "Se connecter"}
+            </Button>
+          </form>
+
+          {/* Séparateur */}
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-[#EAFBEA]/40">ou</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          {/* Google */}
+          <Button type="button" variant="outline" size="lg" className="w-full gap-2" onClick={handleGoogle}>
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41.2 36 44 30.5 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+            </svg>
+            Continuer avec Google
+          </Button>
+
+          {/* Apple */}
+          <Button type="button" variant="outline" size="lg" className="w-full gap-2 mt-3" onClick={handleApple}>
+            <svg width="18" height="18" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true">
+              <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+            </svg>
+            Continuer avec Apple
+          </Button>
+
+          <p className="text-sm text-[#EAFBEA]/60 text-center mt-6">
+            Pas encore de compte ?{" "}
+            <Link to="/signup" className="text-[#7CFF3A] hover:underline font-semibold">
+              Créer un compte
+            </Link>
+          </p>
+        </motion.div>
       </div>
     </div>
   );
