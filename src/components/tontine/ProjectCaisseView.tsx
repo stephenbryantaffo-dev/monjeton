@@ -615,7 +615,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
         <div className="min-w-0 flex-1">
           <h1 className="text-lg font-bold text-foreground truncate mb-1">{tontine.name}</h1>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold bg-amber-500/15 text-amber-500 px-1.5 py-0.5 rounded-full">🎯 Projet</span>
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-500/15 text-amber-500 px-1.5 py-0.5 rounded-full"><Target className="w-2.5 h-2.5" /> Projet</span>
             <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${roleInfo.cls}`}>
               <RoleIcon className="w-2.5 h-2.5" /> {roleInfo.label}
             </span>
@@ -862,6 +862,29 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {/* ─── Onglet Membres ─── */}
       {activeTab === "members" && (
         <>
+          {/* ─── Résumé cotisations (cohérent avec la Trésorerie côté Postes) ─── */}
+          {expectedPerMember > 0 && members.length > 0 && (() => {
+            const objectif = expectedPerMember * members.length;
+            const pct = objectif > 0 ? Math.min(100, Math.round((recettes / objectif) * 100)) : 0;
+            return (
+              <div className="rounded-2xl p-4 mb-4 border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02]">
+                <div className="flex items-end justify-between mb-2.5">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Collecté</p>
+                    <p className="text-2xl font-extrabold text-foreground leading-none">
+                      {fmt(recettes)} <span className="text-xs font-semibold text-muted-foreground">FCFA</span>
+                    </p>
+                  </div>
+                  <span className="text-sm font-extrabold text-primary">{pct}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full gradient-primary" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-2">Objectif : {fmt(objectif)} FCFA</p>
+              </div>
+            );
+          })()}
+
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold text-muted-foreground">
               {expectedPerMember > 0
@@ -1040,8 +1063,8 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                           {(p as any).expense_item_id && (() => {
                             const lbl = expenseItems.find(i => i.id === (p as any).expense_item_id)?.label;
                             return lbl ? (
-                              <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
-                                🎯 {lbl}
+                              <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                                <Target className="w-2.5 h-2.5" /> {lbl}
                               </span>
                             ) : null;
                           })()}
@@ -1558,7 +1581,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                 {expenseItems.length > 0 && (
                   <optgroup label="Tes postes de dépense">
                     {expenseItems.map((it) => (
-                      <option key={`poste-${it.id}`} value={`poste:${it.id}`}>🎯 {it.label}</option>
+                      <option key={`poste-${it.id}`} value={`poste:${it.id}`}>{it.label}</option>
                     ))}
                   </optgroup>
                 )}
