@@ -74,7 +74,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("react-hook-form") || id.includes("zod") || id.includes("@hookform")) {
             return "vendor-forms";
           }
-          if (id.includes("@radix-ui") || id.includes("lucide-react")) return "vendor-ui";
+          if (id.includes("@radix-ui")) return "vendor-radix";
+          if (id.includes("lucide-react")) return "vendor-lucide";
         },
       },
     },
