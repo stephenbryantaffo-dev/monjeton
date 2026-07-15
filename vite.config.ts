@@ -75,7 +75,6 @@ export default defineConfig(({ mode }) => ({
             return "vendor-forms";
           }
           if (id.includes("@radix-ui")) return "vendor-radix";
-          if (id.includes("lucide-react")) return "vendor-lucide";
         },
       },
     },
