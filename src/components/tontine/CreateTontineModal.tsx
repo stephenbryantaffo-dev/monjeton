@@ -43,7 +43,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
 
   // Project-specific
   const [eventDate, setEventDate] = useState("");
-  const [targetMode, setTargetMode] = useState<"total" | "per_member">("total");
+  const [targetMode, setTargetMode] = useState<"total" | "per_member" | "open">("total");
   const [targetTotal, setTargetTotal] = useState("");
   const [perMember, setPerMember] = useState("");
 
@@ -326,12 +326,44 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Mariage de Kouassi, Voyage Dakar..." className="glass" />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Objectif à collecter (optionnel)</label>
-              <div className="relative">
-                <MoneyInput value={targetTotal} onChange={(n) => setTargetTotal(n ? String(n) : "")} placeholder="500 000" showCurrency={false} className="[&>input]:glass [&>input]:pr-14" />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">FCFA</span>
+              <label className="text-sm text-muted-foreground mb-2 block">Objectif de collecte</label>
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setTargetMode("total")}
+                  className={`flex-1 text-sm font-semibold py-2.5 rounded-xl border transition-colors ${
+                    targetMode !== "open"
+                      ? "bg-primary/15 border-primary/40 text-primary"
+                      : "border-white/10 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Objectif fixe
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTargetMode("open"); setTargetTotal(""); }}
+                  className={`flex-1 text-sm font-semibold py-2.5 rounded-xl border transition-colors ${
+                    targetMode === "open"
+                      ? "bg-primary/15 border-primary/40 text-primary"
+                      : "border-white/10 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Ouvert
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Tu peux laisser vide et fixer l'objectif plus tard.</p>
+              {targetMode === "open" ? (
+                <p className="text-xs text-muted-foreground">
+                  Pas de montant fixe : la caisse suit ce qui est collecté et dépensé. Idéal quand les charges s'ajoutent en cours de route. Tu pourras fixer un objectif plus tard.
+                </p>
+              ) : (
+                <>
+                  <div className="relative">
+                    <MoneyInput value={targetTotal} onChange={(n) => setTargetTotal(n ? String(n) : "")} placeholder="500 000" showCurrency={false} className="[&>input]:glass [&>input]:pr-14" />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">FCFA</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Tu peux laisser vide et fixer l'objectif plus tard.</p>
+                </>
+              )}
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Date de l'événement (optionnel)</label>
