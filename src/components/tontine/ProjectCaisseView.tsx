@@ -12,6 +12,7 @@ import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -783,36 +784,44 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                     <Icon className="w-2.5 h-2.5" />
                   </span>
                   {canManage && !isMe && c.role !== "owner" && (
-                    <>
-                      {c.role === "viewer" ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <button
-                          title="Promouvoir co-gestionnaire"
+                          title="Options"
                           disabled={saving}
-                          onClick={() => changeCollabRole(c.user_id, "manager")}
-                          className="text-muted-foreground hover:text-blue-400 disabled:opacity-50"
+                          className="ml-0.5 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-50"
                         >
-                          <ArrowUp className="w-3 h-3" />
+                          <MoreHorizontal className="w-3.5 h-3.5" />
                         </button>
-                      ) : c.role === "manager" ? (
-                        <button
-                          title="Passer observateur"
-                          disabled={saving}
-                          onClick={() => changeCollabRole(c.user_id, "viewer")}
-                          className="text-muted-foreground hover:text-amber-400 disabled:opacity-50"
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52">
+                        {c.role === "viewer" && (
+                          <DropdownMenuItem onClick={() => changeCollabRole(c.user_id, "manager")}>
+                            <ArrowUp className="w-4 h-4 mr-2 text-blue-400" />
+                            Promouvoir co-gestionnaire
+                          </DropdownMenuItem>
+                        )}
+                        {c.role === "manager" && (
+                          <DropdownMenuItem onClick={() => changeCollabRole(c.user_id, "viewer")}>
+                            <ArrowDown className="w-4 h-4 mr-2 text-amber-400" />
+                            Passer en observateur
+                          </DropdownMenuItem>
+                        )}
+                        <ConfirmDeleteDialog
+                          onConfirm={() => removeCollaborator(c.user_id)}
+                          title={`Retirer ${display} de la caisse ?`}
+                          description="Il n'aura plus accès à cette caisse. Ce qu'il a déjà cotisé reste dans la caisse."
                         >
-                          <ArrowDown className="w-3 h-3" />
-                        </button>
-                      ) : null}
-                      <ConfirmDeleteDialog
-                        onConfirm={() => removeCollaborator(c.user_id)}
-                        title={`Retirer ${display} de la caisse ?`}
-                        description="Il n'aura plus accès à cette caisse."
-                      >
-                        <button title="Retirer" className="text-muted-foreground hover:text-destructive">
-                          <UserMinus className="w-3 h-3" />
-                        </button>
-                      </ConfirmDeleteDialog>
-                    </>
+                          <DropdownMenuItem
+                            onSelect={(e) => e.preventDefault()}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <UserMinus className="w-4 h-4 mr-2" />
+                            Retirer de la caisse
+                          </DropdownMenuItem>
+                        </ConfirmDeleteDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                 </div>
               );
@@ -862,29 +871,6 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       {/* ─── Onglet Membres ─── */}
       {activeTab === "members" && (
         <>
-          {/* ─── Résumé cotisations (cohérent avec la Trésorerie côté Postes) ─── */}
-          {expectedPerMember > 0 && members.length > 0 && (() => {
-            const objectif = expectedPerMember * members.length;
-            const pct = objectif > 0 ? Math.min(100, Math.round((recettes / objectif) * 100)) : 0;
-            return (
-              <div className="rounded-2xl p-4 mb-4 border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02]">
-                <div className="flex items-end justify-between mb-2.5">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Collecté</p>
-                    <p className="text-2xl font-extrabold text-foreground leading-none">
-                      {fmt(recettes)} <span className="text-xs font-semibold text-muted-foreground">FCFA</span>
-                    </p>
-                  </div>
-                  <span className="text-sm font-extrabold text-primary">{pct}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full gradient-primary" style={{ width: `${pct}%` }} />
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-2">Objectif : {fmt(objectif)} FCFA</p>
-              </div>
-            );
-          })()}
-
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold text-muted-foreground">
               {expectedPerMember > 0
