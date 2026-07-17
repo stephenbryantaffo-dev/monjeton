@@ -780,8 +780,11 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
                   <span className="text-[11px] font-medium text-foreground truncate max-w-[110px]">
                     {display}{isMe && " (toi)"}
                   </span>
-                  <span className={`inline-flex items-center gap-0.5 text-[9px] px-1 py-0.5 rounded-full ${ri.cls}`}>
+                  <span className={`inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-full ${ri.cls}`}>
                     <Icon className="w-2.5 h-2.5" />
+                    <span className="font-semibold">
+                      {c.role === "owner" ? "Propriétaire" : c.role === "manager" ? "Co-gestion." : "Observateur"}
+                    </span>
                   </span>
                   {canManage && !isMe && c.role !== "owner" && (
                     <DropdownMenu>
