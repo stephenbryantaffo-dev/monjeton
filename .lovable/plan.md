@@ -1,35 +1,39 @@
-## Objectif
-Lier les membres de tontines aux comptes utilisateurs et empêcher les doublons dans une même caisse.
+Plan : notifications push pour les rappels d’abonnement
 
-## Changements DB (migration unique)
+Contexte actuel confirmé
+- Le rappel quotidien de dépenses est déjà opérationnel (edge function `send-daily-reminders`, cron 8h/20h, push web via VAPID).
+- L’edge function `subscription-reminders` existe déjà mais : elle ne gère que les notifications in-app (`public.notifications`), et son cron job actuel est rejeté en 401 car la méthode d’authentification ne correspond pas à ce que la fonction attend.
 
-1. **Ajouter colonne `user_id`** à `public.tontine_members`
-   - Type: `uuid`, nullable (les membres invités par téléphone sans compte restent supportés)
-   - Pas de FK vers `auth.users` (règle Lovable Cloud) — juste la colonne uuid
+Objectif
+Envoyer des notifications push aux utilisateurs 7 jours, 3 jours, 1 jour et le jour de l’expiration de leur abonnement, en complément des notifications in-app déjà présentes.
 
-2. **Index unique partiel** sur `(tontine_id, user_id)`
-   - Partiel avec `WHERE user_id IS NOT NULL` pour permettre plusieurs membres sans compte
-   - Empêche qu'un même `user_id` soit ajouté deux fois à la même caisse
+Travail à faire
 
-3. **Index secondaire** sur `user_id` seul pour accélérer les lookups "mes caisses via membership"
+1. Corriger l’authentification de `subscription-reminders`
+   - Remplacer le système actuel (header Authorization Bearer vs service role) par le même mécanisme que `send-daily-reminders` : token lu depuis `public.system_config` (clé `subscription_reminders_cron_token`) ou variable d’env `REMINDERS_CRON_TOKEN`, passé en header `x-cron-token` ou en query `?token=`.
+   - Mettre à jour le cron job `subscription-reminders-daily` pour envoyer ce token au lieu de la clé anon.
+   - Stocker le token dans `public.system_config` s’il n’existe pas encore.
 
-## SQL prévu
+2. Ajouter l’envoi de push dans `subscription-reminders`
+   - Importer `web-push` (même version que `send-daily-reminders`).
+   - Configurer VAPID avec les variables d’env existantes (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+   - Pour chaque utilisateur à relancer (J-7, J-3, J-1, J0) ou pour chaque abonnement expiré :
+     - récupérer ses abonnements actifs dans `push_subscriptions` ;
+     - envoyer une notification push avec le titre/body adapté au stage (J7/J3/J1/J0/expiré) ;
+     - nettoyer les endpoints retournant 404/410 (désactivés).
+   - Conserver la création de la notification in-app dans `public.notifications`.
 
-```sql
-ALTER TABLE public.tontine_members
-  ADD COLUMN user_id uuid;
+3. Respecter les contraintes existantes
+   - Ne pas modifier les messages WhatsApp (laisser inchangés).
+   - Ne pas toucher au système de rappels quotidiens — il reste indépendant.
+   - Aucun changement UI dans un premier temps : on utilise les abonnements push déjà collectés par le bouton « Activer les rappels ».
 
-CREATE UNIQUE INDEX tontine_members_tontine_user_unique
-  ON public.tontine_members (tontine_id, user_id)
-  WHERE user_id IS NOT NULL;
+4. Vérification
+   - Vérifier la compilation TypeScript de l’edge function.
+   - Déclencher un appel test authentifié et vérifier les logs de `subscription-reminders` pour s’assurer que les pushes partent sans 401.
+   - Confirmer que les cron jobs quotidiens (dépenses) continuent de fonctionner.
 
-CREATE INDEX tontine_members_user_id_idx
-  ON public.tontine_members (user_id);
-```
-
-## Hors périmètre
-- Pas de backfill automatique de `user_id` depuis `profiles.phone` (à faire séparément si souhaité)
-- Pas de changement de RLS ni de code applicatif — l'ajout est rétro-compatible (colonne nullable)
-- Les types Supabase seront régénérés après la migration; aucun code à modifier tant qu'on n'utilise pas encore `user_id`
-
-Confirmez pour que je lance la migration.
+Livrables
+- Edge function `supabase/functions/subscription-reminders/index.ts` modifiée (auth corrigée + push ajouté).
+- Mise à jour du cron job `subscription-reminders-daily`.
+- Ligne ajoutée dans `public.system_config` pour le token si nécessaire.

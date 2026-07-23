@@ -1,95 +1,136 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+// Rappels d'expiration d'abonnement — J-7, J-3, J-1, J0 + downgrade après grâce.
+// Envoie à la fois une notification in-app (public.notifications) ET une push web
+// via les abonnements présents dans public.push_subscriptions.
+//
+// Auth cron : header x-cron-token (ou ?token=), comparé au token stocké dans
+// public.system_config (key='reminders_cron_token') ou à REMINDERS_CRON_TOKEN.
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-cron-token, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-const JEKO_PRO_URL = 'https://pay.jeko.africa/pl/d616710c-47fb-4afc-b0e2-e9fe3e0b29ab';
-const JEKO_MAX_URL = 'https://pay.jeko.africa/pl/e7715547-b693-40dd-b06e-9bbb63a90961';
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!;
+const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:contact@monjeton.app";
+const CRON_TOKEN_ENV = Deno.env.get("REMINDERS_CRON_TOKEN") || "";
 
-type Stage = 'j7' | 'j3' | 'j1' | 'j0';
+const JEKO_PRO_URL = "https://pay.jeko.africa/pl/d616710c-47fb-4afc-b0e2-e9fe3e0b29ab";
+const JEKO_MAX_URL = "https://pay.jeko.africa/pl/e7715547-b693-40dd-b06e-9bbb63a90961";
 
-function buildMessage(stage: Stage, planName: string, url: string): { title: string; body: string; wa: string } {
-  const plan = planName || 'Pro';
-  if (stage === 'j7') {
+webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+
+type Stage = "j7" | "j3" | "j1" | "j0";
+
+function buildMessage(stage: Stage, planName: string): { title: string; body: string } {
+  const plan = planName || "Pro";
+  if (stage === "j7") {
     return {
       title: `Ton accès ${plan} expire dans 7 jours`,
       body: `Pense à renouveler ton abonnement pour ne rien perdre.`,
-      wa:
-        `👋 *Mon Jeton* — Ton accès ${plan} expire *dans 7 jours*.\n\n` +
-        `Pour continuer à profiter de tes scans illimités et de l'assistant IA, ` +
-        `renouvelle dès maintenant 👉 ${url}\n\n🪙 monjeton.app`,
     };
   }
-  if (stage === 'j3') {
+  if (stage === "j3") {
     return {
       title: `Plus que 3 jours sur ton plan ${plan}`,
-      body: `Garde tes scans, ton coach IA et tes alertes WhatsApp actifs.`,
-      wa:
-        `⏳ *Plus que 3 jours* sur ton abonnement ${plan}.\n\n` +
-        `Évite la coupure : renouvelle en 1 clic 👉 ${url}\n\n🪙 Mon Jeton — monjeton.app`,
+      body: `Garde tes scans et ton coach IA actifs.`,
     };
   }
-  if (stage === 'j1') {
+  if (stage === "j1") {
     return {
       title: `Dernier jour avant l'expiration`,
       body: `Ton plan ${plan} expire demain. Renouvelle maintenant.`,
-      wa:
-        `🚨 *Dernier jour !* Ton plan ${plan} expire *demain*.\n\n` +
-        `Renouvelle maintenant pour garder ton accès complet 👉 ${url}\n\n🪙 Mon Jeton`,
     };
   }
   return {
     title: `Ton abonnement expire aujourd'hui`,
     body: `Renouvelle ton plan ${plan} pour ne pas perdre tes avantages.`,
-    wa:
-      `⚠️ *Aujourd'hui*, ton abonnement ${plan} expire.\n\n` +
-      `Renouvelle dès maintenant pour rester Pro 👉 ${url}\n\n🪙 Mon Jeton`,
   };
 }
 
 function getStage(daysLeft: number): Stage | null {
-  if (daysLeft <= 0) return 'j0';
-  if (daysLeft === 1) return 'j1';
-  if (daysLeft <= 3) return 'j3';
-  if (daysLeft <= 7) return 'j7';
+  if (daysLeft <= 0) return "j0";
+  if (daysLeft === 1) return "j1";
+  if (daysLeft <= 3) return "j3";
+  if (daysLeft <= 7) return "j7";
   return null;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Auth: appel cron uniquement (header x-cron-secret OU Authorization Bearer <service_role>)
-  const cronSecret = Deno.env.get('CRON_SECRET');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const callerSecret = req.headers.get('x-cron-secret') || '';
-  const authHeader = req.headers.get('authorization') || '';
-  const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-  const validCron = cronSecret && callerSecret === cronSecret;
-  const validBearer = bearerToken && bearerToken === serviceRoleKey;
-  if (!validCron && !validBearer) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  const url = new URL(req.url);
+  const token = url.searchParams.get("token") || req.headers.get("x-cron-token") || "";
+  const { data: cfg } = await supabase
+    .from("system_config")
+    .select("value")
+    .eq("key", "reminders_cron_token")
+    .maybeSingle();
+  const expected = cfg?.value || CRON_TOKEN_ENV;
+
+  if (!expected || token !== expected) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
-
   const now = new Date();
-  const stats = { processed: 0, reminded: 0, expired: 0, errors: 0 };
+  const stats = { processed: 0, reminded: 0, pushed: 0, expired: 0, errors: 0, cleaned: 0 };
+  const staleEndpoints: string[] = [];
+
+  async function pushToUser(userId: string, title: string, body: string, planName: string) {
+    const isUltra = (planName || "").toLowerCase().includes("ultra");
+    const targetUrl = isUltra ? JEKO_MAX_URL : JEKO_PRO_URL;
+    const { data: subs } = await supabase
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth")
+      .eq("user_id", userId)
+      .is("disabled_at", null);
+
+    if (!subs || subs.length === 0) return 0;
+
+    const payload = JSON.stringify({
+      title,
+      body,
+      url: "/settings/subscription",
+      tag: "subscription-reminder",
+      icon: "/pwa-icon-192.svg",
+      badge: "/pwa-icon-192.svg",
+      data: { url: "/settings/subscription", paymentUrl: targetUrl },
+    });
+
+    let sent = 0;
+    for (const s of subs) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          payload,
+        );
+        sent++;
+      } catch (e: any) {
+        const status = e?.statusCode || 0;
+        if (status === 404 || status === 410) staleEndpoints.push(s.endpoint);
+        else console.error("push failed", status, e?.body);
+      }
+    }
+    return sent;
+  }
 
   try {
     const { data: subs, error } = await supabase
-      .from('subscriptions')
-      .select('id, user_id, status, plan_name, expires_at, grace_until, last_reminder_sent')
-      .eq('status', 'active')
-      .not('expires_at', 'is', null);
+      .from("subscriptions")
+      .select("id, user_id, status, plan_name, expires_at, grace_until, last_reminder_sent")
+      .eq("status", "active")
+      .not("expires_at", "is", null);
 
     if (error) throw error;
 
@@ -104,23 +145,30 @@ Deno.serve(async (req) => {
         // Expired past grace -> downgrade
         if (now > graceUntil) {
           await supabase
-            .from('subscriptions')
+            .from("subscriptions")
             .update({
-              status: 'expired',
-              plan_name: 'Gratuit',
+              status: "expired",
+              plan_name: "Gratuit",
               price_xof: 0,
-              last_reminder_sent: 'expired',
+              last_reminder_sent: "expired",
               updated_at: now.toISOString(),
             })
-            .eq('id', sub.id);
+            .eq("id", sub.id);
 
-          await supabase.from('notifications').insert({
+          await supabase.from("notifications").insert({
             user_id: sub.user_id,
-            type: 'subscription_expired',
-            title: 'Abonnement expiré',
-            message: `Ton abonnement ${sub.plan_name || 'Pro'} a expiré. Tu es repassé en plan Gratuit. Renouvelle quand tu veux.`,
+            type: "subscription_expired",
+            title: "Abonnement expiré",
+            message: `Ton abonnement ${sub.plan_name || "Pro"} a expiré. Tu es repassé en plan Gratuit. Renouvelle quand tu veux.`,
           });
 
+          const pushed = await pushToUser(
+            sub.user_id,
+            "Abonnement expiré",
+            `Ton plan ${sub.plan_name || "Pro"} a expiré. Renouvelle en 1 clic.`,
+            sub.plan_name || "Pro",
+          );
+          stats.pushed += pushed;
           stats.expired++;
           continue;
         }
@@ -131,37 +179,43 @@ Deno.serve(async (req) => {
         if (!stage) continue;
         if (sub.last_reminder_sent === stage) continue;
 
-        const url = (sub.plan_name || '').toLowerCase().includes('ultra') ? JEKO_MAX_URL : JEKO_PRO_URL;
-        const { title, body } = buildMessage(stage, sub.plan_name || 'Pro', url);
+        const { title, body } = buildMessage(stage, sub.plan_name || "Pro");
 
-        // In-app notification
-        await supabase.from('notifications').insert({
+        await supabase.from("notifications").insert({
           user_id: sub.user_id,
-          type: 'subscription_reminder',
+          type: "subscription_reminder",
           title,
           message: body,
         });
 
+        const pushed = await pushToUser(sub.user_id, title, body, sub.plan_name || "Pro");
+        stats.pushed += pushed;
+
         await supabase
-          .from('subscriptions')
+          .from("subscriptions")
           .update({ last_reminder_sent: stage, updated_at: now.toISOString() })
-          .eq('id', sub.id);
+          .eq("id", sub.id);
 
         stats.reminded++;
       } catch (e) {
-        console.error('sub error', sub.id, e);
+        console.error("sub error", sub.id, e);
         stats.errors++;
       }
     }
 
+    if (staleEndpoints.length > 0) {
+      await supabase.from("push_subscriptions").delete().in("endpoint", staleEndpoints);
+      stats.cleaned = staleEndpoints.length;
+    }
+
     return new Response(JSON.stringify({ ok: true, ...stats }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error('fatal', e);
+    console.error("fatal", e);
     return new Response(JSON.stringify({ error: String(e), ...stats }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
