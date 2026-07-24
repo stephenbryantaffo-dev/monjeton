@@ -14,12 +14,16 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
-// CORS headers (défini localement comme dans les autres fonctions du projet)
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-cron-token, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+// CORS restreint aux domaines de production (monjeton.app + previews Lovable).
+// Les appels cron server-to-server n'envoient pas d'Origin : aucun header Allow-Origin
+// n'est alors émis, mais la requête aboutit quand même (le navigateur seul bloque).
+import { getCorsHeaders as _getCorsHeaders } from "../_shared/cors.ts";
+function buildCorsHeaders(req: Request) {
+  const h = _getCorsHeaders(req);
+  h["Access-Control-Allow-Headers"] =
+    (h["Access-Control-Allow-Headers"] || "") + ", x-cron-token";
+  return h;
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
