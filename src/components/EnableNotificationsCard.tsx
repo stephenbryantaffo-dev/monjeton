@@ -139,6 +139,12 @@ const EnableNotificationsCard = ({ variant = "card" }: Props) => {
               </Button>
             )}
           </div>
+          {!active && !standalone && (
+            <p className="text-[11px] text-muted-foreground mt-3 leading-snug flex items-start gap-1.5">
+              <Smartphone className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span>{installHint}</span>
+            </p>
+          )}
         </div>
       </div>
     </div>
