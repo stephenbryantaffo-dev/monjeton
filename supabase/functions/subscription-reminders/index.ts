@@ -8,11 +8,14 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-cron-token, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+// CORS restreint aux domaines de production (monjeton.app + previews Lovable).
+import { getCorsHeaders as _getCorsHeaders } from "../_shared/cors.ts";
+function buildCorsHeaders(req: Request) {
+  const h = _getCorsHeaders(req);
+  h["Access-Control-Allow-Headers"] =
+    (h["Access-Control-Allow-Headers"] || "") + ", x-cron-token";
+  return h;
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -63,6 +66,7 @@ function getStage(daysLeft: number): Stage | null {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);

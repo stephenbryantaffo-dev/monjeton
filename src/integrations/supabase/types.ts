@@ -1351,6 +1351,33 @@ export type Database = {
         }
         Relationships: []
       }
+      push_notifications_log: {
+        Row: {
+          created_at: string
+          dedup_key: string
+          id: string
+          notification_type: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedup_key: string
+          id?: string
+          notification_type: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedup_key?: string
+          id?: string
+          notification_type?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
