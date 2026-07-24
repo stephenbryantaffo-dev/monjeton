@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Bell, BellOff, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Bell, BellOff, Loader2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -13,21 +13,47 @@ interface Props {
   variant?: "card" | "row";
 }
 
+function detectPlatform(): "ios" | "android" | "desktop" {
+  if (typeof navigator === "undefined") return "desktop";
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/.test(ua)) return "ios";
+  if (/Android/.test(ua)) return "android";
+  return "desktop";
+}
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    nav.standalone === true
+  );
+}
+
 const EnableNotificationsCard = ({ variant = "card" }: Props) => {
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [supported, setSupported] = useState(true);
+  const platform = useMemo(detectPlatform, []);
+  const standalone = useMemo(isStandalone, []);
 
   useEffect(() => {
     setSupported(pushSupported());
     isDailyReminderActive().then(setActive);
   }, []);
 
+  const installHint =
+    platform === "ios"
+      ? "Sur iPhone : ouvre le menu Partager de Safari → « Sur l'écran d'accueil » pour installer Mon Jeton, puis reviens ici pour activer les rappels."
+      : platform === "android"
+      ? "Sur Android : ouvre le menu du navigateur → « Installer l'application » ou « Ajouter à l'écran d'accueil » pour recevoir les notifications hors app."
+      : "Installe Mon Jeton depuis le menu du navigateur (icône d'installation) pour recevoir les rappels hors du site.";
+
   if (!supported) {
     return variant === "card" ? (
-      <div className="glass-card rounded-2xl p-4 border border-border/50 text-xs text-muted-foreground">
-        Ton navigateur ne supporte pas les notifications push. Sur iPhone, installe d'abord Mon Jeton
-        sur ton écran d'accueil pour activer les rappels.
+      <div className="glass-card rounded-2xl p-4 border border-border/50 text-xs text-muted-foreground flex items-start gap-2">
+        <Smartphone className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <span>{installHint}</span>
       </div>
     ) : null;
   }
