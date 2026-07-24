@@ -373,6 +373,7 @@ function pickMessage(userId: string, pool: string[], day: number) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = new URL(req.url);
