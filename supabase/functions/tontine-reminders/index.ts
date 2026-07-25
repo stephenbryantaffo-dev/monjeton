@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       notificationType: "tontine_reminder",
       dedupKey: today,
       payload: {
-        title: "🤝 Cotisations tontine en attente",
+        title: "Cotisations tontine en attente",
         body: `Certains membres n'ont pas encore versé leur part. Ouvre ta tontine pour relancer.`,
         url: "/tontines",
         tag: `tontine-${today}`,
