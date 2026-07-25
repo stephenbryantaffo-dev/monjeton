@@ -76,7 +76,8 @@ Deno.serve(async (req) => {
     const crossed = [...THRESHOLDS].reverse().find((t) => pct >= t);
     if (!crossed) continue;
 
-    const emoji = crossed === 100 ? "🔴" : crossed === 90 ? "🟠" : "🟡";
+    const severity =
+      crossed === 100 ? "Critique" : crossed === 90 ? "Alerte" : "Attention";
     const label = b.name || b.category || "budget";
 
     const result = await sendPushWithGuard(supabase, {
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
       notificationType: "budget_alert",
       dedupKey: `budget:${b.id}:${crossed}:${month}`,
       payload: {
-        title: `${emoji} Budget ${label} à ${pct}%`,
+        title: `${severity} : Budget ${label} à ${pct}%`,
         body:
           crossed === 100
             ? `Tu as atteint ton plafond du mois. Attention aux prochaines dépenses.`
