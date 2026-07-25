@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     if (b.today > 0) parts.push(`${b.today} pour aujourd'hui`);
     if (b.tomorrow > 0) parts.push(`${b.tomorrow} pour demain`);
 
-    const title = b.overdue > 0 ? "⏰ Échéances de dette en retard" : "💳 Échéance de dette à venir";
+    const title = b.overdue > 0 ? "Échéances de dette en retard" : "Échéance de dette à venir";
     const body = `Tu as ${parts.join(", ")}. Ouvre la section Dettes pour vérifier.`;
 
     const res = await sendPushWithGuard(supabase, {
