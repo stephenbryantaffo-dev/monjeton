@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCountry } from "@/contexts/CountryContext";
 import { COUNTRIES } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
+import { LanguageSelector } from "@/components/settings/LanguageSelector";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { Switch } from "@/components/ui/switch";
@@ -169,6 +170,9 @@ const Parametres = () => {
 
   return (
     <DashboardLayout title="Paramètres" showBack backTo="/settings">
+      <div className="mb-4">
+        <LanguageSelector />
+      </div>
       {/* Country & Language */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">

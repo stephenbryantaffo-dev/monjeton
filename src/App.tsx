@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CountryProvider } from "@/contexts/CountryContext";
+import { AppLangProvider } from "@/lib/appTranslation";
+import { AutoTranslate } from "@/components/AutoTranslate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { lazy, Suspense } from "react";
 
@@ -29,37 +31,41 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <CountryProvider>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route
-                path="/privacy"
-                element={
-                  <Suspense fallback={<PageLoader />}>
-                    <PrivacyPolicy />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/terms"
-                element={
-                  <Suspense fallback={<PageLoader />}>
-                    <Terms />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="*"
-                element={
-                  <Suspense fallback={<PageLoader />}>
-                    <PrivateApp />
-                  </Suspense>
-                }
-              />
-            </Routes>
-          </CountryProvider>
-        </BrowserRouter>
+        <AppLangProvider>
+          <AutoTranslate>
+            <BrowserRouter>
+              <CountryProvider>
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route
+                    path="/privacy"
+                    element={
+                      <Suspense fallback={<PageLoader />}>
+                        <PrivacyPolicy />
+                      </Suspense>
+                    }
+                  />
+                  <Route
+                    path="/terms"
+                    element={
+                      <Suspense fallback={<PageLoader />}>
+                        <Terms />
+                      </Suspense>
+                    }
+                  />
+                  <Route
+                    path="*"
+                    element={
+                      <Suspense fallback={<PageLoader />}>
+                        <PrivateApp />
+                      </Suspense>
+                    }
+                  />
+                </Routes>
+              </CountryProvider>
+            </BrowserRouter>
+          </AutoTranslate>
+        </AppLangProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </ErrorBoundary>
