@@ -395,25 +395,29 @@ const Onboarding = () => {
                 🎉 Bienvenue ! Configure ton compte en 30 secondes, puis tu rejoindras la caisse de ton ami juste après.
               </div>
             )}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">
-                Question {currentIndex + 1}/{totalSteps}
-              </span>
-              <button
-                onClick={handleSkip}
-                className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
-              >
-                <SkipForward className="w-3 h-3" /> Passer
-              </button>
-            </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-primary rounded-full"
-                initial={false}
-                animate={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              />
-            </div>
+            {localeConfirmed && (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground">
+                    Question {currentIndex + 1}/{totalSteps}
+                  </span>
+                  <button
+                    onClick={handleSkip}
+                    className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
+                  >
+                    <SkipForward className="w-3 h-3" /> Passer
+                  </button>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary rounded-full"
+                    initial={false}
+                    animate={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </Screen.Header>
 
