@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { LocaleSetupStep } from "@/components/onboarding/LocaleSetupStep";
 
 // ── Types ──
 interface StepQuestion {
@@ -211,6 +212,7 @@ const Onboarding = () => {
   const [multiSelection, setMultiSelection] = useState<string[]>([]);
   const [shouldSave, setShouldSave] = useState(false);
   const [inviteContext, setInviteContext] = useState<string | null>(null);
+  const [localeConfirmed, setLocaleConfirmed] = useState(false);
 
   useEffect(() => {
     setInviteContext(localStorage.getItem('invite_context'));
