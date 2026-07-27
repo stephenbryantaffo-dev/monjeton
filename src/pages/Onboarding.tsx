@@ -424,64 +424,70 @@ const Onboarding = () => {
         <Screen.Content className="overflow-y-auto">
           <div className="flex items-start justify-center px-5 py-4">
             <div className="w-full max-w-md bg-background/60 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-border/30">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={`${currentQuestion.id}-${currentIndex}`}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="space-y-6"
-                >
-                  <h2 className="text-2xl font-bold text-foreground text-center leading-snug mb-2">
-                    {currentQuestion.title}
-                  </h2>
+              {!localeConfirmed ? (
+                <LocaleSetupStep onComplete={() => setLocaleConfirmed(true)} />
+              ) : (
+                <AnimatePresence mode="wait" custom={direction}>
+                  <motion.div
+                    key={`${currentQuestion.id}-${currentIndex}`}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="space-y-6"
+                  >
+                    <h2 className="text-2xl font-bold text-foreground text-center leading-snug mb-2">
+                      {currentQuestion.title}
+                    </h2>
 
-                  <div className={`grid gap-3 ${currentQuestion.options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
-                    {currentQuestion.options.map((opt) => {
-                      const isSelected = currentQuestion.multi
-                        ? multiSelection.includes(opt.value)
-                        : answers[currentQuestion.id as keyof Answers] === opt.value;
+                    <div className={`grid gap-3 ${currentQuestion.options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
+                      {currentQuestion.options.map((opt) => {
+                        const isSelected = currentQuestion.multi
+                          ? multiSelection.includes(opt.value)
+                          : answers[currentQuestion.id as keyof Answers] === opt.value;
 
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => handleSelect(opt.value)}
-                          className={`p-3.5 rounded-xl text-sm font-medium transition-all border text-left flex items-center gap-3 ${
-                            isSelected
-                              ? "border-primary bg-primary/10 text-foreground"
-                              : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
-                          }`}
-                        >
-                          <span className="text-lg flex-shrink-0">{opt.emoji}</span>
-                          <span>{opt.label}</span>
-                          {isSelected && (
-                            <Check className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => handleSelect(opt.value)}
+                            className={`p-3.5 rounded-xl text-sm font-medium transition-all border text-left flex items-center gap-3 ${
+                              isSelected
+                                ? "border-primary bg-primary/10 text-foreground"
+                                : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
+                            }`}
+                          >
+                            <span className="text-lg flex-shrink-0">{opt.emoji}</span>
+                            <span>{opt.label}</span>
+                            {isSelected && (
+                              <Check className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              )}
             </div>
           </div>
         </Screen.Content>
 
-        <Screen.StickyAction>
-          <Button
-            variant="hero"
-            size="lg"
-            className="w-full gap-2"
-            disabled={!hasAnswer || saving}
-            onClick={goNext}
-          >
-            {saving ? "Enregistrement..." : isLast ? "Terminer" : "Suivant"}
-            {isLast ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-          </Button>
-        </Screen.StickyAction>
+        {localeConfirmed && (
+          <Screen.StickyAction>
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full gap-2"
+              disabled={!hasAnswer || saving}
+              onClick={goNext}
+            >
+              {saving ? "Enregistrement..." : isLast ? "Terminer" : "Suivant"}
+              {isLast ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+            </Button>
+          </Screen.StickyAction>
+        )}
       </Screen>
     </div>
   );
