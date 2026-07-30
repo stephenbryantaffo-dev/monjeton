@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ChevronRight, Camera, Upload, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { compressReceipt, fileToBase64 } from "@/lib/imageCompression";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -138,30 +139,18 @@ const Scan = () => {
     setMultiScanResult(null);
     setScanStoragePath(null);
     try {
-      let processedFile: File = file;
-      if (file.size > 4 * 1024 * 1024) {
-        const bitmap = await createImageBitmap(file);
-        const canvas = document.createElement('canvas');
-        const ratio = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height));
-        canvas.width = bitmap.width * ratio;
-        canvas.height = bitmap.height * ratio;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        const blob = await new Promise<Blob>(resolve =>
-          canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.85)
-        );
-        processedFile = new File([blob], 'compressed.jpg', { type: 'image/jpeg' });
-      }
+      // L'IA reçoit TOUJOURS l'image d'origine (meilleure lecture OCR).
+      const base64 = await fileToBase64(file);
 
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result.split(',')[1]);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(processedFile);
-      });
+      // Ce qu'on STOCKE est compressé : archive légère + vignette.
+      // Si la compression échoue (format exotique), on retombe sur l'original.
+      let processedFile: File = file;
+      try {
+        const { archive } = await compressReceipt(file);
+        processedFile = archive;
+      } catch (e) {
+        console.warn('[Scan compression]', e);
+      }
 
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
