@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-  <circle cx="24" cy="24" r="24" fill="#FF7900"/>
-  <text x="24" y="29" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="-0.5">OM</text>
+  <rect width="48" height="48" rx="13" fill="#000000"/>
+  <path d="M12 29 21 20M15.4 20H21v5.6" fill="none" stroke="#FFFFFF" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M27 19l9 9M36 22.4V28h-5.6" fill="none" stroke="#FF7900" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
