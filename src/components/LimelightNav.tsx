@@ -3,10 +3,28 @@ import { Home, Plus, PieChart, Settings, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+/**
+ * Barre de navigation flottante + bouton d'ajout détaché.
+ *
+ * - La barre ne touche plus les bords : elle flotte au-dessus du contenu,
+ *   coins arrondis, fond translucide. Le contenu respire sous elle.
+ * - Le "+" est sorti de la barre : c'est un bouton rond flottant en bas
+ *   à droite (FAB), au-dessus de la barre. Résultat : 4 items bien espacés
+ *   dans la barre (cibles plus larges) et un "+" qui gagne en présence.
+ *
+ * Les hauteurs consommées par le layout (Screen.tsx, DashboardLayout.tsx)
+ * ont été ajustées en conséquence, garder ces valeurs cohérentes.
+ */
+
+/**
+ * Écrans qui possèdent déjà leur propre bouton flottant.
+ * Sur ceux-là, le "+" global est masqué pour éviter une pile de boutons.
+ */
+const HIDE_FAB_ON = ["/dashboard", "/debts"];
+
 const navItems = [
   { icon: Home, label: "Accueil", path: "/dashboard" },
   { icon: BookOpen, label: "Transactions", path: "/transactions" },
-  { icon: Plus, label: "Ajouter", path: "/transactions/new", isMain: true },
   { icon: PieChart, label: "Rapports", path: "/reports" },
   { icon: Settings, label: "Plus", path: "/settings" },
 ];
@@ -14,83 +32,80 @@ const navItems = [
 const LimelightNav = () => {
   const location = useLocation();
 
+  const isActivePath = (path: string) =>
+    location.pathname === path ||
+    (path !== "/dashboard" && location.pathname.startsWith(path));
+
+  const showFab = !HIDE_FAB_ON.includes(location.pathname);
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Gradient fade above the nav */}
-      <div className="h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+    <>
+      {/* Bouton d'ajout — flottant, détaché de la barre.
+          Masqué sur les écrans qui ont déjà le leur. */}
+      {showFab && (
+      <Link
+        to="/transactions/new"
+        aria-label="Ajouter une transaction"
+        className="fixed right-5 z-50"
+        style={{
+          bottom:
+            "calc(96px + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        <motion.div
+          whileTap={{ scale: 0.9 }}
+          className="w-14 h-14 rounded-full gradient-primary flex items-center justify-center shadow-[0_10px_28px_hsla(100,100%,61%,0.36)]"
+        >
+          <Plus className="w-6 h-6 text-primary-foreground" strokeWidth={2.6} />
+        </motion.div>
+      </Link>
+      )}
 
-      <div className="bg-card/80 backdrop-blur-xl border-t border-border/60">
-        <div className="flex items-center justify-around max-w-lg mx-auto py-1.5 px-1 sm:px-2">
+      {/* Barre flottante */}
+      <nav
+        className="fixed left-4 right-4 z-40"
+        style={{
+          bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        <div className="mx-auto max-w-lg flex items-center justify-between gap-1 rounded-full bg-card/85 backdrop-blur-2xl border border-border/70 px-2.5 py-2 shadow-[0_16px_42px_rgba(0,0,0,0.55)]">
           {navItems.map((item) => {
-            const isActive =
-              location.pathname === item.path ||
-              (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
-
-            if (item.isMain) {
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  aria-label="Ajouter une transaction"
-                  className="relative -mt-7"
-                >
-                  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-[0_4px_24px_hsla(84,81%,44%,0.4)]"
-                  >
-                    <item.icon className="w-5 h-5 text-primary-foreground" />
-                  </motion.div>
-                </Link>
-              );
-            }
-
+            const isActive = isActivePath(item.path);
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className="relative flex flex-col items-center gap-0.5 py-1.5 px-2 sm:px-3"
+                className="relative flex-1"
+                aria-label={item.label}
               >
                 <motion.div
-                  whileTap={{ scale: 0.85 }}
-                  className="flex flex-col items-center gap-0.5"
+                  whileTap={{ scale: 0.9 }}
+                  className={cn(
+                    "flex flex-col items-center gap-1 py-1.5 rounded-full transition-colors duration-300",
+                    isActive && "bg-primary/15"
+                  )}
                 >
-                  <div
+                  <item.icon
                     className={cn(
-                      "p-1.5 rounded-xl transition-all duration-300",
-                      isActive
-                        ? "bg-primary/15 text-primary"
-                        : "text-muted-foreground"
+                      "w-5 h-5 transition-colors duration-300",
+                      isActive ? "text-primary" : "text-muted-foreground"
                     )}
-                  >
-                    <item.icon className="w-5 h-5" />
-                  </div>
+                  />
                   <span
                     className={cn(
-                      "text-[10px] font-medium transition-colors duration-300",
+                      "text-[9.5px] font-bold transition-colors duration-300",
                       isActive ? "text-primary" : "text-muted-foreground"
                     )}
                   >
                     {item.label}
                   </span>
                 </motion.div>
-
-                {/* Active indicator dot */}
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-indicator"
-                    className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
               </Link>
             );
           })}
         </div>
-
-        {/* Safe area spacer for notched phones */}
-        <div className="pb-safe" />
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 };
 
