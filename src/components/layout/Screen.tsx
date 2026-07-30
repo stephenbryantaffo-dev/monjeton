@@ -32,7 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // Hauteur visuelle de la LimelightNav (sans safe-area, gérée séparément)
-const BOTTOM_NAV_HEIGHT = 72;
+const BOTTOM_NAV_HEIGHT = 96;
 const STICKY_ACTION_MIN_HEIGHT = 88;
 
 interface ScreenContextValue {
