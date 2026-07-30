@@ -11,7 +11,7 @@
        Source de vérité unique — utilisée par .pb-nav / .mb-nav / .bottom-nav
        et par Screen.StickyAction. Ne jamais coller un bouton à bottom-0
        sans réserver cet espace. */
-    --bottom-nav-space: calc(80px + env(safe-area-inset-bottom, 0px));
+    --bottom-nav-space: calc(100px + env(safe-area-inset-bottom, 0px));
 
     --background: 218 17% 9%;
     --foreground: 110 19% 94%;
