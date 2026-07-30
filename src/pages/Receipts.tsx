@@ -48,7 +48,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ReceiptsPinLock from "@/components/ReceiptsPinLock";
-import { getReceiptImageUrl, isValidImageUrl } from "@/lib/receiptImageManager";
+import { getReceiptImageUrl, getReceiptImageUrls, isValidImageUrl } from "@/lib/receiptImageManager";
 
 interface ScanItem {
   id: string;
@@ -182,16 +182,33 @@ const Receipts = () => {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     const rows = (data as unknown as ScanItem[]) || [];
-    const scansWithUrls = await Promise.all(
-      rows.map(async (scan) => {
-        let signed: string | null = null;
-        if (scan.storage_path) signed = await getSignedUrl(scan.storage_path);
-        if (!signed) signed = sanitizeImageUrl(scan.image_url);
-        return { ...scan, signedImageUrl: signed };
-      })
+
+    // 1) Afficher tout de suite la liste (nom, montant, date) avec le
+    //    fallback URL si présent. Plus d'écran noir en attendant les images.
+    setScans(
+      rows.map((scan) => ({
+        ...scan,
+        signedImageUrl: sanitizeImageUrl(scan.image_url),
+      }))
     );
-    setScans(scansWithUrls);
     setLoading(false);
+
+    // 2) Signer toutes les vignettes du bucket privé en UN SEUL appel,
+    //    puis compléter la liste sans la bloquer.
+    const paths = rows.map((r) => r.storage_path).filter(Boolean) as string[];
+    if (paths.length > 0) {
+      const urlMap = await getReceiptImageUrls(paths);
+      setScans((prev) =>
+        prev.map((scan) => {
+          const signed = scan.storage_path
+            ? urlMap.get(scan.storage_path) ?? null
+            : null;
+          return signed
+            ? { ...scan, signedImageUrl: signed }
+            : scan;
+        })
+      );
+    }
     if (user && scansWithUrls.length > 1) {
       try {
         const dups = await detectDuplicates(user.id);
@@ -1144,6 +1161,8 @@ const Receipts = () => {
                       <img
                         src={scan.signedImageUrl}
                         alt="Reçu"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const img = e.currentTarget as HTMLImageElement;
