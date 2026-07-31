@@ -44,7 +44,7 @@ const STATUS = {
   pending: { label: "En cours", color: "text-primary", bg: "bg-primary/10" },
   partial: { label: "Partiel", color: "text-yellow-500", bg: "bg-yellow-500/10" },
   overdue: { label: "En retard", color: "text-destructive", bg: "bg-destructive/10" },
-  paid: { label: "Payé ✓", color: "text-primary", bg: "bg-primary/20" },
+  paid: { label: "Payé", color: "text-primary", bg: "bg-primary/20" },
   cancelled: { label: "Annulé", color: "text-muted-foreground", bg: "bg-secondary" },
 } as const;
 
@@ -165,7 +165,7 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
         nextDue && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Calendar className="w-3 h-3" />
-            {nextDue.status === "overdue" ? "⚠️ En retard : " : "Prochain : "}
+            {nextDue.status === "overdue" ? "En retard : " : "Prochain : "}
             {formatMoneyDisplay(nextDue.expected_amount)} le{" "}
             {new Date(nextDue.due_date).toLocaleDateString("fr-FR", {
               day: "2-digit",
