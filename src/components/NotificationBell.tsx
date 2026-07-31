@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, Check, Trash2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Bell, Check, Trash2, AlertTriangle, PiggyBank, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,10 +66,10 @@ const NotificationBell = () => {
     setNotifications([]);
   };
 
-  const typeIcon: Record<string, string> = {
-    budget_exceeded: "⚠️",
-    low_balance: "💰",
-    weekly_summary: "📊",
+  const typeIcon: Record<string, LucideIcon> = {
+    budget_exceeded: AlertTriangle,
+    low_balance: PiggyBank,
+    weekly_summary: BarChart3,
   };
 
   return (
@@ -117,7 +118,7 @@ const NotificationBell = () => {
                 >
                   <div className="flex gap-2">
                     <span className="text-lg shrink-0">
-                      {typeIcon[notif.type] || "🔔"}
+                      {(() => { const I = typeIcon[notif.type] || Bell; return <I className="w-4 h-4 text-primary" />; })()}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground leading-tight">
