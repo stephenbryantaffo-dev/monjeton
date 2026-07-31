@@ -251,7 +251,7 @@ const Budgets = () => {
         if (error) throw error;
       }
       setNewBudgetAmount("");
-      toast({ title: "Budget global mis à jour ✅" });
+      toast({ title: "Budget global mis à jour" });
       loadData();
     } catch (e: any) {
       toast({ title: "Erreur sauvegarde", description: e?.message, variant: "destructive" });
@@ -278,7 +278,7 @@ const Budgets = () => {
     setDialogOpen(false);
     setNewCatBudget("");
     setSelectedCategoryId("");
-    toast({ title: "Budget catégorie ajouté ✅" });
+    toast({ title: "Budget catégorie ajouté" });
     loadData();
   };
 
@@ -291,7 +291,7 @@ const Budgets = () => {
     try {
       const { error } = await supabase.from("category_budgets").update({ budget_amount: amount }).eq("id", cbId);
       if (error) throw error;
-      toast({ title: "Budget mis à jour ✅" });
+      toast({ title: "Budget mis à jour" });
       setEditingId(null);
       loadData();
     } catch (e: any) {
@@ -525,7 +525,7 @@ const Budgets = () => {
       await upsertCategoryBudgetFromSuggestion(s);
       setEditableSuggestions((prev) => prev.filter((item) => item.categorie !== s.categorie));
       toast({
-        title: `Budget ${s.categorie} approuvé ✅`,
+        title: `Budget ${s.categorie} approuvé`,
         description: `${fmt(s.montant_suggere)} alloués`,
       });
       await loadData();
@@ -564,7 +564,7 @@ const Budgets = () => {
       setEditableSuggestions(failed);
       if (failed.length === 0) setShowSuggestions(false);
       toast({
-        title: `${successCount} budget(s) approuvé(s) ✅`,
+        title: `${successCount} budget(s) approuvé(s)`,
         description: failed.length > 0
           ? `${failed.length} échec(s) — réessaie`
           : "Ta répartition est maintenant active",
@@ -703,7 +703,7 @@ const Budgets = () => {
           >
             <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
             <p className="text-sm text-destructive font-medium">
-              ⚠️ {exceededCount} budget{exceededCount > 1 ? "s" : ""} dépassé{exceededCount > 1 ? "s" : ""} ce mois-ci
+              {exceededCount} budget{exceededCount > 1 ? "s" : ""} dépassé{exceededCount > 1 ? "s" : ""} ce mois-ci
             </p>
           </motion.div>
         )}
@@ -771,10 +771,10 @@ const Budgets = () => {
                 const score = Math.max(0, Math.min(100, Math.round(100 - budgetUsedPercent)));
                 const health =
                   score >= 70
-                    ? { label: "🟢 Bonne santé", color: "text-primary", bg: "bg-primary/10" }
+                    ? { label: "Bonne santé", color: "text-primary", bg: "bg-primary/10" }
                     : score >= 40
-                      ? { label: "🟡 Attention", color: "text-yellow-500", bg: "bg-yellow-500/10" }
-                      : { label: "🔴 Critique", color: "text-destructive", bg: "bg-destructive/10" };
+                      ? { label: "Attention", color: "text-yellow-500", bg: "bg-yellow-500/10" }
+                      : { label: "Critique", color: "text-destructive", bg: "bg-destructive/10" };
                 return (
                   <div className={`flex items-center justify-between px-3 py-2 rounded-xl mt-2 ${health.bg}`}>
                     <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
@@ -820,7 +820,7 @@ const Budgets = () => {
             </div>
             {!amountsHidden && isOverBudget && (
               <p className="text-xs text-destructive font-medium animate-pulse">
-                🔴 Budget dépassé de {fmt(totalSpent - totalBudget)} !
+                Budget dépassé de {fmt(totalSpent - totalBudget)} !
               </p>
             )}
             {/* Projection fin de mois */}
@@ -844,7 +844,7 @@ const Budgets = () => {
                       : "bg-secondary/50"
                   }`}
                 >
-                  <span className="text-base flex-shrink-0">{isProjectedOver ? "⚠️" : "📈"}</span>
+                  {isProjectedOver ? <AlertTriangle className="w-4 h-4 flex-shrink-0 text-destructive" /> : <TrendingUp className="w-4 h-4 flex-shrink-0 text-primary" />}
                   <p className={isProjectedOver ? "text-destructive" : "text-muted-foreground"}>
                     À ce rythme, fin de mois :{" "}
                     <span className="font-bold text-foreground tabular-nums">{fmt(projectedTotal)}</span>
@@ -1045,7 +1045,7 @@ const Budgets = () => {
                   </div>
 
                   <p className="text-[10px] text-muted-foreground italic px-1 text-center">
-                    💡 Modifie chaque montant pour ajuster ta répartition. Les budgets s'ajustent automatiquement à mesure que tu dépenses.
+                    Modifie chaque montant pour ajuster ta répartition. Les budgets s'ajustent automatiquement à mesure que tu dépenses.
                   </p>
                 </motion.div>
               )}
@@ -1213,12 +1213,12 @@ const Budgets = () => {
                     </div>
                     {!amountsHidden && over && (
                       <p className="text-[10px] text-destructive mt-1 font-medium animate-pulse">
-                        🔴 Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} !
+                        Dépassé de {fmt((cb.spent || 0) - cb.budget_amount)} !
                       </p>
                     )}
                     {pred && !over && pred.predictedEndOfMonth > cb.budget_amount && (
                       <p className="text-[10px] text-[hsl(30,90%,55%)] mt-1">
-                        ⚠️ Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} en fin de mois
+                        Prévu : {fmt(Math.round(pred.predictedEndOfMonth))} en fin de mois
                       </p>
                     )}
                     {(() => {
