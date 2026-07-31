@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +57,7 @@ export const EditDebtDialog = ({ debt, userId, open, onClose, onSaved }: Props) 
   const save = async () => {
     setSaving(true);
     const newAmount = Number(form.amount);
-    const updates: Record<string, unknown> = {
+    const updates: TablesUpdate<"debts"> = {
       amount: newAmount,
       motif: form.motif.trim() || null,
       note: form.note.trim() || null,
