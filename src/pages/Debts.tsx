@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import {
-  Plus,
-  ArrowDownLeft,
-  ArrowUpRight,
-  User,
-  Trash2,
-} from "lucide-react";
+import { Plus, ArrowDownLeft, ArrowUpRight, User, Trash2, Banknote, CalendarDays, CalendarRange } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -428,7 +422,7 @@ const Debts = () => {
         });
       }
 
-      toast({ title: "Dette créée ✅" });
+      toast({ title: "Dette créée" });
       setShowNew(false);
       resetNew();
       loadDebts();
@@ -671,9 +665,9 @@ const Debts = () => {
               <div className="grid grid-cols-3 gap-2">
                 {(
                   [
-                    { val: "lump_sum", icon: "💵", label: "En une fois" },
-                    { val: "monthly", icon: "📅", label: "Mensuel" },
-                    { val: "custom", icon: "🗓️", label: "Dates fixes" },
+                    { val: "lump_sum", Icon: Banknote, label: "En une fois" },
+                    { val: "monthly", Icon: CalendarDays, label: "Mensuel" },
+                    { val: "custom", Icon: CalendarRange, label: "Dates fixes" },
                   ] as const
                 ).map((opt) => (
                   <button
@@ -685,7 +679,7 @@ const Debts = () => {
                         : "glass text-muted-foreground"
                     }`}
                   >
-                    <div className="text-lg leading-none mb-1">{opt.icon}</div>
+                    <opt.Icon className="w-5 h-5 mx-auto mb-1.5" />
                     <div className="text-[10px] font-bold leading-tight">
                       {opt.label}
                     </div>
@@ -742,7 +736,7 @@ const Debts = () => {
                       return (
                         <>
                           <p className="text-[11px] font-bold text-primary mb-1">
-                            📊 Aperçu du plan
+                            Aperçu du plan
                           </p>
                           <p className="text-xs text-foreground">
                             {nbMonths} versement(s) de{" "}
@@ -829,13 +823,13 @@ const Debts = () => {
                   if (remaining === 0)
                     return (
                       <p className="text-[11px] text-primary font-bold">
-                        ✓ Plan complet — 100% alloué
+                        Plan complet — 100 % alloué
                       </p>
                     );
                   if (remaining < 0)
                     return (
                       <p className="text-[11px] text-destructive font-bold">
-                        ⚠️ Dépasse de {formatMoneyDisplay(-remaining)}
+                        Dépasse de {formatMoneyDisplay(-remaining)}
                       </p>
                     );
                   return (
