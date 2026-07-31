@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Mic, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AmountKeypad } from "@/components/transaction/AmountKeypad";
+import { VoiceRecorderSheet } from "@/components/transaction/VoiceRecorderSheet";
+import { useLiveTranscript } from "@/hooks/useLiveTranscript";
 import {
   CategorySheet,
   WalletSheet,
@@ -18,7 +20,6 @@ import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Screen } from "@/components/layout/Screen";
 import VoiceConfirmationDialog, { type ParsedTransaction } from "@/components/voice/VoiceConfirmationDialog";
-import AudioLevelVisualizer from "@/components/voice/AudioLevelVisualizer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,11 @@ const NewTransaction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcriptText, setTranscriptText] = useState<string | null>(null);
   const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [voiceSheetOpen, setVoiceSheetOpen] = useState(false);
+  const cancelledRef = useRef(false);
+  const live = useLiveTranscript();
   const [showRetryVoice, setShowRetryVoice] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -78,6 +84,7 @@ const NewTransaction = () => {
     const state = location.state as any;
     if (state?.autoVoice && !isRecording && !isProcessing) {
       // Small delay to ensure component is mounted
+      setVoiceSheetOpen(true);
       const timer = setTimeout(() => startRecording(), 500);
       return () => clearTimeout(timer);
     }
@@ -131,10 +138,20 @@ const NewTransaction = () => {
     return "";
   };
 
+  useEffect(() => {
+    if (!isRecording || isPaused) return;
+    const id = setInterval(() => setElapsed((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [isRecording, isPaused]);
+
   const startRecording = async () => {
     try {
       setTranscriptText(null);
       setShowRetryVoice(false);
+      setElapsed(0);
+      setIsPaused(false);
+      cancelledRef.current = false;
+      live.start();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setActiveStream(stream);
       const mimeType = getSupportedMimeType();
@@ -151,6 +168,17 @@ const NewTransaction = () => {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         setActiveStream(null);
+        live.stop();
+
+        // Annulation explicite : on jette l'audio sans rien envoyer
+        if (cancelledRef.current) {
+          chunksRef.current = [];
+          setIsRecording(false);
+          setIsPaused(false);
+          setElapsed(0);
+          setVoiceSheetOpen(false);
+          return;
+        }
         const blob = new Blob(chunksRef.current, { type: getSupportedMimeType() || "audio/webm" });
 
         if (blob.size < 8000) {
@@ -178,9 +206,43 @@ const NewTransaction = () => {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
+    const rec = mediaRecorderRef.current;
+    if (rec && (rec.state === "recording" || rec.state === "paused")) {
+      rec.stop();
       setIsRecording(false);
+      setIsPaused(false);
+    }
+  };
+
+  const pauseRecording = () => {
+    const rec = mediaRecorderRef.current;
+    if (rec?.state === "recording") {
+      rec.pause();
+      setIsPaused(true);
+      live.pause();
+    }
+  };
+
+  const resumeRecording = () => {
+    const rec = mediaRecorderRef.current;
+    if (rec?.state === "paused") {
+      rec.resume();
+      setIsPaused(false);
+      live.resume();
+    }
+  };
+
+  const cancelRecording = () => {
+    const rec = mediaRecorderRef.current;
+    if (rec && (rec.state === "recording" || rec.state === "paused")) {
+      cancelledRef.current = true;
+      rec.stop();
+    } else {
+      setVoiceSheetOpen(false);
+      setIsRecording(false);
+      setIsPaused(false);
+      setElapsed(0);
+      live.stop();
     }
   };
 
@@ -289,6 +351,8 @@ const NewTransaction = () => {
       setShowRetryVoice(true);
     } finally {
       setIsProcessing(false);
+      setVoiceSheetOpen(false);
+      setElapsed(0);
     }
   };
 
@@ -460,41 +524,31 @@ const NewTransaction = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
           </div>
 
-      {/* Voice Input */}
-      <motion.div
+      {/* Déclencheur vocal */}
+      <motion.button
+        type="button"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-2xl p-4 mb-4 flex items-center gap-4"
+        onClick={() => setVoiceSheetOpen(true)}
+        disabled={isProcessing}
+        className="glass-card rounded-2xl p-4 mb-4 flex items-center gap-4 w-full text-left"
       >
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={isProcessing}
-          className={`min-w-[56px] min-h-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
-            isRecording
-              ? "bg-destructive text-destructive-foreground animate-pulse"
-              : "gradient-primary text-primary-foreground neon-glow"
-          }`}
-        >
+        <span className="min-w-[56px] min-h-[56px] w-14 h-14 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground neon-glow">
           {isProcessing ? (
             <Loader2 className="w-6 h-6 animate-spin" />
-          ) : isRecording ? (
-            <MicOff className="w-6 h-6" />
           ) : (
             <Mic className="w-6 h-6" />
           )}
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground">
-            {isProcessing ? "Analyse IA en cours..." : isRecording ? "Écoute en cours..." : "Saisie vocale intelligente"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {isRecording
-              ? "Parlez librement, ex : « J'ai payé taxi 3000 et restaurant 25000 »"
-              : "Détecte plusieurs transactions, devises et montants automatiquement"}
-          </p>
-        </div>
-        <AudioLevelVisualizer stream={activeStream} isActive={isRecording} />
-      </motion.div>
+        </span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-medium text-foreground">
+            {isProcessing ? "Analyse IA en cours..." : "Dis ta dépense"}
+          </span>
+          <span className="block text-xs text-muted-foreground">
+            Ex : « J'ai payé 2 500 au garba »
+          </span>
+        </span>
+      </motion.button>
 
       {/* Transcription bubble */}
       <AnimatePresence>
@@ -666,6 +720,21 @@ const NewTransaction = () => {
           </Screen.StickyAction>
         )}
 
+        <VoiceRecorderSheet
+          open={voiceSheetOpen}
+          isRecording={isRecording}
+          isPaused={isPaused}
+          isProcessing={isProcessing}
+          elapsed={elapsed}
+          transcriptFinal={live.final}
+          transcriptPartial={live.partial}
+          transcriptSupported={live.supported}
+          onStart={startRecording}
+          onPause={pauseRecording}
+          onResume={resumeRecording}
+          onStop={stopRecording}
+          onCancel={cancelRecording}
+        />
         <CategorySheet
           open={showCatSheet}
           onOpenChange={setShowCatSheet}
