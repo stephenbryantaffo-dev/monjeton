@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check, SkipForward, Users, GraduationCap, Briefcase, Building2, User, Home, Building, UtensilsCrossed, Car, Smartphone, Shirt, Pill, Gamepad2, Tv, Music, Dumbbell, Cloud, X, Sprout, TrendingUp, Trophy, AlertTriangle, PiggyBank, CreditCard, BarChart3, Rocket, Scale } from "lucide-react";
@@ -13,7 +14,14 @@ import { LocaleSetupStep } from "@/components/onboarding/LocaleSetupStep";
 interface StepQuestion {
   id: string;
   title: string;
-  options: { label: string; emoji: string; value: string }[];
+  options: {
+    label: string;
+    value: string;
+    /** Icône Lucide, pour les options qualitatives. */
+    icon?: LucideIcon;
+    /** Niveau 1..5, pour les options qui forment une échelle (tranches de montant). */
+    level?: number;
+  }[];
   multi?: boolean;
   optional?: boolean;
   condition?: (answers: Answers) => boolean;
