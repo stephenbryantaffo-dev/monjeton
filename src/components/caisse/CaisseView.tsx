@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw, Link2, Users } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw, Link2, Users, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -40,9 +40,9 @@ const ROLE_COLOR: Record<string, string> = {
 const fmt = (n: number) => n?.toLocaleString("fr-FR") ?? "0";
 
 const getActionLabel = (action: string) => ({
-  added: '➕ Membre ajouté',
-  removed: '❌ Membre retiré',
-  reinstated: '✅ Membre réintégré',
+  added: 'Membre ajouté',
+  removed: 'Membre retiré',
+  reinstated: 'Membre réintégré',
   cotisation_cancelled: '↩️ Cotisation annulée',
   suspended: '⏸️ Membre suspendu',
 }[action] || action);
@@ -211,7 +211,7 @@ const CaisseView = () => {
     }
     setActiveCycleLabel(candidate);
     setCycleLabel(candidate);
-    toast({ title: "Nouveau cycle démarré ✅", description: `Cycle : ${candidate}. Tous les membres repassent à Non payé.` });
+    toast({ title: "Nouveau cycle démarré", description: `Cycle : ${candidate}. Tous les membres repassent à Non payé.` });
   };
 
   const getMemberName = (id: string) => members.find((m) => m.id === id)?.name || "?";
@@ -328,7 +328,7 @@ const CaisseView = () => {
       action: "reinstated",
       performed_by: user.id,
     } as any);
-    toast({ title: `${member.name} réintégré ✅` });
+    toast({ title: `${member.name} réintégré` });
     setShowMemberActions(false);
     await refreshDetail();
   };
@@ -349,7 +349,7 @@ const CaisseView = () => {
         status: "confirmed",
       } as any);
       await supabase.from("caisses" as any).update({ total_collected: selected.total_collected + amount } as any).eq("id", selected.id);
-      toast({ title: `Cotisation de ${getMemberName(cotisationMemberId)} enregistrée ✅` });
+      toast({ title: `Cotisation de ${getMemberName(cotisationMemberId)} enregistrée` });
       setShowCotisation(false);
       setCotisationMemberId("");
       await refreshDetail();
@@ -409,7 +409,7 @@ const CaisseView = () => {
           performed_by: user.id,
         } as any);
       }
-      toast({ title: `${newMemberName} ajouté ✅` });
+      toast({ title: `${newMemberName} ajouté` });
       setShowAddMember(false);
       setNewMemberName("");
       setNewMemberPhone("");
@@ -475,7 +475,7 @@ const CaisseView = () => {
             Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
           ) : caisses.length === 0 ? (
             <div className="glass-card rounded-2xl p-8 text-center">
-              <span className="text-4xl">🏦</span>
+              <Landmark className="w-9 h-9 text-muted-foreground" />
               <p className="text-sm font-semibold text-foreground mt-3 mb-1">Aucune caisse créée</p>
               <p className="text-xs text-muted-foreground mb-4">Crée une caisse commune pour gérer les cotisations de ton groupe — location, événements, urgences...</p>
             </div>
@@ -485,7 +485,7 @@ const CaisseView = () => {
                 onClick={() => openDetail(c)} className="glass-card rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-transform border border-primary/20">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">🏦</span>
+                    <Landmark className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-foreground truncate">{c.name}</p>
@@ -493,7 +493,7 @@ const CaisseView = () => {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <ConfirmDeleteDialog onConfirm={() => deleteCaisse(c.id)} title="Supprimer cette caisse ?">
-                      <button className="text-muted-foreground hover:text-destructive p-1" onClick={(e) => e.stopPropagation()}>✕</button>
+                      <button className="text-muted-foreground hover:text-destructive p-1" onClick={(e) => e.stopPropagation()}aria-label="Supprimer"><X className="w-4 h-4" /></button>
                     </ConfirmDeleteDialog>
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
@@ -687,7 +687,7 @@ const CaisseView = () => {
                 <div className="flex-shrink-0 flex items-center gap-1">
                   {m.status === 'active' && (
                     paid ? (
-                      <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">✅ Payé</span>
+                      <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">Payé</span>
                     ) : (
                       <button onClick={() => { setCotisationMemberId(m.id); setCotisationAmount(String(selected.contribution_amount)); setCycleLabel(defaultCycleLabel); setShowCotisation(true); }}
                         className="text-xs gradient-primary text-primary-foreground px-3 py-1.5 rounded-lg font-medium">
@@ -867,7 +867,7 @@ const CaisseView = () => {
           {(selectedMember?.total_paid || 0) > 0 && (
             <div className="glass-card rounded-xl p-3 mb-4 border border-yellow-500/20">
               <p className="text-xs text-yellow-500">
-                ⚠️ Ce membre a déjà versé {fmt(selectedMember?.total_paid || 0)}. Ces fonds restent dans la caisse.
+                Ce membre a déjà versé {fmt(selectedMember?.total_paid || 0)}. Ces fonds restent dans la caisse.
               </p>
             </div>
           )}
@@ -897,7 +897,7 @@ const CaisseView = () => {
                 <SelectTrigger className="bg-secondary border-border mt-1"><SelectValue placeholder="Choisir un membre" /></SelectTrigger>
                 <SelectContent>
                   {members.filter(m => m.status === 'active').map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.name} {hasPaidThisCycle(m.id) ? "✅" : "⏳"}</SelectItem>
+                    <SelectItem key={m.id} value={m.id}>{m.name} {hasPaidThisCycle(m.id) ? "· payé" : "· en attente"}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -946,7 +946,7 @@ const CaisseView = () => {
               <Label>Montant (F CFA)</Label>
               <MoneyInput value={depenseAmount} onChange={(n) => setDepenseAmount(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
               {Number(depenseAmount) > soldeDisponible && (
-                <p className="text-xs text-destructive mt-1">⚠️ Solde insuffisant — disponible : {fmt(soldeDisponible)}</p>
+                <p className="text-xs text-destructive mt-1">Solde insuffisant — disponible : {fmt(soldeDisponible)}</p>
               )}
             </div>
             <div>
