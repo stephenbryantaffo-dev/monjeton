@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check, SkipForward } from "lucide-react";
+import { ArrowRight, Check, SkipForward, Users, GraduationCap, Briefcase, Building2, User, Home, Building, UtensilsCrossed, Car, Smartphone, Shirt, Pill, Gamepad2, Tv, Music, Dumbbell, Cloud, X, Sprout, TrendingUp, Trophy, AlertTriangle, PiggyBank, CreditCard, BarChart3, Rocket, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/layout/Screen";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,29 +41,29 @@ const ALL_QUESTIONS: StepQuestion[] = [
     id: "profile_type",
     title: "Tu es...",
     options: [
-      { label: "Parent / Chef de famille", emoji: "👨‍👩‍👧", value: "parent" },
-      { label: "Étudiant(e)", emoji: "🎓", value: "étudiant" },
-      { label: "Salarié(e)", emoji: "💼", value: "salarié" },
-      { label: "Entrepreneur / Freelance", emoji: "🏢", value: "entrepreneur" },
-      { label: "Autre", emoji: "👤", value: "autre" },
+      { label: "Parent / Chef de famille", icon: Users, value: "parent" },
+      { label: "Étudiant(e)", icon: GraduationCap, value: "étudiant" },
+      { label: "Salarié(e)", icon: Briefcase, value: "salarié" },
+      { label: "Entrepreneur / Freelance", icon: Building2, value: "entrepreneur" },
+      { label: "Autre", icon: User, value: "autre" },
     ],
   },
   {
     id: "gender",
     title: "Tu es...",
     options: [
-      { label: "Un homme", emoji: "👨", value: "homme" },
-      { label: "Une femme", emoji: "👩", value: "femme" },
+      { label: "Un homme", icon: User, value: "homme" },
+      { label: "Une femme", icon: User, value: "femme" },
     ],
   },
   {
     id: "living_situation",
     title: "Tu vis...",
     options: [
-      { label: "Seul(e)", emoji: "🏠", value: "seul" },
-      { label: "En famille", emoji: "👨‍👩‍👧", value: "famille" },
-      { label: "En colocation", emoji: "🏘️", value: "colocation" },
-      { label: "Avec parents", emoji: "👨‍👧", value: "parents" },
+      { label: "Seul(e)", icon: Home, value: "seul" },
+      { label: "En famille", icon: Users, value: "famille" },
+      { label: "En colocation", icon: Building, value: "colocation" },
+      { label: "Avec parents", icon: Users, value: "parents" },
     ],
   },
   {
@@ -71,11 +71,11 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Ton revenu mensuel se situe dans quelle tranche ?",
     condition: (a) => ["salarié", "entrepreneur", "autre"].includes(a.profile_type || ""),
     options: [
-      { label: "Moins de 100 000 FCFA", emoji: "💚", value: "0-100k" },
-      { label: "100 000 - 300 000 FCFA", emoji: "💛", value: "100-300k" },
-      { label: "300 000 - 700 000 FCFA", emoji: "🟠", value: "300-700k" },
-      { label: "700 000 - 1 500 000 FCFA", emoji: "🔵", value: "700k-1.5M" },
-      { label: "Plus de 1 500 000 FCFA", emoji: "💜", value: "1.5M+" },
+      { label: "Moins de 100 000 FCFA", level: 1, value: "0-100k" },
+      { label: "100 000 - 300 000 FCFA", level: 2, value: "100-300k" },
+      { label: "300 000 - 700 000 FCFA", level: 3, value: "300-700k" },
+      { label: "700 000 - 1 500 000 FCFA", level: 4, value: "700k-1.5M" },
+      { label: "Plus de 1 500 000 FCFA", level: 5, value: "1.5M+" },
     ],
   },
   {
@@ -83,10 +83,10 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "L'argent que tu reçois par mois ?",
     condition: (a) => a.profile_type === "étudiant",
     options: [
-      { label: "Moins de 30 000 FCFA", emoji: "💚", value: "0-30k" },
-      { label: "30 000 - 75 000 FCFA", emoji: "💛", value: "30-75k" },
-      { label: "75 000 - 150 000 FCFA", emoji: "🟠", value: "75-150k" },
-      { label: "Plus de 150 000 FCFA", emoji: "🔵", value: "150k+" },
+      { label: "Moins de 30 000 FCFA", level: 1, value: "0-30k" },
+      { label: "30 000 - 75 000 FCFA", level: 2, value: "30-75k" },
+      { label: "75 000 - 150 000 FCFA", level: 3, value: "75-150k" },
+      { label: "Plus de 150 000 FCFA", level: 4, value: "150k+" },
     ],
   },
   {
@@ -94,11 +94,11 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Les revenus de ton foyer par mois ?",
     condition: (a) => a.profile_type === "parent",
     options: [
-      { label: "Moins de 100 000 FCFA", emoji: "💚", value: "0-100k" },
-      { label: "100 000 - 300 000 FCFA", emoji: "💛", value: "100-300k" },
-      { label: "300 000 - 700 000 FCFA", emoji: "🟠", value: "300-700k" },
-      { label: "700 000 - 1 500 000 FCFA", emoji: "🔵", value: "700k-1.5M" },
-      { label: "Plus de 1 500 000 FCFA", emoji: "💜", value: "1.5M+" },
+      { label: "Moins de 100 000 FCFA", level: 1, value: "0-100k" },
+      { label: "100 000 - 300 000 FCFA", level: 2, value: "100-300k" },
+      { label: "300 000 - 700 000 FCFA", level: 3, value: "300-700k" },
+      { label: "700 000 - 1 500 000 FCFA", level: 4, value: "700k-1.5M" },
+      { label: "Plus de 1 500 000 FCFA", level: 5, value: "1.5M+" },
     ],
   },
   {
@@ -106,24 +106,24 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Combien de personnes dépendent de toi ?",
     condition: (a) => a.profile_type === "parent",
     options: [
-      { label: "1-2", emoji: "👤", value: "1-2" },
-      { label: "3-4", emoji: "👥", value: "3-4" },
-      { label: "5-6", emoji: "👨‍👩‍👧‍👦", value: "5-6" },
-      { label: "Plus de 6", emoji: "👨‍👩‍👧‍👦", value: "6+" },
+      { label: "1-2", icon: User, value: "1-2" },
+      { label: "3-4", icon: Users, value: "3-4" },
+      { label: "5-6", icon: Users, value: "5-6" },
+      { label: "Plus de 6", icon: Users, value: "6+" },
     ],
   },
   {
     id: "main_expense",
     title: "Ta plus grosse dépense mensuelle ?",
     options: [
-      { label: "Nourriture / Alimentation", emoji: "🍛", value: "alimentation" },
-      { label: "Loyer / Logement", emoji: "🏠", value: "loyer" },
-      { label: "Transport", emoji: "🚗", value: "transport" },
-      { label: "Téléphone / Abonnements", emoji: "📱", value: "téléphone" },
-      { label: "Vêtements / Beauté", emoji: "👗", value: "vêtements" },
-      { label: "Scolarité / Formation", emoji: "🎓", value: "scolarité" },
-      { label: "Santé", emoji: "💊", value: "santé" },
-      { label: "Loisirs / Sorties", emoji: "🎮", value: "loisirs" },
+      { label: "Nourriture / Alimentation", icon: UtensilsCrossed, value: "alimentation" },
+      { label: "Loyer / Logement", icon: Home, value: "loyer" },
+      { label: "Transport", icon: Car, value: "transport" },
+      { label: "Téléphone / Abonnements", icon: Smartphone, value: "téléphone" },
+      { label: "Vêtements / Beauté", icon: Shirt, value: "vêtements" },
+      { label: "Scolarité / Formation", icon: GraduationCap, value: "scolarité" },
+      { label: "Santé", icon: Pill, value: "santé" },
+      { label: "Loisirs / Sorties", icon: Gamepad2, value: "loisirs" },
     ],
   },
   {
@@ -131,12 +131,12 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Tu as des abonnements en cours ?",
     multi: true,
     options: [
-      { label: "Netflix / Canal+", emoji: "📺", value: "streaming-video" },
-      { label: "Spotify / Apple Music", emoji: "🎵", value: "streaming-audio" },
-      { label: "Forfait data mensuel", emoji: "📱", value: "data" },
-      { label: "Salle de sport", emoji: "🏋️", value: "sport" },
-      { label: "Cloud / Apps payantes", emoji: "☁️", value: "cloud" },
-      { label: "Aucun", emoji: "❌", value: "aucun" },
+      { label: "Netflix / Canal+", icon: Tv, value: "streaming-video" },
+      { label: "Spotify / Apple Music", icon: Music, value: "streaming-audio" },
+      { label: "Forfait data mensuel", icon: Smartphone, value: "data" },
+      { label: "Salle de sport", icon: Dumbbell, value: "sport" },
+      { label: "Cloud / Apps payantes", icon: Cloud, value: "cloud" },
+      { label: "Aucun", icon: X, value: "aucun" },
     ],
   },
   {
@@ -144,11 +144,11 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Tu as des employés ?",
     condition: (a) => a.profile_type === "entrepreneur",
     options: [
-      { label: "Non", emoji: "👤", value: "non" },
-      { label: "1-2", emoji: "👥", value: "1-2" },
-      { label: "3-5", emoji: "👥", value: "3-5" },
-      { label: "6-10", emoji: "👥", value: "6-10" },
-      { label: "Plus de 10", emoji: "🏢", value: "10+" },
+      { label: "Non", icon: User, value: "non" },
+      { label: "1-2", icon: Users, value: "1-2" },
+      { label: "3-5", icon: Users, value: "3-5" },
+      { label: "6-10", icon: Users, value: "6-10" },
+      { label: "Plus de 10", icon: Building2, value: "10+" },
     ],
   },
   {
@@ -156,9 +156,9 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Ton business tourne depuis ?",
     condition: (a) => a.profile_type === "entrepreneur",
     options: [
-      { label: "Moins d'1 an", emoji: "🌱", value: "<1an" },
-      { label: "1-3 ans", emoji: "📈", value: "1-3ans" },
-      { label: "Plus de 3 ans", emoji: "🏆", value: "3ans+" },
+      { label: "Moins d'1 an", icon: Sprout, value: "<1an" },
+      { label: "1-3 ans", icon: TrendingUp, value: "1-3ans" },
+      { label: "Plus de 3 ans", icon: Trophy, value: "3ans+" },
     ],
   },
   {
@@ -166,9 +166,9 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Les enfants sont scolarisés ?",
     condition: (a) => a.profile_type === "parent" && ["3-4", "5-6", "6+"].includes(a.dependents_count || ""),
     options: [
-      { label: "Tous", emoji: "✅", value: "tous" },
-      { label: "Certains", emoji: "⚠️", value: "certains" },
-      { label: "Non", emoji: "❌", value: "non" },
+      { label: "Tous", icon: Check, value: "tous" },
+      { label: "Certains", icon: AlertTriangle, value: "certains" },
+      { label: "Non", icon: X, value: "non" },
     ],
   },
   {
@@ -176,21 +176,21 @@ const ALL_QUESTIONS: StepQuestion[] = [
     title: "Tu alloues combien à ta beauté/vêtements par mois ?",
     condition: (a) => a.gender === "femme",
     options: [
-      { label: "Moins de 10 000 F", emoji: "💚", value: "<10k" },
-      { label: "10 000 - 30 000 F", emoji: "💛", value: "10-30k" },
-      { label: "30 000 - 75 000 F", emoji: "🟠", value: "30-75k" },
-      { label: "Plus de 75 000 F", emoji: "💜", value: "75k+" },
+      { label: "Moins de 10 000 F", level: 1, value: "<10k" },
+      { label: "10 000 - 30 000 F", level: 2, value: "10-30k" },
+      { label: "30 000 - 75 000 F", level: 3, value: "30-75k" },
+      { label: "Plus de 75 000 F", level: 5, value: "75k+" },
     ],
   },
   {
     id: "financial_goal",
     title: "Ton objectif principal avec Mon Jeton ?",
     options: [
-      { label: "Épargner plus", emoji: "💰", value: "épargner" },
-      { label: "Rembourser des dettes", emoji: "💳", value: "dettes" },
-      { label: "Comprendre où va mon argent", emoji: "📊", value: "comprendre" },
-      { label: "Investir", emoji: "🚀", value: "investir" },
-      { label: "Équilibrer mes dépenses", emoji: "⚖️", value: "équilibrer" },
+      { label: "Épargner plus", icon: PiggyBank, value: "épargner" },
+      { label: "Rembourser des dettes", icon: CreditCard, value: "dettes" },
+      { label: "Comprendre où va mon argent", icon: BarChart3, value: "comprendre" },
+      { label: "Investir", icon: Rocket, value: "investir" },
+      { label: "Équilibrer mes dépenses", icon: Scale, value: "équilibrer" },
     ],
   },
 ];
@@ -362,7 +362,7 @@ const Onboarding = () => {
         }
       }
 
-      toast({ title: "Bienvenue sur Mon Jeton ! 🎉" });
+      toast({ title: "Bienvenue sur Mon Jeton" });
       const postRedirect = localStorage.getItem('post_onboarding_redirect');
       localStorage.removeItem('post_onboarding_redirect');
       localStorage.removeItem('invite_context');
@@ -392,7 +392,7 @@ const Onboarding = () => {
           <div className="px-6 pt-6 pb-2">
             {inviteContext === 'caisse' && (
               <div className="mb-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary">
-                🎉 Bienvenue ! Configure ton compte en 30 secondes, puis tu rejoindras la caisse de ton ami juste après.
+                Bienvenue ! Configure ton compte en 30 secondes, puis tu rejoindras la caisse de ton ami juste après.
               </div>
             )}
             {localeConfirmed && (
@@ -458,7 +458,16 @@ const Onboarding = () => {
                                 : "border-border bg-secondary/80 text-foreground hover:border-primary/50 hover:bg-primary/5"
                             }`}
                           >
-                            <span className="text-lg flex-shrink-0">{opt.emoji}</span>
+                            <span className="flex-shrink-0 w-[18px] flex items-center justify-center">
+                              {"level" in opt && opt.level ? (
+                                <span
+                                  className="block w-2.5 h-2.5 rounded-full bg-primary"
+                                  style={{ opacity: 0.25 + 0.15 * (opt.level as number) }}
+                                />
+                              ) : "icon" in opt && opt.icon ? (
+                                <opt.icon className="w-[18px] h-[18px] text-primary" />
+                              ) : null}
+                            </span>
                             <span>{opt.label}</span>
                             {isSelected && (
                               <Check className="w-4 h-4 text-primary ml-auto flex-shrink-0" />
