@@ -4,7 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/ui/MoneyInput";
+import { AmountKeypad } from "@/components/transaction/AmountKeypad";
+import {
+  CategorySheet,
+  WalletSheet,
+  DateSheet,
+  MetaChip,
+} from "@/components/transaction/TransactionPickers";
+import { getCatIcon } from "@/lib/getCatIcon";
+import { CreditCard, CalendarDays, StickyNote } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -34,6 +42,10 @@ const NewTransaction = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCatSheet, setShowCatSheet] = useState(false);
+  const [showWalletSheet, setShowWalletSheet] = useState(false);
+  const [showDateSheet, setShowDateSheet] = useState(false);
+  const [showNote, setShowNote] = useState(false);
 
   // Voice states
   const [isRecording, setIsRecording] = useState(false);
@@ -72,6 +84,24 @@ const NewTransaction = () => {
   }, [location.state]);
 
   const filteredCategories = categories.filter(c => c.type === type);
+
+  const selectedCategory = filteredCategories.find((c: any) => c.id === categoryId) || null;
+  const selectedWallet = wallets.find((w: any) => w.id === walletId) || null;
+
+  const dateLabel = (() => {
+    const iso = (n: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      return d.toISOString().split("T")[0];
+    };
+    if (date === iso(0)) return "Aujourd'hui";
+    if (date === iso(1)) return "Hier";
+    if (date === iso(2)) return "Avant-hier";
+    const d = new Date(date + "T00:00:00");
+    return isNaN(d.getTime())
+      ? "Date"
+      : d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  })();
 
   const HALLUCINATIONS = [
     "merci", "merci.", "sous-titres", "sous-titrage",
@@ -551,54 +581,71 @@ const NewTransaction = () => {
             </button>
           </div>
 
-          <form id="new-tx-form" className="space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <Label>Montant (FCFA)</Label>
-              <MoneyInput
-                value={amount}
-                onChange={(n) => setAmount(n ? String(n) : "")}
-                placeholder="0"
-                min={0}
-                showCurrency={false}
-                className="[&>input]:bg-secondary [&>input]:border-border [&>input]:text-xl [&>input]:sm:text-2xl [&>input]:font-bold [&>input]:h-14"
-                required
+          <form id="new-tx-form" onSubmit={handleSubmit}>
+            {/* Montant : le montant EST l'écran */}
+            <div className="text-center pt-2 pb-1">
+              <div className="text-[52px] leading-none font-extrabold tracking-[-0.05em] text-foreground">
+                {amount
+                  ? Number(amount).toLocaleString("fr-FR")
+                  : <span className="text-muted-foreground/40">0</span>}
+                <span className="ml-2 align-baseline text-[20px] font-bold text-muted-foreground">
+                  FCFA
+                </span>
+              </div>
+              <p className="mt-3 text-[12.5px] font-semibold text-muted-foreground">
+                Tape le montant, le reste est déjà rempli
+              </p>
+            </div>
+
+            {/* Les trois choix, pré-remplis mais toujours modifiables */}
+            <div className="grid grid-cols-2 gap-2.5 mt-5">
+              <MetaChip
+                icon={
+                  selectedCategory
+                    ? getCatIcon(selectedCategory.name || "", type)
+                    : <StickyNote className="w-4 h-4" />
+                }
+                label={selectedCategory?.name || "Catégorie"}
+                empty={!selectedCategory}
+                onClick={() => setShowCatSheet(true)}
+              />
+              <MetaChip
+                icon={<CreditCard className="w-4 h-4" />}
+                label={selectedWallet?.wallet_name || "Moyen de paiement"}
+                empty={!selectedWallet}
+                onClick={() => setShowWalletSheet(true)}
+              />
+              <MetaChip
+                icon={<CalendarDays className="w-4 h-4" />}
+                label={dateLabel}
+                onClick={() => setShowDateSheet(true)}
+              />
+              <MetaChip
+                icon={<StickyNote className="w-4 h-4" />}
+                label={note ? note : "Note"}
+                empty={!note}
+                onClick={() => setShowNote((v) => !v)}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Catégorie</Label>
-              <div className="flex flex-wrap gap-2">
-                {filteredCategories.map((c) => (
-                  <button key={c.id} type="button" onClick={() => setCategoryId(c.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors max-w-[calc(50%-4px)] truncate ${categoryId === c.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
-                    {c.name}
-                  </button>
-                ))}
+            {showNote && (
+              <div className="mt-3">
+                <Textarea
+                  placeholder="Détails de la transaction..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="bg-secondary border-border"
+                  autoFocus
+                />
               </div>
-            </div>
+            )}
 
-            <div className="space-y-2">
-              <Label>Portefeuille</Label>
-              <div className="flex flex-wrap gap-2">
-                {wallets.map((w) => (
-                  <button key={w.id} type="button" onClick={() => setWalletId(w.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${walletId === w.id ? "gradient-primary text-primary-foreground" : "glass-card text-muted-foreground hover:text-foreground"}`}>
-                    {w.wallet_name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Note</Label>
-              <Textarea placeholder="Détails de la transaction..." value={note} onChange={(e) => setNote(e.target.value)} className="bg-secondary border-border" />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <DatePickerField value={date} onChange={setDate} className="bg-secondary border-border" />
-            </div>
-
+            {/* Pavé numérique */}
+            <AmountKeypad
+              value={amount}
+              onChange={setAmount}
+              className="mt-5"
+            />
           </form>
         </>
       )}
@@ -618,6 +665,28 @@ const NewTransaction = () => {
             </Button>
           </Screen.StickyAction>
         )}
+
+        <CategorySheet
+          open={showCatSheet}
+          onOpenChange={setShowCatSheet}
+          categories={filteredCategories}
+          value={categoryId}
+          onSelect={setCategoryId}
+          type={type}
+        />
+        <WalletSheet
+          open={showWalletSheet}
+          onOpenChange={setShowWalletSheet}
+          wallets={wallets}
+          value={walletId}
+          onSelect={setWalletId}
+        />
+        <DateSheet
+          open={showDateSheet}
+          onOpenChange={setShowDateSheet}
+          value={date}
+          onSelect={setDate}
+        />
       </Screen>
     </DashboardLayout>
   );
