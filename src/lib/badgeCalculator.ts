@@ -1,6 +1,13 @@
+import {
+  UtensilsCrossed, Car, Shirt, Briefcase, PiggyBank, Scale,
+  Smartphone, Trophy, PartyPopper, CreditCard, Users, Wind,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
 export interface Badge {
   id: string;
-  emoji: string;
+  /** Icône Lucide du badge. */
+  Icon: LucideIcon;
   title: string;
   subtitle: string;
   description: string;
@@ -11,7 +18,7 @@ export interface Badge {
 export const BADGES_CI: Record<string, Badge> = {
   glouton: {
     id: "glouton",
-    emoji: "🍛",
+    Icon: UtensilsCrossed,
     title: "Le Gros Glouton",
     subtitle: "Ah le boss, tu dépenses beaucoup dans dabali hein !",
     description: "Plus de 40% de tes dépenses sont en nourriture",
@@ -20,7 +27,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   chauffeur: {
     id: "chauffeur",
-    emoji: "🚕",
+    Icon: Car,
     title: "Roi du Yango",
     subtitle: "Gbaka, wôrô-wôrô, Yango... tu fais des allers-retours !",
     description: "Transport = ta plus grosse dépense du mois",
@@ -29,7 +36,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   sapeuse: {
     id: "sapeuse",
-    emoji: "👗",
+    Icon: Shirt,
     title: "La Sapeuse",
     subtitle: "Boutique Placard CI t'a vu cette semaine ou comment ?",
     description: "Vêtements et beauté représentent +30% de tes dépenses",
@@ -38,7 +45,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   sapeur: {
     id: "sapeur",
-    emoji: "👔",
+    Icon: Briefcase,
     title: "Le Vrai Sapeur",
     subtitle: "Tu t'es bien sapé ce mois-ci hein, on voit !",
     description: "Shopping & vêtements = top dépense du mois",
@@ -47,7 +54,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   economiste: {
     id: "economiste",
-    emoji: "💰",
+    Icon: PiggyBank,
     title: "L'Économiste",
     subtitle: "C'est toi le vrai gestionnaire ! Tout le quartier peut apprendre",
     description: "Tu as épargné plus de 20% de tes revenus",
@@ -56,7 +63,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   equilibre: {
     id: "equilibre",
-    emoji: "⚖️",
+    Icon: Scale,
     title: "La Balance",
     subtitle: "Ni trop dépenser, ni trop garder. Équilibre parfait !",
     description: "Tes dépenses sont bien réparties entre catégories",
@@ -65,7 +72,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   telecom: {
     id: "telecom",
-    emoji: "📱",
+    Icon: Smartphone,
     title: "Le Telecom",
     subtitle: "Credit, data, forfait... Orange et Wave te connaissent bien !",
     description: "Téléphone et abonnements = gros poste de dépense",
@@ -74,7 +81,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   champion: {
     id: "champion",
-    emoji: "🏆",
+    Icon: Trophy,
     title: "Le Champion du Mois",
     subtitle: "Vraiment trop fort ! Tu as tout noté, tout géré. Respect !",
     description: "100% de jours notés, épargne positive ce mois",
@@ -83,7 +90,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   social: {
     id: "social",
-    emoji: "🎉",
+    Icon: PartyPopper,
     title: "Le Social Butterfly",
     subtitle: "Sorties, restaurants, maquis... tu aimes la vie !",
     description: "Loisirs et sorties = +25% de tes dépenses",
@@ -92,7 +99,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   dette: {
     id: "dette",
-    emoji: "💳",
+    Icon: CreditCard,
     title: "Le Rembourseur",
     subtitle: "Tu gères tes dettes sérieusement. Chapeau !",
     description: "Tu as remboursé des dettes ce mois-ci",
@@ -101,7 +108,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   tontine_champion: {
     id: "tontine_champion",
-    emoji: "🤝",
+    Icon: Users,
     title: "Le Solidaire",
     subtitle: "Tu cotises toujours à l'heure ! La tontine t'adore boss.",
     description: "100% de tes cotisations payées à temps",
@@ -110,7 +117,7 @@ export const BADGES_CI: Record<string, Badge> = {
   },
   tontine_retard: {
     id: "tontine_retard",
-    emoji: "😅",
+    Icon: Wind,
     title: "Le Toujours Tard",
     subtitle: "Eh fréro, la tontine c'est pas 'on verra demain' hein !",
     description: "Tu as des cotisations en retard ce mois",
