@@ -199,7 +199,7 @@ const Reports = () => {
       userName: user?.user_metadata?.full_name || "",
       userEmail: user?.email || "",
     });
-    toast({ title: "PDF exporté ✅" });
+    toast({ title: "PDF exporté" });
   };
 
   const predChartData = predictions.map(p => ({
@@ -271,7 +271,7 @@ const Reports = () => {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-3">💡 Ces petites dépenses s'accumulent. Essayez de les regrouper ou les réduire.</p>
+              <p className="text-xs text-muted-foreground mt-3">Ces petites dépenses s'accumulent. Essayez de les regrouper ou les réduire.</p>
             </motion.div>
           )}
 
@@ -406,7 +406,7 @@ const Reports = () => {
                         </div>
                       ) : null}
                       {willExceed && (
-                        <p className="text-[10px] text-[hsl(30,90%,55%)] mt-1">⚠️ Dépassement prévu</p>
+                        <p className="text-[10px] text-[hsl(30,90%,55%)] mt-1">Dépassement prévu</p>
                       )}
                     </BorderRotate>
                   );
@@ -509,7 +509,7 @@ const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapsho
     if (error) {
       toast({ title: "Erreur", description: "Impossible de sauvegarder", variant: "destructive" });
     } else {
-      toast({ title: "Snapshot sauvegardé ✅" });
+      toast({ title: "Snapshot sauvegardé" });
       const { data } = await supabase
         .from("prediction_snapshots")
         .select("*")
@@ -578,7 +578,7 @@ const PredictionHistory = ({ user, predictions, snapshots, setSnapshots, snapsho
           {accuracyChartData.length >= 2 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <BorderRotate className="p-5" animationSpeed={14}>
-                <h2 className="text-sm font-semibold text-foreground mb-4">📈 Évolution de la précision</h2>
+                <h2 className="text-sm font-semibold text-foreground mb-4">Évolution de la précision</h2>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={accuracyChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(150, 10%, 16%)" />
