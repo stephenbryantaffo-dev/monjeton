@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check, SkipForward, Users, GraduationCap, Briefcase, Building2, User, Home, Building, UtensilsCrossed, Car, Smartphone, Shirt, Pill, Gamepad2, Tv, Music, Dumbbell, Cloud, X, Sprout, TrendingUp, Trophy, AlertTriangle, PiggyBank, CreditCard, BarChart3, Rocket, Scale } from "lucide-react";
@@ -313,7 +314,7 @@ const Onboarding = () => {
     }
 
     try {
-      const profileUpdate: Record<string, any> = {
+      const profileUpdate: TablesUpdate<"profiles"> = {
         profile_type: finalAnswers.profile_type || null,
         gender: finalAnswers.gender || null,
         living_situation: finalAnswers.living_situation || null,
