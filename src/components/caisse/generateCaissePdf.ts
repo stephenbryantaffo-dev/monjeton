@@ -16,9 +16,9 @@ const esc = (s: unknown) =>
 
 const getActionLabel = (action: string) =>
   ({
-    added: "➕ Membre ajouté",
-    removed: "❌ Membre retiré",
-    reinstated: "✅ Membre réintégré",
+    added: "Membre ajouté",
+    removed: "Membre retiré",
+    reinstated: "Membre réintégré",
     cotisation_cancelled: "↩️ Cotisation annulée",
     suspended: "⏸️ Membre suspendu",
   }[action] || action);
@@ -180,38 +180,38 @@ tr:nth-child(even) td{background:#f9f9f9}
     <div>Rapport généré le ${new Date().toLocaleDateString("fr-FR")}</div>
     <div>${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>
   </div>
-  <h1>🏦 ${esc(caisse.name)}</h1>
+  <h1>${esc(caisse.name)}</h1>
   <div class="sub">${esc(caisse.description || "Caisse commune")} · ${caisse.frequency === "monthly" ? "Mensuelle" : caisse.frequency === "weekly" ? "Hebdomadaire" : esc(caisse.frequency)}</div>
 </div>
 <div class="body">
 
-  <div class="print-hint">💡 Pour sauvegarder en PDF : Ctrl+P → choisir "Enregistrer en PDF"</div>
+  <div class="print-hint">Pour sauvegarder en PDF : Ctrl+P → choisir "Enregistrer en PDF"</div>
 
   <div class="cards">
     <div class="card cg">
-      <div class="lbl">💚 Total collecté</div>
+      <div class="lbl">Total collecté</div>
       <div class="val green">${fmt(caisse.total_collected)}</div>
       <div class="sub-val">${cotisations.length} cotisation${cotisations.length > 1 ? "s" : ""}</div>
     </div>
     <div class="card cr">
-      <div class="lbl">🔴 Total dépensé</div>
+      <div class="lbl">Total dépensé</div>
       <div class="val red">${fmt(caisse.total_spent)}</div>
       <div class="sub-val">${depenses.length} dépense${depenses.length > 1 ? "s" : ""}</div>
     </div>
     <div class="card" style="background:#f0fff4;border:2px solid #7ec845">
-      <div class="lbl">💰 Solde disponible</div>
+      <div class="lbl">Solde disponible</div>
       <div class="val" style="color:${soldeDisponible >= 0 ? "#27ae60" : "#e74c3c"}">${fmt(soldeDisponible)}</div>
       <div class="sub-val">${soldeDisponible >= 0 ? "En caisse" : "Déficit"}</div>
     </div>
     <div class="card cb">
-      <div class="lbl">👥 Membres</div>
+      <div class="lbl">Membres</div>
       <div class="val" style="color:#3498db">${activeMembers.length}</div>
       <div class="sub-val">${inactiveMembers.length > 0 ? `+ ${inactiveMembers.length} inactif${inactiveMembers.length > 1 ? "s" : ""}` : "Tous actifs"}</div>
     </div>
   </div>
 
   <div class="sec">
-    <div class="sec-title">👥 Liste des membres (${members.length})</div>
+    <div class="sec-title">Liste des membres (${members.length})</div>
     <table>
       <thead><tr><th>Nom</th><th>Statut</th><th>Total versé</th><th>Téléphone</th></tr></thead>
       <tbody>
@@ -226,7 +226,7 @@ tr:nth-child(even) td{background:#f9f9f9}
   </div>
 
   <div class="sec">
-    <div class="sec-title">📥 Cotisations confirmées (${cotisations.length})</div>
+    <div class="sec-title">Cotisations confirmées (${cotisations.length})</div>
     ${cotisations.length > 0 ? `<table>
       <thead><tr><th>Date</th><th>Membre</th><th>Montant</th><th>Cycle</th></tr></thead>
       <tbody>${cotisationRows}</tbody>
@@ -242,7 +242,7 @@ tr:nth-child(even) td{background:#f9f9f9}
   </div>` : ""}
 
   <div class="sec">
-    <div class="sec-title" style="border-bottom-color:#e74c3c">📤 Dépenses (${depenses.length})</div>
+    <div class="sec-title" style="border-bottom-color:#e74c3c">Dépenses (${depenses.length})</div>
     ${depenses.length > 0 ? `<table>
       <thead><tr><th>Date</th><th>Description</th><th>Montant</th><th>Catégorie</th><th>Bénéficiaire</th></tr></thead>
       <tbody>${depenseRows}</tbody>
@@ -250,7 +250,7 @@ tr:nth-child(even) td{background:#f9f9f9}
   </div>
 
   ${Object.keys(catSummary).length > 0 ? `<div class="sec">
-    <div class="sec-title">📊 Répartition des dépenses</div>
+    <div class="sec-title">Répartition des dépenses</div>
     <table>
       <thead><tr><th>Catégorie</th><th>Montant</th><th>Part</th></tr></thead>
       <tbody>
@@ -261,7 +261,7 @@ tr:nth-child(even) td{background:#f9f9f9}
   </div>` : ""}
 
   ${memberHistory.length > 0 ? `<div class="sec">
-    <div class="sec-title">📋 Historique des actions sur les membres</div>
+    <div class="sec-title">Historique des actions sur les membres</div>
     <table>
       <thead><tr><th>Date</th><th>Action</th><th>Membre</th><th>Raison</th></tr></thead>
       <tbody>${historyRows}</tbody>
@@ -270,7 +270,7 @@ tr:nth-child(even) td{background:#f9f9f9}
 
 </div>
 <div class="footer">
-  <span>🪙 Mon Jeton — Caisse "${esc(caisse.name)}"</span>
+  <span>Mon Jeton — Caisse "${esc(caisse.name)}"</span>
   <span>Généré automatiquement • Confidentiel</span>
 </div>
 </body>
