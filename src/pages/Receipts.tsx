@@ -2,12 +2,7 @@ import { getActiveCurrencySymbol } from "@/lib/currencyStore";
 import { formatMoneyDisplay } from "@/lib/formatAmount";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock,
-  ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock,
-  Printer, Download, FileDown, ZoomIn, X, AlertTriangle, Loader2,
-  Trash2, Receipt as ReceiptIcon,
-} from "lucide-react";
+import { Search, ArrowLeft, Edit3, CheckCircle2, XCircle, Clock, ChevronRight, ArrowUpDown, ShieldAlert, Eye, EyeOff, Lock, Printer, Download, FileDown, ZoomIn, X, AlertTriangle, Loader2, Trash2, Receipt as ReceiptIcon, Smartphone, ReceiptText, Camera, PartyPopper } from "lucide-react";
 
 /**
  * Sanitize the legacy `image_url` field. Some old receipts have JSON,
@@ -338,7 +333,7 @@ const Receipts = () => {
       .eq("id", selectedScan.id);
 
     toast({
-      title: "Reçu modifié ✅",
+      title: "Reçu modifié",
       description: `${changes.length} champ(s) mis à jour`,
     });
     setShowEditDialog(false);
@@ -364,7 +359,7 @@ const Receipts = () => {
         setDuplicates(dups);
         if (dups.length === 0) {
           setDupViewOpen(false);
-          toast({ title: "Plus aucun doublon 🎉" });
+          toast({ title: "Plus aucun doublon" });
         }
       } catch { /* ignore */ }
     }
@@ -383,7 +378,7 @@ const Receipts = () => {
         toast({ title: "Suppression impossible", description: "Tu n'as peut-être pas les droits.", variant: "destructive" });
         return;
       }
-      toast({ title: "Doublon supprimé ✅" });
+      toast({ title: "Doublon supprimé" });
       await reloadAfterDup();
     } finally {
       setSaving(false);
@@ -409,7 +404,7 @@ const Receipts = () => {
         toast({ title: "Suppression impossible", description: "Tu n'as peut-être pas les droits.", variant: "destructive" });
         return;
       }
-      toast({ title: `${data.length} doublon${data.length > 1 ? "s" : ""} supprimé${data.length > 1 ? "s" : ""} ✅` });
+      toast({ title: `${data.length} doublon${data.length > 1 ? "s" : ""} supprimé${data.length > 1 ? "s" : ""}` });
       setDupConfirmAll(false);
       await reloadAfterDup();
     } finally {
@@ -440,14 +435,14 @@ const Receipts = () => {
         .footer{text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:12px;margin-top:16px}
         @media print{body{padding:0}button{display:none}}
       </style></head><body>
-      <div class="header"><div class="brand">🪙 Mon Jeton</div><div class="subtitle">Reçu de transaction</div></div>
+      <div class="header"><div class="brand">Mon Jeton</div><div class="subtitle">Reçu de transaction</div></div>
       ${scan.image_url ? `<img class="receipt-img" src="${scan.image_url}" alt="Reçu"/>` : ''}
       <div class="row"><span class="row-label">Marchand</span><span class="row-value">${scan.parsed_merchant || 'Inconnu'}</span></div>
       <div class="row"><span class="row-label">Montant</span><span class="row-value">${scan.parsed_amount != null ? `${Number(scan.parsed_amount).toLocaleString('fr-FR')} ${scan.parsed_currency || ''}`.trim() : 'Non détecté'}</span></div>
       <div class="row"><span class="row-label">Catégorie</span><span class="row-value">${scan.parsed_category || 'Non catégorisé'}</span></div>
       <div class="row"><span class="row-label">Date</span><span class="row-value">${scan.parsed_date || new Date(scan.created_at).toLocaleDateString('fr-FR')}</span></div>
-      <div class="row"><span class="row-label">Type</span><span class="row-value">${scan.scan_type === 'screenshot' ? '📱 Capture Mobile Money' : '🧾 Ticket de caisse'}</span></div>
-      <div class="row"><span class="row-label">Statut</span><span class="row-value">${scan.status === 'confirmed' ? '✅ Confirmé' : scan.status === 'rejected' ? '❌ Rejeté' : '⏳ En attente'}</span></div>
+      <div class="row"><span class="row-label">Type</span><span class="row-value">${scan.scan_type === 'screenshot' ? 'Capture Mobile Money' : 'Ticket de caisse'}</span></div>
+      <div class="row"><span class="row-label">Statut</span><span class="row-value">${scan.status === 'confirmed' ? 'Confirmé' : scan.status === 'rejected' ? 'Rejeté' : 'En attente'}</span></div>
       <div class="ref">Référence : ${scan.id.slice(0, 8).toUpperCase()}</div>
       <div class="footer">Généré par Mon Jeton · ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · monjeton.lovable.app</div>
       </body></html>`;
@@ -542,7 +537,7 @@ const Receipts = () => {
 
     const fileName = `recu_${scan.parsed_merchant?.replace(/\s+/g, '_') || 'monjeton'}_${scan.id.slice(0, 6)}.pdf`;
     doc.save(fileName);
-    toast({ title: 'PDF exporté ✅', description: fileName });
+    toast({ title: 'PDF exporté', description: fileName });
   };
 
   // ━━━ Export all confirmed receipts in one PDF ━━━
@@ -661,7 +656,7 @@ const Receipts = () => {
 
     const fileName = `recus_monjeton_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(fileName);
-    toast({ title: `${confirmed.length} reçus exportés ✅`, description: fileName });
+    toast({ title: `${confirmed.length} reçus exportés`, description: fileName });
   };
 
   // Discreet mode banner
@@ -759,10 +754,10 @@ const Receipts = () => {
                 label: "Statut",
                 value:
                   selectedScan.status === "confirmed"
-                    ? "✅ Confirmé"
+                    ? "Confirmé"
                     : selectedScan.status === "rejected"
-                    ? "❌ Rejeté"
-                    : "⏳ En attente",
+                    ? "Rejeté"
+                    : "En attente",
               },
             ]
               .filter((item) => item.value)
@@ -832,7 +827,7 @@ const Receipts = () => {
                   a.click();
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
-                  toast({ title: "Photo téléchargée ✅" });
+                  toast({ title: "Photo téléchargée" });
                 } catch {
                   toast({ title: "Erreur de téléchargement", variant: "destructive" });
                 } finally {
@@ -886,7 +881,7 @@ const Receipts = () => {
           <DialogContent className="glass-card border-border">
             <DialogTitle>Modifier le reçu</DialogTitle>
             <p className="text-xs text-muted-foreground -mt-2 mb-4">
-              ⚠️ Toute modification sera tracée dans l'historique
+              Toute modification sera tracée dans l'historique
             </p>
             <div className="space-y-3">
               <div>
@@ -1083,10 +1078,10 @@ const Receipts = () => {
               {f === "all"
                 ? `Tous (${stats.totalScans})`
                 : f === "confirmed"
-                ? `✅ Confirmés (${stats.totalConfirmed})`
+                ? `Confirmés (${stats.totalConfirmed})`
                 : f === "pending"
-                ? "⏳ En attente"
-                : `❌ Rejetés (${stats.totalRejected})`}
+                ? "En attente"
+                : `Rejetés (${stats.totalRejected})`}
             </button>
           ))}
         </div>
@@ -1118,7 +1113,7 @@ const Receipts = () => {
           </div>
         ) : filteredScans.length === 0 ? (
           <div className="glass-card rounded-2xl p-8 text-center">
-            <span className="text-4xl">🧾</span>
+            <ReceiptText className="w-9 h-9 text-muted-foreground" />
             <p className="text-sm font-semibold text-foreground mt-3 mb-1">
               Aucun reçu trouvé
             </p>
@@ -1172,9 +1167,11 @@ const Receipts = () => {
                         }}
                       />
                       <div className="hidden absolute inset-0 bg-secondary/50 items-center justify-center">
-                        <span className="text-2xl">
-                          {scan.scan_type === "screenshot" ? "📱" : "🧾"}
-                        </span>
+                        {scan.scan_type === "screenshot" ? (
+                          <Smartphone className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ReceiptText className="w-5 h-5 text-muted-foreground" />
+                        )}
                       </div>
                       {!isDiscreetMode && (
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -1184,9 +1181,11 @@ const Receipts = () => {
                     </div>
                   ) : (
                     <div className="w-14 h-14 rounded-xl bg-secondary/50 flex items-center justify-center border border-border">
-                      <span className="text-2xl">
-                        {scan.scan_type === "screenshot" ? "📱" : "🧾"}
-                      </span>
+                      {scan.scan_type === "screenshot" ? (
+                        <Smartphone className="w-6 h-6 text-muted-foreground" />
+                      ) : (
+                        <ReceiptText className="w-6 h-6 text-muted-foreground" />
+                      )}
                     </div>
                   )}
                 </button>
@@ -1214,10 +1213,10 @@ const Receipts = () => {
                     }`}
                   >
                     {scan.status === "confirmed"
-                      ? "✅ Confirmé"
+                      ? "Confirmé"
                       : scan.status === "rejected"
-                      ? "❌ Rejeté"
-                      : "⏳ En attente"}
+                      ? "Rejeté"
+                      : "En attente"}
                   </span>
                   {!scan.signedImageUrl && (
                     <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium inline-block mt-1">
@@ -1349,7 +1348,7 @@ const Receipts = () => {
               )}
               {!loadingViewer && !isValidImageUrl(fullscreenImage) && (
                 <div className="flex flex-col items-center gap-4 text-center max-w-xs">
-                  <span className="text-7xl">📷</span>
+                  <Camera className="w-14 h-14 text-muted-foreground" />
                   <p className="text-base font-bold text-white">Image non disponible</p>
                   <p className="text-sm text-white/50">
                     Ce reçu a été créé avant la mise à jour du système d'images.
@@ -1399,10 +1398,10 @@ const Receipts = () => {
                         label: "Statut",
                         value:
                           fullscreenScan.status === "confirmed"
-                            ? "✅ Confirmé"
+                            ? "Confirmé"
                             : fullscreenScan.status === "rejected"
-                            ? "❌ Rejeté"
-                            : "⏳ En attente",
+                            ? "Rejeté"
+                            : "En attente",
                       },
                       {
                         label: "Catégorie",
@@ -1412,8 +1411,8 @@ const Receipts = () => {
                         label: "Type",
                         value:
                           fullscreenScan.scan_type === "screenshot"
-                            ? "📱 Capture"
-                            : "🧾 Ticket",
+                            ? "Capture"
+                            : "Ticket",
                       },
                     ].map((item) => (
                       <div key={item.label} className="text-center">
@@ -1459,7 +1458,7 @@ const Receipts = () => {
 
             {duplicates.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-3xl mb-2">🎉</p>
+                <PartyPopper className="w-8 h-8 text-primary mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Plus aucun doublon</p>
               </div>
             )}
