@@ -204,7 +204,7 @@ const Receipts = () => {
         })
       );
     }
-    if (user && scansWithUrls.length > 1) {
+    if (user && rows.length > 1) {
       try {
         const dups = await detectDuplicates(user.id);
         setDuplicates(dups);
