@@ -21,32 +21,29 @@ interface DailyReminderModalProps {
 
 function getMessage(txCount: number, firstName: string, profileType?: string) {
   if (txCount === 0) {
-    const title = `Eh ${firstName} ! 👀`;
+    const title = `Eh ${firstName} !`;
     const messages: Record<string, string> = {
       salarié: "T'as passé toute la journée sans noter une seule dépense. Le garba du midi ? Le taxi ? Quelque chose !",
-      étudiant: "Journée sans dépense ? Impossible ! Même 100F pour l'eau tu dois noter hein 😄",
+      étudiant: "Journée sans dépense ? Impossible ! Même 100F pour l'eau tu dois noter hein",
       entrepreneur: "Patron ! Tes charges du jour, tu les as notées quelque part ?",
       parent: "Les courses, les enfants, le marché... Qu'est-ce qui s'est passé aujourd'hui ?",
     };
     return {
       title,
       message: messages[profileType || ""] || "Tu n'as noté aucune dépense aujourd'hui. Prends 30 secondes pour le faire !",
-      emoji: "👀",
     };
   }
 
   if (txCount <= 2) {
     return {
-      title: `Bien ${firstName} ! 🟡`,
-      message: `T'as noté ${txCount} dépense${txCount > 1 ? "s" : ""} aujourd'hui. Tu es sûr c'est tout ? Le transport ? Le déjeuner ? 🤔`,
-      emoji: "🟡",
+      title: `Bien ${firstName} !`,
+      message: `T'as noté ${txCount} dépense${txCount > 1 ? "s" : ""} aujourd'hui. Tu es sûr c'est tout ? Le transport ? Le déjeuner ?`,
     };
   }
 
   return {
-    title: "Champion ! 🔥",
+    title: "Champion !",
     message: `Wow ${txCount} transactions aujourd'hui ! Tu gères bien ton Jeton. Continue comme ça !`,
-    emoji: "🔥",
   };
 }
 
@@ -149,7 +146,7 @@ const DailyReminderModal = ({ open, onClose, txCount, firstName, profileType, us
             {tontineReminder && (
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-center space-y-2 mb-4">
                 <p className="text-sm text-foreground font-medium">
-                  ⚠️ Ta tontine <span className="font-bold">{tontineReminder.name}</span> se termine dans{" "}
+                   Ta tontine <span className="font-bold">{tontineReminder.name}</span> se termine dans{" "}
                   <span className="text-amber-400 font-bold">
                     {tontineReminder.daysLeft} jour{tontineReminder.daysLeft > 1 ? "s" : ""}
                   </span> !
