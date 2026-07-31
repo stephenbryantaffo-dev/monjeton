@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,7 +81,7 @@ export const EditDebtModal = ({
       return;
     }
 
-    const updateData: Record<string, unknown> = {
+    const updateData: TablesUpdate<"debts"> = {
       note: editNote || null,
       date_echeance: editDueDate || null,
       due_date: editDueDate || null,
