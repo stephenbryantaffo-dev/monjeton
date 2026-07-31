@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { safeReturnTo } from "@/lib/safeRedirect";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, User, Eye, EyeOff, ShieldCheck, ScanLine, Users, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ const Signup = () => {
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get("returnTo") || "/dashboard";
+  const returnTo = safeReturnTo(searchParams.get("returnTo"));
   const { toast } = useToast();
 
   const sendPasswordReset = async (targetEmail: string) => {
