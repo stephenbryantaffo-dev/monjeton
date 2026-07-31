@@ -132,7 +132,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         await supabase.from("tontines" as any).delete().eq("id", tontineId);
         throw new Error(cErr.message);
       }
-      toast({ title: caisseType === "association" ? "Caisse d'association créée ✅" : "Tontine créée ✅", description: `${nbMembers} membres · cycle 1 ouvert` });
+      toast({ title: caisseType === "association" ? "Caisse d'association créée " : "Tontine créée ", description: `${nbMembers} membres · cycle 1 ouvert` });
       reset(); onOpenChange(false); onCreated();
     } catch (e: any) {
       toast({ title: "Erreur création", description: e?.message, variant: "destructive" });
@@ -189,7 +189,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         throw new Error(cErr.message);
       }
 
-      toast({ title: "Caisse de projet créée ✅", description: `${members.length} membre(s) · cible ${fmt(finalTotal)}` });
+      toast({ title: "Caisse de projet créée ", description: `${members.length} membre(s) · cible ${fmt(finalTotal)}` });
       reset(); onOpenChange(false); onCreated();
     } catch (e: any) {
       toast({ title: "Erreur création", description: e?.message, variant: "destructive" });
@@ -218,7 +218,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-xl">🎯</div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-xl"></div>
                 <p className="font-bold text-foreground">Collecter pour un événement</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -231,7 +231,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center text-xl">🔄</div>
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center text-xl"></div>
                 <p className="font-bold text-foreground">Tontine tournante</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -244,7 +244,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
               className="w-full text-left p-4 rounded-2xl border border-border bg-secondary/40 hover:bg-primary/10 hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl">🏦</div>
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl"></div>
                 <p className="font-bold text-foreground">Cotisations d'un groupe</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -306,7 +306,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
         {(caisseType === "recurring" || caisseType === "association") && step === 4 && (
           <div className="space-y-3">
             <div className="glass-card rounded-xl p-4 space-y-2">
-              <p className="font-semibold text-foreground">📋 Résumé</p>
+              <p className="font-semibold text-foreground">Résumé</p>
               <p className="text-sm text-muted-foreground">
                 Tontine <span className="text-foreground font-medium">{name}</span> — {FREQ_LABELS[frequency]}
               </p>
@@ -437,7 +437,7 @@ const MembersStep = ({
         <div key={i} className="glass-card rounded-xl p-2 flex items-center justify-between">
           <div>
             <span className="text-sm font-medium text-foreground">{m.name}</span>
-            {m.is_owner && <span className="ml-2 text-xs text-primary">👤 Moi</span>}
+            {m.is_owner && <span className="ml-2 text-xs text-primary">Moi</span>}
             {m.phone && <span className="ml-2 text-xs text-muted-foreground">{m.phone}</span>}
           </div>
           <button onClick={() => removeMember(i)} className="text-destructive">
