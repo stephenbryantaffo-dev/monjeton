@@ -330,13 +330,29 @@ const Savings = () => {
     }
   };
 
-  const getDailyTarget = (g: SavingsGoal) => {
+  /**
+   * Rythme d'épargne à tenir pour atteindre l'objectif à temps.
+   *
+   * On raisonne par MOIS quand l'échéance est lointaine : personne
+   * n'épargne 1 850 F par jour, on met 55 000 F en fin de mois.
+   * Par jour seulement dans la dernière ligne droite.
+   */
+  const getPace = (g: SavingsGoal) => {
     if (!g.deadline) return null;
     const remaining = g.target_amount - g.current_amount;
     if (remaining <= 0) return null;
     const daysLeft = Math.ceil((new Date(g.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     if (daysLeft <= 0) return null;
-    return Math.ceil(remaining / daysLeft);
+
+    if (daysLeft >= 45) {
+      const monthsLeft = Math.max(1, Math.round(daysLeft / 30));
+      return { amount: Math.ceil(remaining / monthsLeft), unit: "par mois" as const, daysLeft };
+    }
+    if (daysLeft >= 14) {
+      const weeksLeft = Math.max(1, Math.round(daysLeft / 7));
+      return { amount: Math.ceil(remaining / weeksLeft), unit: "par semaine" as const, daysLeft };
+    }
+    return { amount: Math.ceil(remaining / daysLeft), unit: "par jour" as const, daysLeft };
   };
 
   const toggleHistory = (goalId: string) => {
@@ -370,7 +386,7 @@ const Savings = () => {
             const daysLeft = g.deadline
               ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
               : null;
-            const dailyTarget = getDailyTarget(g);
+            const pace = getPace(g);
             const isAchieved = g.current_amount >= g.target_amount && g.target_amount > 0;
             const goalDeposits = deposits[g.id] || [];
 
@@ -419,18 +435,55 @@ const Savings = () => {
                   </div>
 
                   {!isAchieved && (
-                    <div className="mt-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Reste : <span className="font-medium text-foreground">{formatMoneySmart(remaining)}</span>
-                      </p>
-                      {daysLeft !== null && daysLeft > 0 && dailyTarget && (
+                    <div className="mt-3">
+                      {pace ? (
+                        <div
+                          className="rounded-xl px-3.5 py-3"
+                          style={{
+                            background: "linear-gradient(150deg, hsl(var(--primary) / 0.12), hsl(var(--card)) 72%)",
+                            border: "1px solid hsl(var(--primary) / 0.2)",
+                          }}
+                        >
+                          <p className="text-[14px] font-semibold leading-relaxed text-foreground">
+                            Mets{" "}
+                            <span className="font-extrabold text-primary tabular-nums">
+                              {formatMoneySmart(pace.amount)}
+                            </span>{" "}
+                            {pace.unit} pour y arriver avant le{" "}
+                            {new Date(g.deadline!).toLocaleDateString("fr-FR", {
+                              day: "numeric",
+                              month: "long",
+                            })}
+                            .
+                          </p>
+                          <p className="mt-1.5 text-[11.5px] font-medium text-muted-foreground">
+                            Il reste {formatMoneySmart(remaining)} à réunir
+                            {pace.daysLeft > 0 && ` · ${pace.daysLeft} jour${pace.daysLeft > 1 ? "s" : ""}`}
+                          </p>
+                        </div>
+                      ) : daysLeft !== null && daysLeft <= 0 ? (
+                        <div
+                          className="rounded-xl px-3.5 py-3"
+                          style={{
+                            background: "linear-gradient(150deg, hsl(var(--destructive) / 0.14), hsl(var(--card)) 72%)",
+                            border: "1px solid hsl(var(--destructive) / 0.26)",
+                          }}
+                        >
+                          <p className="text-[14px] font-semibold text-foreground">
+                            Échéance dépassée — il manque{" "}
+                            <span className="font-extrabold text-destructive tabular-nums">
+                              {formatMoneySmart(remaining)}
+                            </span>
+                            .
+                          </p>
+                        </div>
+                      ) : (
                         <p className="text-xs text-muted-foreground">
-                          Épargne <span className="font-medium text-primary">{formatMoneySmart(dailyTarget)}/jour</span> pour atteindre l'objectif avant le{" "}
-                          {new Date(g.deadline!).toLocaleDateString("fr-FR")}
+                          Reste :{" "}
+                          <span className="font-medium text-foreground">
+                            {formatMoneySmart(remaining)}
+                          </span>
                         </p>
-                      )}
-                      {daysLeft !== null && daysLeft <= 0 && (
-                        <p className="text-xs font-medium text-destructive">Échéance dépassée</p>
                       )}
                     </div>
                   )}
