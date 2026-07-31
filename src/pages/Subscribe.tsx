@@ -1,3 +1,4 @@
+import { Coins } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -99,7 +100,7 @@ const Subscribe = () => {
       <main className="flex-1 flex items-center justify-center px-5 py-8">
         <div className="w-full max-w-md space-y-5">
           <div className="text-center space-y-2">
-            <div className="text-5xl">🪙</div>
+            <Coins className="w-12 h-12 text-primary mx-auto" />
             <h1 className="text-2xl font-bold text-foreground">Choisis ton plan</h1>
             <p className="text-sm text-muted-foreground">Paiement sécurisé via Jèko (Mobile Money & Carte)</p>
           </div>
@@ -111,9 +112,9 @@ const Subscribe = () => {
               <span className="text-2xl font-black text-foreground">0 F</span>
             </div>
             <ul className="space-y-1.5 text-sm text-muted-foreground">
-              <li>✓ Suivi des transactions de base</li>
-              <li>✓ 5 scans de reçus / mois</li>
-              <li>✓ 1 portefeuille</li>
+              <li>Suivi des transactions de base</li>
+              <li>5 scans de reçus / mois</li>
+              <li>1 portefeuille</li>
             </ul>
           </div>
 
@@ -129,11 +130,11 @@ const Subscribe = () => {
               </div>
             </div>
             <ul className="space-y-1.5 text-sm text-foreground">
-              <li>✓ Transactions illimitées</li>
-              <li>✓ Scan IA des reçus (50 / mois)</li>
-              <li>✓ Assistant IA financier</li>
-              <li>✓ Rapports & exports PDF</li>
-              <li>✓ Tontines & dettes</li>
+              <li>Transactions illimitées</li>
+              <li>Scan IA des reçus (50 / mois)</li>
+              <li>Assistant IA financier</li>
+              <li>Rapports & exports PDF</li>
+              <li>Tontines & dettes</li>
             </ul>
             <Button onClick={() => handleSubscribe("pro")} variant="hero" size="lg" className="w-full" disabled={isPro || isUltra}>
               {isPro ? "Plan actuel" : isUltra ? "Inclus dans Ultra Pro" : "Payer 2 000 F via Jèko"}
@@ -144,7 +145,7 @@ const Subscribe = () => {
           <div className="glass-card rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="inline-block px-3 py-1 rounded-full bg-foreground text-background text-xs font-bold">
-                💎 ULTRA PRO
+                ULTRA PRO
               </span>
               <div className="text-right">
                 <div className="text-2xl font-black text-foreground">5 000 F</div>
@@ -152,10 +153,10 @@ const Subscribe = () => {
               </div>
             </div>
             <ul className="space-y-1.5 text-sm text-foreground">
-              <li>✓ Tout ce qui est dans Pro</li>
-              <li>✓ Scan IA illimité</li>
-              <li>✓ Support prioritaire</li>
-              <li>✓ Accès en avant-première aux nouvelles features</li>
+              <li>Tout ce qui est dans Pro</li>
+              <li>Scan IA illimité</li>
+              <li>Support prioritaire</li>
+              <li>Accès en avant-première aux nouvelles features</li>
             </ul>
             <Button onClick={() => handleSubscribe("max")} size="lg" className="w-full gradient-primary text-primary-foreground" disabled={isUltra}>
               {isUltra ? "Plan actuel" : isPro ? "Passer à Ultra Pro" : "Payer 5 000 F via Jèko"}
