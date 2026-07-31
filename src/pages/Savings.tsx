@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Target, Plus, ChevronDown, ChevronUp, ArrowDownToLine, PartyPopper, Wallet } from "lucide-react";
+import { GoalIcon, ICON_CHOICES, ICON_LABELS, toIconKey } from "@/lib/goalIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,12 +48,13 @@ interface WalletItem {
 }
 
 const TEMPLATES = [
-  { emoji: "📱", name: "Nouveau téléphone", amount: 150000 },
-  { emoji: "🏠", name: "Loyer", amount: 75000 },
-  { emoji: "🎓", name: "Formation", amount: 200000 },
+  { icon: "phone", name: "Nouveau téléphone", amount: 150000 },
+  { icon: "home", name: "Loyer", amount: 75000 },
+  { icon: "school", name: "Formation", amount: 200000 },
+  { icon: "savings", name: "Fonds d'urgence", amount: 100000 },
 ];
 
-const EMOJI_CHOICES = ["🎯", "🏖️", "✈️", "🚗", "💍", "🎓", "🏠", "💻", "🎁", "📱", "💰", "🛍️", "🍽️", "⚽", "🎮"];
+// Le choix d'icônes vit désormais dans @/lib/goalIcons (ICON_CHOICES).
 
 const Savings = () => {
   const { user } = useAuth();
@@ -64,7 +66,7 @@ const Savings = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState("🎯");
+  const [emoji, setEmoji] = useState("target");
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [note, setNote] = useState("");
@@ -136,7 +138,7 @@ const Savings = () => {
   const resetForm = () => {
     setEditingGoalId(null);
     setName("");
-    setEmoji("🎯");
+    setEmoji("target");
     setTarget("");
     setDeadline("");
     setNote("");
@@ -158,7 +160,7 @@ const Savings = () => {
   const openEditModal = (g: SavingsGoal) => {
     setEditingGoalId(g.id);
     setName(g.name);
-    setEmoji(g.emoji || "🎯");
+    setEmoji(toIconKey(g.emoji));
     setTarget(String(g.target_amount));
     setDeadline(g.deadline || "");
     setNote(g.note || "");
@@ -181,7 +183,7 @@ const Savings = () => {
     try {
       const payload = {
         name: trimmedName.slice(0, 50),
-        emoji: emoji || "🎯",
+        emoji: emoji || "target",
         target_amount: goalTarget,
         deadline: deadline || null,
         note: note ? note.slice(0, 200) : null,
@@ -192,14 +194,14 @@ const Savings = () => {
           .update(payload)
           .eq("id", editingGoalId);
         if (error) throw error;
-        toast({ title: "Objectif mis à jour ✅" });
+        toast({ title: "Objectif mis à jour" });
       } else {
         const { error } = await supabase.from("savings_goals").insert({
           user_id: user.id,
           ...payload,
         });
         if (error) throw error;
-        toast({ title: "Objectif créé ✅" });
+        toast({ title: "Objectif créé" });
       }
       setModalOpen(false);
       resetForm();
@@ -277,7 +279,7 @@ const Savings = () => {
         .eq("id", goalId);
       if (upErr) throw upErr;
 
-      toast({ title: `${formatMoneySmart(val)} versés ✅` });
+      toast({ title: `${formatMoneySmart(val)} versés` });
       setDepositGoalId(null);
       setDepositAmount("");
       setDepositWalletId("");
@@ -302,7 +304,7 @@ const Savings = () => {
       if (txErr) throw txErr;
 
       await supabase.from("savings_goals").update({ current_amount: 0 }).eq("id", goal.id);
-      toast({ title: `${formatMoneySmart(goal.current_amount)} retirés vers ${wallets[0].wallet_name} ✅` });
+      toast({ title: `${formatMoneySmart(goal.current_amount)} retirés vers ${wallets[0].wallet_name}` });
       fetchGoals();
     } catch {
       toast({ title: "Erreur de retrait", variant: "destructive" });
@@ -382,7 +384,7 @@ const Savings = () => {
                 <BorderRotate className="p-4" animationSpeed={18}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${isAchieved ? "bg-green-500/20" : "bg-primary/20"}`}>
-                      {isAchieved ? <PartyPopper className="w-5 h-5 text-green-500" /> : (g.emoji || <Target className="w-5 h-5 text-primary" />)}
+                      {isAchieved ? <PartyPopper className="w-5 h-5 text-primary" /> : <GoalIcon value={g.emoji} className="w-5 h-5 text-primary" />}
                     </div>
                     <button
                       type="button"
@@ -406,7 +408,7 @@ const Savings = () => {
 
                   {isAchieved && (
                     <Badge className="mb-3 bg-green-500/20 text-green-500 border-green-500/30">
-                      Objectif atteint ! 🎉
+                      Objectif atteint
                     </Badge>
                   )}
 
@@ -428,7 +430,7 @@ const Savings = () => {
                         </p>
                       )}
                       {daysLeft !== null && daysLeft <= 0 && (
-                        <p className="text-xs font-medium text-destructive">Échéance dépassée ⚠️</p>
+                        <p className="text-xs font-medium text-destructive">Échéance dépassée</p>
                       )}
                     </div>
                   )}
@@ -529,7 +531,9 @@ const Savings = () => {
       {!loading && goals.length === 0 && (
         <div className="space-y-3">
           <div className="text-center py-4">
-            <p className="text-4xl mb-2">🎯</p>
+            <span className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
+              <Target className="h-7 w-7 text-primary" />
+            </span>
             <p className="font-semibold text-foreground mb-1">Commence à épargner</p>
             <p className="text-sm text-muted-foreground">Choisis une suggestion ou crée le tien</p>
           </div>
@@ -537,19 +541,24 @@ const Savings = () => {
           <p className="text-xs uppercase tracking-wide text-muted-foreground px-1">
             Suggestions
           </p>
-          <div className="grid gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             {TEMPLATES.map((t) => (
               <button
                 key={t.name}
                 onClick={() => openTemplateModal(t)}
-                className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/50 border border-border hover:bg-secondary transition-colors text-left"
+                className="flex flex-col justify-between gap-3.5 p-4 min-h-[134px] rounded-2xl bg-card border border-border hover:bg-secondary/60 transition-colors text-left"
               >
-                <span className="text-2xl">{t.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{formatMoneySmart(t.amount)}</p>
-                </div>
-                <Plus className="w-4 h-4 text-muted-foreground" />
+                <span className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-none">
+                  <GoalIcon value={t.icon} className="w-5 h-5 text-primary" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[14.5px] font-bold text-foreground leading-tight">
+                    {t.name}
+                  </span>
+                  <span className="block mt-1.5 text-[13.5px] font-extrabold text-primary">
+                    {formatMoneySmart(t.amount)}
+                  </span>
+                </span>
               </button>
             ))}
           </div>
@@ -605,18 +614,19 @@ const Savings = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs">Emoji / icône</Label>
                 <div className="flex flex-wrap gap-2">
-                  {EMOJI_CHOICES.map((e) => (
+                  {ICON_CHOICES.map((k) => (
                     <button
-                      key={e}
+                      key={k}
                       type="button"
-                      onClick={() => setEmoji(e)}
-                      className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
-                        emoji === e
-                          ? "bg-primary/20 ring-2 ring-primary"
-                          : "bg-secondary hover:bg-secondary/70"
+                      onClick={() => setEmoji(k)}
+                      aria-label={ICON_LABELS[k] || k}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                        toIconKey(emoji) === k
+                          ? "bg-primary/20 ring-2 ring-primary text-primary"
+                          : "bg-secondary hover:bg-secondary/70 text-muted-foreground"
                       }`}
                     >
-                      {e}
+                      <GoalIcon value={k} className="w-[18px] h-[18px]" />
                     </button>
                   ))}
                 </div>
