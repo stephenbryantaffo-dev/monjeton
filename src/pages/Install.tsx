@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Share, MoreVertical, Plus, ArrowLeft } from "lucide-react";
+import { Download, Share, MoreVertical, Plus, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -47,7 +47,7 @@ const Install = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center space-y-4">
-          <div className="text-5xl">✅</div>
+          <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
           <h1 className="text-2xl font-bold text-foreground">Déjà installée !</h1>
           <p className="text-muted-foreground">Mon Jeton est déjà sur ton écran d'accueil.</p>
           <Button onClick={() => navigate("/dashboard")} variant="hero" size="lg">
@@ -130,10 +130,10 @@ const Install = () => {
         <div className="pt-4 border-t border-border space-y-2">
           <h3 className="text-sm font-semibold text-foreground">Avantages</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>✨ Accès rapide depuis l'écran d'accueil</li>
-            <li>📱 Plein écran comme une vraie app</li>
-            <li>⚡ Chargement ultra rapide</li>
-            <li>🔒 Tes données restent sécurisées</li>
+            <li>Accès rapide depuis l'écran d'accueil</li>
+            <li>Plein écran comme une vraie app</li>
+            <li>Chargement ultra rapide</li>
+            <li>Tes données restent sécurisées</li>
           </ul>
         </div>
       </div>
