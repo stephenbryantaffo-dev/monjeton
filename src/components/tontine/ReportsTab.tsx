@@ -88,10 +88,10 @@ const ReportsTab = ({ tontines }: Props) => {
     if (!cycle) return;
     const report = getCycleReport(cycle);
     const lines = report.map((r) => {
-      const icon = r.status === "paid" ? "✅" : r.status === "partial" ? "⚠️" : "⏳";
+      const icon = r.status === "paid" ? "[payé]" : r.status === "partial" ? "[partiel]" : "[en attente]";
       return `${icon} ${r.member.name} — ${fmt(r.total)}`;
     });
-    const msg = `📊 Rapport — ${selected.name}\n${cycle.period_label}\n\nTotal : ${fmt(cycle.total_collected)} / ${fmt(cycle.total_expected)}\n\n${lines.join("\n")}`;
+    const msg = `Rapport — ${selected.name}\n${cycle.period_label}\n\nTotal : ${fmt(cycle.total_collected)} / ${fmt(cycle.total_expected)}\n\n${lines.join("\n")}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -106,7 +106,7 @@ const ReportsTab = ({ tontines }: Props) => {
       const report = getCycleReport(cycle);
       const pctCollected = cycle.total_expected > 0 ? Math.round((cycle.total_collected / cycle.total_expected) * 100) : 0;
       const rows = report.map((r) => {
-        const icon = r.status === "paid" ? "✅" : r.status === "partial" ? "⚠️" : "⏳";
+        const icon = r.status === "paid" ? "[payé]" : r.status === "partial" ? "[partiel]" : "[en attente]";
         const detail = r.status === "paid" && r.lastDate
           ? `Payé le ${new Date(r.lastDate).toLocaleDateString("fr-FR")}`
           : r.status === "partial"
@@ -115,20 +115,20 @@ const ReportsTab = ({ tontines }: Props) => {
         return `<tr><td style="padding:8px;border-bottom:1px solid #333">${icon} ${esc(r.member.name)}${r.member.is_owner ? " (Moi)" : ""}</td><td style="padding:8px;border-bottom:1px solid #333;text-align:right;font-weight:bold">${fmt(r.total)}</td><td style="padding:8px;border-bottom:1px solid #333;color:#888;font-size:12px">${esc(detail)}</td></tr>`;
       }).join("");
 
-      return `<div style="margin-bottom:40px;page-break-inside:avoid"><h2 style="color:#10b981;margin-bottom:4px">📊 Cycle ${cycle.cycle_number} — ${esc(cycle.period_label)}</h2><p style="color:#888;font-size:13px">Du ${new Date(cycle.start_date).toLocaleDateString("fr-FR")} au ${new Date(cycle.end_date).toLocaleDateString("fr-FR")}</p><div style="display:flex;gap:20px;margin:16px 0"><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total attendu</p><p style="font-size:20px;font-weight:bold">${fmt(cycle.total_expected)}</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total collecté</p><p style="font-size:20px;font-weight:bold;color:#10b981">${fmt(cycle.total_collected)}</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Taux</p><p style="font-size:20px;font-weight:bold;color:${pctCollected >= 80 ? "#10b981" : "#f59e0b"}">${pctCollected}%</p></div></div><table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
+      return `<div style="margin-bottom:40px;page-break-inside:avoid"><h2 style="color:#10b981;margin-bottom:4px">Cycle ${cycle.cycle_number} — ${esc(cycle.period_label)}</h2><p style="color:#888;font-size:13px">Du ${new Date(cycle.start_date).toLocaleDateString("fr-FR")} au ${new Date(cycle.end_date).toLocaleDateString("fr-FR")}</p><div style="display:flex;gap:20px;margin:16px 0"><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total attendu</p><p style="font-size:20px;font-weight:bold">${fmt(cycle.total_expected)}</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Total collecté</p><p style="font-size:20px;font-weight:bold;color:#10b981">${fmt(cycle.total_collected)}</p></div><div style="background:#1a1a2e;border-radius:12px;padding:12px 20px;flex:1;text-align:center"><p style="color:#888;font-size:12px">Taux</p><p style="font-size:20px;font-weight:bold;color:${pctCollected >= 80 ? "#10b981" : "#f59e0b"}">${pctCollected}%</p></div></div><table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
     }).join("");
 
     const cumulData = getCumulativeData();
     const cumulHeaders = cycles.map((c) => `<th style="padding:6px;font-size:11px;color:#888">C${c.cycle_number}</th>`).join("");
     const cumulRows = cumulData.map((d) => {
       const cells = d.perCycle.map((s) => {
-        const icon = s === "paid" ? "✅" : s === "partial" ? "⚠️" : "⏳";
+        const icon = s === "paid" ? "[payé]" : s === "partial" ? "[partiel]" : "[en attente]";
         return `<td style="padding:6px;text-align:center">${icon}</td>`;
       }).join("");
       return `<tr><td style="padding:6px;font-weight:500">${esc(d.member.name)}</td>${cells}<td style="padding:6px;text-align:center;font-weight:bold;color:${d.reliability >= 80 ? "#10b981" : "#f59e0b"}">${d.reliability}%</td></tr>`;
     }).join("");
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Rapport Tontine — ${esc(selected.name)}</title><style>@media print{body{padding:10px}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a1a;color:#fff;padding:30px;max-width:800px;margin:0 auto}h1{font-size:22px}table{width:100%}th{text-align:left;padding:6px;border-bottom:2px solid #333}td{padding:6px;border-bottom:1px solid #222}</style></head><body><h1>🪙 Mon Jeton — Rapport Tontine</h1><p style="color:#888">${esc(selected.name)} · ${esc(FREQ_LABELS[selected.frequency] || selected.frequency)}</p><p style="color:#666;font-size:12px">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p><hr style="border-color:#333;margin:20px 0">${cyclePages}${cycles.length > 1 ? `<h2 style="color:#10b981;margin-top:40px">📋 Fiabilité cumulée</h2><table><tr><th>Membre</th>${cumulHeaders}<th style="text-align:center">Fiabilité</th></tr>${cumulRows}</table>` : ""}<p style="text-align:center;color:#444;font-size:11px;margin-top:40px">🪙 Mon Jeton — Document confidentiel</p></body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Rapport Tontine — ${esc(selected.name)}</title><style>@media print{body{padding:10px}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a1a;color:#fff;padding:30px;max-width:800px;margin:0 auto}h1{font-size:22px}table{width:100%}th{text-align:left;padding:6px;border-bottom:2px solid #333}td{padding:6px;border-bottom:1px solid #222}</style></head><body><h1>Mon Jeton — Rapport Tontine</h1><p style="color:#888">${esc(selected.name)} · ${esc(FREQ_LABELS[selected.frequency] || selected.frequency)}</p><p style="color:#666;font-size:12px">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p><hr style="border-color:#333;margin:20px 0">${cyclePages}${cycles.length > 1 ? `<h2 style="color:#10b981;margin-top:40px">Fiabilité cumulée</h2><table><tr><th>Membre</th>${cumulHeaders}<th style="text-align:center">Fiabilité</th></tr>${cumulRows}</table>` : ""}<p style="text-align:center;color:#444;font-size:11px;margin-top:40px">Mon Jeton — Document confidentiel</p></body></html>`;
 
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -174,7 +174,7 @@ const ReportsTab = ({ tontines }: Props) => {
         const pctC = cycle.total_expected > 0 ? Math.round((cycle.total_collected / cycle.total_expected) * 100) : 0;
         return (
           <motion.div key={cycle.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4">
-            <p className="font-bold text-foreground mb-1">📊 Cycle {cycle.cycle_number} — {cycle.period_label}</p>
+            <p className="font-bold text-foreground mb-1">Cycle {cycle.cycle_number} — {cycle.period_label}</p>
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div className="bg-secondary rounded-xl p-2 text-center">
                 <p className="text-xs text-muted-foreground">Attendu</p>
@@ -216,7 +216,7 @@ const ReportsTab = ({ tontines }: Props) => {
       {/* Cumulative table */}
       {cycles.length > 1 && cycleId === "all" && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 overflow-x-auto">
-          <p className="font-bold text-foreground mb-3">📋 Fiabilité cumulée</p>
+          <p className="font-bold text-foreground mb-3">Fiabilité cumulée</p>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -233,7 +233,7 @@ const ReportsTab = ({ tontines }: Props) => {
                   <td className="py-2 text-foreground font-medium">{d.member.name}</td>
                   {d.perCycle.map((s, i) => (
                     <td key={i} className="text-center py-2">
-                      {s === "paid" ? "✅" : s === "partial" ? "⚠️" : "⏳"}
+                      {s === "paid" ? "Payé" : s === "partial" ? "Partiel" : "En attente"}
                     </td>
                   ))}
                   <td className={`text-center py-2 font-bold ${d.reliability >= 80 ? "text-emerald-400" : "text-amber-400"}`}>
