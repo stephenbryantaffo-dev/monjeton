@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { safeReturnTo } from "@/lib/safeRedirect";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ScanLine, Users, Target } from "lucide-react";
 import { motion } from "framer-motion";
@@ -71,7 +72,7 @@ const Login = () => {
     }
     setLoading(false);
     resetRateLimit(`login:${normalizedEmail}`);
-    navigate(searchParams.get("returnTo") || "/dashboard", { replace: true });
+    navigate(safeReturnTo(searchParams.get("returnTo")), { replace: true });
   };
 
   const handleForgotPassword = async () => {
@@ -99,7 +100,7 @@ const Login = () => {
   };
 
   const handleGoogle = async () => {
-    const returnTo = searchParams.get("returnTo") || "/dashboard";
+    const returnTo = safeReturnTo(searchParams.get("returnTo"));
     const typed = email.trim().toLowerCase();
     if (typed) {
       const info = await checkAuthMethod(typed);
@@ -126,7 +127,7 @@ const Login = () => {
   };
 
   const handleApple = async () => {
-    const returnTo = searchParams.get("returnTo") || "/dashboard";
+    const returnTo = safeReturnTo(searchParams.get("returnTo"));
     const typed = email.trim().toLowerCase();
     if (typed) {
       const info = await checkAuthMethod(typed);
