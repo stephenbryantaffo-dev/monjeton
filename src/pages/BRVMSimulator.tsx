@@ -102,19 +102,23 @@ const BRVMSimulator = () => {
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-primary" />
-              BRVM Simulator
+              Simulateur BRVM
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Top 10 actions · Simulation d'investissement
+              Investis sans risquer un franc
             </p>
           </div>
           {lastUpdate && (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-secondary/50 px-2.5 py-1.5 rounded-lg">
-              <div className={`w-1.5 h-1.5 rounded-full ${fromCache ? "bg-yellow-500" : "bg-green-500"}`} />
-              <span>{fromCache ? "Cache" : "Direct"}</span>
-              <span>· {new Date(lastUpdate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
-              <button onClick={fetchLiveData} className="ml-1 hover:text-primary transition-colors">
-                <RefreshCw className="w-2.5 h-2.5" />
+            <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap text-[11px] font-semibold text-muted-foreground bg-secondary/60 border border-border px-3 py-2 rounded-full">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${fromCache ? "bg-yellow-500" : "bg-primary"}`} />
+              <span className="text-foreground">{fromCache ? "Cache" : "Direct"}</span>
+              <span>{new Date(lastUpdate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+              <button
+                onClick={fetchLiveData}
+                aria-label="Rafraîchir les cours"
+                className="hover:text-primary transition-colors flex-shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -154,6 +158,9 @@ const BRVMSimulator = () => {
                 <TrendingUp className="w-4 h-4 text-primary" />
                 Top 10 du jour
               </h2>
+              <p className="text-[11.5px] text-muted-foreground">
+                Touche une action pour simuler un achat
+              </p>
               <div className="space-y-1.5">
                 {stocks.map((stock, i) => (
                   <motion.button
@@ -172,7 +179,9 @@ const BRVMSimulator = () => {
                     }`}
                   >
                     {/* Rank */}
-                    <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
+                    <div className={`w-6 flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${
+                      i === 0 ? "text-primary" : "text-muted-foreground"
+                    }`}>
                       {i + 1}
                     </div>
 
