@@ -248,9 +248,9 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
         Pas de jargon, que du concret.
       </p>
       <div className="glass-card rounded-2xl p-4 text-left text-xs text-muted-foreground space-y-1">
-        <p>✅ Personnalisé selon ton profil</p>
-        <p>✅ Conseils pratiques par catégorie</p>
-        <p>✅ Sauvegarde automatique</p>
+        <p>Personnalisé selon ton profil</p>
+        <p>Conseils pratiques par catégorie</p>
+        <p>Sauvegarde automatique</p>
       </div>
       <Button onClick={goNext} className="w-full gradient-primary text-primary-foreground h-12">
         Commencer <ChevronRight className="w-4 h-4 ml-1" />
@@ -345,7 +345,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       </div>
       {data.dettes_mois > 0 && (
         <div className="glass-card rounded-xl p-3 text-xs text-muted-foreground">
-          💡 Rembourser ses dettes en priorité libère ton budget pour la suite.
+          Rembourser ses dettes en priorité libère ton budget pour la suite.
         </div>
       )}
     </div>
@@ -377,12 +377,12 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
   );
 
   const OBJECTIFS = [
-    { v: 'epargne', l: '💰 Épargner' },
-    { v: 'dette', l: '🏦 Rembourser dettes' },
-    { v: 'tenir', l: '⚖️ Tenir le mois' },
-    { v: 'projet', l: '🎯 Financer un projet' },
-    { v: 'investir', l: '📈 Investir' },
-    { v: 'famille', l: '👨‍👩‍👧 Aider la famille' },
+    { v: 'epargne', l: 'Épargner' },
+    { v: 'dette', l: 'Rembourser dettes' },
+    { v: 'tenir', l: 'Tenir le mois' },
+    { v: 'projet', l: 'Financer un projet' },
+    { v: 'investir', l: 'Investir' },
+    { v: 'famille', l: 'Aider la famille' },
   ];
 
   const toggleObjectif = (v: string) => {
@@ -459,9 +459,9 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       <p className="text-sm text-muted-foreground">Comment dépenses-tu généralement ?</p>
       <div className="space-y-2">
         {([
-          { v: 'gros_achats', l: '🛒 Gros achats mensuels', d: 'Courses du mois, stock' },
-          { v: 'petits_achats', l: '🥐 Petits achats quotidiens', d: 'Au jour le jour' },
-          { v: 'mixte', l: '⚖️ Un mix des deux', d: 'Ça dépend' },
+          { v: 'gros_achats', l: 'Gros achats mensuels', d: 'Courses du mois, stock' },
+          { v: 'petits_achats', l: 'Petits achats quotidiens', d: 'Au jour le jour' },
+          { v: 'mixte', l: 'Un mix des deux', d: 'Ça dépend' },
         ] as const).map(opt => (
           <button
             key={opt.v}
@@ -484,11 +484,11 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       </div>
       <div className="space-y-2">
         {([
-          { v: 'normal', l: '😌 Mois normal' },
-          { v: 'rentree', l: '🎒 Rentrée scolaire' },
-          { v: 'fetes', l: '🎉 Fêtes / Événement' },
-          { v: 'voyage', l: '✈️ Voyage prévu' },
-          { v: 'sante', l: '🏥 Frais santé' },
+          { v: 'normal', l: 'Mois normal' },
+          { v: 'rentree', l: 'Rentrée scolaire' },
+          { v: 'fetes', l: 'Fêtes / Événement' },
+          { v: 'voyage', l: 'Voyage prévu' },
+          { v: 'sante', l: 'Frais santé' },
         ] as const).map(opt => (
           <button
             key={opt.v}
@@ -536,7 +536,7 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
       </div>
       {disponible <= 0 && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 text-xs text-destructive">
-          ⚠️ Tes charges dépassent tes revenus. Le coach te proposera un plan d'urgence.
+          Tes charges dépassent tes revenus. Le coach te proposera un plan d'urgence.
         </div>
       )}
     </div>
