@@ -12,7 +12,7 @@ import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic, SlidersHorizontal } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic, SlidersHorizontal, Plus, PieChart, Users, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -661,27 +661,125 @@ const Dashboard = () => {
           )}
           {(() => {
             const walletsBlock = (
-              <div key="wallets" className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
-                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                      <ArrowDownLeft className="w-4 h-4 text-primary shrink-0" />
-                      <span className="text-xs text-muted-foreground">Revenus</span>
-                    </div>
-                    <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalIncome)}</p>
-                    <p className="text-xs text-muted-foreground">FCFA</p>
-                  </BorderRotate>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                  <BorderRotate className="p-3 sm:p-4 overflow-hidden" animationSpeed={10}>
-                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                      <ArrowUpRight className="w-4 h-4 text-destructive shrink-0" />
-                      <span className="text-xs text-muted-foreground">Dépenses</span>
-                    </div>
-                    <p className="text-base sm:text-xl font-bold text-foreground truncate tabular-nums">{formatAmount(totalExpense)}</p>
-                    <p className="text-xs text-muted-foreground">FCFA</p>
-                  </BorderRotate>
-                </motion.div>
+              <div key="wallets" className="mb-4 sm:mb-6">
+                {/* Duo Revenus / Dépenses — vert = ce qui rentre, rouge = ce qui sort */}
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                    <BorderRotate
+                      tone="lime"
+                      animationSpeed={9}
+                      surface="hsl(var(--card))"
+                      className="overflow-hidden"
+                      style={{ borderRadius: 22 }}
+                    >
+                      <div
+                        className="relative p-4 overflow-hidden"
+                        style={{
+                          borderRadius: 21,
+                          background:
+                            "linear-gradient(155deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.82) 100%)",
+                        }}
+                      >
+                        <span
+                          className="absolute -right-8 -bottom-11 w-28 h-28 rounded-full"
+                          style={{ background: "hsl(var(--primary-foreground) / 0.16)" }}
+                        />
+                        <div className="relative flex items-center justify-between">
+                          <span className="text-[13px] font-extrabold text-primary-foreground/70">Revenus</span>
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary-foreground) / 0.16)" }}>
+                            <ArrowDownLeft className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
+                          </span>
+                        </div>
+                        <p className="relative mt-2 text-[22px] leading-none font-extrabold tracking-[-0.04em] text-primary-foreground truncate tabular-nums">
+                          {formatAmount(totalIncome)}
+                          <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
+                        </p>
+                      </div>
+                    </BorderRotate>
+                  </motion.div>
+
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+                    <BorderRotate
+                      tone="red"
+                      animationSpeed={11}
+                      surface="hsl(var(--card))"
+                      className="overflow-hidden"
+                      style={{ borderRadius: 22 }}
+                    >
+                      <div
+                        className="relative p-4 overflow-hidden"
+                        style={{
+                          borderRadius: 21,
+                          background:
+                            "linear-gradient(155deg, hsl(var(--destructive) / 0.85) 0%, hsl(var(--destructive)) 100%)",
+                        }}
+                      >
+                        <span className="absolute -right-8 -bottom-11 w-28 h-28 rounded-full bg-white/15" />
+                        <div className="relative flex items-center justify-between">
+                          <span className="text-[13px] font-extrabold text-white/75">Dépenses</span>
+                          <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                            <ArrowUpRight className="w-3 h-3 text-white" strokeWidth={3} />
+                          </span>
+                        </div>
+                        <p className="relative mt-2 text-[22px] leading-none font-extrabold tracking-[-0.04em] text-white truncate tabular-nums">
+                          {formatAmount(totalExpense)}
+                          <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
+                        </p>
+                      </div>
+                    </BorderRotate>
+                  </motion.div>
+                </div>
+
+                {/* Trois actions rondes */}
+                <div className="grid grid-cols-3 gap-3 mt-5 px-2">
+                  {[
+                    { Icon: Plus, label: "Saisir", go: () => navigate("/transactions/new") },
+                    { Icon: Mic, label: "Parler", go: () => navigate("/transactions/new", { state: { autoVoice: true } }) },
+                    { Icon: Camera, label: "Scanner", go: () => navigate("/scan") },
+                  ].map(({ Icon, label, go }) => (
+                    <button key={label} onClick={go} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+                      <span className="w-[60px] h-[60px] rounded-full bg-card border border-border flex items-center justify-center relative overflow-hidden">
+                        <span
+                          className="absolute inset-0"
+                          style={{ background: "radial-gradient(circle at 32% 18%, hsl(var(--primary) / 0.16), transparent 62%)" }}
+                        />
+                        <Icon className="relative w-[23px] h-[23px] text-primary" strokeWidth={1.9} />
+                      </span>
+                      <span className="text-xs font-bold text-foreground">{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Deux raccourcis vert sombre */}
+                <div className="grid grid-cols-2 gap-2.5 mt-4">
+                  {[
+                    { Icon: PieChart, label: "Créer un budget", to: "/budgets", speed: 8 },
+                    { Icon: Users, label: "Créer une tontine", to: "/tontine", speed: 13 },
+                  ].map(({ Icon, label, to, speed }) => (
+                    <BorderRotate
+                      key={to}
+                      tone="lime"
+                      animationSpeed={speed}
+                      surface="hsl(var(--card))"
+                      style={{ borderRadius: 16 }}
+                    >
+                      <button
+                        onClick={() => navigate(to)}
+                        className="relative w-full flex items-center gap-2.5 p-2.5 overflow-hidden text-left active:scale-[0.98] transition-transform"
+                        style={{
+                          borderRadius: 15,
+                          background: "linear-gradient(150deg, hsl(var(--primary) / 0.14), hsl(var(--card)) 70%)",
+                        }}
+                      >
+                        <span className="w-7 h-7 rounded-full flex-none flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.18)" }}>
+                          <Icon className="w-3.5 h-3.5 text-primary" strokeWidth={2.1} />
+                        </span>
+                        <span className="flex-1 min-w-0 text-xs font-bold text-foreground truncate">{label}</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-primary flex-none opacity-80" strokeWidth={2.4} />
+                      </button>
+                    </BorderRotate>
+                  ))}
+                </div>
               </div>
             );
             const planBlock = showPlan ? (
@@ -773,26 +871,13 @@ const Dashboard = () => {
         </>
       )}
 
-      <div style={{ bottom: "calc(var(--bottom-nav-space) + 16px)" }} className="fixed right-5 z-50 flex flex-col gap-3">
-        {/* Quick voice button */}
-        <button
-          onClick={() => navigate("/transactions/new", { state: { autoVoice: true } })}
-          aria-label="Ajouter une transaction par la voix"
-          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30 hover:border-primary/60 hover:scale-110 active:scale-95 transition-all duration-200"
-        >
-          <Mic className="w-5 h-5 text-primary" />
-        </button>
-        <Link
-          to="/scan"
-          aria-label="Scanner un reçu"
-          className="w-12 h-12 rounded-full glass shadow-lg flex items-center justify-center border border-primary/30 hover:border-primary/60 hover:scale-110 active:scale-95 transition-all duration-200"
-        >
-          <Camera className="w-5 h-5 text-primary" />
-        </Link>
+      {/* Saisir, Parler et Scanner vivent maintenant dans le trio, en haut.
+          Seul l'assistant garde son bouton flottant. */}
+      <div style={{ bottom: "calc(var(--bottom-nav-space) + 16px)" }} className="fixed right-5 z-50">
         <Link
           to="/assistant"
           aria-label="Ouvrir l'assistant IA"
-          className="w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center animate-bounce-slow"
+          className="w-14 h-14 rounded-full gradient-primary neon-glow shadow-lg flex items-center justify-center"
         >
           <MessageCircle className="w-6 h-6 text-primary-foreground" />
         </Link>
