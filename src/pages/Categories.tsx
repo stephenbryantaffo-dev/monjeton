@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Plus, Pencil, Wallet, icons } from "lucide-react";
+import { Plus, Pencil, Wallet } from "lucide-react";
+import { ICON_OPTIONS, resolveCategoryIcon } from "@/lib/categoryIconMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,13 +33,6 @@ const COLOR_PALETTE = [
   "hsl(0,0%,60%)",
 ];
 
-const ICON_OPTIONS = [
-  "Utensils", "Car", "Home", "ShoppingBag", "Zap", "Heart", "GraduationCap",
-  "Plane", "Gift", "Phone", "Wifi", "Shirt", "Dumbbell", "Music", "Film",
-  "Coffee", "Baby", "PiggyBank", "Briefcase", "Stethoscope", "Wrench",
-  "Bus", "Fuel", "Landmark", "HandCoins", "TrendingUp", "Wallet",
-  "Gamepad2", "Building2", "Smartphone", "Package", "CreditCard",
-];
 
 const categorySchema = z.object({
   name: z.string().trim().min(1, "Le nom est requis").max(50, "50 caractères max"),
@@ -63,7 +57,7 @@ const ColorPicker = ({ value, onChange }: { value: string; onChange: (c: string)
 const IconPicker = ({ value, onChange, color }: { value: string; onChange: (v: string) => void; color: string }) => (
   <div className="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto">
     {ICON_OPTIONS.map((name) => {
-      const Icon = (icons as any)[name] || Wallet;
+      const Icon = resolveCategoryIcon(name);
       return (
         <button
           key={name}
@@ -79,7 +73,7 @@ const IconPicker = ({ value, onChange, color }: { value: string; onChange: (v: s
 );
 
 const CatIcon = ({ iconName, color }: { iconName?: string | null; color: string }) => {
-  const Icon = iconName && (icons as any)[iconName] ? (icons as any)[iconName] : Wallet;
+  const Icon = resolveCategoryIcon(iconName);
   return (
     <div
       className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
