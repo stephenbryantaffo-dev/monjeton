@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initNative } from "./lib/initNative";
 
 const hideSplash = () => {
   const s = document.getElementById("splash-screen");
@@ -10,6 +11,10 @@ const hideSplash = () => {
 };
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Barre d'état, clavier et splash natifs.
+// Ne fait rien sur le web : l'app démarre exactement comme avant.
+void initNative();
 
 // Hide splash as soon as React has rendered the first frame.
 requestAnimationFrame(() => {
