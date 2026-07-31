@@ -3,16 +3,35 @@
   "appName": "Mon Jeton",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
   },
   "ios": {
     "scheme": "Mon Jeton",
-    "contentInset": "automatic"
+    "contentInset": "automatic",
+    "backgroundColor": "#14171C"
+  },
+  "android": {
+    "backgroundColor": "#14171C"
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#0F0F1A"
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#14171C",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#14171C"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK",
+      "resizeOnFullScreen": true
     }
   }
 }
