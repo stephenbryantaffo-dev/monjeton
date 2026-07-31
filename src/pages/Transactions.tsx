@@ -177,22 +177,155 @@ const Transactions = () => {
     return result;
   }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder]);
 
+  /** Nombre de filtres actifs, pour la pastille du bouton Filtres. */
+  const activeFilterCount =
+    (filterCategory !== "all" ? 1 : 0) +
+    (filterWallet !== "all" ? 1 : 0) +
+    (filterPeriod !== "all" ? 1 : 0) +
+    (filterMinAmount ? 1 : 0) +
+    (filterMaxAmount ? 1 : 0) +
+    (sortOrder !== "date_desc" ? 1 : 0);
+
+  /** Raccourcis de période — pilotent le MÊME état que le panneau de filtres. */
+  const periodChips = [
+    { value: "all", label: "Tout" },
+    { value: "week", label: "7 jours" },
+    { value: "month", label: "Ce mois" },
+    { value: "3months", label: "3 mois" },
+    { value: "year", label: "Cette année" },
+  ];
+
+  const dayLabel = (iso: string) => {
+    const d = new Date(iso);
+    const today = new Date();
+    const y = new Date();
+    y.setDate(today.getDate() - 1);
+    const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+    if (same(d, today)) return "Aujourd'hui";
+    if (same(d, y)) return "Hier";
+    return d.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+  };
+
+  /**
+   * On ne regroupe par jour que si le tri est chronologique.
+   * Trié par montant, des en-têtes de date n'auraient aucun sens.
+   */
+  const groupedByDay = sortOrder === "date_desc" || sortOrder === "date_asc";
+
+  const dayGroups = useMemo(() => {
+    if (!groupedByDay) return [];
+    const map = new Map<string, any[]>();
+    for (const t of filtered) {
+      const key = String(t.date).slice(0, 10);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(t);
+    }
+    return Array.from(map.entries()).map(([key, items]) => {
+      const net = items.reduce(
+        (sum, t) => sum + (t.type === "income" ? Number(t.amount) : -Number(t.amount)),
+        0
+      );
+      return { key, items, net };
+    });
+  }, [filtered, groupedByDay]);
+
+  /** Une ligne de transaction. Rendu identique en liste plate ou groupée. */
+  const TxRow = ({ t, i }: { t: any; i: number }) => (
+    <motion.div
+      key={t.id}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(0.03 * i, 0.3) }}
+    >
+      <div className="glass-card rounded-2xl p-3 flex items-center gap-3">
+        <div
+          className="category-icon-wrapper"
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor:
+              t.categories?.color ||
+              (t.type === "income" ? "hsl(var(--primary))" : "hsl(var(--secondary))"),
+          }}
+        >
+          {getCatIcon(t.categories?.name || "", t.type)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {t.note || t.categories?.name || "Transaction"}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {t.categories?.name}
+            {!groupedByDay && ` · ${new Date(t.date).toLocaleDateString("fr-FR")}`}
+          </p>
+        </div>
+        <span
+          className={`text-sm font-extrabold whitespace-nowrap ${
+            t.type === "income" ? "text-primary" : "text-foreground"
+          }`}
+        >
+          {t.type === "income" ? "+" : "-"}
+          {formatMoneySmart(Number(t.amount))}
+        </span>
+        <ConfirmDeleteDialog
+          onConfirm={() => handleDelete(t.id)}
+          title="Supprimer cette transaction ?"
+        />
+      </div>
+    </motion.div>
+  );
+
   return (
     <DashboardLayout title="Transactions">
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 items-center mb-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-secondary border-border" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un libellé, une catégorie…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-11 h-12 rounded-full bg-card border-border text-sm"
+          />
         </div>
-        <Button
-          variant={hasActiveFilters ? "hero" : "glass"}
-          size="icon"
+        <button
+          type="button"
           onClick={() => setShowFilters(!showFilters)}
-          aria-label="Filtrer les transactions"
-          className="shrink-0"
+          aria-label="Filtres avancés"
+          className={`relative shrink-0 w-12 h-12 rounded-full flex items-center justify-center border transition-colors ${
+            hasActiveFilters
+              ? "bg-primary border-transparent text-primary-foreground"
+              : "bg-card border-border text-foreground"
+          }`}
         >
-          <Filter className="w-4 h-4" />
-        </Button>
+          <Filter className="w-[18px] h-[18px]" />
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[19px] h-[19px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold flex items-center justify-center border-2 border-background">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Raccourcis de période — pilotent le même filtre que le panneau */}
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {periodChips.map((p) => (
+          <button
+            key={p.value}
+            type="button"
+            onClick={() => setFilterPeriod(p.value)}
+            className={`flex-none px-4 py-2 rounded-full text-[12.5px] font-bold border transition-colors ${
+              filterPeriod === p.value
+                ? "bg-primary/15 border-transparent text-primary"
+                : "bg-card border-border text-muted-foreground"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
 
       {showFilters && (
@@ -273,32 +406,34 @@ const Transactions = () => {
             </button>
           </div>
         )}
-        {loading && page === 0
-          ? Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)
-          : filtered.map((t, i) => (
-            <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}>
-              <div className="glass-card rounded-xl p-3 flex items-center gap-3">
-              <div
-                className="category-icon-wrapper"
-                style={{
-                  width: 44,
-                  height: 44,
-                  backgroundColor: t.categories?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "#374151"),
-                }}
-              >
-                {getCatIcon(t.categories?.name || "", t.type)}
+        {loading && page === 0 ? (
+          Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)
+        ) : groupedByDay ? (
+          dayGroups.map((g) => (
+            <div key={g.key}>
+              <div className="flex items-baseline justify-between px-1 pt-4 pb-2">
+                <span className="text-[12.5px] font-extrabold text-foreground capitalize">
+                  {dayLabel(g.key)}
+                </span>
+                <span
+                  className={`text-[11.5px] font-bold ${
+                    g.net >= 0 ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {g.net >= 0 ? "+" : "-"}
+                  {formatMoneySmart(Math.abs(g.net))}
+                </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{t.note || t.categories?.name || "Transaction"}</p>
-                <p className="text-xs text-muted-foreground">{t.categories?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
+              <div className="space-y-2">
+                {g.items.map((t: any, i: number) => (
+                  <TxRow key={t.id} t={t} i={i} />
+                ))}
               </div>
-              <span className={`text-sm font-semibold whitespace-nowrap ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-                {t.type === "income" ? "+" : "-"}{formatMoneySmart(Number(t.amount))}
-              </span>
-              <ConfirmDeleteDialog onConfirm={() => handleDelete(t.id)} title="Supprimer cette transaction ?" />
-              </div>
-            </motion.div>
-          ))}
+            </div>
+          ))
+        ) : (
+          filtered.map((t, i) => <TxRow key={t.id} t={t} i={i} />)
+        )}
         {!loading && filtered.length === 0 && (
           <p className="text-center text-muted-foreground text-sm py-8">Aucune transaction</p>
         )}
