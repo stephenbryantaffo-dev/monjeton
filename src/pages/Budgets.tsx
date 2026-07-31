@@ -790,6 +790,81 @@ const Budgets = () => {
             </motion.div>
           )}
 
+          {/* Phrase clé — répond à la seule question qui compte :
+              est-ce que je tiens jusqu'à la fin du mois ? */}
+          {(() => {
+            if (!totalBudget || totalBudget <= 0 || amountsHidden) return null;
+            const today = new Date();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const isCurrent =
+              month === today.getMonth() + 1 && year === today.getFullYear();
+            if (!isCurrent) return null;
+            const daysLeft = Math.max(0, daysInMonth - today.getDate());
+            const left = totalBudget - totalSpent;
+            const perDay = daysLeft > 0 ? Math.floor(left / daysLeft) : left;
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative overflow-hidden rounded-2xl p-4 mb-4"
+                style={{
+                  background:
+                    left >= 0
+                      ? "linear-gradient(150deg, hsl(var(--primary) / 0.14), hsl(var(--card)) 72%)"
+                      : "linear-gradient(150deg, hsl(var(--destructive) / 0.16), hsl(var(--card)) 72%)",
+                  border:
+                    left >= 0
+                      ? "1px solid hsl(var(--primary) / 0.22)"
+                      : "1px solid hsl(var(--destructive) / 0.28)",
+                }}
+              >
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.1em] ${
+                    left >= 0 ? "text-primary" : "text-destructive"
+                  }`}
+                >
+                  {left >= 0 ? (
+                    <Wallet className="w-3 h-3" />
+                  ) : (
+                    <AlertTriangle className="w-3 h-3" />
+                  )}
+                  À retenir
+                </span>
+
+                {left >= 0 ? (
+                  <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">
+                    Il te reste{" "}
+                    <span className="font-extrabold text-primary tabular-nums">
+                      {fmt(left)}
+                    </span>{" "}
+                    à dépenser.
+                    {daysLeft > 0 && (
+                      <>
+                        {" "}Ça fait{" "}
+                        <span className="font-extrabold text-primary tabular-nums">
+                          {fmt(perDay)}
+                        </span>{" "}
+                        par jour jusqu'au {daysInMonth}.
+                      </>
+                    )}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">
+                    Tu as dépassé ton budget de{" "}
+                    <span className="font-extrabold text-destructive tabular-nums">
+                      {fmt(Math.abs(left))}
+                    </span>
+                    .
+                    {daysLeft > 0 && (
+                      <> Il reste {daysLeft} jour{daysLeft > 1 ? "s" : ""} avant la fin du mois.</>
+                    )}
+                  </p>
+                )}
+              </motion.div>
+            );
+          })()}
+
           {/* Global budget card */}
           <BorderRotate className={`p-5 mb-4 ${!amountsHidden && isOverBudget ? "border border-destructive/50" : ""}`} animationSpeed={10}>
             <div className="flex items-center justify-between mb-3">
