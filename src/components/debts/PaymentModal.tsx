@@ -25,10 +25,10 @@ interface Props {
 }
 
 const METHODS = [
-  { key: "cash", label: "💵 Cash" },
-  { key: "wave", label: "📱 Wave" },
-  { key: "orange", label: "🟠 Orange" },
-  { key: "bank", label: "🏦 Banque" },
+  { key: "cash", label: "Espèces", wallet: "Cash" },
+  { key: "wave", label: "Wave", wallet: "Wave" },
+  { key: "orange", label: "Orange Money", wallet: "Orange Money" },
+  { key: "bank", label: "Banque", wallet: "Carte bancaire" },
 ];
 
 export const PaymentModal = ({
@@ -149,7 +149,7 @@ export const PaymentModal = ({
 
     setSaving(false);
     toast({
-      title: "Paiement enregistré ✅",
+      title: "Paiement enregistré",
       description: `${formatMoneyDisplay(amount)} via ${method}`,
     });
     onSaved();
