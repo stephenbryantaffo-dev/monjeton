@@ -152,7 +152,7 @@ const Savings = () => {
   const openTemplateModal = (t: typeof TEMPLATES[number]) => {
     resetForm();
     setName(t.name);
-    setEmoji(t.emoji);
+    setEmoji(t.icon);
     setTarget(String(t.amount));
     setModalOpen(true);
   };
