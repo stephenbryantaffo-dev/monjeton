@@ -3,12 +3,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
-import {
-  Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle,
-  Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle,
-  PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert,
-  MoreVertical, UserX, RotateCcw, Ban, Pencil, Link2,
-} from "lucide-react";
+import { Plus, Users, ChevronLeft, ChevronRight, CheckCircle, CheckCircle2, Clock, AlertTriangle, Lock, Crown, ChevronDown, ChevronUp, FileText, MessageCircle, PauseCircle, PlayCircle, XCircle, AlertCircle, Calendar, Bell, ShieldAlert, MoreVertical, UserX, RotateCcw, Ban, Pencil, Link2, Target, Building2, RefreshCw, Wallet, Undo2, Hand, Settings, Mail, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import EditCaisseModal from "@/components/tontine/EditCaisseModal";
 import InviteCaisseModal from "@/components/caisse/InviteCaisseModal";
 import CaisseCollaborators from "@/components/tontine/CaisseCollaborators";
@@ -46,6 +42,14 @@ const TontinePage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<"active" | "closed" | "all">("active");
+  /**
+   * Séparation Caisses / Tontines.
+   * Une tontine fait tourner un tour entre membres (caisse_type par défaut).
+   * Une caisse collecte vers un objectif : "project" (événement) ou
+   * "association" (groupe). Les mélanger obligeait à lire un badge sur
+   * chaque carte pour savoir de quoi il s'agit.
+   */
+  const [familyFilter, setFamilyFilter] = useState<"caisses" | "tontines">("caisses");
   const [tontines, setTontines] = useState<TontineData[]>([]);
   const [roleMap, setRoleMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -324,7 +328,7 @@ const TontinePage = () => {
       } as any);
 
       toast({
-        title: "Cotisation annulée ✅",
+        title: "Cotisation annulée",
         description: `Paiement de ${member.name} retiré du cycle ${openCycle.cycle_number}`,
       });
       setMemberActionOpen(false);
@@ -396,7 +400,7 @@ const TontinePage = () => {
         });
       } catch {}
 
-      toast({ title: `Paiement de ${payMember.name} enregistré ✅` });
+      toast({ title: `Paiement de ${payMember.name} enregistré` });
       setPayModalOpen(false);
 
       // Reload detail to check if all paid
@@ -411,11 +415,11 @@ const TontinePage = () => {
       });
       if (updatedStatuses.length > 0 && updatedStatuses.every(Boolean)) {
         if (selected?.caisse_type === "association") {
-          toast({ title: "Cycle complet ! 🎉", description: "Tous les membres ont cotisé ce cycle." });
+          toast({ title: "Cycle complet", description: "Tous les membres ont cotisé ce cycle." });
         } else {
           const ben = getBeneficiary();
           toast({
-            title: `Tour complet ! 🎉`,
+            title: "Tour complet",
             description: `${ben?.name || "Le bénéficiaire"} reçoit ${fmt(openCycle.total_expected)}`,
           });
         }
@@ -460,7 +464,7 @@ const TontinePage = () => {
         );
       }
 
-      toast({ title: `${newMemberName.trim()} ajouté ✅` });
+      toast({ title: `${newMemberName.trim()} ajouté` });
       setNewMemberName("");
       setNewMemberPhone("");
       setAddMemberOpen(false);
@@ -501,7 +505,7 @@ const TontinePage = () => {
         message: `Cycle 1 ouvert pour la tontine "${selected.name}".`,
         canal: "systeme",
       });
-      toast({ title: "Premier cycle ouvert ✅" });
+      toast({ title: "Premier cycle ouvert" });
       await loadDetail(selected.id);
     } catch (e: any) {
       console.error(e);
@@ -542,7 +546,7 @@ const TontinePage = () => {
           await new Promise((r) => setTimeout(r, 500));
         }
       }
-      toast({ title: "Cycle clôturé, nouveau cycle ouvert ✅" });
+      toast({ title: "Cycle clôturé, nouveau cycle ouvert" });
       loadDetail(selected.id);
     } catch (e: any) {
       toast({ title: "Erreur clôture", description: e?.message, variant: "destructive" });
@@ -569,7 +573,7 @@ const TontinePage = () => {
       tontineId: selected.id, type: "systeme",
       message: `Tontine "${selected.name}" reprise.`, canal: "systeme",
     });
-    toast({ title: "▶️ Tontine reprise ✅" });
+    toast({ title: "Tontine reprise" });
     loadTontines();
   };
 
@@ -595,7 +599,7 @@ const TontinePage = () => {
     });
     const notifiedCount = members.filter((m) => m.phone).length;
     toast({
-      title: "🔒 Tontine clôturée",
+      title: "Tontine clôturée",
       description: notifiedCount > 0 ? `${notifiedCount} membre(s) notifié(s) sur WhatsApp` : undefined,
     });
     loadTontines();
@@ -614,7 +618,7 @@ const TontinePage = () => {
       openCycle.cycle_number, selected.contribution_amount, selected.id, openCycle.end_date
     );
     toast({
-      title: count > 0 ? `${count} rappel(s) envoyé(s) 📲` : "Tous les membres ont déjà payé ✅",
+      title: count > 0 ? `${count} rappel(s) envoyé(s)` : "Tous les membres ont déjà payé",
       description: count > 0 ? "WhatsApp ouvert pour chaque membre" : undefined,
     });
   };
@@ -630,7 +634,7 @@ const TontinePage = () => {
       });
       return;
     }
-    toast({ title: "Caisse supprimée ✅" });
+    toast({ title: "Caisse supprimée" });
     if (selectedId === id) setSelectedId(null);
     await loadTontines();
   };
@@ -658,19 +662,59 @@ const TontinePage = () => {
     [tontines]
   );
 
+  const isTontine = (t: TontineData) =>
+    t.caisse_type !== "project" && t.caisse_type !== "association";
+
+  /** Caisses ou tontines, avant application du filtre de statut. */
+  const familyCaisses = useMemo(
+    () =>
+      allCaisses.filter((t) =>
+        familyFilter === "tontines" ? isTontine(t) : !isTontine(t)
+      ),
+    [allCaisses, familyFilter]
+  );
+
   const visibleTontines = useMemo(() => {
-    if (statusFilter === "active") return allCaisses.filter(t => !isCaisseClosed(t));
-    if (statusFilter === "closed") return allCaisses.filter(t => isCaisseClosed(t));
-    return allCaisses;
-  }, [allCaisses, statusFilter]);
+    if (statusFilter === "active") return familyCaisses.filter(t => !isCaisseClosed(t));
+    if (statusFilter === "closed") return familyCaisses.filter(t => isCaisseClosed(t));
+    return familyCaisses;
+  }, [familyCaisses, statusFilter]);
+
+  const familyFilterBar = (
+    <div className="flex gap-1.5 p-1.5 glass-card rounded-full mb-3">
+      {([
+        { key: "caisses" as const, label: "Caisses", Icon: Target },
+        { key: "tontines" as const, label: "Tontines", Icon: Users },
+      ]).map(({ key, label, Icon }) => {
+        const on = familyFilter === key;
+        const n = allCaisses.filter((t) =>
+          key === "tontines" ? isTontine(t) : !isTontine(t)
+        ).length;
+        return (
+          <button
+            key={key}
+            onClick={() => setFamilyFilter(key)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-[13.5px] font-extrabold transition-all ${
+              on
+                ? "gradient-primary text-primary-foreground"
+                : "text-muted-foreground"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label} ({n})
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const statusFilterBar = (
     <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
       {(["active", "closed", "all"] as const).map((f) => {
         const counts = {
-          active: allCaisses.filter(t => !isCaisseClosed(t)).length,
-          closed: allCaisses.filter(t => isCaisseClosed(t)).length,
-          all: allCaisses.length,
+          active: familyCaisses.filter(t => !isCaisseClosed(t)).length,
+          closed: familyCaisses.filter(t => isCaisseClosed(t)).length,
+          all: familyCaisses.length,
         };
         const labels: Record<typeof f, string> = {
           active: "Actives",
@@ -693,9 +737,9 @@ const TontinePage = () => {
 
   // Style + libellé par type de caisse (langage humain)
   const typeMeta = (t: TontineData) => {
-    if (t.caisse_type === "project") return { emoji: "🎯", label: "Événement", cls: "bg-amber-500/15 text-amber-500" };
-    if (t.caisse_type === "association") return { emoji: "🏦", label: "Groupe", cls: "bg-sky-500/15 text-sky-500" };
-    return { emoji: "🔄", label: "Tournante", cls: "bg-primary/15 text-primary" };
+    if (t.caisse_type === "project") return { Icon: Target, label: "Événement", cls: "bg-amber-500/15 text-amber-500" };
+    if (t.caisse_type === "association") return { Icon: Building2, label: "Groupe", cls: "bg-sky-500/15 text-sky-500" };
+    return { Icon: RefreshCw, label: "Tournante", cls: "bg-primary/15 text-primary" };
   };
 
 
@@ -719,6 +763,7 @@ const TontinePage = () => {
           </p>
         </div>
 
+        {familyFilterBar}
         {statusFilterBar}
         <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground shadow-[0_0_24px_-8px_hsl(var(--primary))]">
           <Plus className="w-4 h-4 mr-2" /> Créer une caisse
@@ -730,7 +775,7 @@ const TontinePage = () => {
             Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)
           ) : visibleTontines.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-4xl mb-3">💰</p>
+              <Wallet className="w-9 h-9 text-muted-foreground mx-auto mb-3" />
               <p className="font-semibold text-foreground mb-1">
                 {statusFilter === "closed" ? "Aucune caisse clôturée" : "Aucune caisse pour l'instant"}
               </p>
@@ -780,7 +825,7 @@ const TontinePage = () => {
                 );
                 progressLine = (
                   <div className="flex justify-between items-baseline text-xs text-muted-foreground">
-                    <span>💰 En caisse</span>
+                    <span>En caisse</span>
                     {keyAmount}
                   </div>
                 );
@@ -817,7 +862,7 @@ const TontinePage = () => {
                         <p className="font-bold text-foreground truncate">{t.name}</p>
                         {myRole !== "owner" && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 flex-shrink-0">
-                            {myRole === "manager" ? "✏️ Co-gestion" : "👁 Observateur"}
+                            {myRole === "manager" ? "Co-gestion" : "Observateur"}
                           </span>
                         )}
                         {t.is_closed && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive flex-shrink-0">Clôturé</span>}
@@ -830,12 +875,12 @@ const TontinePage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border border-primary/15 ${meta.cls}`}>
-                        <span>{meta.emoji}</span>
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center border border-primary/15 ${meta.cls}`}>
+                        <meta.Icon className="w-5 h-5" />
                       </div>
                       {canDelete && (
                         <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette caisse ?">
-                          <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()}>✕</button>
+                          <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()} aria-label="Supprimer"><X className="w-4 h-4" /></button>
                         </ConfirmDeleteDialog>
                       )}
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -1009,7 +1054,7 @@ const TontinePage = () => {
           {isAssociation && (
             <div className="mt-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
               <div className="flex items-center gap-2">
-                <span className="text-lg shrink-0">💰</span>
+                <Wallet className="w-4 h-4 shrink-0 text-primary" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Total en caisse (cumulé)</p>
                   <p className="text-sm font-bold text-foreground tabular-nums">{fmt(totalEnCaisse)}</p>
@@ -1021,7 +1066,7 @@ const TontinePage = () => {
           {/* All paid celebration */}
           {allPaid && !isAssociation && (
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
-              <p className="text-sm font-bold text-primary">Tour complet ! 🎉</p>
+              <p className="text-sm font-bold text-primary">Tour complet</p>
               <p className="text-xs text-muted-foreground">
                 {beneficiary?.name} reçoit {fmt(openCycle.total_expected)}
               </p>
@@ -1029,7 +1074,7 @@ const TontinePage = () => {
           )}
           {allPaid && isAssociation && (
             <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
-              <p className="text-sm font-bold text-primary">Cycle complet ! 🎉</p>
+              <p className="text-sm font-bold text-primary">Cycle complet</p>
               <p className="text-xs text-muted-foreground">Tous les membres ont cotisé ce cycle.</p>
             </div>
           )}
@@ -1238,7 +1283,7 @@ const TontinePage = () => {
                       <Progress value={cPct} className="h-1.5 mb-1" />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>{fmt(c.total_collected)} / {fmt(c.total_expected)}</span>
-                        {ben && <span className="truncate ml-2">👑 {ben.name}</span>}
+                        {ben && <span className="truncate ml-2">{ben.name}</span>}
                       </div>
                     </div>
                   );
@@ -1438,7 +1483,7 @@ const TontinePage = () => {
                     onClick={async () => {
                       const ok = await performMemberAction("active", actionMember, "reactivated");
                       if (ok) {
-                        toast({ title: `${actionMember.name} réactivé ✅` });
+                        toast({ title: `${actionMember.name} réactivé` });
                         setMemberActionOpen(false);
                       }
                     }}
@@ -1459,7 +1504,7 @@ const TontinePage = () => {
                     onClick={async () => {
                       const ok = await performMemberAction("active", actionMember, "reinstated");
                       if (ok) {
-                        toast({ title: `${actionMember.name} réintégré ✅` });
+                        toast({ title: `${actionMember.name} réintégré` });
                         setMemberActionOpen(false);
                       }
                     }}
@@ -1498,10 +1543,11 @@ const TontinePage = () => {
                   <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Historique</p>
                   <div className="space-y-2">
                     {memberHistory.map((h) => {
-                      const icons: Record<string, string> = {
-                        suspended: "⏸️", reactivated: "▶️", removed: "🚫",
-                        reinstated: "✅", paid: "💰", payment_cancelled: "↩️",
+                      const icons: Record<string, LucideIcon> = {
+                        suspended: PauseCircle, reactivated: PlayCircle, removed: Ban,
+                        reinstated: CheckCircle2, paid: Wallet, payment_cancelled: Undo2,
                       };
+                      const HistoryIcon = icons[h.action] || FileText;
                       const labels: Record<string, string> = {
                         suspended: "Suspendu", reactivated: "Réactivé",
                         removed: "Retiré", reinstated: "Réintégré",
@@ -1509,7 +1555,7 @@ const TontinePage = () => {
                       };
                       return (
                         <div key={h.id} className="flex items-start gap-2 text-xs">
-                          <span className="flex-shrink-0">{icons[h.action] || "📝"}</span>
+                          <HistoryIcon className="w-4 h-4 flex-shrink-0 text-muted-foreground mt-0.5" />
                           <div className="flex-1 min-w-0">
                             <p className="text-foreground font-medium">{labels[h.action] || h.action}</p>
                             <p className="text-muted-foreground">
@@ -1619,7 +1665,7 @@ const TontinePage = () => {
           {members.filter(m => m.phone).length > 0 && (
             <div className="glass-card rounded-xl p-3 border border-primary/20 mt-2">
               <p className="text-xs text-foreground">
-                📲 {members.filter(m => m.phone).length} membre(s) seront notifiés sur WhatsApp.
+                {members.filter(m => m.phone).length} membre(s) seront notifiés sur WhatsApp.
               </p>
             </div>
           )}
@@ -1733,14 +1779,14 @@ const CalendrierTab = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="text-sm font-bold text-foreground truncate">
-                🏆 {item.member?.name || "À définir"}
+                {item.member?.name || "À définir"}
               </p>
               {item.isCurrent && (
                 <Badge className="bg-primary/20 text-primary text-[10px] py-0 h-4">En cours</Badge>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              📅 {item.date.toLocaleDateString("fr-FR", {
+              {item.date.toLocaleDateString("fr-FR", {
                 weekday: "short", day: "2-digit", month: "long", year: "numeric",
               })}
             </p>
@@ -1776,12 +1822,12 @@ const NotificationHistory = ({ tontineId }: { tontineId: string }) => {
       });
   }, [tontineId]);
 
-  const typeIcon: Record<string, string> = {
-    rappel_cotisation: "📲",
-    nouveau_cycle: "🔔",
-    bienvenue: "👋",
-    cloture: "🔒",
-    systeme: "⚙️",
+  const typeIcon: Record<string, LucideIcon> = {
+    rappel_cotisation: MessageCircle,
+    nouveau_cycle: Bell,
+    bienvenue: Hand,
+    cloture: Lock,
+    systeme: Settings,
   };
 
   if (loading) return <p className="text-xs text-muted-foreground text-center py-6">Chargement...</p>;
@@ -1796,7 +1842,9 @@ const NotificationHistory = ({ tontineId }: { tontineId: string }) => {
     <div className="space-y-2">
       {notifs.map((n) => (
         <div key={n.id} className="glass-card rounded-xl p-3 flex gap-3">
-          <span className="text-xl flex-shrink-0">{typeIcon[n.type] || "📩"}</span>
+          <span className="flex-shrink-0 w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+            {(() => { const NotifIcon = typeIcon[n.type] || Mail; return <NotifIcon className="w-4 h-4 text-primary" />; })()}
+          </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
               <p className="text-xs font-bold text-foreground truncate">
