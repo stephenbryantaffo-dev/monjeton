@@ -27,9 +27,8 @@ const getJokeAndTips = (
       ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100)
       : 0;
 
-  const jokes: Record<string, { emoji: string; blague: string; tips: string[] }> = {
+  const jokes: Record<string, { blague: string; tips: string[] }> = {
     transport: {
-      emoji: "🚕",
       blague:
         "Gbaka, wôrô-wôrô, Yango… ce mois-ci tu as tellement bougé que même les chauffeurs de gbaka te connaissent par ton prénom ! Prochain mois, pense à covoiturer avec un voisin hein !",
       tips: [
@@ -40,7 +39,6 @@ const getJokeAndTips = (
       ],
     },
     alimentation: {
-      emoji: "🍛",
       blague:
         "Garba le matin, alloco le midi, kedjenou le soir… tu as vraiment bien mangé ce mois ! Ton ventre dit merci mais ton portefeuille pleure un peu. La prochaine fois, essaie de cuisiner à la maison quelques jours !",
       tips: [
@@ -51,7 +49,6 @@ const getJokeAndTips = (
       ],
     },
     shopping: {
-      emoji: "👗",
       blague:
         "Boutique Placard CI, les marchés de Treichville… ce mois-ci tu as bien sapé ! On comprend, il faut être beau/belle. Mais le prochain mois, peut-être juste regarder les vitrines sans acheter ?",
       tips: [
@@ -62,7 +59,6 @@ const getJokeAndTips = (
       ],
     },
     "t\u00e9l\u00e9phone": {
-      emoji: "📱",
       blague:
         "Crédit, data, forfait… Orange, MTN, Wave te connaissent bien ce mois ! Tu as peut-être passé plus de temps sur TikTok que prévu. On ne te juge pas, mais ton compte bancaire un peu !",
       tips: [
@@ -73,7 +69,6 @@ const getJokeAndTips = (
       ],
     },
     factures: {
-      emoji: "💡",
       blague:
         "CIE, SODECI, loyer… les factures ont bien mangé ton argent ce mois ! C'est la vie d'adulte responsable. Mais il y a des astuces pour réduire ça un peu chaque mois.",
       tips: [
@@ -84,7 +79,6 @@ const getJokeAndTips = (
       ],
     },
     loisirs: {
-      emoji: "🎉",
       blague:
         "Maquis, boîtes, sorties entre amis… ce mois-ci tu as bien profité de la vie ! Abidjan by night te connaît bien. Le plaisir c'est important, mais peut-être réserver un budget 'sortie' fixe chaque mois ?",
       tips: [
@@ -95,7 +89,6 @@ const getJokeAndTips = (
       ],
     },
     "sant\u00e9": {
-      emoji: "💊",
       blague:
         "Pharmacie, consultations… tu as bien pris soin de toi ce mois ! La santé n'a pas de prix c'est vrai, mais on peut quand même optimiser un peu sans se négliger.",
       tips: [
@@ -107,7 +100,7 @@ const getJokeAndTips = (
     },
   };
 
-  let match: { emoji: string; blague: string; tips: string[] } | null = null;
+  let match: { blague: string; tips: string[] } | null = null;
   for (const [key, joke] of Object.entries(jokes)) {
     if (topName.includes(key) || key.includes(topName)) {
       match = joke;
@@ -118,7 +111,6 @@ const getJokeAndTips = (
   if (!match) {
     if (savingsRate >= 20) {
       match = {
-        emoji: "🏆",
         blague: `Waouh ! Tu as épargné ${savingsRate}% de tes revenus ce mois-ci. C'est toi le vrai patron de tes finances ! Tout le quartier peut venir apprendre chez toi !`,
         tips: [
           "Continue comme ça ! Essaie d'investir une partie de ton épargne",
@@ -129,7 +121,6 @@ const getJokeAndTips = (
       };
     } else {
       match = {
-        emoji: "💰",
         blague:
           "Ce mois-ci, ton argent a beaucoup voyagé ! Il est parti dans plein de directions. Le prochain mois, essaie de lui donner une destination précise avant qu'il parte tout seul !",
         tips: [
@@ -158,13 +149,13 @@ export const generateMonthlyPdf = (data: PdfData) => {
 
   let scoreColor = "#e74c3c";
   let scoreText = "\u00c0 am\u00e9liorer";
-  let scoreEmoji = "😬";
+  
   if (savingsRate >= 20) {
-    scoreColor = "#27ae60"; scoreText = "Excellent !"; scoreEmoji = "🏆";
+    scoreColor = "#27ae60"; scoreText = "Excellent !";
   } else if (savingsRate >= 10) {
-    scoreColor = "#f39c12"; scoreText = "Correct"; scoreEmoji = "👍";
+    scoreColor = "#f39c12"; scoreText = "Correct";
   } else if (savingsRate >= 0) {
-    scoreColor = "#e67e22"; scoreText = "Attention"; scoreEmoji = "⚠️";
+    scoreColor = "#e67e22"; scoreText = "Attention";
   }
 
   const sortedCats = [...data.categories].sort((a, b) => b.value - a.value);
@@ -175,7 +166,7 @@ export const generateMonthlyPdf = (data: PdfData) => {
       const bar = "\u2588".repeat(bars) + "\u2591".repeat(20 - bars);
       const isTop = idx === 0;
       return `<tr>
-          <td>${isTop ? "🔥 " : ""}${cat.name}</td>
+          <td>${isTop ? "• " : ""}${cat.name}</td>
           <td class="ra bold">${fmt(cat.value)}</td>
           <td class="ca">${pct}%</td>
           <td class="bar">${bar}</td>
@@ -225,7 +216,6 @@ body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
 .body{padding:20px 24px}
 .print-hint{background:#e8f5e9;padding:8px 14px;border-radius:6px;font-size:11px;color:#388e3c;margin-bottom:16px;text-align:center}
 .score-box{display:flex;align-items:center;gap:16px;padding:16px;border-radius:10px;margin-bottom:20px}
-.score-emoji{font-size:40px}
 .score-label{font-size:14px;font-weight:bold}
 .score-desc{font-size:12px;color:#555;margin-top:4px}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
@@ -237,7 +227,6 @@ body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
 .cr{background:#fff5f5;border:1px solid #e74c3c}
 .cgy{background:#f5f5f5;border:1px solid #ccc}
 .joke-box{background:linear-gradient(135deg,#fff8e1,#fff3cd);border:1px solid #f0c040;border-radius:10px;padding:16px;margin-bottom:22px}
-.joke-box .joke-emoji{font-size:32px;margin-bottom:6px}
 .joke-box .joke-top{font-size:12px;font-weight:bold;color:#333;margin-bottom:6px}
 .joke-box .joke-text{font-size:12px;color:#555;font-style:italic;line-height:1.5}
 .tips-box{background:#f0fff4;border:1px solid #7ec845;border-radius:10px;padding:16px;margin-bottom:22px}
@@ -281,7 +270,6 @@ tr:nth-child(even) td{background:#f9f9f9}
   <div class="print-hint">\ud83d\udca1 Pour sauvegarder en PDF : Ctrl+P \u2192 choisir "Enregistrer en PDF"</div>
 
   <div class="score-box" style="background:${scoreColor}15;border:1px solid ${scoreColor}">
-    <div class="score-emoji">${scoreEmoji}</div>
     <div>
       <div class="score-label" style="color:${scoreColor}">Sant\u00e9 financi\u00e8re : ${scoreText}</div>
       <div class="score-desc">
@@ -323,7 +311,6 @@ tr:nth-child(even) td{background:#f9f9f9}
   ${joke ? `
   <div class="joke-box">
     <div style="font-size:13px;font-weight:bold;color:#1a1a2e;margin-bottom:8px">\ud83d\ude02 La blague du mois</div>
-    <div class="joke-emoji">${joke.emoji}</div>
     <div class="joke-top">Ce mois, ta plus grosse d\u00e9pense : ${joke.topCategory} (${fmt(joke.topAmount)})</div>
     <div class="joke-text">"${joke.blague}"</div>
   </div>
