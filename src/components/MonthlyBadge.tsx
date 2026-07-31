@@ -47,7 +47,7 @@ const MonthlyBadge = ({ open, onClose, badge, month, savingsRate }: MonthlyBadge
   if (!badge) return null;
 
   const handleShare = async () => {
-    const text = `${badge.emoji} J'ai obtenu le badge "${badge.title}" sur Mon Jeton ce mois de ${month} !\n${badge.subtitle}\n\nTélécharge Mon Jeton pour gérer tes finances : https://monjeton.lovable.app`;
+    const text = `J'ai obtenu le badge "${badge.title}" sur Mon Jeton ce mois de ${month} !\n${badge.subtitle}\n\nTélécharge Mon Jeton pour gérer tes finances : https://monjeton.lovable.app`;
     if (navigator.share) {
       try {
         await navigator.share({ title: `Badge: ${badge.title}`, text });
@@ -92,7 +92,7 @@ const MonthlyBadge = ({ open, onClose, badge, month, savingsRate }: MonthlyBadge
                 transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
                 className="text-6xl"
               >
-                {badge.emoji}
+                <badge.Icon className="w-12 h-12" />
               </motion.div>
 
               <motion.div
