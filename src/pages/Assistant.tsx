@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check, BarChart3 } from "lucide-react";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -150,16 +150,19 @@ const getGreeting = () => {
 
 const initialMessages: Message[] = [{
   role: "assistant",
-  content: `${getGreeting()} ! 👋\n\nDis-moi juste ce que tu as dépensé ou reçu aujourd'hui. Même en nouchi, je comprends tout ! 😄\n\nExemples :\n🗣️ "Garba 500"\n🗣️ "Taxi 2000 Wave"\n🗣️ "Ahmed a cotisé 7000"\n🗣️ "Je veux économiser 100000"`,
+  content: `${getGreeting()} !\n\nDis-moi juste ce que tu as dépensé ou reçu aujourd'hui. Même en nouchi, je comprends tout.\n\nExemples :\n• Garba 500\n• Taxi 2000 Wave\n• Ahmed a cotisé 7000\n• Je veux économiser 100000`,
   type: "text",
 }];
 
+/**
+ * Exemples proposés avant le premier message.
+ * Des phrases entières plutôt que des étiquettes : une pastille "Repas"
+ * n'apprend rien, une phrase complète montre comment parler à l'assistant.
+ */
 const QUICK_ACTIONS = [
-  { emoji: "🍛", label: "Repas", text: "Repas " },
-  { emoji: "📱", label: "Recharge", text: "Recharge téléphone " },
-  { emoji: "💰", label: "Reçu argent", text: "J'ai reçu " },
-  { emoji: "🤝", label: "Tontine", text: "Qui n'a pas payé la tontine ?" },
-  { emoji: "💭", label: "Dilemme", text: "J'hésite entre deux options : " },
+  { icon: Plus, text: "J'ai payé 2 500 au garba" },
+  { icon: BarChart3, text: "Combien j'ai dépensé cette semaine ?" },
+  { icon: Users, text: "Qui me doit encore de l'argent ?" },
 ];
 
 const Assistant = () => {
@@ -433,7 +436,7 @@ const Assistant = () => {
       let base64: string;
       let finalType = file.type;
       if (file.type.startsWith("image/") && file.size > 2 * 1024 * 1024) {
-        toast({ title: "📸 Optimisation en cours...", description: "L'image est compressée pour l'envoi" });
+        toast({ title: "Optimisation en cours…", description: "L'image est compressée pour l'envoi" });
         base64 = await compressImage(file);
         finalType = "image/jpeg";
       } else {
@@ -530,7 +533,7 @@ const Assistant = () => {
     }
     setIsLoading(true);
     const audioUrl = URL.createObjectURL(audioBlob);
-    const userMsg: Message = { role: "user", content: "🎤 Message vocal...", type: "audio", audioUrl };
+    const userMsg: Message = { role: "user", content: "Message vocal…", type: "audio", audioUrl };
     setMessages(prev => [...prev, userMsg]);
     try {
       const formData = new FormData();
@@ -548,7 +551,7 @@ const Assistant = () => {
       if (sttData?.empty === true || !transcript?.trim() || isHallucination(transcript)) {
         setMessages(prev => prev.map((m, i) =>
           i === prev.length - 1
-            ? { ...m, content: "🎤 Je n'ai rien entendu. Parle directement dans le micro et réessaie." }
+            ? { ...m, content: "Je n'ai rien entendu. Parle directement dans le micro et réessaie." }
             : m
         ));
         setIsLoading(false);
@@ -586,11 +589,11 @@ const Assistant = () => {
         date: transaction.date || today,
         category_id: cat?.id || null,
       });
-      const confirmText = `✅ C'est noté ! ${transaction.amount.toLocaleString()} enregistré.`;
+      const confirmText = `C'est noté : ${transaction.amount.toLocaleString()} enregistré.`;
       const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
-      toast({ title: "✅ Transaction enregistrée !" });
+      toast({ title: "Transaction enregistrée" });
       speakText(confirmText);
     } catch {
       toast({ title: "Erreur d'enregistrement", variant: "destructive" });
@@ -657,12 +660,12 @@ const Assistant = () => {
       }
 
       const confirmText = debt.action === "create_debt"
-        ? `✅ Dette enregistrée pour ${debt.person_name} — ${(debt.amount || 0).toLocaleString()}`
-        : `✅ Mis à jour ! ${debt.amount_paid?.toLocaleString()} reçu de ${debt.person_name}`;
+        ? `Dette enregistrée pour ${debt.person_name} — ${(debt.amount || 0).toLocaleString()}`
+        : `Mis à jour : ${debt.amount_paid?.toLocaleString()} reçu de ${debt.person_name}`;
       const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
-      toast({ title: "✅ Dette enregistrée !" });
+      toast({ title: "Dette enregistrée" });
       speakText(confirmText);
     } catch {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la dette", variant: "destructive" });
@@ -727,10 +730,10 @@ const Assistant = () => {
       const remaining = (allMembers as any[] || []).filter((m: any) => !paidIds.has(m.id)).length;
 
       const confirmText = `C'est noté. ${payment.member_name} a payé ${payment.amount.toLocaleString()} francs. Il reste ${remaining} membre${remaining > 1 ? "s" : ""} à payer ce mois-ci.`;
-      const confirmMsg: Message = { role: "assistant", content: `✅ ${confirmText}`, type: "text" };
+      const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
-      toast({ title: "✅ Cotisation enregistrée !" });
+      toast({ title: "Cotisation enregistrée" });
       speakText(confirmText);
     } catch {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la cotisation", variant: "destructive" });
@@ -754,10 +757,10 @@ const Assistant = () => {
       }
 
       const confirmText = `Objectif "${goal.name}" créé ! ${goal.target_amount.toLocaleString()} francs à atteindre${goal.deadline ? ` avant le ${new Date(goal.deadline).toLocaleDateString("fr-FR")}` : ""}. Tu peux suivre ta progression dans Épargne.`;
-      const confirmMsg: Message = { role: "assistant", content: `🎯 ${confirmText}`, type: "text" };
+      const confirmMsg: Message = { role: "assistant", content: confirmText, type: "text" };
       setMessages(prev => [...prev, confirmMsg]);
       await saveMessage("assistant", confirmMsg.content);
-      toast({ title: "🎯 Objectif d'épargne créé !" });
+      toast({ title: "Objectif d'épargne créé" });
       speakText(confirmText);
     } catch {
       toast({ title: "Erreur", description: "Impossible de créer l'objectif", variant: "destructive" });
@@ -792,7 +795,7 @@ const Assistant = () => {
       if (error) { toast({ title: "Erreur Supabase", variant: "destructive" }); return; }
 
       const label = tx.merchant_name || tx.note || "Transaction";
-      const confirmText = `✅ Catégorie mise à jour !\n📦 ${label} — ${Number(tx.amount).toLocaleString()}\n📂 Déplacé vers : ${cat.name}`;
+      const confirmText = `Catégorie mise à jour\n${label} — ${Number(tx.amount).toLocaleString()}\nDéplacé vers : ${cat.name}`;
       setMessages(prev => [...prev, { role: "assistant", content: confirmText, type: "text" }]);
       await saveMessage("assistant", confirmText);
     }
@@ -824,7 +827,7 @@ const Assistant = () => {
       if (error) throw error;
       const confirmMsg: Message = {
         role: 'assistant',
-        content: `✅ Transaction modifiée !\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} → ${Number(action.new_value).toLocaleString('fr-FR')}`,
+        content: `Transaction modifiée\nMontant mis à jour : ${Number(action.old_value).toLocaleString('fr-FR')} → ${Number(action.new_value).toLocaleString('fr-FR')}`,
         type: 'text',
       };
       setMessages(prev => [...prev, confirmMsg]);
@@ -835,7 +838,7 @@ const Assistant = () => {
       utterance.lang = 'fr-FR';
       speechSynthesis.speak(utterance);
       setPendingAction(null);
-      toast({ title: 'Transaction modifiée ✅' });
+      toast({ title: 'Transaction modifiée' });
     } catch (err: any) {
       toast({ title: 'Erreur de modification', description: err.message, variant: 'destructive' });
     }
@@ -846,7 +849,7 @@ const Assistant = () => {
     if ((!text && attachments.length === 0) || isLoading) return;
     const userMsg: Message = {
       role: "user",
-      content: text || (attachments.length > 0 ? "📎 Fichier envoyé" : ""),
+      content: text || (attachments.length > 0 ? "Fichier envoyé" : ""),
       type: "text",
       attachments: attachments.length > 0 ? [...attachments] : undefined,
     };
@@ -1016,7 +1019,7 @@ const Assistant = () => {
     const next = !continuousMode;
     setContinuousMode(next);
     if (next) {
-      toast({ title: "🎙️ Mode conversation activé", description: "Parle, l'assistant répondra et écoutera en boucle." });
+      toast({ title: "Mode conversation activé", description: "Parle, l'assistant répondra et écoutera en boucle." });
       startRecording();
     } else {
       speechSynthesis.cancel();
@@ -1035,12 +1038,12 @@ const Assistant = () => {
       cards.push(
         <div key="tx" className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
           <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-            ✅ Transaction détectée
+            Transaction détectée
           </p>
           <div className="text-sm text-foreground space-y-0.5">
-            <p>💰 <strong>{transaction.amount.toLocaleString()}</strong></p>
-            <p>📁 {transaction.category}</p>
-            {transaction.note && <p>📝 {transaction.note}</p>}
+            <p><strong>{transaction.amount.toLocaleString()}</strong></p>
+            <p>{transaction.category}</p>
+            {transaction.note && <p>{transaction.note}</p>}
           </div>
           <div className="flex gap-2">
             <button
@@ -1056,7 +1059,7 @@ const Assistant = () => {
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
-              {confirmedCards.has(messageIndex) ? "✅ Enregistré" : "✅ Oui, enregistrer"}
+              {confirmedCards.has(messageIndex) ? "Enregistré" : "Oui, enregistrer"}
             </button>
             <button
               onClick={() => {
@@ -1066,7 +1069,7 @@ const Assistant = () => {
               }}
               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
             >
-              ❌ Non
+              Non
             </button>
           </div>
         </div>
@@ -1079,15 +1082,15 @@ const Assistant = () => {
       cards.push(
         <div key="debt" className="mt-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 space-y-2">
           <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-            {debt.action === "update_debt" ? "📊 Mise à jour dette" :
-             debt.debt_type === "owed_to_me" ? "💚 Créance détectée" : "📝 Dette détectée"}
+            {debt.action === "update_debt" ? "Mise à jour dette" :
+             debt.debt_type === "owed_to_me" ? "Créance détectée" : "Dette détectée"}
           </p>
           <div className="text-sm text-foreground space-y-1">
-            <p>👤 <strong>{debt.person_name}</strong></p>
-            {debt.amount != null && <p>💰 Montant : <strong>{debt.amount.toLocaleString()}</strong></p>}
-            {debt.amount_paid != null && <p>✅ Payé : <strong>{debt.amount_paid.toLocaleString()}</strong></p>}
-            {debt.remaining != null && <p>⏳ Reste : <strong>{debt.remaining.toLocaleString()}</strong></p>}
-            {debt.due_date && <p>📅 Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>}
+            <p><strong>{debt.person_name}</strong></p>
+            {debt.amount != null && <p>Montant : <strong>{debt.amount.toLocaleString()}</strong></p>}
+            {debt.amount_paid != null && <p>Payé : <strong>{debt.amount_paid.toLocaleString()}</strong></p>}
+            {debt.remaining != null && <p>Reste : <strong>{debt.remaining.toLocaleString()}</strong></p>}
+            {debt.due_date && <p>Échéance : <strong>{new Date(debt.due_date).toLocaleDateString("fr-FR")}</strong></p>}
           </div>
           <div className="flex gap-2">
             <button
@@ -1103,7 +1106,7 @@ const Assistant = () => {
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
-              {confirmedCards.has(messageIndex + 1000) ? "✅ Confirmé" : "✅ Confirmer"}
+              {confirmedCards.has(messageIndex + 1000) ? "Confirmé" : "Confirmer"}
             </button>
             <button
               onClick={() => {
@@ -1113,7 +1116,7 @@ const Assistant = () => {
               }}
               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
             >
-              ❌ Annuler
+              Annuler
             </button>
           </div>
         </div>
@@ -1128,13 +1131,13 @@ const Assistant = () => {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-accent-foreground" />
             <p className="text-xs font-semibold text-accent-foreground uppercase tracking-wide">
-              💰 Paiement Tontine détecté
+              Paiement Tontine détecté
             </p>
           </div>
           <div className="text-sm text-foreground space-y-1">
-            <p>👤 Membre : <strong>{tontinePayment.member_name}</strong></p>
-            <p>💰 Montant : <strong>{tontinePayment.amount.toLocaleString()}</strong></p>
-            <p>🤝 Tontine : <strong>{tontinePayment.tontine_name}</strong></p>
+            <p>Membre : <strong>{tontinePayment.member_name}</strong></p>
+            <p>Montant : <strong>{tontinePayment.amount.toLocaleString()}</strong></p>
+            <p>Tontine : <strong>{tontinePayment.tontine_name}</strong></p>
           </div>
           <div className="flex gap-2">
             <button
@@ -1150,7 +1153,7 @@ const Assistant = () => {
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
-              {confirmedCards.has(messageIndex + 2000) ? "✅ Enregistré" : "✅ Confirmer"}
+              {confirmedCards.has(messageIndex + 2000) ? "Enregistré" : "Confirmer"}
             </button>
             <button
               onClick={() => {
@@ -1160,7 +1163,7 @@ const Assistant = () => {
               }}
               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
             >
-              ❌ Annuler
+              Annuler
             </button>
           </div>
         </div>
@@ -1175,14 +1178,14 @@ const Assistant = () => {
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
             <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-              🎯 Objectif d'épargne détecté
+              Objectif d'épargne détecté
             </p>
           </div>
           <div className="text-sm text-foreground space-y-1">
-            <p>📌 Nom : <strong>{savingsGoal.name}</strong></p>
-            <p>💰 Objectif : <strong>{savingsGoal.target_amount.toLocaleString()}</strong></p>
+            <p>Nom : <strong>{savingsGoal.name}</strong></p>
+            <p>Objectif : <strong>{savingsGoal.target_amount.toLocaleString()}</strong></p>
             {savingsGoal.deadline && (
-              <p>📅 Avant le : <strong>{new Date(savingsGoal.deadline).toLocaleDateString("fr-FR")}</strong></p>
+              <p>Avant le : <strong>{new Date(savingsGoal.deadline).toLocaleDateString("fr-FR")}</strong></p>
             )}
           </div>
           <div className="flex gap-2">
@@ -1199,7 +1202,7 @@ const Assistant = () => {
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
-              {confirmedCards.has(messageIndex + 3000) ? "🎯 Créé" : "✅ Créer l'objectif"}
+              {confirmedCards.has(messageIndex + 3000) ? "Créé" : "Créer l'objectif"}
             </button>
             <button
               onClick={() => {
@@ -1209,7 +1212,7 @@ const Assistant = () => {
               }}
               className="flex-1 py-2 rounded-xl bg-secondary text-muted-foreground text-sm hover:bg-secondary/80 transition-colors"
             >
-              ❌ Annuler
+              Annuler
             </button>
           </div>
         </div>
@@ -1417,7 +1420,7 @@ const Assistant = () => {
                       {m.role === "assistant" && renderActionCards(m.content, i)}
                       {m.role === "assistant" && pendingAction?.action?.type === 'update_transaction' && i === messages.length - 1 && (
                         <div className="rounded-2xl p-4 mt-2 border border-primary/40 glass-card ml-10">
-                          <p className="text-sm font-bold text-foreground mb-3">✏️ Modification détectée</p>
+                          <p className="text-sm font-bold text-foreground mb-3">Modification détectée</p>
                           <div className="space-y-2 mb-4">
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Transaction</span>
@@ -1433,8 +1436,8 @@ const Assistant = () => {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => executeUpdate(pendingAction.action)} className="flex-1 gradient-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium">✅ Confirmer</button>
-                            <button onClick={() => setPendingAction(null)} className="flex-1 glass text-muted-foreground rounded-xl py-2.5 text-sm">❌ Annuler</button>
+                            <button onClick={() => executeUpdate(pendingAction.action)} className="flex-1 gradient-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium">Confirmer</button>
+                            <button onClick={() => setPendingAction(null)} className="flex-1 glass text-muted-foreground rounded-xl py-2.5 text-sm">Annuler</button>
                           </div>
                         </div>
                       )}
@@ -1493,10 +1496,7 @@ const Assistant = () => {
         {/* Quick action buttons */}
         {messages.length <= 3 && !isLoading && (
           <div className="pb-3">
-            <p className="text-xs text-muted-foreground mb-2 text-center">
-              Appuie sur un bouton ou tape directement 👇
-            </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="flex flex-col gap-2">
               {QUICK_ACTIONS.map((a, i) => (
                 <button
                   key={i}
@@ -1504,11 +1504,11 @@ const Assistant = () => {
                     setInput(a.text);
                     inputRef.current?.focus();
                   }}
-                  className="flex flex-col items-center gap-1 p-2 rounded-xl bg-secondary hover:bg-primary/10 hover:border-primary/30 border border-border transition-all"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-full bg-card hover:bg-secondary/70 border border-border transition-colors text-left"
                 >
-                  <span className="text-xl">{a.emoji}</span>
-                  <span className="text-[10px] text-muted-foreground font-medium leading-tight text-center">
-                    {a.label}
+                  <a.icon className="w-4 h-4 text-primary flex-none" />
+                  <span className="text-[13.5px] font-semibold text-foreground leading-snug">
+                    {a.text}
                   </span>
                 </button>
               ))}
@@ -1543,7 +1543,7 @@ const Assistant = () => {
               }}
               placeholder={
                 isRecording
-                  ? `🔴 Écoute... ${(recordingSeconds % 60).toString().padStart(2, "0")}s`
+                  ? `Écoute… ${(recordingSeconds % 60).toString().padStart(2, "0")}s`
                   : "Tape ou parle..."
               }
               className="bg-secondary border-border flex-1"
@@ -1576,12 +1576,12 @@ const Assistant = () => {
           </div>
           {!isRecording && !input && (
             <p className="text-center text-xs text-muted-foreground">
-              🎤 Appuie sur le micro et parle directement
+              Appuie sur le micro et parle directement
             </p>
           )}
           {isRecording && (
             <p className="text-center text-xs text-destructive font-medium animate-pulse">
-              🔴 Je t'écoute... Appuie à nouveau pour envoyer
+              Je t'écoute… Appuie à nouveau pour envoyer
             </p>
           )}
         </div>
