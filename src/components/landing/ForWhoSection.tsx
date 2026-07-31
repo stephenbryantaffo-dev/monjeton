@@ -1,3 +1,5 @@
+import { Users, Target, Briefcase, ShoppingCart } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -10,7 +12,7 @@ type AccentToken = 'primary' | 'accent' | 'neon-yellow';
 
 const profiles: {
   id: number;
-  emoji: string;
+  Icon: LucideIcon;
   label: string;
   tag: string;
   title: string;
@@ -21,7 +23,7 @@ const profiles: {
 }[] = [
   {
     id: 0,
-    emoji: '👩‍👧',
+    Icon: Users,
     label: 'Nos mamans',
     tag: 'BUDGET FAMILLE',
     title: "Sachez toujours\noù va l'argent du foyer.",
@@ -40,7 +42,7 @@ const profiles: {
   },
   {
     id: 1,
-    emoji: '🎯',
+    Icon: Target,
     label: 'Les jeunes',
     tag: 'DISCIPLINE FINANCIÈRE',
     title: 'Construisez votre\navenir financier dès aujourd’hui.',
@@ -59,7 +61,7 @@ const profiles: {
   },
   {
     id: 2,
-    emoji: '💼',
+    Icon: Briefcase,
     label: "Chefs d'entreprise",
     tag: 'GESTION PRO',
     title: 'Gardez le contrôle\nde chaque franc CFA.',
@@ -78,7 +80,7 @@ const profiles: {
   },
   {
     id: 3,
-    emoji: '🛒',
+    Icon: ShoppingCart,
     label: 'Les commerçants',
     tag: 'COMMERCE QUOTIDIEN',
     title: 'Vos ventes et vos stocks,\nsous contrôle.',
@@ -220,7 +222,7 @@ const ForWhoSection = () => {
                   : 'bg-secondary/60 text-muted-foreground border-border hover:text-foreground hover:bg-secondary',
               )}
             >
-              <span>{p.emoji}</span>
+              <span><p.Icon className="w-6 h-6" /></span>
               <span>{p.label}</span>
             </button>
           );
@@ -280,7 +282,7 @@ const ForWhoSection = () => {
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{p.emoji}</span>
+                    <span className="text-2xl"><p.Icon className="w-6 h-6" /></span>
                     <span className="text-sm sm:text-base font-bold text-foreground">
                       {p.label}
                     </span>
@@ -314,7 +316,7 @@ const ForWhoSection = () => {
                   'border-current/40',
                 )}
               >
-                <span>{profile.emoji}</span>
+                <span><profile.Icon className="w-6 h-6" /></span>
                 {profile.tag}
               </Badge>
 
