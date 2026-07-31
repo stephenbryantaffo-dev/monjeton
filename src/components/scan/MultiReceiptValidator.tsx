@@ -74,13 +74,13 @@ const FALLBACK_CATEGORIES = [
 ];
 
 const DOC_TYPE_LABELS: Record<string, string> = {
-  receipts_physical: '🧾 Reçus physiques',
-  wave_screenshot: '📱 Screenshot Wave',
-  orange_money_screenshot: '🟠 Orange Money',
-  bank_statement: '🏦 Relevé bancaire',
-  invoice: '📄 Facture',
-  mixed: '🔀 Documents mixtes',
-  unknown: '❓ Type inconnu',
+  receipts_physical: 'Reçus physiques',
+  wave_screenshot: 'Capture Wave',
+  orange_money_screenshot: 'Capture Orange Money',
+  bank_statement: 'Relevé bancaire',
+  invoice: 'Facture',
+  mixed: 'Documents mixtes',
+  unknown: 'Type inconnu',
 };
 
 export const MultiReceiptValidator = ({
@@ -230,7 +230,7 @@ export const MultiReceiptValidator = ({
 
     if (successCount > 0) {
       toast({
-        title: `${successCount} transaction(s) enregistrée(s) ✅`,
+        title: `${successCount} transaction(s) enregistrée(s)`,
         description: failCount > 0 ? `${failCount} échec(s)` : 'Toutes sauvegardées avec succès',
       });
       onValidated(successCount);
@@ -274,7 +274,7 @@ export const MultiReceiptValidator = ({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-sm font-bold text-foreground truncate">
-              {DOC_TYPE_LABELS[scanResult.document_type] || '📄 Document'}
+              {DOC_TYPE_LABELS[scanResult.document_type] || 'Document'}
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               {scanResult.total_detected} transaction(s) détectée(s)
@@ -342,13 +342,13 @@ export const MultiReceiptValidator = ({
               onClick={selectAll}
               className="flex-1 glass-card rounded-xl py-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              ✓ Tout sélectionner
+              Tout sélectionner
             </button>
             <button
               onClick={deselectAll}
               className="flex-1 glass-card rounded-xl py-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              ✗ Tout désélectionner
+              Tout désélectionner
             </button>
           </div>
 
