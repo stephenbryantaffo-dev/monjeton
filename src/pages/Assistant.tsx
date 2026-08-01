@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check, BarChart3 } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check, BarChart3, Sparkles, History } from "lucide-react";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -148,11 +148,13 @@ const getGreeting = () => {
   return "Bonsoir";
 };
 
-const initialMessages: Message[] = [{
-  role: "assistant",
-  content: `${getGreeting()} !\n\nDis-moi juste ce que tu as dépensé ou reçu aujourd'hui. Même en nouchi, je comprends tout.\n\nExemples :\n• Garba 500\n• Taxi 2000 Wave\n• Ahmed a cotisé 7000\n• Je veux économiser 100000`,
-  type: "text",
-}];
+/**
+ * Plus de bulle d'accueil : quand la conversation est vide, on affiche
+ * un écran centré (avatar + salutation + exemples). Une bulle qui dit
+ * bonjour occupe la place d'un vrai message et donne l'impression que
+ * l'assistant a déjà parlé.
+ */
+const initialMessages: Message[] = [];
 
 /**
  * Exemples proposés avant le premier message.
@@ -168,6 +170,9 @@ const QUICK_ACTIONS = [
 const Assistant = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  /** Prénom pour la salutation. Repli silencieux si le profil est vide. */
+  const firstName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] || "";
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -245,7 +250,6 @@ const Assistant = () => {
 
     if (data && data.length > 0) {
       const restored: Message[] = [
-        initialMessages[0],
         ...data.map((m) => ({
           role: m.message_role as "user" | "assistant",
           content: m.content,
@@ -1230,11 +1234,15 @@ const Assistant = () => {
           <div className="flex items-center gap-2 min-w-0">
             <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
               <SheetTrigger asChild>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors">
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Historique</span>
+                <button
+                  aria-label="Historique des conversations"
+                  className="relative w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <History className="w-[18px] h-[18px]" />
                   {conversations.length > 0 && (
-                    <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 rounded-full">{conversations.length}</span>
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold flex items-center justify-center border-2 border-background">
+                      {conversations.length}
+                    </span>
                   )}
                 </button>
               </SheetTrigger>
@@ -1328,6 +1336,27 @@ const Assistant = () => {
                     );
                   })}
                 </div>
+
+                {/* Actions rares : déplacées ici pour dégager le haut de l'écran */}
+                <div className="mt-auto pt-4 border-t border-border space-y-1.5">
+                  <ConfirmDeleteDialog
+                    onConfirm={clearHistory}
+                    title="Tout effacer"
+                    description="Toutes les conversations seront supprimées définitivement. Continuer ?"
+                  >
+                    <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-destructive hover:bg-secondary/60 transition-colors">
+                      <Trash2 className="w-4 h-4 flex-none" />
+                      Effacer toutes les conversations
+                    </button>
+                  </ConfirmDeleteDialog>
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 flex-none" />
+                    Quitter l'assistant
+                  </button>
+                </div>
               </SheetContent>
             </Sheet>
             <button
@@ -1341,31 +1370,21 @@ const Assistant = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleContinuousMode}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              aria-label={continuousMode ? "Arrêter le mode conversation" : "Mode conversation"}
+              className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
                 continuousMode
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
-              <Mic className="w-3.5 h-3.5" />
-              <span>{continuousMode ? "Conversation ON" : "Conversation"}</span>
+              <Mic className="w-[18px] h-[18px]" />
             </button>
-            <ConfirmDeleteDialog
-              onConfirm={clearHistory}
-              title="Tout effacer"
-              description="Toutes les conversations seront supprimées définitivement. Continuer ?"
-            >
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-destructive hover:bg-secondary/80 transition-colors">
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tout effacer</span>
-              </button>
-            </ConfirmDeleteDialog>
             <button
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+              onClick={startNewConversation}
+              aria-label="Nouvelle conversation"
+              className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Quitter</span>
+              <Plus className="w-[18px] h-[18px]" />
             </button>
           </div>
         </div>
@@ -1494,6 +1513,26 @@ const Assistant = () => {
         )}
 
         {/* Quick action buttons */}
+        {messages.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center text-center px-2 pb-6 pt-4">
+            <div
+              className="w-[74px] h-[74px] rounded-full flex items-center justify-center mb-4"
+              style={{
+                background: "linear-gradient(150deg, hsl(var(--primary)), hsl(var(--primary) / 0.78))",
+                boxShadow: "0 0 44px hsl(var(--primary) / 0.32)",
+              }}
+            >
+              <Sparkles className="w-8 h-8" style={{ color: "hsl(var(--primary-foreground))" }} />
+            </div>
+            <h2 className="text-[26px] font-extrabold tracking-[-0.03em] text-foreground">
+              {getGreeting()} {firstName}
+            </h2>
+            <p className="mt-2 max-w-[290px] text-[14px] leading-relaxed text-muted-foreground">
+              Dis-moi ce que tu as dépensé, ou pose-moi une question sur ton argent.
+            </p>
+          </div>
+        )}
+
         {messages.length <= 3 && !isLoading && (
           <div className="pb-3">
             <div className="flex flex-col gap-2">
