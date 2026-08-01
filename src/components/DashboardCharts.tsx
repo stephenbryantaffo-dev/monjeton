@@ -40,7 +40,7 @@ const DashboardCharts = ({
                 labelStyle={{ color: "hsl(0,0%,70%)" }}
                 formatter={(value: number) => [`${value.toLocaleString("fr-FR")}`, "Dépenses"]}
               />
-              <Line type="monotone" dataKey="amount" stroke="hsl(84,81%,44%)" strokeWidth={2.5} dot={{ fill: "hsl(84,81%,44%)", r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="amount" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ fill: "hsl(var(--primary))", r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
         </motion.div>
