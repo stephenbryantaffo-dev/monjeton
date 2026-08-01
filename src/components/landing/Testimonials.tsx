@@ -45,7 +45,7 @@ const Testimonials = () => (
           >
             <div className="flex gap-1 mb-4">
               {Array.from({ length: 5 }).map((_, j) => (
-                <Star key={j} className="w-4 h-4 fill-[#8DD621] text-[#8DD621]" />
+                <Star key={j} className="w-4 h-4 fill-[#7CFF3A] text-[#7CFF3A]" />
               ))}
             </div>
             <p className="text-sm text-[#D5D7D6] leading-relaxed mb-4">"{t.text}"</p>
