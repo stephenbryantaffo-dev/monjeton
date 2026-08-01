@@ -81,6 +81,17 @@ const NewTransaction = () => {
     });
   }, [user]);
 
+  // Type initial (Revenus/Dépenses) passé depuis l'accueil.
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.initialType === "income" || state?.initialType === "expense") {
+      setType(state.initialType);
+    }
+    // On ne relit ce réglage qu'au montage : ensuite l'utilisateur
+    // bascule librement avec les onglets Dépense / Revenu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Auto-start voice if navigated with autoVoice flag
   useEffect(() => {
     const state = location.state as any;
