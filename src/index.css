@@ -285,3 +285,8 @@ input:-webkit-autofill:active {
   -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 0%, transparent 80%);
   mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 0%, transparent 80%);
 }
+
+@keyframes loaderSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(330%); }
+}
