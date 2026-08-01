@@ -247,6 +247,62 @@ const Reports = () => {
         <div className="space-y-4"><CardSkeleton /><ChartSkeleton /><ChartSkeleton /></div>
       ) : activeTab === 0 ? (
         <>
+          {/* Phrase clé — le bilan du mois avant tout le détail */}
+          {(() => {
+            const balance = totalIncome - total;
+            const rate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+            const monthLabel = new Date(reportYear, reportMonth).toLocaleDateString("fr-FR", { month: "long" });
+            const positive = balance >= 0;
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative overflow-hidden rounded-2xl p-4 mb-4"
+                style={{
+                  background: positive
+                    ? "linear-gradient(150deg, hsl(var(--primary) / 0.14), hsl(var(--card)) 72%)"
+                    : "linear-gradient(150deg, hsl(var(--destructive) / 0.16), hsl(var(--card)) 72%)",
+                  border: positive
+                    ? "1px solid hsl(var(--primary) / 0.22)"
+                    : "1px solid hsl(var(--destructive) / 0.28)",
+                }}
+              >
+                <span className={`inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.1em] ${positive ? "text-primary" : "text-destructive"}`}>
+                  {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  Bilan de {monthLabel}
+                </span>
+                {total === 0 && totalIncome === 0 ? (
+                  <p className="mt-2 text-[15px] font-semibold text-foreground">
+                    Aucun mouvement enregistré ce mois-ci.
+                  </p>
+                ) : positive ? (
+                  <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">
+                    Tu as mis{" "}
+                    <span className="font-extrabold text-primary tabular-nums">{formatAmount(balance)}</span>{" "}
+                    de côté
+                    {totalIncome > 0 && <> , soit {rate}% de tes revenus</>}.
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">
+                    Tu as dépensé{" "}
+                    <span className="font-extrabold text-destructive tabular-nums">{formatAmount(Math.abs(balance))}</span>{" "}
+                    de plus que tes revenus ce mois-ci.
+                  </p>
+                )}
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-card/60 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Revenus</p>
+                    <p className="text-[15px] font-extrabold text-primary tabular-nums truncate">{formatAmount(totalIncome)}</p>
+                  </div>
+                  <div className="rounded-xl bg-card/60 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Dépenses</p>
+                    <p className="text-[15px] font-extrabold text-foreground tabular-nums truncate">{formatAmount(total)}</p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })()}
+
           <div className="mb-4">
             <Button variant="hero" size="lg" className="w-full" onClick={handleExportPdf}>
               <Download className="w-4 h-4" /> Exporter le rapport PDF
