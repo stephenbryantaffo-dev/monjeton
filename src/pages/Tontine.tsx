@@ -796,7 +796,6 @@ const TontinePage = () => {
               // Infos adaptées selon le type + montant clé
               let subline = "";
               let progressPct = 0;
-              let progressLine: React.ReactNode = null;
               let keyAmount: React.ReactNode = null;
 
               if (t.caisse_type === "project") {
@@ -810,24 +809,12 @@ const TontinePage = () => {
                     <span className="text-xs text-muted-foreground">/ {fmt(target)}</span>
                   </div>
                 );
-                progressLine = (
-                  <div className="flex justify-between items-baseline text-xs text-muted-foreground">
-                    {keyAmount}
-                    <span className="font-semibold text-primary">{progressPct}%</span>
-                  </div>
-                );
               } else if (t.caisse_type === "association") {
                 const collected = Number(cycle?.total_collected || 0);
                 subline = `${mc} membre${mc > 1 ? "s" : ""}`;
                 progressPct = 100;
                 keyAmount = (
                   <span className="text-foreground font-bold text-base">{fmt(collected)}</span>
-                );
-                progressLine = (
-                  <div className="flex justify-between items-baseline text-xs text-muted-foreground">
-                    <span>En caisse</span>
-                    {keyAmount}
-                  </div>
                 );
               } else {
                 const paidInCycle = cycle ? Math.round(cycle.total_collected / (t.contribution_amount || 1)) : 0;
@@ -837,12 +824,6 @@ const TontinePage = () => {
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-foreground font-bold text-base">{paidInCycle}</span>
                     <span className="text-xs text-muted-foreground">/ {mc} ont cotisé</span>
-                  </div>
-                );
-                progressLine = (
-                  <div className="flex justify-between items-baseline text-xs text-muted-foreground">
-                    {keyAmount}
-                    <span className="font-semibold text-primary">{progressPct}%</span>
                   </div>
                 );
               }
@@ -886,8 +867,14 @@ const TontinePage = () => {
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    {progressLine}
+                  {/* Montant clé mis en avant, puis barre + pourcentage */}
+                  <div className="mt-1">
+                    <div className="flex items-end justify-between mb-2">
+                      <div className="min-w-0">{keyAmount}</div>
+                      <span className="text-sm font-extrabold text-primary tabular-nums flex-shrink-0">
+                        {progressPct}%
+                      </span>
+                    </div>
                     <div className="w-full bg-secondary/60 rounded-full h-2 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
