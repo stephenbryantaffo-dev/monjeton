@@ -32,8 +32,8 @@ const WALLET_COLORS: Record<string, string> = {
   "Orange Money": "hsl(25, 95%, 53%)",
   "MTN Mobile Money": "hsl(45, 96%, 58%)",
   "Wave": "hsl(200, 70%, 50%)",
-  "Moov Money": "hsl(270, 70%, 60%)",
-  "Cash": "hsl(84, 81%, 44%)",
+  "Moov Money": "hsl(var(--muted-foreground))",
+  "Cash": "hsl(var(--primary))",
 };
 
 const Wallets = () => {
