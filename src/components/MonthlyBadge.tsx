@@ -20,7 +20,7 @@ const Confetti = () => (
         key={i}
         className="absolute w-2 h-2 rounded-full"
         style={{
-          backgroundColor: [`hsl(45,100%,55%)`, `hsl(84,81%,44%)`, `hsl(200,70%,60%)`, `hsl(320,70%,55%)`, `hsl(25,95%,53%)`][i % 5],
+          backgroundColor: [`hsl(45,100%,55%)`, `hsl(var(--primary))`, `hsl(200,70%,60%)`, `hsl(320,70%,55%)`, `hsl(25,95%,53%)`][i % 5],
           left: `${10 + Math.random() * 80}%`,
           top: "-10px",
         }}
