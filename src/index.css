@@ -13,22 +13,22 @@
        sans réserver cet espace. */
     --bottom-nav-space: calc(100px + env(safe-area-inset-bottom, 0px));
 
-    --background: 218 17% 9%;
+    --background: 218 17% 12%;
     --foreground: 110 19% 94%;
 
-    --card: 218 16% 15%;
+    --card: 218 16% 18%;
     --card-foreground: 110 19% 94%;
 
-    --popover: 218 16% 15%;
+    --popover: 218 16% 18%;
     --popover-foreground: 110 19% 94%;
 
     --primary: 100 100% 61%;
     --primary-foreground: 218 17% 9%;
 
-    --secondary: 217 15% 19%;
+    --secondary: 217 15% 23%;
     --secondary-foreground: 110 12% 88%;
 
-    --muted: 218 16% 20%;
+    --muted: 218 15% 24%;
     --muted-foreground: 214 10% 59%;
 
     --accent: 36 100% 71%;
@@ -37,8 +37,8 @@
     --destructive: 358 75% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 219 14% 22%;
-    --input: 217 16% 16%;
+    --border: 219 14% 27%;
+    --input: 219 14% 23%;
     --ring: 100 100% 61%;
 
     --radius: 1rem;
@@ -107,7 +107,7 @@
   }
 
   .gradient-bg {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(218 17% 11%) 55%, hsl(var(--background)) 100%);
+    background: hsl(var(--background));
   }
 
   .gradient-primary {
@@ -137,11 +137,11 @@
   }
 
   .neon-glow {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.28), 0 0 60px hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 16px hsl(var(--primary) / 0.22);
   }
 
   .neon-glow-purple {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.22), 0 0 60px hsl(var(--primary) / 0.08);
+    box-shadow: 0 0 16px hsl(var(--primary) / 0.18);
   }
 
   /* iOS 18 / iPhone 16 SVG render fix — applied globally to all icon circles */
