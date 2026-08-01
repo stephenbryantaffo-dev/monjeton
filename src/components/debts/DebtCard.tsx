@@ -175,41 +175,45 @@ export const DebtCard = ({ debt, index, onEdit, onPay }: Props) => {
         )
       )}
 
-      <div className="flex gap-2 pt-1">
+      {/* Barre d'actions : "Payer" domine, le reste en pastilles rondes.
+          Un trait sépare les actions des informations au-dessus. */}
+      <div className="flex items-center gap-2.5 pt-3 mt-1 border-t border-border/60">
         {!isPaid && (
           <button
             onClick={() => onPay()}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity"
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-full bg-primary text-primary-foreground text-[14px] font-extrabold active:scale-[0.97] hover:opacity-90 transition-all"
           >
-            <Banknote className="w-3.5 h-3.5" />
+            <Banknote className="w-[17px] h-[17px]" strokeWidth={2.2} />
             Payer
           </button>
         )}
         {!isPaid && (
           <button
             onClick={onEdit}
-            className="px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors"
+            className="w-11 h-11 flex-none rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all"
             aria-label="Modifier"
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 className="w-[17px] h-[17px]" />
           </button>
         )}
         {!isPaid && (
           <button
             onClick={sendWhatsApp}
-            className="px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors text-[#25D366]"
+            className="w-11 h-11 flex-none rounded-full bg-secondary border border-border flex items-center justify-center text-primary active:scale-95 transition-all"
             aria-label="Rappel WhatsApp"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-[17px] h-[17px]" />
           </button>
         )}
         <button
           onClick={() => setHistoryOpen(true)}
-          className={`${isPaid ? "flex-1" : "px-3"} py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors flex items-center justify-center gap-1.5 text-muted-foreground`}
+          className={`${
+            isPaid ? "flex-1 gap-2 px-4" : "w-11 flex-none"
+          } h-11 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all`}
           aria-label="Historique"
         >
-          <History className="w-3.5 h-3.5" />
-          {isPaid && <span className="text-xs font-bold">Historique</span>}
+          <History className="w-[17px] h-[17px]" />
+          {isPaid && <span className="text-[13.5px] font-bold">Historique</span>}
         </button>
       </div>
 
