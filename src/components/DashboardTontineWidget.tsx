@@ -176,7 +176,7 @@ const DashboardTontineWidget = () => {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-foreground">🤝 Mes Tontines</h2>
+        <h2 className="text-sm font-semibold text-foreground">Mes tontines</h2>
         <button onClick={() => navigate("/tontine")} className="text-xs text-primary">
           Voir tout
         </button>
@@ -199,7 +199,7 @@ const DashboardTontineWidget = () => {
               className="glass-card rounded-2xl p-4 min-w-[220px] max-w-[260px] flex-shrink-0 text-left hover:bg-secondary/50 transition-colors"
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">🤝</span>
+                <Users className="w-4 h-4 text-primary" />
                 <p className="text-sm font-semibold text-foreground truncate flex-1">{t.name}</p>
               </div>
               <div className="flex items-center gap-2 mb-3">
@@ -227,7 +227,7 @@ const DashboardTontineWidget = () => {
               {waiting > 0 && (
                 <div className="flex items-center gap-1 text-[10px] text-amber-400">
                   <Clock className="w-3 h-3" />
-                  {waiting} membre{waiting > 1 ? "s" : ""} en attente ⏳
+                  {waiting} membre{waiting > 1 ? "s" : ""} en attente
                 </div>
               )}
             </motion.button>
