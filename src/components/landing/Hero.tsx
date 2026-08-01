@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Play,
@@ -135,10 +134,8 @@ const PhoneScreen = ({ lt }: { lt: LandingStrings }) => {
 
 /* ---------- Phone frame ---------- */
 const Phone = ({ lt }: { lt: LandingStrings }) => (
-  <motion.div
-    animate={{ y: [0, -12, 0] }}
-    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-    className="relative mx-auto"
+  <div
+    className="relative mx-auto hero-float-slow"
     style={{
       width: "min(280px, 72vw)",
       aspectRatio: "9 / 19",
@@ -167,7 +164,7 @@ const Phone = ({ lt }: { lt: LandingStrings }) => (
       />
       <PhoneScreen lt={lt} />
     </div>
-  </motion.div>
+  </div>
 );
 
 /* ---------- Floating card ---------- */
@@ -193,16 +190,11 @@ const FloatCard = ({
   className,
   hideOnMobile,
 }: FloatCardProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: [0, -8, 0] }}
-    transition={{
-      opacity: { duration: 0.6, delay },
-      y: { duration: 5 + delay, repeat: Infinity, ease: "easeInOut", delay },
-    }}
-    className={`absolute ${className} ${hideOnMobile ? "hidden md:block" : ""}`}
+  <div
+    className={`absolute hero-float ${className} ${hideOnMobile ? "hidden md:block" : ""}`}
     style={{
-      transform: `rotate(${rotate}deg)`,
+      ["--rot" as string]: `${rotate}deg`,
+      animationDelay: `${delay}s`,
       background: "rgba(13,21,18,0.92)",
       border: "1px solid rgba(124,255,58,0.16)",
       backdropFilter: "blur(12px)",
@@ -228,7 +220,7 @@ const FloatCard = ({
         />
       </div>
     )}
-  </motion.div>
+  </div>
 );
 
 /* ---------- Hero ---------- */
