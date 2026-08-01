@@ -151,7 +151,7 @@ export const generateMonthlyPdf = (data: PdfData) => {
   let scoreText = "\u00c0 am\u00e9liorer";
   
   if (savingsRate >= 20) {
-    scoreColor = "#27ae60"; scoreText = "Excellent !";
+    scoreColor = "#5FD41F"; scoreText = "Excellent !";
   } else if (savingsRate >= 10) {
     scoreColor = "#f39c12"; scoreText = "Correct";
   } else if (savingsRate >= 0) {
@@ -196,7 +196,7 @@ export const generateMonthlyPdf = (data: PdfData) => {
     ? joke.tips
         .map(
           (tip, i) =>
-            `<p style="margin:6px 0;padding:8px 12px;background:#f9f9f9;border-radius:6px;border-left:3px solid #7ec845;font-size:12px;"><strong>${i + 1}.</strong> ${tip}</p>`
+            `<p style="margin:6px 0;padding:8px 12px;background:#f9f9f9;border-radius:6px;border-left:3px solid #7CFF3A;font-size:12px;"><strong>${i + 1}.</strong> ${tip}</p>`
         )
         .join("")
     : "";
@@ -209,8 +209,8 @@ export const generateMonthlyPdf = (data: PdfData) => {
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
-.hdr{background:#1a1a2e;padding:18px 24px;border-bottom:3px solid #7ec845}
-.hdr h1{color:#7ec845;font-size:24px;font-weight:bold}
+.hdr{background:#14171C;padding:18px 24px;border-bottom:3px solid #7CFF3A}
+.hdr h1{color:#7CFF3A;font-size:24px;font-weight:bold}
 .hdr .meta{color:#aaa;font-size:11px;margin-top:3px}
 .hdr .date{float:right;color:#ccc;font-size:11px;text-align:right;margin-top:-36px}
 .body{padding:20px 24px}
@@ -223,31 +223,31 @@ body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
 .card .lbl{font-size:9px;font-weight:bold;color:#888;text-transform:uppercase;margin-bottom:5px}
 .card .val{font-size:14px;font-weight:bold}
 .card .sub{font-size:9px;color:#999;margin-top:3px}
-.cg{background:#f0fff4;border:1px solid #7ec845}
+.cg{background:#f0fff4;border:1px solid #7CFF3A}
 .cr{background:#fff5f5;border:1px solid #e74c3c}
 .cgy{background:#f5f5f5;border:1px solid #ccc}
 .joke-box{background:linear-gradient(135deg,#fff8e1,#fff3cd);border:1px solid #f0c040;border-radius:10px;padding:16px;margin-bottom:22px}
 .joke-box .joke-top{font-size:12px;font-weight:bold;color:#333;margin-bottom:6px}
 .joke-box .joke-text{font-size:12px;color:#555;font-style:italic;line-height:1.5}
-.tips-box{background:#f0fff4;border:1px solid #7ec845;border-radius:10px;padding:16px;margin-bottom:22px}
-.tips-box .tips-title{font-size:13px;font-weight:bold;color:#1a1a2e;margin-bottom:4px}
+.tips-box{background:#f0fff4;border:1px solid #7CFF3A;border-radius:10px;padding:16px;margin-bottom:22px}
+.tips-box .tips-title{font-size:13px;font-weight:bold;color:#14171C;margin-bottom:4px}
 .tips-box .tips-sub{font-size:11px;color:#666;margin-bottom:10px}
 .sec{margin-bottom:22px}
-.sec-title{font-size:13px;font-weight:bold;color:#1a1a2e;padding-bottom:5px;border-bottom:2px solid #7ec845;margin-bottom:8px}
+.sec-title{font-size:13px;font-weight:bold;color:#14171C;padding-bottom:5px;border-bottom:2px solid #7CFF3A;margin-bottom:8px}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#1a1a2e;color:#fff;padding:7px 10px;text-align:left;font-size:11px}
+th{background:#14171C;color:#fff;padding:7px 10px;text-align:left;font-size:11px}
 td{padding:6px 10px;border-bottom:1px solid #eee}
 tr:nth-child(even) td{background:#f9f9f9}
-.total td{background:#f0fff4;font-weight:bold;border-top:2px solid #7ec845}
+.total td{background:#f0fff4;font-weight:bold;border-top:2px solid #7CFF3A}
 .ra{text-align:right}
 .ca{text-align:center}
 .bold{font-weight:bold}
-.green{color:#27ae60}
+.green{color:#5FD41F}
 .red{color:#e74c3c}
-.bar{font-family:monospace;font-size:9px;color:#7ec845}
+.bar{font-family:monospace;font-size:9px;color:#7CFF3A}
 .trend{font-size:16px;font-weight:bold}
 .legend{font-size:10px;color:#999;margin-top:6px}
-.footer{margin-top:20px;padding-top:8px;border-top:2px solid #7ec845;display:flex;justify-content:space-between;font-size:10px;color:#888}
+.footer{margin-top:20px;padding-top:8px;border-top:2px solid #7CFF3A;display:flex;justify-content:space-between;font-size:10px;color:#888}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .hdr,.joke-box,th,.total td,.cg,.cr,.tips-box,.score-box{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -298,7 +298,7 @@ tr:nth-child(even) td{background:#f9f9f9}
     </div>
     <div class="card cgy">
       <div class="lbl">${balance >= 0 ? "\ud83d\udcb0" : "\u26a0\ufe0f"} Solde net</div>
-      <div class="val" style="color:${balance >= 0 ? "#7ec845" : "#e74c3c"}">${balance >= 0 ? "+" : ""}${fmt(balance)}</div>
+      <div class="val" style="color:${balance >= 0 ? "#7CFF3A" : "#e74c3c"}">${balance >= 0 ? "+" : ""}${fmt(balance)}</div>
       <div class="sub">${balance >= 0 ? "Il te reste \u00e7a" : "Tu as d\u00e9pass\u00e9"}</div>
     </div>
     <div class="card cg">
@@ -310,7 +310,7 @@ tr:nth-child(even) td{background:#f9f9f9}
 
   ${joke ? `
   <div class="joke-box">
-    <div style="font-size:13px;font-weight:bold;color:#1a1a2e;margin-bottom:8px">\ud83d\ude02 La blague du mois</div>
+    <div style="font-size:13px;font-weight:bold;color:#14171C;margin-bottom:8px">\ud83d\ude02 La blague du mois</div>
     <div class="joke-top">Ce mois, ta plus grosse d\u00e9pense : ${joke.topCategory} (${fmt(joke.topAmount)})</div>
     <div class="joke-text">"${joke.blague}"</div>
   </div>
