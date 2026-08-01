@@ -28,7 +28,7 @@ const Platforms = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.08 }}
-            className="px-6 py-3 rounded-xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-sm text-[#D5D7D6] font-medium hover:border-[#8DD621]/30 transition-colors"
+            className="px-6 py-3 rounded-xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-sm text-[#D5D7D6] font-medium hover:border-[#7CFF3A]/30 transition-colors"
           >
             {p}
           </motion.div>
