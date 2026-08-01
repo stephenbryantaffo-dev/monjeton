@@ -58,7 +58,7 @@ export const BADGES_CI: Record<string, Badge> = {
     title: "L'Économiste",
     subtitle: "C'est toi le vrai gestionnaire ! Tout le quartier peut apprendre",
     description: "Tu as épargné plus de 20% de tes revenus",
-    color: "hsl(84, 81%, 44%)",
+    color: "hsl(var(--primary))",
     category: "saving",
   },
   equilibre: {
@@ -112,7 +112,7 @@ export const BADGES_CI: Record<string, Badge> = {
     title: "Le Solidaire",
     subtitle: "Tu cotises toujours à l'heure ! La tontine t'adore boss.",
     description: "100% de tes cotisations payées à temps",
-    color: "hsl(150, 70%, 45%)",
+    color: "hsl(var(--muted-foreground))",
     category: "champion",
   },
   tontine_retard: {
