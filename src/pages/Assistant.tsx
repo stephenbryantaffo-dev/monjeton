@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check, BarChart3, Sparkles, History } from "lucide-react";
+import { Send, Bot, Loader2, Mic, MicOff, Paperclip, Volume2, VolumeX, X, FileText, LogOut, Trash2, Target, Users, MessageSquare, Plus, Pencil, Check, BarChart3, Sparkles, History, ArrowUp } from "lucide-react";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -1227,7 +1227,7 @@ const Assistant = () => {
   };
 
   return (
-    <DashboardLayout title="Assistant IA">
+    <DashboardLayout title="Assistant">
       <div className="flex flex-col" style={{ height: "calc(100vh - 160px)" }}>
         {/* Top action bar */}
         <div className="flex items-center justify-between gap-2 pb-3 flex-wrap">
@@ -1565,59 +1565,59 @@ const Assistant = () => {
           onChange={handleFileSelect}
         />
         <div className="space-y-2 pb-2" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))" }}>
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || isRecording}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
-            >
-              <Paperclip className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.nativeEvent.isComposing) handleSend();
-              }}
-              placeholder={
-                isRecording
-                  ? `Écoute… ${(recordingSeconds % 60).toString().padStart(2, "0")}s`
-                  : "Tape ou parle..."
-              }
-              className="bg-secondary border-border flex-1"
-              disabled={isLoading || isRecording}
-            />
-            {input.trim() ? (
+          {/* Barre de saisie : une pilule unique (pièce jointe + champ + micro)
+              et un bouton d'envoi rond détaché, comme sur la maquette. */}
+          <div className="flex gap-2.5 items-center">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 h-[52px] pl-2 pr-1.5 rounded-full bg-card border border-border">
               <button
-                onClick={handleSend}
-                disabled={isLoading}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isRecording}
+                aria-label="Joindre un fichier"
+                className="w-9 h-9 flex-none rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors"
               >
-                <Send className="w-4 h-4 text-primary-foreground" />
+                <Paperclip className="w-[18px] h-[18px]" />
               </button>
-            ) : (
-              <button
-                onClick={() => isRecording ? stopRecording() : startRecording()}
-                disabled={isLoading}
-                className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-50 shadow-lg ${
+
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) handleSend();
+                }}
+                placeholder={
                   isRecording
-                    ? "bg-destructive animate-pulse shadow-destructive/40"
-                    : "gradient-primary neon-glow"
+                    ? `Écoute… ${(recordingSeconds % 60).toString().padStart(2, "0")}s`
+                    : "Écris ton message…"
+                }
+                disabled={isLoading || isRecording}
+                className="flex-1 min-w-0 bg-transparent border-none outline-none text-[15px] text-foreground placeholder:text-muted-foreground disabled:opacity-60"
+              />
+
+              <button
+                onClick={() => (isRecording ? stopRecording() : startRecording())}
+                disabled={isLoading}
+                aria-label={isRecording ? "Arrêter" : "Dicter"}
+                className={`w-10 h-10 flex-none rounded-full flex items-center justify-center transition-all disabled:opacity-40 ${
+                  isRecording
+                    ? "bg-destructive animate-pulse text-white"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {isRecording
-                  ? <MicOff className="w-5 h-5 text-white" />
-                  : <Mic className="w-5 h-5 text-primary-foreground" />
-                }
+                {isRecording ? <MicOff className="w-[18px] h-[18px]" /> : <Mic className="w-[18px] h-[18px]" />}
               </button>
-            )}
+            </div>
+
+            <button
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              aria-label="Envoyer"
+              className="w-[52px] h-[52px] flex-none rounded-full gradient-primary flex items-center justify-center active:scale-95 transition-all disabled:opacity-35"
+            >
+              <ArrowUp className="w-[22px] h-[22px] text-primary-foreground" strokeWidth={2.6} />
+            </button>
           </div>
-          {!isRecording && !input && (
-            <p className="text-center text-xs text-muted-foreground">
-              Appuie sur le micro et parle directement
-            </p>
-          )}
+
           {isRecording && (
             <p className="text-center text-xs text-destructive font-medium animate-pulse">
               Je t'écoute… Appuie à nouveau pour envoyer
