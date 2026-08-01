@@ -19,15 +19,15 @@ import { z } from "zod";
 import { formatMoneySmart } from "@/lib/formatMoney";
 
 const COLOR_PALETTE = [
-  "hsl(84,81%,44%)",
-  "hsl(270,70%,60%)",
+  "hsl(var(--primary))",
+  "hsl(var(--muted-foreground))",
   "hsl(45,96%,58%)",
   "hsl(200,70%,50%)",
   "hsl(0,70%,55%)",
   "hsl(340,70%,55%)",
   "hsl(180,60%,45%)",
   "hsl(30,80%,50%)",
-  "hsl(150,60%,45%)",
+  "hsl(var(--muted-foreground))",
   "hsl(220,70%,60%)",
   "hsl(60,70%,50%)",
   "hsl(0,0%,60%)",
@@ -121,12 +121,12 @@ const Categories = () => {
       { name: "Nourriture", icon: "Utensils", color: "hsl(45,96%,58%)", type: "expense" },
       { name: "Logement", icon: "Home", color: "hsl(200,70%,50%)", type: "expense" },
       { name: "Santé", icon: "Heart", color: "hsl(0,70%,55%)", type: "expense" },
-      { name: "Communication", icon: "Phone", color: "hsl(270,70%,60%)", type: "expense" },
+      { name: "Communication", icon: "Phone", color: "hsl(var(--muted-foreground))", type: "expense" },
       { name: "Loisirs", icon: "Gamepad2", color: "hsl(160,60%,45%)", type: "expense" },
       { name: "Éducation", icon: "GraduationCap", color: "hsl(260,70%,55%)", type: "expense" },
       { name: "Autre", icon: "Package", color: "hsl(0,0%,60%)", type: "expense" },
-      { name: "Salaire", icon: "Briefcase", color: "hsl(84,81%,44%)", type: "income" },
-      { name: "Business", icon: "Building2", color: "hsl(150,60%,45%)", type: "income" },
+      { name: "Salaire", icon: "Briefcase", color: "hsl(var(--primary))", type: "income" },
+      { name: "Business", icon: "Building2", color: "hsl(var(--muted-foreground))", type: "income" },
       { name: "Transfert", icon: "HandCoins", color: "hsl(200,70%,60%)", type: "income" },
     ];
     await supabase.from("categories").insert(
