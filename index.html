@@ -61,23 +61,61 @@
     </script>
 
     <style>
-      /* iOS splash screen */
+      /* Écran de démarrage — s'affiche AVANT tout JavaScript.
+         Aucune image externe : logo en SVG inline, donc zéro requête
+         réseau. C'est ce qui rend l'ouverture instantanée même sur un
+         téléphone lent. */
       #splash-screen {
         position: fixed; inset: 0; z-index: 99999;
-        background: #0a1a0d;
+        background: #14171C;
         display: flex; align-items: center; justify-content: center; flex-direction: column;
-        transition: opacity 0.4s ease;
+        transition: opacity 0.35s ease;
       }
       #splash-screen.hide { opacity: 0; pointer-events: none; }
-      #splash-screen img { width: 96px; height: 96px; border-radius: 20px; }
-      #splash-screen p { color: #4a9a1e; font-family: sans-serif; font-weight: 700; font-size: 20px; margin-top: 16px; }
+      #splash-logo {
+        width: 78px; height: 78px; border-radius: 20px;
+        background: linear-gradient(150deg, #7CFF3A, #5fd41f);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 44px rgba(124, 255, 58, 0.34);
+        animation: sp-pop 0.5s ease-out both;
+      }
+      #splash-logo span {
+        color: #14171C; font-family: system-ui, sans-serif;
+        font-weight: 800; font-size: 34px; letter-spacing: -0.04em;
+      }
+      #splash-screen p {
+        color: #7CFF3A; font-family: system-ui, sans-serif;
+        font-weight: 700; font-size: 19px; margin-top: 18px; letter-spacing: -0.01em;
+      }
+      #splash-bar {
+        margin-top: 20px; width: 132px; height: 3px;
+        border-radius: 3px; background: rgba(124, 255, 58, 0.16);
+        overflow: hidden;
+      }
+      #splash-bar::after {
+        content: ""; display: block; height: 100%; width: 40%;
+        border-radius: 3px; background: #7CFF3A;
+        animation: sp-slide 1.1s ease-in-out infinite;
+      }
+      @keyframes sp-pop {
+        from { transform: scale(0.82); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      @keyframes sp-slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(330%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash-logo, #splash-bar::after { animation: none; }
+      }
     </style>
   </head>
 
   <body>
     <div id="splash-screen">
-      <img src="/pwa-icon-192.png" alt="Mon Jeton" />
+      <div id="splash-logo"><span>MJ</span></div>
       <p>Mon Jeton</p>
+      <div id="splash-bar"></div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
