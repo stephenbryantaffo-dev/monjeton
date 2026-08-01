@@ -16,16 +16,16 @@
     --background: 218 17% 9%;
     --foreground: 110 19% 94%;
 
-    --card: 218 17% 13%;
+    --card: 218 16% 15%;
     --card-foreground: 110 19% 94%;
 
-    --popover: 218 17% 13%;
+    --popover: 218 16% 15%;
     --popover-foreground: 110 19% 94%;
 
     --primary: 100 100% 61%;
     --primary-foreground: 218 17% 9%;
 
-    --secondary: 217 16% 16%;
+    --secondary: 217 15% 19%;
     --secondary-foreground: 110 12% 88%;
 
     --muted: 218 16% 20%;
@@ -37,7 +37,7 @@
     --destructive: 358 75% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 219 15% 18%;
+    --border: 219 14% 22%;
     --input: 217 16% 16%;
     --ring: 100 100% 61%;
 
@@ -93,55 +93,55 @@
 
 @layer utilities {
   .glass {
-    background: hsla(150, 12%, 12%, 0.6);
+    background: hsl(var(--card) / 0.72);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsla(150, 10%, 20%, 0.5);
+    border: 1px solid hsl(var(--border) / 0.9);
   }
 
   .glass-card {
-    background: hsla(150, 12%, 10%, 0.7);
+    background: hsl(var(--card) / 0.82);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsla(150, 10%, 22%, 0.4);
+    border: 1px solid hsl(var(--border) / 0.85);
   }
 
   .gradient-bg {
-    background: linear-gradient(180deg, hsl(150, 20%, 4%) 0%, hsl(150, 25%, 8%) 50%, hsl(160, 20%, 4%) 100%);
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(218 17% 11%) 55%, hsl(var(--background)) 100%);
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(84, 81%, 44%) 0%, hsl(84, 81%, 55%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.82) 100%);
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, hsl(270, 70%, 60%) 0%, hsl(280, 70%, 50%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.9) 0%, hsl(var(--primary) / 0.6) 100%);
   }
 
   .gradient-hero {
-    background: linear-gradient(135deg, hsl(84, 81%, 44%) 0%, hsl(270, 70%, 60%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.55) 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(84, 81%, 50%) 0%, hsl(84, 81%, 65%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-hero {
-    background: linear-gradient(135deg, hsl(84, 81%, 50%) 0%, hsl(270, 70%, 65%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.6) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .neon-glow {
-    box-shadow: 0 0 20px hsla(84, 81%, 44%, 0.3), 0 0 60px hsla(84, 81%, 44%, 0.1);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.28), 0 0 60px hsl(var(--primary) / 0.1);
   }
 
   .neon-glow-purple {
-    box-shadow: 0 0 20px hsla(270, 70%, 60%, 0.3), 0 0 60px hsla(270, 70%, 60%, 0.1);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.22), 0 0 60px hsl(var(--primary) / 0.08);
   }
 
   /* iOS 18 / iPhone 16 SVG render fix — applied globally to all icon circles */
@@ -220,9 +220,9 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px hsl(150, 20%, 4%) inset !important;
-  -webkit-text-fill-color: hsl(110, 19%, 94%) !important;
-  caret-color: hsl(110, 19%, 94%);
+  -webkit-box-shadow: 0 0 0 1000px hsl(var(--card)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  caret-color: hsl(var(--foreground));
   transition: background-color 5000s ease-in-out 0s;
 }
 
