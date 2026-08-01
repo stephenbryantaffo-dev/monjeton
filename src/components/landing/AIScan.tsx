@@ -54,13 +54,13 @@ const AIScan = () => (
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
       >
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(126,200,69,0.10)] text-[#7EC845] text-xs font-semibold mb-6 border border-[rgba(126,200,69,0.25)]">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(126,200,69,0.10)] text-[#7CFF3A] text-xs font-semibold mb-6 border border-[rgba(126,200,69,0.25)]">
           📸 OCR · IA · Multidevise
         </div>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#EAFBEA] mb-6 font-syne leading-tight">
           Une photo suffit.
           <br />
-          <span className="text-[#7EC845]">L'IA fait le reste.</span>
+          <span className="text-[#7CFF3A]">L'IA fait le reste.</span>
         </h2>
         <p className="text-[rgba(234,251,234,0.72)] mb-10 leading-relaxed text-base">
           Vous venez de payer chez un marchand. Vous avez reçu un virement Wave.
@@ -80,11 +80,11 @@ const AIScan = () => (
               className="relative flex gap-4"
             >
               <div className="relative z-10 w-14 h-14 rounded-xl bg-[rgba(126,200,69,0.10)] border border-[rgba(126,200,69,0.30)] flex items-center justify-center shrink-0 backdrop-blur-md">
-                <step.icon className="w-5 h-5 text-[#7EC845]" />
+                <step.icon className="w-5 h-5 text-[#7CFF3A]" />
               </div>
               <div className="flex-1 pt-1">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-xs font-mono text-[#7EC845]/60">{step.num}</span>
+                  <span className="text-xs font-mono text-[#7CFF3A]/60">{step.num}</span>
                   <h3 className="text-[#EAFBEA] font-semibold">{step.title}</h3>
                 </div>
                 <p className="text-sm text-[#8892A4] leading-relaxed">{step.desc}</p>
@@ -102,7 +102,7 @@ const AIScan = () => (
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 + i * 0.05 }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(126,200,69,0.10)] border border-[rgba(126,200,69,0.25)] text-[#7EC845] text-xs font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(126,200,69,0.10)] border border-[rgba(126,200,69,0.25)] text-[#7CFF3A] text-xs font-medium"
             >
               <Check className="w-3 h-3" /> {cap}
             </motion.span>
@@ -129,7 +129,7 @@ const AIScan = () => (
                 whileInView={{ width: "85%" }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.4, ease: "easeOut" }}
-                className="h-full bg-[#7EC845]"
+                className="h-full bg-[#7CFF3A]"
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ const AIScan = () => (
             transition={{ delay: 1.5 }}
             className="grid grid-cols-2 gap-3"
           >
-            <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#7EC845] text-[#05070A] text-sm font-semibold hover:brightness-110 transition">
+            <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#7CFF3A] text-[#05070A] text-sm font-semibold hover:brightness-110 transition">
               <Check className="w-4 h-4" /> Confirmer
             </button>
             <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[rgba(234,251,234,0.05)] border border-[rgba(234,251,234,0.15)] text-[#EAFBEA] text-sm font-semibold hover:bg-[rgba(234,251,234,0.08)] transition">
