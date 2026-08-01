@@ -442,25 +442,27 @@ const Debts = () => {
     <DashboardLayout title="Dettes">
       {/* TOTALS */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="glass-card rounded-2xl p-3">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">
-            On te doit
+        <div className="glass-card rounded-2xl p-3.5">
+          <p className="flex items-center gap-1.5 text-[12px] font-bold text-muted-foreground">
+            <ArrowDownLeft className="w-3.5 h-3.5 text-primary" strokeWidth={2.4} />
+            On me doit
           </p>
-          <p className="text-lg font-black text-primary tabular-nums mt-0.5">
+          <p className="text-[19px] font-extrabold text-primary tabular-nums mt-1.5 truncate">
             {formatMoneyDisplay(totals.owedToMe)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             {totals.countOwed} personne{totals.countOwed > 1 ? "s" : ""}
           </p>
         </div>
-        <div className="glass-card rounded-2xl p-3">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">
-            Tu dois
+        <div className="glass-card rounded-2xl p-3.5">
+          <p className="flex items-center gap-1.5 text-[12px] font-bold text-muted-foreground">
+            <ArrowUpRight className="w-3.5 h-3.5 text-destructive" strokeWidth={2.4} />
+            Je dois
           </p>
-          <p className="text-lg font-black text-destructive tabular-nums mt-0.5">
+          <p className="text-[19px] font-extrabold text-destructive tabular-nums mt-1.5 truncate">
             {formatMoneyDisplay(totals.iOwe)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             {totals.countIOwe} personne{totals.countIOwe > 1 ? "s" : ""}
           </p>
         </div>
