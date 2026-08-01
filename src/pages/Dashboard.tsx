@@ -815,7 +815,7 @@ const Dashboard = () => {
                           style={{
                             width: 44,
                             height: 44,
-                            backgroundColor: (t.categories as any)?.color || (t.type === "income" ? "hsl(84,81%,44%)" : "#374151"),
+                            backgroundColor: (t.categories as any)?.color || (t.type === "income" ? "hsl(var(--primary))" : "#374151"),
                           }}
                         >
                           {getCatIcon((t.categories as any)?.name || "", t.type)}
