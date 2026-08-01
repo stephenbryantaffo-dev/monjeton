@@ -737,8 +737,8 @@ const TontinePage = () => {
 
   // Style + libellé par type de caisse (langage humain)
   const typeMeta = (t: TontineData) => {
-    if (t.caisse_type === "project") return { Icon: Target, label: "Événement", cls: "bg-amber-500/15 text-amber-500" };
-    if (t.caisse_type === "association") return { Icon: Building2, label: "Groupe", cls: "bg-sky-500/15 text-sky-500" };
+    if (t.caisse_type === "project") return { Icon: Target, label: "Événement", cls: "bg-primary/12 text-primary" };
+    if (t.caisse_type === "association") return { Icon: Building2, label: "Groupe", cls: "bg-primary/8 text-primary/75" };
     return { Icon: RefreshCw, label: "Tournante", cls: "bg-primary/15 text-primary" };
   };
 
