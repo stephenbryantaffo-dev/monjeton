@@ -5,6 +5,7 @@ import { ArrowLeft, Mic, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AmountKeypad } from "@/components/transaction/AmountKeypad";
+import { AmountDisplay } from "@/components/transaction/AmountDisplay";
 import { VoiceRecorderSheet } from "@/components/transaction/VoiceRecorderSheet";
 import { useLiveTranscript } from "@/hooks/useLiveTranscript";
 import {
@@ -36,6 +37,7 @@ const NewTransaction = () => {
   const { toast } = useToast();
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
+  const [amountCaret, setAmountCaret] = useState(0);
   const [note, setNote] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [categoryId, setCategoryId] = useState("");
@@ -636,20 +638,13 @@ const NewTransaction = () => {
           </div>
 
           <form id="new-tx-form" onSubmit={handleSubmit}>
-            {/* Montant : le montant EST l'écran */}
-            <div className="text-center pt-2 pb-1">
-              <div className="text-[52px] leading-none font-extrabold tracking-[-0.05em] text-foreground">
-                {amount
-                  ? Number(amount).toLocaleString("fr-FR")
-                  : <span className="text-muted-foreground/40">0</span>}
-                <span className="ml-2 align-baseline text-[20px] font-bold text-muted-foreground">
-                  FCFA
-                </span>
-              </div>
-              <p className="mt-3 text-[12.5px] font-semibold text-muted-foreground">
-                Tape le montant, le reste est déjà rempli
-              </p>
-            </div>
+            {/* Montant : le montant EST l'écran, et il est éditable */}
+            <AmountDisplay
+              value={amount}
+              onChange={setAmount}
+              onCaretChange={setAmountCaret}
+              className="pt-2 pb-1"
+            />
 
             {/* Les trois choix, pré-remplis mais toujours modifiables */}
             <div className="grid grid-cols-2 gap-2.5 mt-5">
@@ -698,6 +693,8 @@ const NewTransaction = () => {
             <AmountKeypad
               value={amount}
               onChange={setAmount}
+              caret={amountCaret}
+              onCaretChange={setAmountCaret}
               className="mt-5"
             />
           </form>
