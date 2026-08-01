@@ -12,7 +12,7 @@ import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic, SlidersHorizontal, Plus, PieChart, Users, ChevronRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, MessageCircle, Camera, CalendarIcon, Sparkles, RefreshCw, Mic, SlidersHorizontal, Plus, PieChart, Users, ChevronRight, Flame } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -204,8 +204,8 @@ const Dashboard = () => {
             );
             toast({
               title: daysLeft <= 0
-                ? `⚠️ Échéance aujourd'hui !`
-                : `🔔 Rappel dans ${daysLeft} jour(s)`,
+                ? `Échéance aujourd'hui`
+                : `Rappel dans ${daysLeft} jour(s)`,
               description: debt.type === "owed_to_me"
                 ? `${debt.person_name} te doit encore ${Number(debt.amount).toLocaleString()}`
                 : `Tu dois ${Number(debt.amount).toLocaleString()} à ${debt.person_name}`,
@@ -478,7 +478,7 @@ const Dashboard = () => {
       <SubscriptionRenewBanner />
       <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-sm">Bonjour 👋</p>
+          <p className="text-muted-foreground text-sm">Bonjour</p>
           <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{profile?.full_name || "Tableau de bord"}</h1>
         </div>
         <div className="flex items-center gap-2 mt-1 shrink-0">
@@ -488,7 +488,7 @@ const Dashboard = () => {
               animate={{ scale: 1 }}
               className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-full font-semibold"
             >
-              🔥 {streak} jour{streak > 1 ? "s" : ""} de suite
+              <Flame className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />{streak} jour{streak > 1 ? "s" : ""} de suite
             </motion.div>
           )}
           <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
@@ -672,11 +672,8 @@ const Dashboard = () => {
                       className="overflow-hidden"
                       style={{ borderRadius: 22 }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => navigate("/transactions/new", { state: { initialType: "income" } })}
-                        aria-label="Ajouter un revenu"
-                        className="block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
+                      <div
+                        className="relative p-4 overflow-hidden"
                         style={{
                           borderRadius: 21,
                           background:
@@ -697,7 +694,7 @@ const Dashboard = () => {
                           {formatAmount(totalIncome)}
                           <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
                         </p>
-                      </button>
+                      </div>
                     </BorderRotate>
                   </motion.div>
 
@@ -709,11 +706,8 @@ const Dashboard = () => {
                       className="overflow-hidden"
                       style={{ borderRadius: 22 }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => navigate("/transactions/new", { state: { initialType: "expense" } })}
-                        aria-label="Ajouter une dépense"
-                        className="block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
+                      <div
+                        className="relative p-4 overflow-hidden"
                         style={{
                           borderRadius: 21,
                           background:
@@ -731,7 +725,7 @@ const Dashboard = () => {
                           {formatAmount(totalExpense)}
                           <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
                         </p>
-                      </button>
+                      </div>
                     </BorderRotate>
                   </motion.div>
                 </div>
