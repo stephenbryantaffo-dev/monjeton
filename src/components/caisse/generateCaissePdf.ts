@@ -27,7 +27,7 @@ const statusLabel = (s: string) =>
   ({ active: "Actif", removed: "Retiré", suspended: "Suspendu" }[s] || s);
 
 const statusColor = (s: string) =>
-  ({ active: "#27ae60", removed: "#e74c3c", suspended: "#f39c12" }[s] || "#888");
+  ({ active: "#5FD41F", removed: "#e74c3c", suspended: "#f39c12" }[s] || "#888");
 
 export interface CaissePdfData {
   caisse: CaisseData;
@@ -139,8 +139,8 @@ export const generateCaissePdf = (data: CaissePdfData) => {
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
-.hdr{background:#1a1a2e;padding:18px 24px;border-bottom:3px solid #7ec845}
-.hdr h1{color:#7ec845;font-size:22px;font-weight:bold}
+.hdr{background:#14171C;padding:18px 24px;border-bottom:3px solid #7CFF3A}
+.hdr h1{color:#7CFF3A;font-size:22px;font-weight:bold}
 .hdr .sub{color:#aaa;font-size:11px;margin-top:3px}
 .hdr .date{float:right;color:#ccc;font-size:11px;text-align:right;margin-top:-36px}
 .body{padding:20px 24px}
@@ -150,23 +150,23 @@ body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#fff}
 .card .lbl{font-size:9px;font-weight:bold;color:#888;text-transform:uppercase;margin-bottom:5px}
 .card .val{font-size:15px;font-weight:bold}
 .card .sub-val{font-size:9px;color:#999;margin-top:3px}
-.cg{background:#f0fff4;border:1px solid #7ec845}
+.cg{background:#f0fff4;border:1px solid #7CFF3A}
 .cr{background:#fff5f5;border:1px solid #e74c3c}
 .cgy{background:#f5f5f5;border:1px solid #ccc}
 .cb{background:#f0f8ff;border:1px solid #3498db}
 .sec{margin-bottom:22px}
-.sec-title{font-size:13px;font-weight:bold;color:#1a1a2e;padding-bottom:5px;border-bottom:2px solid #7ec845;margin-bottom:8px}
+.sec-title{font-size:13px;font-weight:bold;color:#14171C;padding-bottom:5px;border-bottom:2px solid #7CFF3A;margin-bottom:8px}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#1a1a2e;color:#fff;padding:7px 10px;text-align:left;font-size:11px}
+th{background:#14171C;color:#fff;padding:7px 10px;text-align:left;font-size:11px}
 td{padding:6px 10px;border-bottom:1px solid #eee}
 tr:nth-child(even) td{background:#f9f9f9}
-.total td{background:#f0fff4;font-weight:bold;border-top:2px solid #7ec845}
+.total td{background:#f0fff4;font-weight:bold;border-top:2px solid #7CFF3A}
 .ra{text-align:right}
 .ca{text-align:center}
 .bold{font-weight:bold}
-.green{color:#27ae60}
+.green{color:#5FD41F}
 .red{color:#e74c3c}
-.footer{margin-top:20px;padding-top:8px;border-top:2px solid #7ec845;display:flex;justify-content:space-between;font-size:10px;color:#888}
+.footer{margin-top:20px;padding-top:8px;border-top:2px solid #7CFF3A;display:flex;justify-content:space-between;font-size:10px;color:#888}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .hdr,th,.total td,.cg,.cr,.cb{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -198,9 +198,9 @@ tr:nth-child(even) td{background:#f9f9f9}
       <div class="val red">${fmt(caisse.total_spent)}</div>
       <div class="sub-val">${depenses.length} dépense${depenses.length > 1 ? "s" : ""}</div>
     </div>
-    <div class="card" style="background:#f0fff4;border:2px solid #7ec845">
+    <div class="card" style="background:#f0fff4;border:2px solid #7CFF3A">
       <div class="lbl">Solde disponible</div>
-      <div class="val" style="color:${soldeDisponible >= 0 ? "#27ae60" : "#e74c3c"}">${fmt(soldeDisponible)}</div>
+      <div class="val" style="color:${soldeDisponible >= 0 ? "#5FD41F" : "#e74c3c"}">${fmt(soldeDisponible)}</div>
       <div class="sub-val">${soldeDisponible >= 0 ? "En caisse" : "Déficit"}</div>
     </div>
     <div class="card cb">
