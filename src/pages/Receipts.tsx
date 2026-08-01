@@ -426,8 +426,8 @@ const Receipts = () => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reçu Mon Jeton</title>
       <style>
         body{font-family:system-ui,sans-serif;max-width:420px;margin:40px auto;padding:20px;color:#1a1a1a}
-        .header{text-align:center;border-bottom:2px solid #7EC845;padding-bottom:16px;margin-bottom:20px}
-        .brand{font-size:22px;font-weight:700;color:#7EC845}.subtitle{font-size:13px;color:#888;margin-top:4px}
+        .header{text-align:center;border-bottom:2px solid #7CFF3A;padding-bottom:16px;margin-bottom:20px}
+        .brand{font-size:22px;font-weight:700;color:#7CFF3A}.subtitle{font-size:13px;color:#888;margin-top:4px}
         .receipt-img{display:block;max-width:100%;max-height:200px;margin:0 auto 16px;border-radius:12px;border:1px solid #eee}
         .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0}
         .row-label{font-size:12px;color:#888}.row-value{font-size:13px;font-weight:600}
