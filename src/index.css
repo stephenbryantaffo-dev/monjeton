@@ -290,3 +290,30 @@ input:-webkit-autofill:active {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(330%); }
 }
+
+/* Flottements de la landing (Hero) — remplacent Framer Motion pour
+   ne plus charger 46 Ko de JS au premier écran.
+   La rotation de chaque carte est passée en variable --rot pour ne
+   pas entrer en conflit avec la translation animée. */
+@keyframes heroFloat {
+  0%, 100% { transform: rotate(var(--rot, 0deg)) translateY(0); }
+  50% { transform: rotate(var(--rot, 0deg)) translateY(-8px); }
+}
+@keyframes heroFloatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.hero-float {
+  opacity: 0;
+  animation: heroFloat 5.5s ease-in-out infinite, heroFadeIn 0.6s ease-out forwards;
+}
+.hero-float-slow {
+  animation: heroFloatSlow 6s ease-in-out infinite;
+}
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-float, .hero-float-slow { animation: heroFadeIn 0.6s ease-out forwards; }
+}
