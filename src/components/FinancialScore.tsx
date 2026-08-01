@@ -22,7 +22,7 @@ const ScoreGauge = ({ score }: { score: number }) => {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
-  const color = score < 40 ? "hsl(0, 70%, 55%)" : score < 70 ? "hsl(35, 90%, 55%)" : "hsl(84, 81%, 44%)";
+  const color = score < 40 ? "hsl(0, 70%, 55%)" : score < 70 ? "hsl(35, 90%, 55%)" : "hsl(var(--primary))";
 
   return (
     <div className="relative w-32 h-32 mx-auto">
@@ -80,7 +80,7 @@ const ScoreHistoryChart = ({ history }: { history: ScoreHistoryItem[] }) => {
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top + innerH} L ${points[0].x} ${padding.top + innerH} Z`;
 
   const getColor = (score: number) =>
-    score < 40 ? "hsl(0, 70%, 55%)" : score < 70 ? "hsl(35, 90%, 55%)" : "hsl(84, 81%, 44%)";
+    score < 40 ? "hsl(0, 70%, 55%)" : score < 70 ? "hsl(35, 90%, 55%)" : "hsl(var(--primary))";
 
   const lastScore = history[history.length - 1].score;
   const lineColor = getColor(lastScore);
