@@ -18,6 +18,11 @@
  * - Les textes très courts (< 2 caractères)
  * - Les textes contenant "Mon Jeton" ou d'autres mots protégés (filtré côté serveur)
  * - Le contenu des <input>, <textarea>, <script>, <style>
+ * - LES DONNÉES DE L'UTILISATEUR : tout élément portant translate="no",
+ *   data-no-translate ou la classe "notranslate". Ses noms de catégories,
+ *   de caisses, de personnes et ses notes lui appartiennent — les traduire
+ *   transformait "Alimentation" en "Feeding" et "Factures" en "Bills".
+ *   Utiliser le composant <UserText> pour marquer ces contenus.
  */
 
 import { useEffect, useRef, ReactNode } from "react";
@@ -51,10 +56,19 @@ function isInSkippedElement(node: Node): boolean {
   let el: Node | null = node.parentNode;
   while (el) {
     if (el.nodeType === Node.ELEMENT_NODE) {
-      const tag = (el as Element).tagName;
+      const element = el as Element;
+      const tag = element.tagName;
       if (SKIP_TAGS.has(tag)) return true;
+
+      // Données de l'utilisateur : jamais traduites.
+      // translate="no" est l'attribut HTML standard, reconnu aussi par
+      // Google Translate et les traducteurs intégrés aux navigateurs.
+      if (element.getAttribute("translate") === "no") return true;
+      if (element.hasAttribute("data-no-translate")) return true;
+      if (element.classList?.contains("notranslate")) return true;
+
       // Si l'élément parent est déjà traduit ou en cours, on skip
-      if ((el as Element).hasAttribute(TRANSLATING_MARK)) return true;
+      if (element.hasAttribute(TRANSLATING_MARK)) return true;
     }
     el = el.parentNode;
   }
