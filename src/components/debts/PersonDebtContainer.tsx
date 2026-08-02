@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { UserText } from "@/components/UserText";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { formatMoneyDisplay } from "@/lib/formatAmount";
@@ -75,7 +76,7 @@ export const PersonDebtContainer = ({ group, onEdit, onPay }: Props) => {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-black text-sm truncate">{person.name}</h3>
+            <h3 className="font-black text-sm truncate"><UserText>{person.name}</UserText></h3>
             {hasOverdue && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-destructive/15 text-destructive">
                 En retard
