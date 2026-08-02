@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 import { Download, AlertTriangle, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, History, Save } from "lucide-react";
@@ -30,6 +30,8 @@ const Reports = () => {
   const [reportMonth, setReportMonth] = useState(now.getMonth());
   const [reportYear, setReportYear] = useState(now.getFullYear());
   const [categoryData, setCategoryData] = useState<any[]>([]);
+  /** Fenêtre de lecture du donut : jour, semaine ou mois. */
+  const [catPeriod, setCatPeriod] = useState<"day" | "week" | "month">("month");
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [leaks, setLeaks] = useState<Leak[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
@@ -50,6 +52,38 @@ const Reports = () => {
     else setReportMonth(m => m + 1);
   };
   const isCurrentMonth = reportMonth === now.getMonth() && reportYear === now.getFullYear();
+
+  /**
+   * Dépenses par catégorie sur la fenêtre choisie.
+   * On repart de allTransactions (déjà chargé sur 6 mois), donc aucun
+   * appel réseau supplémentaire.
+   */
+  const displayCategoryData = useMemo(() => {
+    if (catPeriod === "month") return categoryData;
+
+    const ref = new Date(reportYear, reportMonth, 1);
+    const isThisMonth =
+      reportMonth === now.getMonth() && reportYear === now.getFullYear();
+    // Sur le mois courant on part d'aujourd'hui, sinon de la fin du mois consulté.
+    const end = isThisMonth ? new Date() : new Date(reportYear, reportMonth + 1, 0);
+    const start = new Date(end);
+    if (catPeriod === "day") start.setDate(end.getDate());
+    else start.setDate(end.getDate() - 6);
+
+    const from = start.toISOString().split("T")[0];
+    const to = end.toISOString().split("T")[0];
+
+    const map: Record<string, { name: string; value: number; color: string }> = {};
+    allTransactions
+      .filter((t) => t.type === "expense" && t.date >= from && t.date <= to)
+      .forEach((t) => {
+        const name = t.categories?.name || "Autre";
+        const color = t.categories?.color || "hsl(0,0%,50%)";
+        if (!map[name]) map[name] = { name, value: 0, color };
+        map[name].value += Number(t.amount);
+      });
+    return Object.values(map);
+  }, [catPeriod, categoryData, allTransactions, reportMonth, reportYear]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -180,6 +214,8 @@ const Reports = () => {
   }, [activeTab, predictions]);
 
   const total = categoryData.reduce((s, c) => s + c.value, 0);
+  /** Total de la fenêtre affichée dans le donut (jour / semaine / mois). */
+  const displayTotal = displayCategoryData.reduce((s, c) => s + c.value, 0);
   const totalIncome = allTransactions
     .filter(t => {
       const startOfMonth = new Date(reportYear, reportMonth, 1).toISOString().split("T")[0];
@@ -333,24 +369,45 @@ const Reports = () => {
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <BorderRotate className="p-5 mb-4" animationSpeed={14}>
-              <h2 className="text-sm font-semibold text-foreground mb-4">Dépenses par catégorie</h2>
-              {categoryData.length > 0 ? (
+              <h2 className="text-sm font-semibold text-foreground mb-3">Dépenses par catégorie</h2>
+
+              <div className="flex gap-1.5 mb-4">
+                {([
+                  { key: "day" as const, label: "Jour" },
+                  { key: "week" as const, label: "7 jours" },
+                  { key: "month" as const, label: "Mois" },
+                ]).map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setCatPeriod(p.key)}
+                    className={`flex-1 py-2 rounded-full text-[12.5px] font-bold border transition-colors ${
+                      catPeriod === p.key
+                        ? "bg-primary/15 border-transparent text-primary"
+                        : "bg-card border-border text-muted-foreground"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {displayCategoryData.length > 0 ? (
                 <>
                   <div className="relative w-44 h-44 mx-auto">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={3} dataKey="value" stroke="none">
-                          {categoryData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                        <Pie data={displayCategoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={3} dataKey="value" stroke="none">
+                          {displayCategoryData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-2">
-                      <p className="text-base sm:text-lg font-bold text-foreground truncate max-w-full">{formatAmount(total)}</p>
+                      <p className="text-base sm:text-lg font-bold text-foreground truncate max-w-full">{formatAmount(displayTotal)}</p>
                       <p className="text-xs text-muted-foreground">FCFA</p>
                     </div>
                   </div>
                   <div className="space-y-2 mt-4">
-                    {categoryData.map((c) => (
+                    {displayCategoryData.map((c) => (
                       <div key={c.name} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
