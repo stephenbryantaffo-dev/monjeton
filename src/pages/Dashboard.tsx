@@ -672,8 +672,11 @@ const Dashboard = () => {
                       className="overflow-hidden"
                       style={{ borderRadius: 22 }}
                     >
-                      <div
-                        className="relative p-4 overflow-hidden"
+                      <button
+                        type="button"
+                        onClick={() => navigate("/transactions/new", { state: { initialType: "income" } })}
+                        aria-label="Ajouter un revenu"
+                        className="block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
                         style={{
                           borderRadius: 21,
                           background:
@@ -694,7 +697,7 @@ const Dashboard = () => {
                           {formatAmount(totalIncome)}
                           <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
                         </p>
-                      </div>
+                      </button>
                     </BorderRotate>
                   </motion.div>
 
@@ -706,8 +709,11 @@ const Dashboard = () => {
                       className="overflow-hidden"
                       style={{ borderRadius: 22 }}
                     >
-                      <div
-                        className="relative p-4 overflow-hidden"
+                      <button
+                        type="button"
+                        onClick={() => navigate("/transactions/new", { state: { initialType: "expense" } })}
+                        aria-label="Ajouter une dépense"
+                        className="block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
                         style={{
                           borderRadius: 21,
                           background:
@@ -725,7 +731,7 @@ const Dashboard = () => {
                           {formatAmount(totalExpense)}
                           <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
                         </p>
-                      </div>
+                      </button>
                     </BorderRotate>
                   </motion.div>
                 </div>
