@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { UserText } from "@/components/UserText";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Plus, Pencil, Wallet } from "lucide-react";
@@ -273,7 +274,7 @@ const Categories = () => {
         <div className="flex items-center gap-3">
           <CatIcon iconName={c.icon} color={color} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+            <p className="text-sm font-medium text-foreground truncate"><UserText>{c.name}</UserText></p>
             <p className="text-xs text-muted-foreground">
               {spent > 0 ? `Ce mois : ${formatMoneySmart(spent)}` : "Aucune transaction"}
             </p>
