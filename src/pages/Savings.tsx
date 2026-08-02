@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { UserText } from "@/components/UserText";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
@@ -407,7 +408,7 @@ const Savings = () => {
                       onClick={() => openEditModal(g)}
                       className="flex-1 min-w-0 text-left"
                     >
-                      <p className="text-sm font-medium text-foreground truncate">{g.name}</p>
+                      <p className="text-sm font-medium text-foreground truncate"><UserText>{g.name}</UserText></p>
                       {g.deadline && (
                         <p className="text-xs text-muted-foreground">
                           Échéance : {new Date(g.deadline).toLocaleDateString("fr-FR")}
