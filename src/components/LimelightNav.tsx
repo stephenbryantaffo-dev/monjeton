@@ -20,7 +20,13 @@ import { cn } from "@/lib/utils";
  * Écrans qui possèdent déjà leur propre bouton flottant.
  * Sur ceux-là, le "+" global est masqué pour éviter une pile de boutons.
  */
-const HIDE_FAB_ON = ["/dashboard", "/debts"];
+/**
+ * Écrans où le bouton "+" flottant est masqué.
+ * - /dashboard et /debts ont déjà leur propre bouton d'action
+ * - /assistant : le "+" recouvrait le bouton d'envoi du message
+ * - /categories et /scan : il gênait les actions de la page
+ */
+const HIDE_FAB_ON = ["/dashboard", "/debts", "/assistant", "/categories", "/scan"];
 
 const navItems = [
   { icon: Home, label: "Accueil", path: "/dashboard" },
