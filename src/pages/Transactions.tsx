@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { UserText } from "@/components/UserText";
 import WalletIcon from "@/components/WalletIcon";
 import { formatMoneySmart } from "@/lib/formatMoney";
 import { motion } from "framer-motion";
@@ -256,10 +257,10 @@ const Transactions = () => {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">
-            {t.note || t.categories?.name || "Transaction"}
+            <UserText>{t.note || t.categories?.name || "Transaction"}</UserText>
           </p>
           <p className="text-xs text-muted-foreground truncate">
-            {t.categories?.name}
+            <UserText>{t.categories?.name}</UserText>
             {!groupedByDay && ` · ${new Date(t.date).toLocaleDateString("fr-FR")}`}
           </p>
         </div>
@@ -344,7 +345,7 @@ const Transactions = () => {
               <SelectTrigger className="bg-secondary border-border text-sm"><SelectValue placeholder="Catégorie" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
-                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                {categories.map(c => <SelectItem key={c.id} value={c.id}><UserText>{c.name}</UserText></SelectItem>)}
               </SelectContent>
             </Select>
 
