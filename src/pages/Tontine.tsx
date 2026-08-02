@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { UserText } from "@/components/UserText";
 
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -840,7 +841,7 @@ const TontinePage = () => {
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="font-bold text-foreground truncate">{t.name}</p>
+                        <p className="font-bold text-foreground truncate"><UserText>{t.name}</UserText></p>
                         {myRole !== "owner" && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 flex-shrink-0">
                             {myRole === "manager" ? "Co-gestion" : "Observateur"}
