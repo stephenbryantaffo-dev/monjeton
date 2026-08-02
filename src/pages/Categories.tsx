@@ -63,7 +63,7 @@ const IconPicker = ({ value, onChange, color }: { value: string; onChange: (v: s
           key={name}
           onClick={() => onChange(name)}
           className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:scale-110 ${value === name ? "ring-2 ring-foreground" : ""}`}
-          style={{ backgroundColor: color + "20" }}
+          style={{ backgroundColor: softBg(color) }}
         >
           <Icon className="w-4 h-4" style={{ color }} />
         </button>
@@ -72,13 +72,35 @@ const IconPicker = ({ value, onChange, color }: { value: string; onChange: (v: s
   </div>
 );
 
+/**
+ * Fond translucide à partir d'une couleur de catégorie.
+ *
+ * L'ancien code faisait `color + "20"`, ce qui ne marche QUE si la
+ * couleur est un hex 6 chiffres. Les catégories créées avant (ou par
+ * l'IA) peuvent contenir "rgb(...)" ou "hsl(...)" : la concaténation
+ * produisait alors une valeur invalide, le fond disparaissait et la
+ * pastille s'affichait en aplat plein sans icône lisible.
+ */
+function softBg(color: string | null | undefined): string {
+  const c = (color || "").trim();
+  if (/^#[0-9a-f]{6}$/i.test(c)) return c + "20";
+  if (/^#[0-9a-f]{3}$/i.test(c)) {
+    const [r, g, b] = [c[1], c[2], c[3]];
+    return `#${r}${r}${g}${g}${b}${b}20`;
+  }
+  // rgb(), hsl(), nom de couleur… : on ne peut pas concaténer d'alpha.
+  // color-mix est géré par tous les navigateurs récents, avec repli.
+  if (c) return `color-mix(in srgb, ${c} 14%, transparent)`;
+  return "hsl(var(--secondary))";
+}
+
 const CatIcon = ({ iconName, color }: { iconName?: string | null; color: string }) => {
   const Icon = resolveCategoryIcon(iconName);
   return (
     <div
       className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
       style={{
-        backgroundColor: color + "20",
+        backgroundColor: softBg(color),
         overflow: "visible",
         isolation: "isolate",
         WebkitTransform: "translateZ(0)",
