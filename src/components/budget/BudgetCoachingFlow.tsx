@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { QuickBudgetSteps } from '@/components/budget/QuickBudgetSteps';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/MoneyInput';
@@ -181,7 +182,29 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
   const totalRevenu = data.revenu_principal + data.revenu_exceptionnel;
   const disponible = totalRevenu - totalCharges - data.dettes_mois;
 
-  const generatePlan = async () => {
+  /**
+   * Version simplifiée : les 3 écrans rapides appellent ceci.
+   * On injecte revenu + charges dans le state, on persiste, puis on
+   * génère le plan avec la logique IA existante (inchangée).
+   */
+  const handleQuickGenerate = async (revenu: number, charges: Array<{ nom: string; montant: number }>) => {
+    const nextData: CoachingState = {
+      ...data,
+      revenu_principal: revenu,
+      charges_fixes: charges,
+      // objectifs : si l'utilisateur n'a rien choisi, on met un objectif
+      // par défaut équilibré pour que l'IA ait un point de départ.
+      objectifs: data.objectifs.length ? data.objectifs : ['epargne', 'maitrise'],
+    };
+    setData(nextData);
+    await saveProgress(nextData, 9);
+    // petite attente pour que coachingId/state soient bien à jour
+    await generatePlanWith(nextData);
+  };
+
+  const generatePlan = async () => generatePlanWith(data);
+
+  const generatePlanWith = async (ctx: CoachingState) => {
     if (!user || !coachingId || generating) return;
     setGenerating(true);
     try {
@@ -193,8 +216,8 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          context: data,
-          disponible: Math.max(0, disponible),
+          context: ctx,
+          disponible: Math.max(0, (ctx.revenu_principal + ctx.revenu_exceptionnel) - ctx.charges_fixes.reduce((a,c)=>a+(Number(c.montant)||0),0) - ctx.dettes_mois),
           month, year,
         }),
       });
@@ -658,11 +681,12 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
 
   const stickyAction = renderStickyAction();
 
-  return (
-    <Screen>
-      <Screen.Content>
-        <div className="max-w-md mx-auto pb-8">
-          {step === 10 && (
+  // Le plan est généré (step 10) → écran de validation existant.
+  if (step === 10) {
+    return (
+      <Screen>
+        <Screen.Content>
+          <div className="max-w-md mx-auto pb-8">
             <div className="flex justify-end mb-3">
               <button
                 type="button"
@@ -673,37 +697,33 @@ export const BudgetCoachingFlow = ({ month, year, onComplete }: Props) => {
                 Recommencer
               </button>
             </div>
-          )}
-          {step > 0 && step < 9 && (
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-muted-foreground">Étape {step}/8</span>
-                <span className="text-xs text-muted-foreground">{Math.round((step / 8) * 100)}%</span>
-              </div>
-              <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(step / 8) * 100}%` }}
-                  className="h-full gradient-primary"
-                />
-              </div>
-            </div>
-          )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="plan"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {Step10}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </Screen.Content>
+      </Screen>
+    );
+  }
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {renderStep()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+  // Sinon : les 3 écrans rapides (revenu → charges → génération).
+  return (
+    <Screen>
+      <Screen.Content>
+        <QuickBudgetSteps
+          initialRevenu={data.revenu_principal}
+          initialCharges={data.charges_fixes}
+          generating={generating}
+          onGenerate={handleQuickGenerate}
+        />
       </Screen.Content>
-      {stickyAction && <Screen.StickyAction>{stickyAction}</Screen.StickyAction>}
     </Screen>
   );
 };
