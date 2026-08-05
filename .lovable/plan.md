@@ -1,39 +1,42 @@
-Plan : notifications push pour les rappels d’abonnement
+# Création de tontine : passer de 5 écrans à 2
 
-Contexte actuel confirmé
-- Le rappel quotidien de dépenses est déjà opérationnel (edge function `send-daily-reminders`, cron 8h/20h, push web via VAPID).
-- L’edge function `subscription-reminders` existe déjà mais : elle ne gère que les notifications in-app (`public.notifications`), et son cron job actuel est rejeté en 401 car la méthode d’authentification ne correspond pas à ce que la fonction attend.
+Objectif : appliquer la maquette fournie au flux de création (`CreateTontineModal`), sans perdre aucune fonctionnalité existante.
 
-Objectif
-Envoyer des notifications push aux utilisateurs 7 jours, 3 jours, 1 jour et le jour de l’expiration de leur abonnement, en complément des notifications in-app déjà présentes.
+## État actuel
 
-Travail à faire
+Le flux tournante/groupe fait 5 écrans :
+1. Choix du type (3 cartes)
+2. Nom + montant + date de début
+3. Fréquence (5 options en liste)
+4. Membres
+5. Récapitulatif
 
-1. Corriger l’authentification de `subscription-reminders`
-   - Remplacer le système actuel (header Authorization Bearer vs service role) par le même mécanisme que `send-daily-reminders` : token lu depuis `public.system_config` (clé `subscription_reminders_cron_token`) ou variable d’env `REMINDERS_CRON_TOKEN`, passé en header `x-cron-token` ou en query `?token=`.
-   - Mettre à jour le cron job `subscription-reminders-daily` pour envoyer ce token au lieu de la clé anon.
-   - Stocker le token dans `public.system_config` s’il n’existe pas encore.
+Le flux événement fait déjà 3 écrans (type, infos, participants).
 
-2. Ajouter l’envoi de push dans `subscription-reminders`
-   - Importer `web-push` (même version que `send-daily-reminders`).
-   - Configurer VAPID avec les variables d’env existantes (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
-   - Pour chaque utilisateur à relancer (J-7, J-3, J-1, J0) ou pour chaque abonnement expiré :
-     - récupérer ses abonnements actifs dans `push_subscriptions` ;
-     - envoyer une notification push avec le titre/body adapté au stage (J7/J3/J1/J0/expiré) ;
-     - nettoyer les endpoints retournant 404/410 (désactivés).
-   - Conserver la création de la notification in-app dans `public.notifications`.
+## Nouveau flux (2 écrans)
 
-3. Respecter les contraintes existantes
-   - Ne pas modifier les messages WhatsApp (laisser inchangés).
-   - Ne pas toucher au système de rappels quotidiens — il reste indépendant.
-   - Aucun changement UI dans un premier temps : on utilise les abonnements push déjà collectés par le bouton « Activer les rappels ».
+**Écran 1 — « Ta tontine »**
+- Sélecteur de type compact en haut : 3 tuiles côte à côte (Tontine tournante / Cotisations groupe / Événement), icônes en trait lime, tuile active surlignée.
+- Nom
+- Ligne à deux colonnes : Cotisation (montant) et Début (date)
+- Rythme : pastilles horizontales au lieu de la liste verticale. Chaque jour / Chaque semaine / Chaque mois affichées en premier, plus Trimestrielle, Annuelle et Personnalisée (le champ « tous les combien de jours » n'apparaît que si Personnalisée est choisie).
+- Bouton « Continuer »
 
-4. Vérification
-   - Vérifier la compilation TypeScript de l’edge function.
-   - Déclencher un appel test authentifié et vérifier les logs de `subscription-reminders` pour s’assurer que les pushes partent sans 401.
-   - Confirmer que les cron jobs quotidiens (dépenses) continuent de fonctionner.
+Pour le type Événement, l'écran 1 garde ses champs propres (objectif fixe / ouvert, date de l'événement) à la place de cotisation + rythme.
 
-Livrables
-- Edge function `supabase/functions/subscription-reminders/index.ts` modifiée (auth corrigée + push ajouté).
-- Mise à jour du cron job `subscription-reminders-daily`.
-- Ligne ajoutée dans `public.system_config` pour le token si nécessaire.
+**Écran 2 — « Qui participe ? »**
+- Liste des membres en cartes avec avatar initiale, nom, croix de suppression
+- Bouton en pointillés « + Ajouter un membre » (ouvre les champs nom/téléphone + case « C'est moi »)
+- Bloc récapitulatif intégré en bas, mis à jour en direct : nom, montant × rythme, nombre de membres, cagnotte du tour
+- Bouton « Créer la tontine »
+
+Barre de progression à 2 segments en haut, plus de compteur « Étape X/5 ».
+
+## Détails techniques
+
+- Fichier concerné : `src/components/tontine/CreateTontineModal.tsx` (refonte du rendu et de la machine à étapes ; les fonctions `createRecurring` / `createProject` et les payloads Supabase restent inchangés).
+- `step` passe de 0–4 à 1–2 ; le choix du type devient un état interne à l'écran 1 (valeur par défaut : tontine tournante).
+- Validation : écran 1 exige type + nom + montant > 0 + date (événement : nom seul) ; écran 2 exige 2 membres minimum (1 pour événement).
+- `MembersStep` est réécrit en style cartes/avatars, réutilisé par les deux parcours.
+- Styles issus des tokens existants (`glass-card`, `primary`, `border`) — pas de couleurs en dur, aucun emoji.
+- Aucun changement de base de données.
