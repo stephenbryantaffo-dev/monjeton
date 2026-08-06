@@ -19,6 +19,7 @@ import {
   PersonDebtContainer,
   type PersonGroup,
 } from "@/components/debts/PersonDebtContainer";
+import { EmptyState } from "@/components/EmptyState";
 import type { DebtCardData } from "@/components/debts/DebtCard";
 import { EditDebtModal } from "@/components/debts/EditDebtModal";
 import { PaymentModal } from "@/components/debts/PaymentModal";
@@ -516,18 +517,12 @@ const Debts = () => {
           ))}
         </div>
       ) : filteredGroups.length === 0 ? (
-        <div className="glass-card rounded-2xl p-8 text-center">
-          <User className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucune dette à afficher</p>
-          <Button
-            variant="hero"
-            className="mt-4"
-            onClick={openNew}
-          >
-            <Plus className="w-4 h-4" />
-            Nouvelle dette
-          </Button>
-        </div>
+        <EmptyState
+          icon={User}
+          title="Tu es à jour avec tout le monde."
+          hint="Aucune dette en cours. Ajoute-en une pour commencer à suivre."
+          action={{ label: "Nouvelle dette", onClick: openNew }}
+        />
       ) : (
         <div className="space-y-3 pb-24">
           {filteredGroups.map((g, i) => (
