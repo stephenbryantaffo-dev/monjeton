@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from
 
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { EmptyState } from "@/components/EmptyState";
 const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
@@ -408,7 +409,69 @@ const Dashboard = () => {
     fetchPredictions();
   }, [user]);
 
-  const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+  /**
+   * Message d'accueil contextuel — remplace le générique "Bonjour + nom".
+   * Choisit un message pertinent selon l'heure, la date du mois, les
+   * dépenses du jour et la santé du budget. Toujours factuel et court,
+   * jamais moralisateur (l'utilisateur n'aime pas se sentir jugé).
+   */
+  const buildGreeting = (): { hello: string; context: string | null } => {
+    const now = new Date();
+    const h = now.getHours();
+    const day = now.getDate();
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysLeft = lastDayOfMonth - day;
+    const firstName = (profile?.full_name || "").split(" ")[0] || "";
+
+    // salutation selon l'heure
+    let hello = "Bonjour";
+    if (h < 5) hello = "Bonne nuit";
+    else if (h >= 5 && h < 12) hello = "Bonjour";
+    else if (h >= 12 && h < 18) hello = "Bon après-midi";
+    else hello = "Bonsoir";
+    if (firstName) hello = `${hello} ${firstName}.`;
+
+    // dépenses aujourd'hui
+    const todayISO = new Date().toISOString().split("T")[0];
+    const todayExpense = transactions
+      .filter((t) => t.type === "expense" && t.date === todayISO)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    // reste du mois si on connaît revenus + dépenses
+    const monthBalance = totalIncome - totalExpense;
+    const fmtMoney = (n: number) =>
+      new Intl.NumberFormat("fr-FR").format(Math.round(n)).replace(/\s/g, "\u202F");
+
+    // priorité 1 : dépense du jour (une seule fois par jour, factuel)
+    if (todayExpense > 0 && h >= 12) {
+      return { hello, context: `Tu as dépensé ${fmtMoney(todayExpense)} F aujourd'hui.` };
+    }
+
+    // priorité 2 : fin de mois avec reste positif
+    if (daysLeft <= 5 && monthBalance > 0) {
+      return {
+        hello,
+        context: `Plus que ${daysLeft} jour${daysLeft > 1 ? "s" : ""}. Il te reste ${fmtMoney(monthBalance)} F.`,
+      };
+    }
+
+    // priorité 3 : début de mois — encourager
+    if (day <= 3 && totalIncome > 0) {
+      return { hello, context: "Un nouveau mois commence." };
+    }
+
+    // priorité 4 : matin — inviter à noter
+    if (h >= 5 && h < 11 && todayExpense === 0) {
+      return { hello, context: "Comment se passe ta journée ?" };
+    }
+
+    // sinon rien : on garde juste la salutation
+    return { hello, context: null };
+  };
+
+  const greeting = buildGreeting();
+
+    const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
 
   const expenseByCategory = transactions
@@ -478,8 +541,15 @@ const Dashboard = () => {
       <SubscriptionRenewBanner />
       <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-sm">Bonjour</p>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{profile?.full_name || "Tableau de bord"}</h1>
+          {/* Header contextuel : salutation + phrase pertinente selon l'heure et l'état du budget */}
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate leading-tight">
+            {greeting.hello}
+          </h1>
+          {greeting.context && (
+            <p className="text-primary text-[13px] font-semibold mt-1 truncate">
+              {greeting.context}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2 mt-1 shrink-0">
           {streak > 0 && (
@@ -810,7 +880,7 @@ const Dashboard = () => {
                       </motion.span>
                     )}
                   </div>
-                  <Link to="/transactions" className="text-xs text-primary">Voir tout</Link>
+                  <Link to="/transactions" className="text-xs font-semibold text-primary">{transactions.length > 0 ? `${transactions.length} ce mois` : "Voir tout"} →</Link>
                 </div>
                 <div className="space-y-2">
                   {recentTx.map((t, i) => (
@@ -837,7 +907,13 @@ const Dashboard = () => {
                     </motion.div>
                   ))}
                   {recentTx.length === 0 && (
-                    <p className="text-center text-muted-foreground text-sm py-4">Aucune transaction</p>
+                    <EmptyState
+                      compact
+                      icon={Mic}
+                      title="Dis-moi ce que tu as dépensé aujourd'hui."
+                      hint="Appuie sur le micro et parle."
+                      action={{ label: "Ajouter", onClick: () => navigate("/transactions/new") }}
+                    />
                   )}
                 </div>
               </div>
