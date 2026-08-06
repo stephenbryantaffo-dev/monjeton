@@ -40,7 +40,7 @@ const ConfirmDeleteDialog = ({
       <AlertDialogFooter>
         <AlertDialogCancel>Annuler</AlertDialogCancel>
         <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-          Supprimer
+          Supprimer quand même
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
