@@ -178,7 +178,7 @@ const DashboardTontineWidget = () => {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-foreground">Mes tontines</h2>
         <button onClick={() => navigate("/tontine")} className="text-xs text-primary">
-          Voir tout
+          {tontines.length > 0 ? `Tes ${tontines.length} tontine${tontines.length > 1 ? 's' : ''}` : 'Voir tout'} →
         </button>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
