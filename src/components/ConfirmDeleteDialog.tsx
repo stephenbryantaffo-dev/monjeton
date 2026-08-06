@@ -20,7 +20,7 @@ interface ConfirmDeleteDialogProps {
 
 const ConfirmDeleteDialog = ({
   onConfirm,
-  title = "Confirmer la suppression",
+  title = "Supprimer ?",
   description = "Cette action est irréversible. Voulez-vous continuer ?",
   children,
 }: ConfirmDeleteDialogProps) => (
