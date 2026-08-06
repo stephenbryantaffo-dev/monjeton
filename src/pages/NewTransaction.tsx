@@ -723,7 +723,7 @@ const NewTransaction = () => {
               className="w-full"
               disabled={loading}
             >
-              {loading ? "Enregistrement..." : "Enregistrer la transaction"}
+              {loading ? "Un instant…" : "C'est bon"}
             </Button>
           </Screen.StickyAction>
         )}
