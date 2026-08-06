@@ -11,6 +11,7 @@ import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import CreateTontineModal from "./CreateTontineModal";
 import { TontineData, TontineCycle, FREQ_LABELS, FREQ_BADGE_CLASSES } from "./types";
 import { fmt } from "./utils";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Props {
   tontines: TontineData[];
@@ -139,7 +140,11 @@ const TontineList = ({ tontines, loading, onRefresh }: Props) => {
               );
             })}
         {tontines.length === 0 && !loading && (
-          <p className="text-center text-muted-foreground text-sm py-12">Aucune tontine créée</p>
+          <EmptyState
+            icon={Users}
+            title="Ta première tontine en 30 secondes."
+            hint="Nom, montant, fréquence — c'est tout."
+          />
         )}
       </div>
     </div>
