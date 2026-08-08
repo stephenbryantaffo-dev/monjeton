@@ -292,7 +292,7 @@ const Transactions = () => {
     <DashboardLayout title="Transactions">
       <div className="flex gap-2 items-center mb-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
           <Input
             placeholder="Rechercher une transaction…"
             value={searchQuery}
