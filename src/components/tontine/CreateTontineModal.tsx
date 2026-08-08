@@ -34,10 +34,10 @@ const RHYTHMS: { id: RhythmId; label: string }[] = [
   { id: "custom", label: "Personnalisée" },
 ];
 
-const TYPES: { id: CaisseType; label: string; Icon: typeof Repeat }[] = [
-  { id: "recurring", label: "Tontine tournante", Icon: Repeat },
-  { id: "association", label: "Cotisations groupe", Icon: Users },
-  { id: "project", label: "Événement", Icon: CalendarHeart },
+const TYPES: { id: CaisseType; label: string; description: string; Icon: typeof Repeat }[] = [
+  { id: "recurring", label: "Tontine tournante", description: "Chacun cotise, et à tour de rôle une personne reçoit toute la cagnotte.", Icon: Repeat },
+  { id: "association", label: "Cotisations groupe", description: "Vous mettez de l'argent ensemble pour un objectif commun.", Icon: Users },
+  { id: "project", label: "Événement", description: "Collecte ponctuelle pour un mariage, un baptême, une fête.", Icon: CalendarHeart },
 ];
 
 const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
@@ -247,7 +247,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
                 C'est pour quoi ?
               </p>
               <div className="flex gap-2">
-                {TYPES.map(({ id, label, Icon }) => (
+                {TYPES.map(({ id, label, description, Icon }) => (
                   <button
                     key={id}
                     type="button"
@@ -262,6 +262,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
                       <Icon className="h-4 w-4 text-primary" />
                     </span>
                     <span className="block text-[10.5px] font-bold leading-tight text-foreground">{label}</span>
+                    <span className="mt-1 block text-[10px] leading-tight text-muted-foreground">{description}</span>
                   </button>
                 ))}
               </div>
