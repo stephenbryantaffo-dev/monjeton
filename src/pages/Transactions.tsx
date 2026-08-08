@@ -294,10 +294,10 @@ const Transactions = () => {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un libellé, une catégorie…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-11 h-12 rounded-full bg-card border-border text-sm"
+            placeholder="Rechercher une transaction…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-11 h-12 rounded-full bg-secondary border-border text-sm"
           />
         </div>
         <button
