@@ -1199,7 +1199,11 @@ const Budgets = () => {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <BorderRotate className={`p-4 ${over ? "border border-destructive/40" : ""}`} animationSpeed={18}>
+                  <BorderRotate
+                    className={`p-4 ${over ? "border border-destructive/40" : ""} ${pct >= 85 ? "border-l-[3px] border-l-destructive" : pct >= 60 ? "border-l-[3px]" : ""}`}
+                    style={pct >= 60 && pct < 85 ? { borderLeftColor: "hsl(30, 90%, 55%)" } : undefined}
+                    animationSpeed={18}
+                  >
                     <div className="flex items-center justify-between mb-1 gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         {cb.category?.color && (
