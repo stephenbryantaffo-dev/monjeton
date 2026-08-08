@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Target, Plus, ChevronDown, ChevronUp, ArrowDownToLine, PartyPopper, Wallet } from "lucide-react";
-import { GoalIcon, ICON_CHOICES, ICON_LABELS, toIconKey } from "@/lib/goalIcons";
+import { GoalIcon } from "@/lib/goalIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,10 +67,10 @@ const Savings = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState("target");
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [note, setNote] = useState("");
+  const [showMore, setShowMore] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Deposit states
@@ -139,10 +139,10 @@ const Savings = () => {
   const resetForm = () => {
     setEditingGoalId(null);
     setName("");
-    setEmoji("target");
     setTarget("");
     setDeadline("");
     setNote("");
+    setShowMore(false);
   };
 
   const openCreateModal = () => {
@@ -153,7 +153,6 @@ const Savings = () => {
   const openTemplateModal = (t: typeof TEMPLATES[number]) => {
     resetForm();
     setName(t.name);
-    setEmoji(t.icon);
     setTarget(String(t.amount));
     setModalOpen(true);
   };
@@ -161,10 +160,10 @@ const Savings = () => {
   const openEditModal = (g: SavingsGoal) => {
     setEditingGoalId(g.id);
     setName(g.name);
-    setEmoji(toIconKey(g.emoji));
     setTarget(String(g.target_amount));
     setDeadline(g.deadline || "");
     setNote(g.note || "");
+    setShowMore(Boolean(g.deadline || g.note));
     setModalOpen(true);
   };
 
@@ -184,7 +183,7 @@ const Savings = () => {
     try {
       const payload = {
         name: trimmedName.slice(0, 50),
-        emoji: emoji || "target",
+        emoji: "target",
         target_amount: goalTarget,
         deadline: deadline || null,
         note: note ? note.slice(0, 200) : null,
@@ -655,7 +654,7 @@ const Savings = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs">Nom de l'objectif</Label>
                 <Input
-                  placeholder="Ex : Voyage Japon"
+                  placeholder="Ex : Voyage à Dubaï"
                   value={name}
                   maxLength={50}
                   onChange={(e) => setName(e.target.value)}
@@ -663,34 +662,6 @@ const Savings = () => {
                   autoFocus
                 />
                 <p className="text-[10px] text-muted-foreground text-right">{name.length}/50</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">Emoji / icône</Label>
-                <div className="flex flex-wrap gap-2">
-                  {ICON_CHOICES.map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => setEmoji(k)}
-                      aria-label={ICON_LABELS[k] || k}
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                        toIconKey(emoji) === k
-                          ? "bg-primary/20 ring-2 ring-primary text-primary"
-                          : "bg-secondary hover:bg-secondary/70 text-muted-foreground"
-                      }`}
-                    >
-                      <GoalIcon value={k} className="w-[18px] h-[18px]" />
-                    </button>
-                  ))}
-                </div>
-                <Input
-                  placeholder="ou tape un emoji libre"
-                  value={emoji}
-                  maxLength={4}
-                  onChange={(e) => setEmoji(e.target.value)}
-                  className="bg-secondary border-border mt-2 text-center text-xl"
-                />
               </div>
 
               <div className="space-y-1.5">
@@ -704,23 +675,43 @@ const Savings = () => {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">Date d'échéance (optionnel)</Label>
-                <DatePickerField value={deadline} onChange={(v) => setDeadline(v)} min={today} className="bg-secondary border-border" />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowMore((s) => !s)}
+                className="w-full flex items-center justify-between rounded-xl border border-border bg-secondary/50 px-3.5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+              >
+                <span>{showMore ? "Moins de détails" : "+ Ajouter des détails"}</span>
+                {showMore ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </button>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">Note (optionnel)</Label>
-                <Textarea
-                  placeholder="Pourquoi cet objectif ?"
-                  value={note}
-                  maxLength={200}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="bg-secondary border-border resize-none"
-                  rows={3}
-                />
-                <p className="text-[10px] text-muted-foreground text-right">{note.length}/200</p>
-              </div>
+              <AnimatePresence>
+                {showMore && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4 overflow-hidden"
+                  >
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Date d'échéance (optionnel)</Label>
+                      <DatePickerField value={deadline} onChange={(v) => setDeadline(v)} min={today} className="bg-secondary border-border" />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Note (optionnel)</Label>
+                      <Textarea
+                        placeholder="Pourquoi cet objectif ?"
+                        value={note}
+                        maxLength={200}
+                        onChange={(e) => setNote(e.target.value)}
+                        className="bg-secondary border-border resize-none"
+                        rows={3}
+                      />
+                      <p className="text-[10px] text-muted-foreground text-right">{note.length}/200</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Screen.Content>
 
             <Screen.StickyAction>
