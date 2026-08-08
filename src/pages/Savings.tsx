@@ -139,10 +139,10 @@ const Savings = () => {
   const resetForm = () => {
     setEditingGoalId(null);
     setName("");
-    setEmoji("target");
     setTarget("");
     setDeadline("");
     setNote("");
+    setShowMore(false);
   };
 
   const openCreateModal = () => {
