@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BorderRotate } from "@/components/ui/animated-gradient-border";
 import { Target, Plus, ChevronDown, ChevronUp, ArrowDownToLine, PartyPopper, Wallet } from "lucide-react";
-import { GoalIcon, ICON_CHOICES, ICON_LABELS, toIconKey } from "@/lib/goalIcons";
+import { GoalIcon } from "@/lib/goalIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
