@@ -34,10 +34,10 @@ const RHYTHMS: { id: RhythmId; label: string }[] = [
   { id: "custom", label: "Personnalisée" },
 ];
 
-const TYPES: { id: CaisseType; label: string; Icon: typeof Repeat }[] = [
-  { id: "recurring", label: "Tontine tournante", Icon: Repeat },
-  { id: "association", label: "Cotisations groupe", Icon: Users },
-  { id: "project", label: "Événement", Icon: CalendarHeart },
+const TYPES: { id: CaisseType; label: string; description: string; Icon: typeof Repeat }[] = [
+  { id: "recurring", label: "Tontine tournante", description: "Chacun cotise, et à tour de rôle une personne reçoit toute la cagnotte.", Icon: Repeat },
+  { id: "association", label: "Cotisations groupe", description: "Vous mettez de l'argent ensemble pour un objectif commun.", Icon: Users },
+  { id: "project", label: "Événement", description: "Collecte ponctuelle pour un mariage, un baptême, une fête.", Icon: CalendarHeart },
 ];
 
 const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
