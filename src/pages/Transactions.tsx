@@ -113,16 +113,24 @@ const Transactions = () => {
 
   const hasActiveFilters = filterCategory !== "all" || filterWallet !== "all" || filterPeriod !== "all" || filterMinAmount || filterMaxAmount || sortOrder !== "date_desc";
 
+  const normalize = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
   const filtered = useMemo(() => {
     let result = transactions;
 
     // Text search
-    if (search) {
-      const s = search.toLowerCase();
-      result = result.filter(t =>
-        (t.note || "").toLowerCase().includes(s) ||
-        (t.categories?.name || "").toLowerCase().includes(s)
-      );
+    if (searchQuery) {
+      const s = normalize(searchQuery);
+      result = result.filter((t) => {
+        const note = normalize(t.note || "");
+        const category = normalize(t.categories?.name || "");
+        const amount = String(t.amount || "");
+        return note.includes(s) || category.includes(s) || amount.includes(s);
+      });
     }
 
     // Category filter
@@ -176,7 +184,7 @@ const Transactions = () => {
     }
 
     return result;
-  }, [transactions, search, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder]);
+  }, [transactions, searchQuery, filterCategory, filterWallet, filterPeriod, filterMinAmount, filterMaxAmount, sortOrder]);
 
   /** Nombre de filtres actifs, pour la pastille du bouton Filtres. */
   const activeFilterCount =
