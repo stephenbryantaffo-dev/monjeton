@@ -67,10 +67,10 @@ const Savings = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState("target");
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [note, setNote] = useState("");
+  const [showMore, setShowMore] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Deposit states
