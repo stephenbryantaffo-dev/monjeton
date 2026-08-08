@@ -5,18 +5,33 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 
-const menuItems = [
-  { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
-  { icon: Receipt, label: "Mes reçus", path: "/receipts" },
-  { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
-  { icon: Tag, label: "Catégories", path: "/categories" },
-  { icon: Target, label: "Épargne", path: "/savings" },
-  { icon: Shield, label: "Dettes", path: "/debts" },
-  { icon: PieChart, label: "Budgets", path: "/budgets" },
-  { icon: Users, label: "Tontine & Caisse commune", path: "/tontine" },
-  { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
-  { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
-  { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
+const menuGroups = [
+  {
+    title: "Mon argent",
+    items: [
+      { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
+      { icon: PieChart, label: "Budgets", path: "/budgets" },
+      { icon: Target, label: "Épargne", path: "/savings" },
+      { icon: Shield, label: "Dettes", path: "/debts" },
+    ],
+  },
+  {
+    title: "Outils",
+    items: [
+      { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
+      { icon: Receipt, label: "Mes reçus", path: "/receipts" },
+      { icon: Tag, label: "Catégories", path: "/categories" },
+      { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
+    ],
+  },
+  {
+    title: "Communauté & plus",
+    items: [
+      { icon: Users, label: "Tontine & Caisse", path: "/tontine" },
+      { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
+      { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
+    ],
+  },
 ];
 
 const SettingsPage = () => {
