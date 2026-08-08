@@ -444,7 +444,9 @@ const Transactions = () => {
           filtered.map((t, i) => <TxRow key={t.id} t={t} i={i} />)
         )}
         {!loading && filtered.length === 0 && (
-          <p className="text-center text-muted-foreground text-sm py-8">Aucune transaction</p>
+          <p className="text-center text-muted-foreground text-sm py-8">
+            {searchQuery ? `Rien trouvé pour « ${searchQuery} »` : "Aucune transaction"}
+          </p>
         )}
         {!loading && hasMore && filtered.length >= PAGE_SIZE && (
           <Button
