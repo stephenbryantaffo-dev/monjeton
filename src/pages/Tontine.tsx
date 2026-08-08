@@ -747,7 +747,7 @@ const TontinePage = () => {
   // ─── LIST VIEW ───
   if (!selectedId) {
     return (
-      <DashboardLayout title="Mes caisses">
+      <DashboardLayout title="Mes tontines">
         {/* Halo ambiant */}
         <div className="relative">
           <div
@@ -760,14 +760,14 @@ const TontinePage = () => {
             }}
           />
           <p className="relative text-xs uppercase tracking-wider text-primary font-bold mb-2">
-            Tes collectes
+            Tes tontines & cotisations
           </p>
         </div>
 
         {familyFilterBar}
         {statusFilterBar}
         <Button onClick={() => setCreateOpen(true)} className="w-full mb-4 gradient-primary text-primary-foreground shadow-[0_0_24px_-8px_hsl(var(--primary))]">
-          <Plus className="w-4 h-4 mr-2" /> Créer une caisse
+          <Plus className="w-4 h-4 mr-2" /> Créer une tontine
         </Button>
         <CreateTontineModal open={createOpen} onOpenChange={setCreateOpen} onCreated={loadTontines} />
 
@@ -778,12 +778,12 @@ const TontinePage = () => {
             <div className="text-center py-12">
               <Wallet className="w-9 h-9 text-muted-foreground mx-auto mb-3" />
               <p className="font-semibold text-foreground mb-1">
-                {statusFilter === "closed" ? "Aucune caisse clôturée" : "Aucune caisse pour l'instant"}
+                {statusFilter === "closed" ? "Aucune tontine clôturée" : "Aucune tontine pour l'instant"}
               </p>
               <p className="text-sm text-muted-foreground">
                 {statusFilter === "closed"
-                  ? "Les caisses actives apparaissent sous l'onglet Actives."
-                  : "Crée ta première caisse pour commencer"}
+                  ? "Les tontines actives apparaissent sous l'onglet Actives."
+                  : "Crée ta première tontine pour commencer"}
               </p>
             </div>
           ) : (
