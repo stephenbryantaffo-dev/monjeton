@@ -247,7 +247,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
                 C'est pour quoi ?
               </p>
               <div className="flex gap-2">
-                {TYPES.map(({ id, label, Icon }) => (
+                {TYPES.map(({ id, label, description, Icon }) => (
                   <button
                     key={id}
                     type="button"
@@ -262,6 +262,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
                       <Icon className="h-4 w-4 text-primary" />
                     </span>
                     <span className="block text-[10.5px] font-bold leading-tight text-foreground">{label}</span>
+                    <span className="mt-1 block text-[10px] leading-tight text-muted-foreground">{description}</span>
                   </button>
                 ))}
               </div>
