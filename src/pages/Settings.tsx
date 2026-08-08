@@ -5,18 +5,33 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { BADGES_CI } from "@/lib/badgeCalculator";
 
-const menuItems = [
-  { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
-  { icon: Receipt, label: "Mes reçus", path: "/receipts" },
-  { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
-  { icon: Tag, label: "Catégories", path: "/categories" },
-  { icon: Target, label: "Épargne", path: "/savings" },
-  { icon: Shield, label: "Dettes", path: "/debts" },
-  { icon: PieChart, label: "Budgets", path: "/budgets" },
-  { icon: Users, label: "Tontine & Caisse commune", path: "/tontine" },
-  { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
-  { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
-  { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
+const menuGroups = [
+  {
+    title: "Mon argent",
+    items: [
+      { icon: Wallet, label: "Portefeuilles", path: "/wallets" },
+      { icon: PieChart, label: "Budgets", path: "/budgets" },
+      { icon: Target, label: "Épargne", path: "/savings" },
+      { icon: Shield, label: "Dettes", path: "/debts" },
+    ],
+  },
+  {
+    title: "Outils",
+    items: [
+      { icon: Camera, label: "Scanner (OCR)", path: "/scan" },
+      { icon: Receipt, label: "Mes reçus", path: "/receipts" },
+      { icon: Tag, label: "Catégories", path: "/categories" },
+      { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
+    ],
+  },
+  {
+    title: "Communauté & plus",
+    items: [
+      { icon: Users, label: "Tontine & Caisse", path: "/tontine" },
+      { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
+      { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
+    ],
+  },
 ];
 
 const SettingsPage = () => {
@@ -74,43 +89,45 @@ const SettingsPage = () => {
         <ChevronRight className="w-5 h-5 text-muted-foreground" />
       </button>
 
-      {/* Titre outils */}
-      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">Mes outils</h3>
+      {/* Groupes d'outils */}
+      {menuGroups.map((group) => (
+        <div key={group.title} className="mb-6">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">{group.title}</h3>
+          <div className="grid grid-cols-2 gap-2.5">
+            {group.items.map((item) => {
+              const content = (
+                <div className="flex flex-col items-start gap-2 h-full">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-[18px] h-[18px] text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="block text-[13.5px] font-semibold text-foreground leading-tight">{item.label}</span>
+                  </div>
+                </div>
+              );
 
-      {/* Grille d'outils */}
-      <div className="grid grid-cols-2 gap-2.5 mb-6">
-        {menuItems.map((item) => {
-          const content = (
-            <div className="flex flex-col items-start gap-2 h-full">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <item.icon className="w-[18px] h-[18px] text-primary" />
-              </div>
-              <div className="min-w-0">
-                <span className="block text-[13.5px] font-semibold text-foreground leading-tight">{item.label}</span>
-              </div>
-            </div>
-          );
+              if (item.path === "/settings/subscription") {
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => navigate("/settings/subscription")}
+                    className="glass-card rounded-2xl p-4 flex hover:bg-secondary/50 transition-colors min-h-[92px] text-left"
+                  >
+                    {content}
+                  </button>
+                );
+              }
 
-          if (item.path === "/settings/subscription") {
-            return (
-              <button
-                key={item.path}
-                type="button"
-                onClick={() => navigate("/settings/subscription")}
-                className="glass-card rounded-2xl p-4 flex hover:bg-secondary/50 transition-colors min-h-[92px] text-left"
-              >
-                {content}
-              </button>
-            );
-          }
-
-          return (
-            <Link key={item.path} to={item.path} className="glass-card rounded-2xl p-4 flex hover:bg-secondary/50 transition-colors min-h-[92px]">
-              {content}
-            </Link>
-          );
-        })}
-      </div>
+              return (
+                <Link key={item.path} to={item.path} className="glass-card rounded-2xl p-4 flex hover:bg-secondary/50 transition-colors min-h-[92px]">
+                  {content}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
       {/* Mes badges */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
