@@ -160,10 +160,10 @@ const Savings = () => {
   const openEditModal = (g: SavingsGoal) => {
     setEditingGoalId(g.id);
     setName(g.name);
-    setEmoji(toIconKey(g.emoji));
     setTarget(String(g.target_amount));
     setDeadline(g.deadline || "");
     setNote(g.note || "");
+    setShowMore(Boolean(g.deadline || g.note));
     setModalOpen(true);
   };
 
