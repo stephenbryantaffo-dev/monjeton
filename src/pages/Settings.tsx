@@ -24,10 +24,10 @@ const menuGroups = [
       { icon: MessageCircle, label: "Assistant IA", path: "/assistant" },
     ],
   },
-  {
-    title: "Communauté & plus",
-    items: [
-      { icon: Users, label: "Tontine & Caisse", path: "/tontine" },
+    {
+      title: "Communauté & plus",
+      items: [
+        { icon: Users, label: "Tontines", path: "/tontine" },
       { icon: BarChart3, label: "Bourse BRVM", path: "/brvm" },
       { icon: CreditCard, label: "Mon abonnement", path: "/settings/subscription" },
     ],
