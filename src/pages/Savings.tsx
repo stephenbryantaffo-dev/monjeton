@@ -183,7 +183,7 @@ const Savings = () => {
     try {
       const payload = {
         name: trimmedName.slice(0, 50),
-        emoji: emoji || "target",
+        emoji: "target",
         target_amount: goalTarget,
         deadline: deadline || null,
         note: note ? note.slice(0, 200) : null,
