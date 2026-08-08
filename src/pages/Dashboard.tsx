@@ -810,18 +810,18 @@ const Dashboard = () => {
                 <div className="grid grid-cols-3 gap-3 mt-5 px-2">
                   {[
                     { Icon: Plus, label: "Saisir", go: () => navigate("/transactions/new") },
-                    { Icon: Mic, label: "Parler", go: () => navigate("/transactions/new", { state: { autoVoice: true } }) },
+                    { Icon: Mic, label: "Parler", go: () => navigate("/transactions/new", { state: { autoVoice: true } }), accent: true },
                     { Icon: Camera, label: "Scanner", go: () => navigate("/scan") },
-                  ].map(({ Icon, label, go }) => (
+                  ].map(({ Icon, label, go, accent }) => (
                     <button key={label} onClick={go} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
-                      <span className="w-[60px] h-[60px] rounded-full bg-card border border-border flex items-center justify-center relative overflow-hidden">
+                      <span className={cn("w-[60px] h-[60px] rounded-full bg-card flex items-center justify-center relative overflow-hidden", accent ? "border border-primary/50" : "border border-border")}>
                         <span
                           className="absolute inset-0"
                           style={{ background: "radial-gradient(circle at 32% 18%, hsl(var(--primary) / 0.16), transparent 62%)" }}
                         />
                         <Icon className="relative w-[23px] h-[23px] text-primary" strokeWidth={1.9} />
                       </span>
-                      <span className="text-xs font-bold text-foreground">{label}</span>
+                      <span className={cn("text-xs font-bold", accent ? "text-primary" : "text-foreground")}>{label}</span>
                     </button>
                   ))}
                 </div>
