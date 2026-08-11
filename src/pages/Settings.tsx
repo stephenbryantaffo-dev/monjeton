@@ -82,7 +82,7 @@ const SettingsPage = () => {
         onClick={() => navigate("/parametres")}
         className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors mb-6"
       >
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl icon-3d flex items-center justify-center flex-shrink-0">
           <Settings className="w-[18px] h-[18px] text-primary" />
         </div>
         <span className="flex-1 text-left text-[15px] font-semibold text-foreground">Paramètres</span>
