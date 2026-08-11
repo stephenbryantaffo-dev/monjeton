@@ -185,7 +185,7 @@ const TontinePage = () => {
     if (loading) return;
     if (selectedId && !tontines.find(t => t.id === selectedId)) {
       setSelectedId(null);
-      toast({ title: "Accès retiré", description: "Tu n'as plus accès à cette caisse.", variant: "destructive" });
+      toast({ title: "Accès retiré", description: "Tu n'as plus accès à cette tontine.", variant: "destructive" });
     }
   }, [tontines, selectedId, loading]);
 
@@ -635,7 +635,7 @@ const TontinePage = () => {
       });
       return;
     }
-    toast({ title: "Caisse supprimée" });
+    toast({ title: "Tontine supprimée" });
     if (selectedId === id) setSelectedId(null);
     await loadTontines();
   };
@@ -861,7 +861,7 @@ const TontinePage = () => {
                         <meta.Icon className="w-5 h-5" />
                       </div>
                       {canDelete && (
-                        <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette caisse ?">
+                        <ConfirmDeleteDialog onConfirm={() => deleteTontine(t.id)} title="Supprimer cette tontine ?">
                           <button className="text-muted-foreground hover:text-destructive p-1" onClick={e => e.stopPropagation()} aria-label="Supprimer"><X className="w-4 h-4" /></button>
                         </ConfirmDeleteDialog>
                       )}
