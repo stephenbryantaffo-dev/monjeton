@@ -97,7 +97,7 @@ const SettingsPage = () => {
             {group.items.map((item) => {
               const content = (
                 <div className="flex flex-col items-start gap-2 h-full">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                   <div className="w-9 h-9 rounded-xl icon-3d flex items-center justify-center flex-shrink-0">
                     <item.icon className="w-[18px] h-[18px] text-primary" />
                   </div>
                   <div className="min-w-0">
