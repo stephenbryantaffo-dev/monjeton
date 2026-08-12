@@ -113,8 +113,8 @@ const Receipts = () => {
   // verrouillage et l'écran plante au déverrouillage.
   const [loadingViewer, setLoadingViewer] = useState(false);
 
-
   useEffect(() => {
+
     if (user && isUnlocked) fetchScans();
   }, [user, isUnlocked]);
 
