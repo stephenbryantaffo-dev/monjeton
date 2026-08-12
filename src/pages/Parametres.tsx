@@ -178,6 +178,39 @@ const Parametres = () => {
       <div className="mb-4">
         <LanguageSelector />
       </div>
+
+      {/* Apparence */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Palette className="w-4 h-4" /> Apparence
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Choisis l'ambiance de l'application.
+        </p>
+        <div className="flex gap-3">
+          {[
+            { id: "dark", label: "Sombre", bg: "#14171C", ring: "#2b323c" },
+            { id: "light", label: "Blanc", bg: "#FFFFFF", ring: "#DFE4DD" },
+            { id: "cream", label: "Crème", bg: "#FAF8F3", ring: "#E3D9C5" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTheme(t.id)}
+              className={`rounded-xl p-2 border-2 transition-colors ${
+                mounted && theme === t.id ? "border-primary" : "border-transparent"
+              }`}
+            >
+              <div
+                className="w-12 h-12 rounded-full mb-1.5"
+                style={{ background: t.bg, boxShadow: `inset 0 0 0 1px ${t.ring}` }}
+              />
+              <span className="text-xs text-foreground">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Country & Language */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
