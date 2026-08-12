@@ -35,6 +35,8 @@ const Parametres = () => {
   const { user, signOut } = useAuth();
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
   const { country, setCountry } = useCountry();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showPinSetup, setShowPinSetup] = useState(false);
@@ -52,6 +54,8 @@ const Parametres = () => {
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState(false);
   const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
+
+  useEffect(() => setMounted(true), []);
 
   const handleCurrencyChange = async (code: CurrencyCode) => {
     if (!user || code === currencyPref) return;
