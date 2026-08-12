@@ -27,7 +27,10 @@ class ErrorBoundary extends Component<Props, State> {
 
   handleReload = () => {
     this.setState({ hasError: false, error: null });
-    window.location.href = "/dashboard";
+    // On recharge la page courante plutôt que de forcer /dashboard :
+    // si c'est le dashboard qui plante, forcer la redirection enferme
+    // l'utilisateur dans une boucle d'erreur.
+    window.location.reload();
   };
 
   render() {
