@@ -189,6 +189,20 @@ Return ONLY the JSON, no other text.`;
 
     const prompt = safeScanType === "screenshot" ? promptScreenshot : promptReceipt;
 
+    // Garde-fou date : rejet si > 6 mois dans le passé ou dans le futur
+    const sanitizeDate = (dateStr: string): string => {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return today;
+      const parsedDate = new Date(dateStr);
+      const now = new Date(today);
+      const sixMonthsAgo = new Date(today);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      if (parsedDate < sixMonthsAgo || parsedDate > now) {
+        console.warn(`scan-receipt: date rejetée (${dateStr}), remplacée par ${today}`);
+        return today;
+      }
+      return dateStr;
+    };
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
