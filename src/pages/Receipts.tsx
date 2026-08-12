@@ -108,8 +108,13 @@ const Receipts = () => {
   const [dupViewOpen, setDupViewOpen] = useState(false);
   const [dupConfirmAll, setDupConfirmAll] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Tous les hooks doivent être appelés avant le return anticipé du PIN,
+  // sinon React compte un nombre de hooks différent selon l'état de
+  // verrouillage et l'écran plante au déverrouillage.
+  const [loadingViewer, setLoadingViewer] = useState(false);
 
   useEffect(() => {
+
     if (user && isUnlocked) fetchScans();
   }, [user, isUnlocked]);
 
@@ -133,9 +138,8 @@ const Receipts = () => {
     return `${Number(amount).toLocaleString("fr-FR")} ${cur}`;
   };
 
-  const [loadingViewer, setLoadingViewer] = useState(false);
-
   const openFullscreen = async (scan: ScanItem) => {
+
     setFullscreenScan(scan);
     setFullscreenImage(null);
     setLoadingViewer(true);
