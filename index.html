@@ -60,7 +60,21 @@
     }
     </script>
 
-    <style>
+    <script>
+      /* Applique le thème enregistré avant le premier affichage.
+         next-themes stocke le choix dans localStorage sous la clé "theme",
+         mais son propre script ne s'exécute qu'au chargement de React —
+         donc trop tard pour le splash. Ce bloc évite l'éclair de couleur. */
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t === "light" || t === "cream") {
+            document.documentElement.classList.add(t);
+          }
+        } catch (e) {}
+      })();
+    </script>
+
       /* Écran de démarrage — s'affiche AVANT tout JavaScript.
          Aucune image externe : logo en SVG inline, donc zéro requête
          réseau. C'est ce qui rend l'ouverture instantanée même sur un
@@ -105,6 +119,19 @@
         0% { transform: translateX(-100%); }
         100% { transform: translateX(330%); }
       }
+      /* Le splash suit le thème choisi. Le carré du logo reste lime dans
+         tous les cas : c'est une surface pleine avec un M sombre dessus,
+         lisible partout. Seuls le fond, le texte et la barre changent. */
+      .light #splash-screen { background: #FFFFFF; }
+      .cream #splash-screen { background: #FAF8F3; }
+      .light #splash-screen p,
+      .cream #splash-screen p { color: #26720A; }
+      .light #splash-logo,
+      .cream #splash-logo { box-shadow: 0 0 30px rgba(38, 114, 10, 0.20); }
+      .light #splash-bar,
+      .cream #splash-bar { background: rgba(38, 114, 10, 0.14); }
+      .light #splash-bar::after,
+      .cream #splash-bar::after { background: #26720A; }
       @media (prefers-reduced-motion: reduce) {
         #splash-logo, #splash-bar::after { animation: none; }
       }
