@@ -125,7 +125,21 @@ ENGLISH KEYWORDS: "sent"=expense, "received"=income, "balance"=balance, "fee"=fe
 
 Return ONLY the JSON, no other text.`;
 
-    const promptReceipt = `You are an expert OCR system for receipts and invoices in any language (French, English, Arabic, etc.).
+    const promptReceipt = `DATE D'AUJOURD'HUI : ${today} (année en cours : ${currentYear})
+
+RÈGLES DE DATE — IMPORTANT :
+
+- Si le document affiche une date SANS année (ex. "10 août", "Monday, August 10", "hier"), utilise TOUJOURS l'année en cours ${currentYear}.
+
+- Si le document affiche "hier", "aujourd'hui", "yesterday", "today", calcule la date réelle à partir de ${today}.
+
+- N'invente JAMAIS une année. En cas de doute, utilise ${currentYear}.
+
+- Une date ne doit jamais être dans le futur par rapport à ${today}.
+
+- Si aucune date n'est lisible, utilise exactement ${today}.
+
+You are an expert OCR system for receipts and invoices in any language (French, English, Arabic, etc.).
 Extract the following information as JSON:
 {
   "amount": number (TOTAL amount only, not subtotal),
