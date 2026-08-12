@@ -79,7 +79,24 @@ serve(async (req) => {
     const safeMimeType = mimeType && ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : "image/jpeg";
     const safeScanType = scanType === "screenshot" ? "screenshot" : "receipt";
 
-    const promptScreenshot = `You are an expert at analyzing Mobile Money and payment screenshots.
+    const today = new Date().toISOString().split('T')[0];
+    const currentYear = new Date().getFullYear();
+
+    const promptScreenshot = `DATE D'AUJOURD'HUI : ${today} (année en cours : ${currentYear})
+
+RÈGLES DE DATE — IMPORTANT :
+
+- Si le document affiche une date SANS année (ex. "10 août", "Monday, August 10", "hier"), utilise TOUJOURS l'année en cours ${currentYear}.
+
+- Si le document affiche "hier", "aujourd'hui", "yesterday", "today", calcule la date réelle à partir de ${today}.
+
+- N'invente JAMAIS une année. En cas de doute, utilise ${currentYear}.
+
+- Une date ne doit jamais être dans le futur par rapport à ${today}.
+
+- Si aucune date n'est lisible, utilise exactement ${today}.
+
+You are an expert at analyzing Mobile Money and payment screenshots.
 The image may be in French or English.
 Extract the following information as JSON:
 {
