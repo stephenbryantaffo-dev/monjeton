@@ -45,6 +45,13 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-muted-foreground">
               L'application a rencontré un problème. Veuillez réessayer.
             </p>
+            {/* DIAGNOSTIC : affiche le message réel pour identifier la panne.
+                À retirer une fois le bug corrigé. */}
+            {this.state.error && (
+              <p className="text-[11px] font-mono text-destructive/90 break-words text-left bg-destructive/10 rounded-lg p-3 leading-relaxed">
+                {this.state.error.message}
+              </p>
+            )}
             <button
               onClick={this.handleReload}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl gradient-primary text-primary-foreground font-medium text-sm"
