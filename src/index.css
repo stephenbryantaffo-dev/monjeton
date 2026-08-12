@@ -292,24 +292,26 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Plage de dates sélectionnée */
-.rdp-day_range_middle {
-  background-color: hsl(100 100% 61% / 0.15) !important;
-  border-radius: 0 !important;
-  color: hsl(110 19% 94%) !important;
-}
+  /* Plage de dates : les couleurs suivent le thème actif.
+     Avant, elles étaient figées en lime + texte clair, ce qui rendait
+     la sélection invisible sur fond clair (contraste 1,07). */
+  .rdp-day_range_middle {
+    background-color: hsl(var(--primary) / 0.15) !important;
+    border-radius: 0 !important;
+    color: hsl(var(--foreground)) !important;
+  }
 
-.rdp-day_range_start {
-  background-color: hsl(100 100% 61%) !important;
-  color: hsl(218 17% 9%) !important;
-  border-radius: 50% 0 0 50% !important;
-}
+  .rdp-day_range_start {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border-radius: 50% 0 0 50% !important;
+  }
 
-.rdp-day_range_end {
-  background-color: hsl(100 100% 61%) !important;
-  color: hsl(218 17% 9%) !important;
-  border-radius: 0 50% 50% 0 !important;
-}
+  .rdp-day_range_end {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border-radius: 0 50% 50% 0 !important;
+  }
 
 .rdp-day_range_start.rdp-day_range_end {
   border-radius: 50% !important;
