@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CreditCard, LogOut, ChevronRight, MessageCircle, Lock, EyeOff, Download, Trash2, FileText, ShieldCheck, Globe, AlertTriangle, Loader2, CheckCircle2, Bell } from "lucide-react";
+import { CreditCard, LogOut, ChevronRight, MessageCircle, Lock, EyeOff, Download, Trash2, FileText, ShieldCheck, Globe, AlertTriangle, Loader2, CheckCircle2, Bell, Palette } from "lucide-react";
+import { useTheme } from "next-themes";
 import EnableNotificationsCard from "@/components/EnableNotificationsCard";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,6 +35,8 @@ const Parametres = () => {
   const { user, signOut } = useAuth();
   const { pinEnabled, isDiscreetMode, setPin, removePin, toggleDiscreetMode } = usePrivacy();
   const { country, setCountry } = useCountry();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showPinSetup, setShowPinSetup] = useState(false);
@@ -51,6 +54,8 @@ const Parametres = () => {
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState(false);
   const [currencyPref, setCurrencyPref] = useState<CurrencyCode>("XOF");
+
+  useEffect(() => setMounted(true), []);
 
   const handleCurrencyChange = async (code: CurrencyCode) => {
     if (!user || code === currencyPref) return;
@@ -173,6 +178,39 @@ const Parametres = () => {
       <div className="mb-4">
         <LanguageSelector />
       </div>
+
+      {/* Apparence */}
+      <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Palette className="w-4 h-4" /> Apparence
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Choisis l'ambiance de l'application.
+        </p>
+        <div className="flex gap-3">
+          {[
+            { id: "dark", label: "Sombre", bg: "#14171C", ring: "#2b323c" },
+            { id: "light", label: "Blanc", bg: "#FFFFFF", ring: "#DFE4DD" },
+            { id: "cream", label: "Crème", bg: "#FAF8F3", ring: "#E3D9C5" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTheme(t.id)}
+              className={`rounded-xl p-2 border-2 transition-colors ${
+                mounted && theme === t.id ? "border-primary" : "border-transparent"
+              }`}
+            >
+              <div
+                className="w-12 h-12 rounded-full mb-1.5"
+                style={{ background: t.bg, boxShadow: `inset 0 0 0 1px ${t.ring}` }}
+              />
+              <span className="text-xs text-foreground">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Country & Language */}
       <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">

@@ -56,7 +56,70 @@
     --sidebar-border: 219 15% 18%;
     --sidebar-ring: 100 100% 61%;
   }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 218 17% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 218 17% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 17% 9%;
+    --primary: 104 84% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 90 14% 95%;
+    --secondary-foreground: 218 17% 9%;
+    --muted: 90 14% 95%;
+    --muted-foreground: 214 10% 40%;
+    --accent: 26 90% 37%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 64% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 103 11% 88%;
+    --input: 90 14% 95%;
+    --ring: 104 84% 24%;
+    --neon-lime: 104 84% 24%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 17% 9%;
+    --sidebar-primary: 104 84% 24%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 90 14% 95%;
+    --sidebar-accent-foreground: 218 17% 9%;
+    --sidebar-border: 103 11% 88%;
+    --sidebar-ring: 104 84% 24%;
+  }
+
+  .cream {
+    --background: 43 41% 97%;
+    --foreground: 38 22% 10%;
+    --card: 43 100% 99%;
+    --card-foreground: 38 22% 10%;
+    --popover: 43 100% 99%;
+    --popover-foreground: 38 22% 10%;
+    --primary: 104 84% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 39 38% 91%;
+    --secondary-foreground: 38 22% 10%;
+    --muted: 39 38% 91%;
+    --muted-foreground: 36 12% 43%;
+    --accent: 26 90% 37%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 64% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 35% 83%;
+    --input: 39 38% 91%;
+    --ring: 104 84% 24%;
+    --neon-lime: 104 84% 24%;
+    --sidebar-background: 43 41% 97%;
+    --sidebar-foreground: 38 22% 10%;
+    --sidebar-primary: 104 84% 24%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 39 38% 91%;
+    --sidebar-accent-foreground: 38 22% 10%;
+    --sidebar-border: 40 35% 83%;
+    --sidebar-ring: 104 84% 24%;
+  }
 }
+
 
 @layer base {
   * {
@@ -109,7 +172,7 @@
   }
 
   .gradient-bg {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(218 17% 11%) 55%, hsl(var(--background)) 100%);
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--card)) 55%, hsl(var(--background)) 100%);
   }
 
   .gradient-primary {
@@ -354,4 +417,25 @@ input:-webkit-autofill:active {
 .icon-3d > * { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) {
   .icon-3d { box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.25); }
+}
+
+/* En mode clair, les cartes ne se distinguent plus du fond par la couleur.
+   C'est l'ombre portée qui crée la séparation. Ombres neutres sur blanc,
+   chaudes sur crème — une ombre grise sur du beige paraît sale. */
+.light .glass-card,
+.light .glass {
+  box-shadow: 0 1px 2px rgba(20, 23, 28, 0.05), 0 3px 8px rgba(20, 23, 28, 0.07);
+}
+.cream .glass-card,
+.cream .glass {
+  box-shadow: 0 1px 2px rgba(96, 74, 40, 0.06), 0 3px 8px rgba(96, 74, 40, 0.09);
+}
+
+/* Le halo néon est conçu pour le fond sombre : sur fond clair il produit
+   une auréole verte sale. On le neutralise. */
+.light .neon-glow,
+.light .neon-glow-purple,
+.cream .neon-glow,
+.cream .neon-glow-purple {
+  box-shadow: none;
 }
