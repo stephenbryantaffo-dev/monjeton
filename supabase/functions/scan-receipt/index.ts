@@ -253,7 +253,7 @@ Return ONLY the JSON, no other text.`;
         parsedResult = {
           amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
           currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
-          date: String(raw.date || "").slice(0, 10),
+          date: sanitizeDate(String(raw.date || "").slice(0, 10)),
           merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
           type: raw.type === "income" ? "income" : "expense",
           wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
