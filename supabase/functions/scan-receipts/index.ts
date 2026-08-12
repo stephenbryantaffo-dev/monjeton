@@ -272,6 +272,20 @@ Si aucune transaction détectée :
       result.transactions = [];
     }
 
+    // Garde-fou date : rejet si > 6 mois dans le passé ou dans le futur
+    const sanitizeDate = (dateStr: string): string => {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return today;
+      const parsedDate = new Date(dateStr);
+      const now = new Date(today);
+      const sixMonthsAgo = new Date(today);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      if (parsedDate < sixMonthsAgo || parsedDate > now) {
+        console.warn(`scan-receipts: date rejetée (${dateStr}), remplacée par ${today}`);
+        return today;
+      }
+      return dateStr;
+    };
+
     result.transactions = result.transactions.map((tx: any, i: number) => ({
       id: tx.id || `tx_${i + 1}`,
       merchant: String(tx.merchant || 'Inconnu').slice(0, 100),
