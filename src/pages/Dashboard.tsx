@@ -469,10 +469,13 @@ const Dashboard = () => {
     return { hello, context: null };
   };
 
-  const greeting = buildGreeting();
-
     const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+
+  // IMPORTANT : buildGreeting() lit totalIncome / totalExpense.
+  // L'appel doit donc venir APRÈS leurs déclarations, sinon on déclenche
+  // une ReferenceError (zone morte temporelle) qui fait planter tout l'écran.
+  const greeting = buildGreeting();
 
   const expenseByCategory = transactions
     .filter(t => t.type === "expense")
