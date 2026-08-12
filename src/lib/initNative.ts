@@ -27,10 +27,24 @@ export async function initNative(): Promise<void> {
   // ---- Barre d'état ----
   try {
     const { StatusBar, Style } = await import("@capacitor/status-bar");
-    // Style.Dark = contenu clair sur fond sombre
-    await StatusBar.setStyle({ style: Style.Dark });
+
+    // La barre d'état doit suivre le thème choisi, sinon on obtient
+    // du texte clair sur fond clair. next-themes enregistre le choix
+    // dans localStorage sous la clé "theme".
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch {
+      stored = null;
+    }
+    const isLight = stored === "light" || stored === "cream";
+    const barColor = stored === "cream" ? "#FAF8F3" : stored === "light" ? "#FFFFFF" : INK;
+
+    // Style.Dark = contenu clair sur fond sombre.
+    // Style.Light = contenu sombre sur fond clair.
+    await StatusBar.setStyle({ style: isLight ? Style.Light : Style.Dark });
     if (Capacitor.getPlatform() === "android") {
-      await StatusBar.setBackgroundColor({ color: INK });
+      await StatusBar.setBackgroundColor({ color: barColor });
     }
     await StatusBar.setOverlaysWebView({ overlay: false });
   } catch (e) {
