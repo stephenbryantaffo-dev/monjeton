@@ -67,7 +67,24 @@ Deno.serve(async (req) => {
     } catch {}
     const ctx = getCurrencyCtx(userCurrency);
 
-    const systemPrompt = `Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech multi-devises.
+    const today = new Date().toISOString().split('T')[0];
+    const currentYear = new Date().getFullYear();
+
+    const systemPrompt = `DATE D'AUJOURD'HUI : ${today} (année en cours : ${currentYear})
+
+RÈGLES DE DATE — IMPORTANT :
+
+- Si le document affiche une date SANS année (ex. "10 août", "Monday, August 10", "hier"), utilise TOUJOURS l'année en cours ${currentYear}.
+
+- Si le document affiche "hier", "aujourd'hui", "yesterday", "today", calcule la date réelle à partir de ${today}.
+
+- N'invente JAMAIS une année. En cas de doute, utilise ${currentYear}.
+
+- Une date ne doit jamais être dans le futur par rapport à ${today}.
+
+- Si aucune date n'est lisible, utilise exactement ${today}.
+
+Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech multi-devises.
 
 Devise préférée de l'utilisateur : ${userCurrency} (${ctx.region}).
 Si aucun symbole de devise n'est lisible sur le document, utiliser ${userCurrency} par défaut.
