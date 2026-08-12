@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { AppLangProvider } from "@/lib/appTranslation";
 import { AutoTranslate } from "@/components/AutoTranslate";
@@ -45,49 +46,51 @@ const PageLoader = () => (
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AppLangProvider>
-          <AutoTranslate>
-            <BrowserRouter>
-              <CountryProvider>
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route
-                    path="/privacy"
-                    element={
-                      <Suspense fallback={<PageLoader />}>
-                        <PrivacyPolicy />
-                      </Suspense>
-                    }
-                  />
-                  <Route
-                    path="/terms"
-                    element={
-                      <Suspense fallback={<PageLoader />}>
-                        <Terms />
-                      </Suspense>
-                    }
-                  />
-                  <Route
-                    path="*"
-                    element={
-                      <Suspense fallback={<PageLoader />}>
-                        <PrivateApp />
-                      </Suspense>
-                    }
-                  />
-                </Routes>
-              </CountryProvider>
-            </BrowserRouter>
-          </AutoTranslate>
-        </AppLangProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+  <ThemeProvider defaultTheme="dark" enableSystem={false}>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppLangProvider>
+            <AutoTranslate>
+              <BrowserRouter>
+                <CountryProvider>
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route
+                      path="/privacy"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <PrivacyPolicy />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/terms"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Terms />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="*"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <PrivateApp />
+                        </Suspense>
+                      }
+                    />
+                  </Routes>
+                </CountryProvider>
+              </BrowserRouter>
+            </AutoTranslate>
+          </AppLangProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  </ThemeProvider>
 );
 
 export default App;
