@@ -46,7 +46,13 @@ const PageLoader = () => (
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider defaultTheme="dark" enableSystem={false}>
+  <ThemeProvider
+    attribute="class"
+    defaultTheme="dark"
+    themes={["dark", "light", "cream"]}
+    enableSystem={false}
+    disableTransitionOnChange
+  >
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
