@@ -67,7 +67,24 @@ Deno.serve(async (req) => {
     } catch {}
     const ctx = getCurrencyCtx(userCurrency);
 
-    const systemPrompt = `Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech multi-devises.
+    const today = new Date().toISOString().split('T')[0];
+    const currentYear = new Date().getFullYear();
+
+    const systemPrompt = `DATE D'AUJOURD'HUI : ${today} (année en cours : ${currentYear})
+
+RÈGLES DE DATE — IMPORTANT :
+
+- Si le document affiche une date SANS année (ex. "10 août", "Monday, August 10", "hier"), utilise TOUJOURS l'année en cours ${currentYear}.
+
+- Si le document affiche "hier", "aujourd'hui", "yesterday", "today", calcule la date réelle à partir de ${today}.
+
+- N'invente JAMAIS une année. En cas de doute, utilise ${currentYear}.
+
+- Une date ne doit jamais être dans le futur par rapport à ${today}.
+
+- Si aucune date n'est lisible, utilise exactement ${today}.
+
+Tu es un expert OCR spécialisé dans la détection de transactions financières pour Mon Jeton, app fintech multi-devises.
 
 Devise préférée de l'utilisateur : ${userCurrency} (${ctx.region}).
 Si aucun symbole de devise n'est lisible sur le document, utiliser ${userCurrency} par défaut.
@@ -255,12 +272,26 @@ Si aucune transaction détectée :
       result.transactions = [];
     }
 
+    // Garde-fou date : rejet si > 6 mois dans le passé ou dans le futur
+    const sanitizeDate = (dateStr: string): string => {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return today;
+      const parsedDate = new Date(dateStr);
+      const now = new Date(today);
+      const sixMonthsAgo = new Date(today);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      if (parsedDate < sixMonthsAgo || parsedDate > now) {
+        console.warn(`scan-receipts: date rejetée (${dateStr}), remplacée par ${today}`);
+        return today;
+      }
+      return dateStr;
+    };
+
     result.transactions = result.transactions.map((tx: any, i: number) => ({
       id: tx.id || `tx_${i + 1}`,
       merchant: String(tx.merchant || 'Inconnu').slice(0, 100),
       amount: Math.max(0, Math.min(999999999, Math.floor(Number(tx.amount) || 0))),
       currency: tx.currency || userCurrency,
-      date: tx.date || new Date().toISOString().split('T')[0],
+      date: sanitizeDate(tx.date || new Date().toISOString().split('T')[0]),
       type: tx.type === 'income' ? 'income' : 'expense',
       category_suggestion: tx.category_suggestion || 'Autre',
       note: String(tx.note || '').slice(0, 200),

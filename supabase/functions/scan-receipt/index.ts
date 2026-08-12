@@ -79,7 +79,24 @@ serve(async (req) => {
     const safeMimeType = mimeType && ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : "image/jpeg";
     const safeScanType = scanType === "screenshot" ? "screenshot" : "receipt";
 
-    const promptScreenshot = `You are an expert at analyzing Mobile Money and payment screenshots.
+    const today = new Date().toISOString().split('T')[0];
+    const currentYear = new Date().getFullYear();
+
+    const promptScreenshot = `DATE D'AUJOURD'HUI : ${today} (année en cours : ${currentYear})
+
+RÈGLES DE DATE — IMPORTANT :
+
+- Si le document affiche une date SANS année (ex. "10 août", "Monday, August 10", "hier"), utilise TOUJOURS l'année en cours ${currentYear}.
+
+- Si le document affiche "hier", "aujourd'hui", "yesterday", "today", calcule la date réelle à partir de ${today}.
+
+- N'invente JAMAIS une année. En cas de doute, utilise ${currentYear}.
+
+- Une date ne doit jamais être dans le futur par rapport à ${today}.
+
+- Si aucune date n'est lisible, utilise exactement ${today}.
+
+You are an expert at analyzing Mobile Money and payment screenshots.
 The image may be in French or English.
 Extract the following information as JSON:
 {
@@ -108,7 +125,21 @@ ENGLISH KEYWORDS: "sent"=expense, "received"=income, "balance"=balance, "fee"=fe
 
 Return ONLY the JSON, no other text.`;
 
-    const promptReceipt = `You are an expert OCR system for receipts and invoices in any language (French, English, Arabic, etc.).
+    const promptReceipt = `DATE D'AUJOURD'HUI : ${today} (année en cours : ${currentYear})
+
+RÈGLES DE DATE — IMPORTANT :
+
+- Si le document affiche une date SANS année (ex. "10 août", "Monday, August 10", "hier"), utilise TOUJOURS l'année en cours ${currentYear}.
+
+- Si le document affiche "hier", "aujourd'hui", "yesterday", "today", calcule la date réelle à partir de ${today}.
+
+- N'invente JAMAIS une année. En cas de doute, utilise ${currentYear}.
+
+- Une date ne doit jamais être dans le futur par rapport à ${today}.
+
+- Si aucune date n'est lisible, utilise exactement ${today}.
+
+You are an expert OCR system for receipts and invoices in any language (French, English, Arabic, etc.).
 Extract the following information as JSON:
 {
   "amount": number (TOTAL amount only, not subtotal),
@@ -157,6 +188,20 @@ DATE FORMATS ACCEPTED:
 Return ONLY the JSON, no other text.`;
 
     const prompt = safeScanType === "screenshot" ? promptScreenshot : promptReceipt;
+
+    // Garde-fou date : rejet si > 6 mois dans le passé ou dans le futur
+    const sanitizeDate = (dateStr: string): string => {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return today;
+      const parsedDate = new Date(dateStr);
+      const now = new Date(today);
+      const sixMonthsAgo = new Date(today);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      if (parsedDate < sixMonthsAgo || parsedDate > now) {
+        console.warn(`scan-receipt: date rejetée (${dateStr}), remplacée par ${today}`);
+        return today;
+      }
+      return dateStr;
+    };
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -208,7 +253,7 @@ Return ONLY the JSON, no other text.`;
         parsedResult = {
           amount: Math.max(0, Math.min(Number(raw.amount) || 0, 999_999_999_999)),
           currency: String(raw.currency || "XOF").toUpperCase().slice(0, 3),
-          date: String(raw.date || "").slice(0, 10),
+          date: sanitizeDate(String(raw.date || "").slice(0, 10)),
           merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
           type: raw.type === "income" ? "income" : "expense",
           wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
