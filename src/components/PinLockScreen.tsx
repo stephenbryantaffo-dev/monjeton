@@ -43,6 +43,9 @@ const PinLockScreen = () => {
   const [blocked, setBlocked] = useState(() => readLockoutRemaining() > 0);
 
   const startLockout = useCallback(() => {
+    try {
+      localStorage.setItem(LOCKOUT_UNTIL_KEY, String(Date.now() + LOCKOUT_MS));
+    } catch { /* ignore */ }
     setBlocked(true);
     setLockoutSeconds(30);
     const interval = setInterval(() => {
@@ -51,6 +54,9 @@ const PinLockScreen = () => {
           clearInterval(interval);
           setBlocked(false);
           setAttempts(0);
+          try {
+            localStorage.removeItem(LOCKOUT_UNTIL_KEY);
+          } catch { /* ignore */ }
           return 0;
         }
         return prev - 1;
