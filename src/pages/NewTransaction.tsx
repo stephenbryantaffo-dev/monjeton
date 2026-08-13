@@ -196,7 +196,7 @@ const NewTransaction = () => {
 
         if (blob.size < 8000) {
           toast({
-            title: "🎤 Trop court",
+            title: "Trop court",
             description: "Parle pendant au moins 2 secondes",
             variant: "destructive",
           });
@@ -333,7 +333,7 @@ const NewTransaction = () => {
       if (sttData?.empty === true || !transcript?.trim() || isHallucination(transcript)) {
         setTranscriptText(null);
         toast({
-          title: "🎤 Rien détecté",
+          title: "Rien détecté",
           description: "Parle clairement et plus près du micro",
           variant: "destructive",
         });
@@ -428,7 +428,7 @@ const NewTransaction = () => {
               exchangeRateSource = convResp.data.source || "api";
             }
           } catch {
-            toast({ title: `⚠️ Conversion ${tx.currency}→XOF échouée, montant conservé`, variant: "destructive" });
+            toast({ title: `Conversion ${tx.currency}→XOF échouée, montant conservé`, variant: "destructive" });
           }
         }
 
@@ -448,7 +448,7 @@ const NewTransaction = () => {
         });
       }
 
-      toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""}` });
       import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       const today2 = new Date();
       const m2 = today2.getMonth() + 1;
