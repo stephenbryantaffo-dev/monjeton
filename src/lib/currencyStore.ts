@@ -38,7 +38,14 @@ export function useActiveCurrency(): CurrencyCode {
   const [c, setC] = useState<CurrencyCode>(active);
   useEffect(() => {
     const unsub = subscribeActiveCurrency(setC);
-    return () => { unsub; };
+
+    // `unsub;` seul n'appelait rien : l'abonnement survivait au démontage
+    // et s'accumulait à chaque ouverture d'écran. On l'appelle vraiment.
+    // L'enveloppe est nécessaire car unsub renvoie un booléen, alors que
+    // React attend une fonction de nettoyage qui ne renvoie rien.
+    return () => {
+      unsub();
+    };
   }, []);
   return c;
 }
