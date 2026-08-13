@@ -9,16 +9,43 @@ const MAX_ATTEMPTS_SOFT = 5;
 const MAX_ATTEMPTS_HARD = 10;
 const LOCKOUT_MS = 30_000;
 
+const ATTEMPTS_KEY = "monjeton_pin_attempts";
+const LOCKOUT_UNTIL_KEY = "monjeton_pin_lockout_until";
+
+const readAttempts = (): number => {
+  try {
+    return Number(localStorage.getItem(ATTEMPTS_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+const readLockoutRemaining = (): number => {
+  try {
+    const until = Number(localStorage.getItem(LOCKOUT_UNTIL_KEY)) || 0;
+    const rest = Math.ceil((until - Date.now()) / 1000);
+    return rest > 0 ? rest : 0;
+  } catch {
+    return 0;
+  }
+};
+
 const PinLockScreen = () => {
   const { unlock } = usePrivacy();
   const { signOut } = useAuth();
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [blocked, setBlocked] = useState(false);
-  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  // Le compteur et le blocage sont relus au montage : sans cela, un
+  // rechargement de page annulait le blocage et rendait possible
+  // l'essai exhaustif des 10 000 codes à 4 chiffres.
+  const [attempts, setAttempts] = useState(readAttempts);
+  const [lockoutSeconds, setLockoutSeconds] = useState(readLockoutRemaining);
+  const [blocked, setBlocked] = useState(() => readLockoutRemaining() > 0);
 
   const startLockout = useCallback(() => {
+    try {
+      localStorage.setItem(LOCKOUT_UNTIL_KEY, String(Date.now() + LOCKOUT_MS));
+    } catch { /* ignore */ }
     setBlocked(true);
     setLockoutSeconds(30);
     const interval = setInterval(() => {
@@ -27,6 +54,9 @@ const PinLockScreen = () => {
           clearInterval(interval);
           setBlocked(false);
           setAttempts(0);
+          try {
+            localStorage.removeItem(LOCKOUT_UNTIL_KEY);
+          } catch { /* ignore */ }
           return 0;
         }
         return prev - 1;
@@ -42,9 +72,16 @@ const PinLockScreen = () => {
     if (next.length === 4) {
       unlock(next).then((success) => {
         if (success) {
+          try {
+            localStorage.removeItem(ATTEMPTS_KEY);
+            localStorage.removeItem(LOCKOUT_UNTIL_KEY);
+          } catch { /* ignore */ }
           setAttempts(0);
         } else {
           const newAttempts = attempts + 1;
+          try {
+            localStorage.setItem(ATTEMPTS_KEY, String(newAttempts));
+          } catch { /* stockage indisponible : on continue en mémoire */ }
           setAttempts(newAttempts);
           setError(true);
 
