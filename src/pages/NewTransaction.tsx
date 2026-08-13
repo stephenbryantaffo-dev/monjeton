@@ -555,7 +555,10 @@ const NewTransaction = () => {
           clavier qui se comprime pour occuper la place restante, au lieu
           d'être découpé. */}
       <Screen className="h-[100dvh] max-h-[100dvh]">
-        <Screen.Content className="flex flex-col min-h-0" style={{ paddingBottom: 0 }}>
+        {/* Pas de paddingBottom forcé : Screen.Content réserve déjà la place
+            de la barre de navigation et du bouton « C'est bon ». La forcer à
+            zéro faisait passer la dernière rangée du clavier sous le bouton. */}
+        <Screen.Content className="flex flex-col min-h-0">
 
           <div className="pt-6 pb-4 flex items-center gap-3">
             <button
