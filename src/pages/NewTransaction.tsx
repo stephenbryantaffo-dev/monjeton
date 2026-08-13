@@ -601,7 +601,7 @@ const NewTransaction = () => {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             className="glass-card rounded-2xl p-3 mb-4 border border-primary/20"
           >
-            <p className="text-xs text-muted-foreground mb-1">🎙️ Texte reconnu :</p>
+            <p className="text-xs text-muted-foreground mb-1">Texte reconnu :</p>
             <p className="text-sm text-foreground font-medium italic">« {transcriptText} »</p>
             {isProcessing && (
               <div className="flex items-center gap-2 mt-2">
@@ -644,7 +644,7 @@ const NewTransaction = () => {
                   startRecording();
                 }}
               >
-                🎤 Réessayer
+                Réessayer
               </Button>
             </div>
           </motion.div>
