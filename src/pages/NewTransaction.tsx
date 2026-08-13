@@ -509,7 +509,7 @@ const NewTransaction = () => {
     if (error) {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la transaction", variant: "destructive" });
     } else {
-      toast({ title: "Transaction enregistrée ✅" });
+      toast({ title: "Transaction enregistrée" });
       checkAndCreateNotifications(user.id, type, categoryId, walletId || null);
       import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       // Auto-ajustement budget catégorie (fire-and-forget)
