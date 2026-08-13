@@ -88,7 +88,7 @@ const LimelightNav = () => {
                   whileTap={{ scale: 0.9 }}
                   className={cn(
                     "flex flex-col items-center gap-1 py-1.5 rounded-full transition-colors duration-300",
-                    isActive && "bg-primary/15"
+                    isActive && "nav-active bg-primary/15"
                   )}
                 >
                   <item.icon
