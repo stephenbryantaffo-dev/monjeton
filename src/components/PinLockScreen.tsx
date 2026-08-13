@@ -35,9 +35,12 @@ const PinLockScreen = () => {
   const { signOut } = useAuth();
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [blocked, setBlocked] = useState(false);
-  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  // Le compteur et le blocage sont relus au montage : sans cela, un
+  // rechargement de page annulait le blocage et rendait possible
+  // l'essai exhaustif des 10 000 codes à 4 chiffres.
+  const [attempts, setAttempts] = useState(readAttempts);
+  const [lockoutSeconds, setLockoutSeconds] = useState(readLockoutRemaining);
+  const [blocked, setBlocked] = useState(() => readLockoutRemaining() > 0);
 
   const startLockout = useCallback(() => {
     setBlocked(true);
