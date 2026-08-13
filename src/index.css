@@ -64,8 +64,16 @@
     --card-foreground: 218 17% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 218 17% 9%;
-    --primary: 104 84% 24%;
+    /* Vert de marque vif (maquette apercu-light-final) */
+    --primary: 101 87% 36%;
     --primary-foreground: 0 0% 100%;
+    /* Vert lisible pour le TEXTE et les icônes sur fond clair */
+    --primary-text: 102 74% 17%;
+    /* Vert clair des pastilles d'icônes */
+    --primary-soft: 99 68% 57%;
+    --grad-primary: linear-gradient(155deg, #6BD62C 0%, #3FAE0C 100%);
+    --grad-primary-soft: linear-gradient(155deg, #A8EE7C 0%, #7ADD44 60%, #5FCB27 100%);
+    --grad-expense: linear-gradient(155deg, #E8705F 0%, #CF4433 100%);
     --secondary: 90 14% 95%;
     --secondary-foreground: 218 17% 9%;
     --muted: 90 14% 95%;
