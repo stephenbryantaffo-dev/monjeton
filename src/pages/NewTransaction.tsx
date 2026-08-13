@@ -704,13 +704,15 @@ const NewTransaction = () => {
             )}
 
             {/* Pavé numérique */}
-            <AmountKeypad
-              value={amount}
-              onChange={setAmount}
-              caret={amountCaret}
-              onCaretChange={setAmountCaret}
-              className="mt-5"
-            />
+            <div className="mt-auto shrink-0">
+              <AmountKeypad
+                value={amount}
+                onChange={setAmount}
+                caret={amountCaret}
+                onCaretChange={setAmountCaret}
+                className="mt-5"
+              />
+            </div>
           </form>
         </>
       )}
