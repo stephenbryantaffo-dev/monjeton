@@ -232,13 +232,13 @@ const Scan = () => {
           currency: tx.currency,
         });
         toast({
-          title: 'Reçu analysé 🎯',
+          title: 'Reçu analysé',
           description: 'Vérifie et valide les informations',
         });
       } else {
         setMultiScanResult(result);
         toast({
-          title: `${txs.length} transactions détectées 🎯`,
+          title: `${txs.length} transactions détectées`,
           description: 'Sélectionne et valide ce que tu veux enregistrer',
         });
       }
@@ -327,7 +327,7 @@ const Scan = () => {
         storage_path: scanStoragePath,
       });
 
-      toast({ title: 'Transaction enregistrée ✅' });
+      toast({ title: 'Transaction enregistrée' });
       setScanResult(null);
       setImagePreview(null);
       setScanStoragePath(null);
