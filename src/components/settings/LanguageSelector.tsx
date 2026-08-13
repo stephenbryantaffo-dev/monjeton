@@ -28,14 +28,14 @@ export function LanguageSelector() {
   };
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+    <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center gap-3 mb-4">
-        <div className="rounded-xl bg-lime-400/10 p-2">
-          <Languages className="w-5 h-5 text-lime-400" />
+        <div className="rounded-xl bg-primary/10 p-2">
+          <Languages className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h3 className="font-semibold text-white">Langue de l'application</h3>
-          <p className="text-sm text-white/50">Choisis la langue de l'interface</p>
+          <h3 className="font-semibold text-foreground">Langue de l'application</h3>
+          <p className="text-sm text-muted-foreground">Choisis la langue de l'interface</p>
         </div>
       </div>
 
@@ -49,26 +49,27 @@ export function LanguageSelector() {
               onClick={() => handleChange(option.code)}
               className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition-all ${
                 isActive
-                  ? "bg-lime-400/10 border border-lime-400/40"
-                  : "bg-white/[0.02] border border-white/8 hover:bg-white/[0.04]"
+                  ? "bg-primary/10 border border-primary/40"
+                  : "bg-muted/30 border border-border hover:bg-muted/50"
               }`}
             >
               <div className="text-left">
-                <div className={`font-medium ${isActive ? "text-lime-400" : "text-white"}`}>
+                <div className={`font-medium ${isActive ? "text-primary" : "text-foreground"}`}>
                   {option.nativeName}
                 </div>
-                <div className="text-xs text-white/40 mt-0.5">{option.name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{option.name}</div>
               </div>
-              {isActive && <Check className="w-5 h-5 text-lime-400" />}
+              {isActive && <Check className="w-5 h-5 text-primary" />}
             </button>
           );
         })}
       </div>
 
-      <p className="text-xs text-white/40 mt-4 leading-relaxed">
+      <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
         La traduction utilise l'IA. Les textes sont mis en cache après la première lecture,
         les affichages suivants sont instantanés.
       </p>
+
     </div>
   );
 }
