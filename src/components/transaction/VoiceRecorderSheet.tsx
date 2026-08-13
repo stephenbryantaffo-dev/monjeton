@@ -1,6 +1,6 @@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Mic, Loader2 } from "lucide-react";
+import { Mic, Loader2, Plus } from "lucide-react";
 
 /**
  * Écran plein d'enregistrement vocal.
@@ -29,6 +29,8 @@ type Props = {
   onResume: () => void;
   onStop: () => void;
   onCancel: () => void;
+  /** Ferme le vocal et laisse l'utilisateur taper au clavier. */
+  onWriteInstead: () => void;
 };
 
 export function VoiceRecorderSheet({
@@ -40,6 +42,7 @@ export function VoiceRecorderSheet({
   onStart,
   onStop,
   onCancel,
+  onWriteInstead,
 }: Props) {
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onCancel()}>
@@ -115,6 +118,16 @@ export function VoiceRecorderSheet({
                 {isRecording ? "Terminer" : "Parler"}
               </Button>
             </div>
+
+            {!isRecording && !isProcessing && (
+              <button
+                onClick={onWriteInstead}
+                className="mt-6 w-full max-w-sm rounded-2xl border border-border py-3.5 flex items-center justify-center gap-2 text-[13.5px] font-bold text-foreground active:scale-[0.98] transition-transform"
+              >
+                <Plus className="w-4 h-4 text-primary" />
+                Écrire à la main
+              </button>
+            )}
           </>
         )}
       </SheetContent>

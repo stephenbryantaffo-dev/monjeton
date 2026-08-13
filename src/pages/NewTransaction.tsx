@@ -773,6 +773,11 @@ const NewTransaction = () => {
           onResume={resumeRecording}
           onStop={stopRecording}
           onCancel={cancelRecording}
+          onWriteInstead={() => {
+            // On ferme simplement le vocal : le clavier de saisie est déjà
+            // là, en dessous. Inutile de naviguer ailleurs.
+            setVoiceSheetOpen(false);
+          }}
         />
         <CategorySheet
           open={showCatSheet}
