@@ -120,11 +120,13 @@ Screen.Header = function ScreenHeader({
 interface ScreenContentProps {
   children: ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 Screen.Content = function ScreenContent({
   children,
   className,
+  style,
 }: ScreenContentProps) {
   const { hasBottomNav, hasStickyAction } = useContext(ScreenContext);
 
@@ -138,6 +140,7 @@ Screen.Content = function ScreenContent({
       className={cn("flex-1 min-h-0", className)}
       style={{
         paddingBottom: `calc(${bottomPadding}px + env(safe-area-inset-bottom, 0px))`,
+        ...style,
       }}
     >
       {children}
