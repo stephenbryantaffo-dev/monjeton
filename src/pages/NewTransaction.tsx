@@ -525,8 +525,11 @@ const NewTransaction = () => {
 
   return (
     <DashboardLayout showBack={false}>
-      <Screen>
-        <Screen.Content>
+      {/* Écran figé : le montant et le clavier doivent rester visibles
+          en permanence. Sans hauteur bornée, la page défile et le montant
+          sort de l'écran pendant la saisie. */}
+      <Screen className="h-[calc(100dvh-190px)] overflow-hidden">
+        <Screen.Content className="overflow-hidden flex flex-col" style={{ paddingBottom: 0 }}>
           <div className="pt-6 pb-4 flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
