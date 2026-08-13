@@ -129,23 +129,23 @@ export function AmountDisplay({
           aria-label="Montant"
           className="
             bg-transparent border-none outline-none text-center
-            text-[52px] leading-none font-extrabold tracking-[-0.05em]
+            text-[44px] leading-none font-extrabold tracking-[-0.05em]
             text-foreground caret-primary
-            w-full min-w-[1ch] p-0 m-0
+            flex-1 min-w-0 p-0 m-0
             placeholder:text-muted-foreground/40
           "
           placeholder="0"
           style={{ caretColor: "hsl(var(--primary))" }}
         />
         <span
-          className={`ml-2 align-baseline text-[20px] font-bold pointer-events-none ${
+          className={`ml-2 align-baseline text-[20px] font-bold pointer-events-none shrink-0 whitespace-nowrap ${
             empty ? "text-muted-foreground/40" : "text-muted-foreground"
           }`}
         >
           {currency}
         </span>
       </div>
-      <p className="mt-3 text-[12.5px] font-semibold text-muted-foreground">
+      <p className="mt-2 text-[11.5px] font-medium text-muted-foreground">
         {focused
           ? "Place le curseur où tu veux, ou sélectionne pour tout remplacer"
           : "Tape le montant, le reste est déjà rempli"}

@@ -525,8 +525,11 @@ const NewTransaction = () => {
 
   return (
     <DashboardLayout showBack={false}>
-      <Screen>
-        <Screen.Content>
+      {/* Écran figé : le montant et le clavier doivent rester visibles
+          en permanence. Sans hauteur bornée, la page défile et le montant
+          sort de l'écran pendant la saisie. */}
+      <Screen className="h-[calc(100dvh-190px)] overflow-hidden">
+        <Screen.Content className="overflow-hidden flex flex-col" style={{ paddingBottom: 0 }}>
           <div className="pt-6 pb-4 flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
@@ -546,11 +549,11 @@ const NewTransaction = () => {
         disabled={isProcessing}
         className="glass-card rounded-2xl p-4 mb-4 flex items-center gap-4 w-full text-left"
       >
-        <span className="min-w-[56px] min-h-[56px] w-14 h-14 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground neon-glow">
+        <span className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground neon-glow">
           {isProcessing ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <Mic className="w-6 h-6" />
+            <Mic className="w-5 h-5" />
           )}
         </span>
         <span className="flex-1 min-w-0">
@@ -658,7 +661,7 @@ const NewTransaction = () => {
             />
 
             {/* Les trois choix, pré-remplis mais toujours modifiables */}
-            <div className="grid grid-cols-2 gap-2.5 mt-5">
+            <div className="grid grid-cols-2 gap-2 mt-3">
               <MetaChip
                 icon={
                   selectedCategory
@@ -701,13 +704,15 @@ const NewTransaction = () => {
             )}
 
             {/* Pavé numérique */}
-            <AmountKeypad
-              value={amount}
-              onChange={setAmount}
-              caret={amountCaret}
-              onCaretChange={setAmountCaret}
-              className="mt-5"
-            />
+            <div className="mt-auto shrink-0">
+              <AmountKeypad
+                value={amount}
+                onChange={setAmount}
+                caret={amountCaret}
+                onCaretChange={setAmountCaret}
+                className="mt-5"
+              />
+            </div>
           </form>
         </>
       )}
