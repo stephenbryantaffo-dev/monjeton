@@ -549,11 +549,11 @@ const NewTransaction = () => {
         disabled={isProcessing}
         className="glass-card rounded-2xl p-4 mb-4 flex items-center gap-4 w-full text-left"
       >
-        <span className="min-w-[56px] min-h-[56px] w-14 h-14 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground neon-glow">
+        <span className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground neon-glow">
           {isProcessing ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <Mic className="w-6 h-6" />
+            <Mic className="w-5 h-5" />
           )}
         </span>
         <span className="flex-1 min-w-0">
