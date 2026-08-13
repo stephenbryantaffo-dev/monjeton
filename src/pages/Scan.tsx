@@ -441,17 +441,17 @@ const Scan = () => {
           {scanning ? (
             <ScanProgress isAnalyzing={scanning} />
           ) : (
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3 w-full">
               <Button
                 onClick={() => cameraRef.current?.click()}
                 disabled={!isPremium && scansRemaining <= 0}
-                className="gradient-primary text-primary-foreground"
+                className="w-full gradient-primary text-primary-foreground"
               >
                 <Camera className="w-4 h-4 mr-2" /> Photo
               </Button>
               <Button
                 variant="outline"
-                className="glass"
+                className="w-full glass"
                 onClick={() => galleryRef.current?.click()}
                 disabled={!isPremium && scansRemaining <= 0}
               >
@@ -461,19 +461,19 @@ const Scan = () => {
           )}
 
           <p className="text-xs text-muted-foreground text-center">
-            💡 Photo bien éclairée et à plat = meilleurs résultats
+            Photo nette et bien éclairée = meilleure précision
           </p>
         </motion.div>
       )}
-
-      <ScanHistory scans={history} onRefresh={fetchHistory} />
 
       <Link
         to="/receipts"
         className="w-full glass-card rounded-xl p-3.5 flex items-center justify-between mt-6 border border-primary/20"
       >
         <div className="flex items-center gap-2">
-          <span className="text-lg">🧾</span>
+          <span className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shrink-0">
+            <Receipt className="w-4 h-4 text-primary-foreground" />
+          </span>
           <div>
             <p className="text-sm font-medium text-foreground">Mes reçus</p>
             <p className="text-xs text-muted-foreground">
