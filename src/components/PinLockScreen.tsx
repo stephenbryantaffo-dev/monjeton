@@ -72,6 +72,10 @@ const PinLockScreen = () => {
     if (next.length === 4) {
       unlock(next).then((success) => {
         if (success) {
+          try {
+            localStorage.removeItem(ATTEMPTS_KEY);
+            localStorage.removeItem(LOCKOUT_UNTIL_KEY);
+          } catch { /* ignore */ }
           setAttempts(0);
         } else {
           const newAttempts = attempts + 1;
