@@ -42,6 +42,7 @@ export function VoiceRecorderSheet({
   onStart,
   onStop,
   onCancel,
+  onWriteInstead,
 }: Props) {
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onCancel()}>
