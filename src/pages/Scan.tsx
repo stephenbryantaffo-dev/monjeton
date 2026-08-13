@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { openJekoPro } from "@/lib/jeko";
 import { isIOSNative } from "@/lib/platform";
 import { motion } from "framer-motion";
-import { ChevronRight, Camera, Upload, Sparkles } from "lucide-react";
+import { ChevronRight, Camera, Upload, Receipt, ScanLine } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { compressReceipt, fileToBase64 } from "@/lib/imageCompression";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import ScanHistory from "@/components/scan/ScanHistory";
+
 import ScanResultCard, { type ParsedResult } from "@/components/scan/ScanResultCard";
 import { MultiReceiptValidator } from "@/components/scan/MultiReceiptValidator";
 import { ScanProgress } from "@/components/scan/ScanProgress";
@@ -232,13 +232,13 @@ const Scan = () => {
           currency: tx.currency,
         });
         toast({
-          title: 'Reçu analysé 🎯',
+          title: 'Reçu analysé',
           description: 'Vérifie et valide les informations',
         });
       } else {
         setMultiScanResult(result);
         toast({
-          title: `${txs.length} transactions détectées 🎯`,
+          title: `${txs.length} transactions détectées`,
           description: 'Sélectionne et valide ce que tu veux enregistrer',
         });
       }
@@ -327,7 +327,7 @@ const Scan = () => {
         storage_path: scanStoragePath,
       });
 
-      toast({ title: 'Transaction enregistrée ✅' });
+      toast({ title: 'Transaction enregistrée' });
       setScanResult(null);
       setImagePreview(null);
       setScanStoragePath(null);
@@ -382,8 +382,8 @@ const Scan = () => {
         <div className="glass-card rounded-xl p-3 mb-4 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {scansRemaining > 0
-              ? `📷 ${scansRemaining} scan${scansRemaining > 1 ? "s" : ""} restant${scansRemaining > 1 ? "s" : ""} ce mois`
-              : "📷 Limite de scans atteinte ce mois"}
+              ? `${scansRemaining} scan${scansRemaining > 1 ? "s" : ""} restant${scansRemaining > 1 ? "s" : ""} ce mois`
+              : "Limite de scans atteinte ce mois"}
           </span>
           {scansRemaining <= 0 && !isIOSNative() && (
             <Button onClick={() => openJekoPro()} size="sm" className="gradient-primary text-primary-foreground">
@@ -406,17 +406,17 @@ const Scan = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-card rounded-2xl p-6 flex flex-col items-center gap-5"
+          className="rounded-2xl p-5 flex flex-col items-center gap-4 border-2 border-dashed border-primary/35"
+          style={{ background: "linear-gradient(160deg, hsl(var(--primary) / 0.07), transparent 78%)" }}
         >
-          <div className="w-16 h-16 rounded-full glass flex items-center justify-center">
-            <Sparkles className="w-7 h-7 text-primary" />
+          <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center">
+            <ScanLine className="w-6 h-6 text-primary-foreground" />
           </div>
 
-          <div className="text-center space-y-1.5 max-w-md">
-            <h3 className="text-foreground font-semibold text-base">Scan Intelligent</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Prends ou importe une photo d'un reçu, d'une facture ou d'un
-              historique Mobile Money. L'IA détecte automatiquement une ou plusieurs transactions.
+          <div className="text-center space-y-1 max-w-xs">
+            <h3 className="text-foreground font-bold text-[15px]">Scanne ton reçu</h3>
+            <p className="text-[13px] text-muted-foreground leading-snug">
+              Facture, reçu Mobile Money ou ticket de caisse. L'IA détecte les montants.
             </p>
           </div>
 
@@ -441,17 +441,17 @@ const Scan = () => {
           {scanning ? (
             <ScanProgress isAnalyzing={scanning} />
           ) : (
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3 w-full">
               <Button
                 onClick={() => cameraRef.current?.click()}
                 disabled={!isPremium && scansRemaining <= 0}
-                className="gradient-primary text-primary-foreground"
+                className="w-full gradient-primary text-primary-foreground"
               >
                 <Camera className="w-4 h-4 mr-2" /> Photo
               </Button>
               <Button
                 variant="outline"
-                className="glass"
+                className="w-full glass"
                 onClick={() => galleryRef.current?.click()}
                 disabled={!isPremium && scansRemaining <= 0}
               >
@@ -461,19 +461,19 @@ const Scan = () => {
           )}
 
           <p className="text-xs text-muted-foreground text-center">
-            💡 Photo bien éclairée et à plat = meilleurs résultats
+            Photo nette et bien éclairée = meilleure précision
           </p>
         </motion.div>
       )}
-
-      <ScanHistory scans={history} onRefresh={fetchHistory} />
 
       <Link
         to="/receipts"
         className="w-full glass-card rounded-xl p-3.5 flex items-center justify-between mt-6 border border-primary/20"
       >
         <div className="flex items-center gap-2">
-          <span className="text-lg">🧾</span>
+          <span className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shrink-0">
+            <Receipt className="w-4 h-4 text-primary-foreground" />
+          </span>
           <div>
             <p className="text-sm font-medium text-foreground">Mes reçus</p>
             <p className="text-xs text-muted-foreground">
