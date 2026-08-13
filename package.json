@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:rls": "vitest run src/test/rls-workspace-members.test.ts",
+    "test:rls": "vitest run src/test/rls-workspace-members.test.ts src/test/rls-workspace-invites.test.ts",
     "test:unit": "vitest run --exclude \"src/test/rls-*.test.ts\" --exclude \"**/node_modules/**\"",
     "test:watch": "vitest",
     "e2e": "playwright test",
