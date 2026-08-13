@@ -69,6 +69,9 @@ const PinLockScreen = () => {
           setAttempts(0);
         } else {
           const newAttempts = attempts + 1;
+          try {
+            localStorage.setItem(ATTEMPTS_KEY, String(newAttempts));
+          } catch { /* stockage indisponible : on continue en mémoire */ }
           setAttempts(newAttempts);
           setError(true);
 
