@@ -1,6 +1,6 @@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Mic, Loader2 } from "lucide-react";
+import { Mic, Loader2, Plus } from "lucide-react";
 
 /**
  * Écran plein d'enregistrement vocal.
@@ -29,6 +29,8 @@ type Props = {
   onResume: () => void;
   onStop: () => void;
   onCancel: () => void;
+  /** Ferme le vocal et laisse l'utilisateur taper au clavier. */
+  onWriteInstead: () => void;
 };
 
 export function VoiceRecorderSheet({
