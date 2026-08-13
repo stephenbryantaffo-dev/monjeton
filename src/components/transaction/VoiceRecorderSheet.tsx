@@ -118,6 +118,16 @@ export function VoiceRecorderSheet({
                 {isRecording ? "Terminer" : "Parler"}
               </Button>
             </div>
+
+            {!isRecording && !isProcessing && (
+              <button
+                onClick={onWriteInstead}
+                className="mt-6 w-full max-w-sm rounded-2xl border border-border py-3.5 flex items-center justify-center gap-2 text-[13.5px] font-bold text-foreground active:scale-[0.98] transition-transform"
+              >
+                <Plus className="w-4 h-4 text-primary" />
+                Écrire à la main
+              </button>
+            )}
           </>
         )}
       </SheetContent>
