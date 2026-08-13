@@ -213,8 +213,34 @@ const NewTransaction = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch {
-      toast({ title: "Microphone non disponible", variant: "destructive" });
+    } catch (err) {
+      // Le message générique masquait la cause réelle. On distingue les cas
+      // pour que l'utilisateur sache quoi faire, et on journalise le détail.
+      console.error("[micro]", err);
+      const name = (err as { name?: string })?.name || "";
+
+      let title = "Microphone non disponible";
+      let description = "Vérifie que ton navigateur autorise le micro.";
+
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        title = "Accès au micro refusé";
+        description = "Autorise le micro dans les réglages du navigateur, puis réessaie.";
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        title = "Aucun micro détecté";
+        description = "Ton appareil ne semble pas avoir de micro disponible.";
+      } else if (name === "NotReadableError" || name === "TrackStartError") {
+        title = "Micro déjà utilisé";
+        description = "Ferme les autres applications qui utilisent le micro.";
+      } else if (name === "SecurityError") {
+        title = "Connexion non sécurisée";
+        description = "Le micro exige une connexion HTTPS.";
+      } else if (typeof MediaRecorder === "undefined") {
+        title = "Navigateur incompatible";
+        description = "Essaie avec Chrome ou Safari à jour.";
+      }
+
+      toast({ title, description, variant: "destructive" });
+      setIsRecording(false);
     }
   };
 
