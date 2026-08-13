@@ -121,7 +121,7 @@ Screen.Header = function ScreenHeader({
 interface ScreenContentProps {
   children: ReactNode;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 Screen.Content = function ScreenContent({
