@@ -23,6 +23,7 @@
  */
 import {
   ReactNode,
+  CSSProperties,
   createContext,
   useContext,
   useEffect,
