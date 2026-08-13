@@ -768,7 +768,6 @@ const Dashboard = () => {
                         </div>
                         <p className="relative mt-2 text-[22px] leading-none font-extrabold tracking-[-0.04em] text-primary-foreground truncate tabular-nums">
                           {formatAmount(totalIncome)}
-                          <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
                         </p>
                       </button>
                     </BorderRotate>
@@ -802,7 +801,6 @@ const Dashboard = () => {
                         </div>
                         <p className="relative mt-2 text-[22px] leading-none font-extrabold tracking-[-0.04em] text-white truncate tabular-nums">
                           {formatAmount(totalExpense)}
-                          <span className="ml-1 text-[12px] font-extrabold opacity-60">F</span>
                         </p>
                       </button>
                     </BorderRotate>
@@ -849,7 +847,7 @@ const Dashboard = () => {
                         <span className="short-icon w-7 h-7 rounded-full flex-none flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.18)" }}>
                           <Icon className="w-3.5 h-3.5 text-primary" strokeWidth={2.1} />
                         </span>
-                        <span className="flex-1 min-w-0 text-xs font-bold text-foreground truncate">{label}</span>
+                        <span className="flex-1 min-w-0 text-[11px] leading-tight font-bold text-foreground">{label}</span>
                         <ChevronRight className="w-3.5 h-3.5 text-primary flex-none opacity-80" strokeWidth={2.4} />
                       </button>
                     </BorderRotate>
