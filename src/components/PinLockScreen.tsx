@@ -9,6 +9,27 @@ const MAX_ATTEMPTS_SOFT = 5;
 const MAX_ATTEMPTS_HARD = 10;
 const LOCKOUT_MS = 30_000;
 
+const ATTEMPTS_KEY = "monjeton_pin_attempts";
+const LOCKOUT_UNTIL_KEY = "monjeton_pin_lockout_until";
+
+const readAttempts = (): number => {
+  try {
+    return Number(localStorage.getItem(ATTEMPTS_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+const readLockoutRemaining = (): number => {
+  try {
+    const until = Number(localStorage.getItem(LOCKOUT_UNTIL_KEY)) || 0;
+    const rest = Math.ceil((until - Date.now()) / 1000);
+    return rest > 0 ? rest : 0;
+  } catch {
+    return 0;
+  }
+};
+
 const PinLockScreen = () => {
   const { unlock } = usePrivacy();
   const { signOut } = useAuth();
