@@ -910,8 +910,15 @@ const Dashboard = () => {
                       compact
                       icon={Mic}
                       title="Dis-moi ce que tu as dépensé aujourd'hui."
-                      hint="Appuie sur le micro et parle."
-                      action={{ label: "Ajouter", onClick: () => navigate("/transactions/new") }}
+                      hint="Tu peux aussi écrire à la main."
+                      action={{
+                        label: "Parler",
+                        // Ouvre directement le mode vocal, comme le bouton
+                        // « Parler » du trio. Avant, le bouton disait
+                        // « Ajouter » et menait au clavier, ce qui
+                        // contredisait l'icône et le texte affichés.
+                        onClick: () => navigate("/transactions/new", { state: { autoVoice: true } }),
+                      }}
                     />
                   )}
                 </div>
