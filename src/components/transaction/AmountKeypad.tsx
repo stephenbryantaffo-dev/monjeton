@@ -66,7 +66,7 @@ export function AmountKeypad({
   };
 
   return (
-    <div className={cn("grid grid-cols-3 gap-2.5", className)}>
+    <div className={cn("grid grid-cols-3 grid-rows-4 gap-2 h-full", className)}>
       {KEYS.map((k) => (
         <motion.button
           key={k}
@@ -74,7 +74,7 @@ export function AmountKeypad({
           whileTap={{ scale: 0.94 }}
           onClick={() => press(k)}
           className={cn(
-            "rounded-2xl bg-secondary border border-border py-4",
+            "rounded-2xl bg-secondary border border-border min-h-[44px] flex items-center justify-center",
             "text-2xl font-bold tracking-tight text-foreground",
             "active:bg-secondary/70 transition-colors",
             k === "000" && "text-base font-extrabold text-muted-foreground"
@@ -93,13 +93,14 @@ export function AmountKeypad({
           e.preventDefault();
           eraseAll();
         }}
-        className="rounded-2xl bg-secondary border border-border py-4 flex items-center justify-center active:bg-secondary/70 transition-colors"
+        className="rounded-2xl bg-secondary border border-border min-h-[44px] flex items-center justify-center active:bg-secondary/70 transition-colors"
         aria-label="Effacer le chiffre avant le curseur"
       >
         <Delete className="w-5 h-5 text-muted-foreground" />
       </motion.button>
     </div>
   );
+
 }
 
 export default AmountKeypad;

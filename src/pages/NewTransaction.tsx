@@ -551,11 +551,12 @@ const NewTransaction = () => {
 
   return (
     <DashboardLayout showBack={false}>
-      {/* Écran figé : le montant et le clavier doivent rester visibles
-          en permanence. Sans hauteur bornée, la page défile et le montant
-          sort de l'écran pendant la saisie. */}
-      <Screen className="h-[calc(100dvh-190px)] overflow-hidden">
-        <Screen.Content className="overflow-hidden flex flex-col" style={{ paddingBottom: 0 }}>
+      {/* Hauteur bornée à l'écran, mais SANS overflow-hidden : c'est le
+          clavier qui se comprime pour occuper la place restante, au lieu
+          d'être découpé. */}
+      <Screen className="h-[100dvh] max-h-[100dvh]">
+        <Screen.Content className="flex flex-col min-h-0" style={{ paddingBottom: 0 }}>
+
           <div className="pt-6 pb-4 flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
@@ -730,15 +731,16 @@ const NewTransaction = () => {
             )}
 
             {/* Pavé numérique */}
-            <div className="mt-auto shrink-0">
+            <div className="mt-3 flex-1 min-h-0 flex flex-col">
               <AmountKeypad
                 value={amount}
                 onChange={setAmount}
                 caret={amountCaret}
                 onCaretChange={setAmountCaret}
-                className="mt-5"
+                className="flex-1 min-h-0 mt-5"
               />
             </div>
+
           </form>
         </>
       )}

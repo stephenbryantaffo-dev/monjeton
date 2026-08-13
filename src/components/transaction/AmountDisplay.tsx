@@ -145,13 +145,9 @@ export function AmountDisplay({
           {currency}
         </span>
       </div>
-      <p className="mt-2 text-[11.5px] font-medium text-muted-foreground">
-        {focused
-          ? "Place le curseur où tu veux, ou sélectionne pour tout remplacer"
-          : "Tape le montant, le reste est déjà rempli"}
-      </p>
     </div>
   );
+
 }
 
 export default AmountDisplay;
