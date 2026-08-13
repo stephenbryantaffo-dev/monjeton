@@ -25,6 +25,8 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          text: "hsl(var(--primary-text, var(--primary)))",
+          soft: "hsl(var(--primary-soft, var(--primary)))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
