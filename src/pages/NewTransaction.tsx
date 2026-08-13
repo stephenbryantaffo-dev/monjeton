@@ -196,7 +196,7 @@ const NewTransaction = () => {
 
         if (blob.size < 8000) {
           toast({
-            title: "🎤 Trop court",
+            title: "Trop court",
             description: "Parle pendant au moins 2 secondes",
             variant: "destructive",
           });
@@ -333,7 +333,7 @@ const NewTransaction = () => {
       if (sttData?.empty === true || !transcript?.trim() || isHallucination(transcript)) {
         setTranscriptText(null);
         toast({
-          title: "🎤 Rien détecté",
+          title: "Rien détecté",
           description: "Parle clairement et plus près du micro",
           variant: "destructive",
         });
@@ -428,7 +428,7 @@ const NewTransaction = () => {
               exchangeRateSource = convResp.data.source || "api";
             }
           } catch {
-            toast({ title: `⚠️ Conversion ${tx.currency}→XOF échouée, montant conservé`, variant: "destructive" });
+            toast({ title: `Conversion ${tx.currency}→XOF échouée, montant conservé`, variant: "destructive" });
           }
         }
 
@@ -448,7 +448,7 @@ const NewTransaction = () => {
         });
       }
 
-      toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""} ✅` });
+      toast({ title: `${transactions.length} transaction${transactions.length > 1 ? "s" : ""} enregistrée${transactions.length > 1 ? "s" : ""}` });
       import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       const today2 = new Date();
       const m2 = today2.getMonth() + 1;
@@ -509,7 +509,7 @@ const NewTransaction = () => {
     if (error) {
       toast({ title: "Erreur", description: "Impossible d'enregistrer la transaction", variant: "destructive" });
     } else {
-      toast({ title: "Transaction enregistrée ✅" });
+      toast({ title: "Transaction enregistrée" });
       checkAndCreateNotifications(user.id, type, categoryId, walletId || null);
       import("@/lib/petReminders").then((m) => m.rearmPetReminder()).catch(() => {});
       // Auto-ajustement budget catégorie (fire-and-forget)
@@ -601,7 +601,7 @@ const NewTransaction = () => {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             className="glass-card rounded-2xl p-3 mb-4 border border-primary/20"
           >
-            <p className="text-xs text-muted-foreground mb-1">🎙️ Texte reconnu :</p>
+            <p className="text-xs text-muted-foreground mb-1">Texte reconnu :</p>
             <p className="text-sm text-foreground font-medium italic">« {transcriptText} »</p>
             {isProcessing && (
               <div className="flex items-center gap-2 mt-2">
@@ -644,7 +644,7 @@ const NewTransaction = () => {
                   startRecording();
                 }}
               >
-                🎤 Réessayer
+                Réessayer
               </Button>
             </div>
           </motion.div>
