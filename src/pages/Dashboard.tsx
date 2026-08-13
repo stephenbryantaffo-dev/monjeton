@@ -633,7 +633,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="flex gap-1 p-1 glass-card rounded-xl mb-2 sm:mb-3 overflow-x-auto">
+      <div className="flex gap-1 p-1 glass-card period-rail rounded-xl mb-2 sm:mb-3 overflow-x-auto">
         {(["Jour", "Semaine", "Mois", "Année"] as const).map((p) => (
           <button
             key={p}
@@ -749,7 +749,7 @@ const Dashboard = () => {
                         type="button"
                         onClick={() => navigate("/transactions/new", { state: { initialType: "income" } })}
                         aria-label="Ajouter un revenu"
-                        className="block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
+                        className="money-income block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
                         style={{
                           borderRadius: 21,
                           background:
@@ -786,7 +786,7 @@ const Dashboard = () => {
                         type="button"
                         onClick={() => navigate("/transactions/new", { state: { initialType: "expense" } })}
                         aria-label="Ajouter une dépense"
-                        className="block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
+                        className="money-expense block w-full text-left relative p-4 overflow-hidden active:scale-[0.98] transition-transform"
                         style={{
                           borderRadius: 21,
                           background:
@@ -840,13 +840,13 @@ const Dashboard = () => {
                     >
                       <button
                         onClick={() => navigate(to)}
-                        className="relative w-full flex items-center gap-2.5 p-2.5 overflow-hidden text-left active:scale-[0.98] transition-transform"
+                        className="short-card relative w-full flex items-center gap-2.5 p-2.5 overflow-hidden text-left active:scale-[0.98] transition-transform"
                         style={{
                           borderRadius: 15,
                           background: "linear-gradient(150deg, hsl(var(--primary) / 0.14), hsl(var(--card)) 70%)",
                         }}
                       >
-                        <span className="w-7 h-7 rounded-full flex-none flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.18)" }}>
+                        <span className="short-icon w-7 h-7 rounded-full flex-none flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.18)" }}>
                           <Icon className="w-3.5 h-3.5 text-primary" strokeWidth={2.1} />
                         </span>
                         <span className="flex-1 min-w-0 text-xs font-bold text-foreground truncate">{label}</span>
