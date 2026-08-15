@@ -224,11 +224,28 @@ Return ONLY the JSON, no other text.`;
     });
 
     if (!response.ok) {
-      console.error("AI gateway error:", response.status);
-      return new Response(JSON.stringify({ error: "Erreur d'analyse" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const err = await response.text();
+      console.error('AI gateway error:', response.status, err);
+      // On renvoie une cause exploitable côté application : le message
+      // générique empêchait de distinguer un crédit épuisé d'une clé
+      // invalide ou d'une limite de débit.
+      const lower = err.toLowerCase();
+      let reason = 'AI service error';
+      if (response.status === 401 || lower.includes('authentication')) {
+        reason = 'Clé API invalide. Vérifie la configuration.';
+      } else if (lower.includes('credit') || lower.includes('balance')) {
+        reason = 'Crédits IA épuisés. Recharge le compte Anthropic.';
+      } else if (response.status === 429 || lower.includes('rate_limit')) {
+        reason = 'Trop de demandes. Réessaie dans une minute.';
+      } else if (response.status === 404 || lower.includes('not_found')) {
+        reason = 'Modèle IA indisponible.';
+      } else if (response.status >= 500) {
+        reason = 'Service Anthropic momentanément indisponible.';
+      }
+      return new Response(
+        JSON.stringify({ error: reason, status: response.status }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();

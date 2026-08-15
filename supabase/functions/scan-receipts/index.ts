@@ -248,9 +248,25 @@ Si aucune transaction détectée :
 
     if (!claudeRes.ok) {
       const err = await claudeRes.text();
-      console.error('Claude Vision error:', err);
+      console.error('Claude Vision error:', claudeRes.status, err);
+      // On renvoie une cause exploitable côté application : le message
+      // générique empêchait de distinguer un crédit épuisé d'une clé
+      // invalide ou d'une limite de débit.
+      const lower = err.toLowerCase();
+      let reason = 'AI service error';
+      if (claudeRes.status === 401 || lower.includes('authentication')) {
+        reason = 'Clé API invalide. Vérifie la configuration.';
+      } else if (lower.includes('credit') || lower.includes('balance')) {
+        reason = 'Crédits IA épuisés. Recharge le compte Anthropic.';
+      } else if (claudeRes.status === 429 || lower.includes('rate_limit')) {
+        reason = 'Trop de demandes. Réessaie dans une minute.';
+      } else if (claudeRes.status === 404 || lower.includes('not_found')) {
+        reason = 'Modèle IA indisponible.';
+      } else if (claudeRes.status >= 500) {
+        reason = 'Service Anthropic momentanément indisponible.';
+      }
       return new Response(
-        JSON.stringify({ error: 'AI service error' }),
+        JSON.stringify({ error: reason, status: claudeRes.status }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
