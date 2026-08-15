@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Lock } from "lucide-react";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,10 @@ const LOCKOUT_MS = 30_000;
 const ATTEMPTS_KEY = "monjeton_pin_attempts";
 const LOCKOUT_UNTIL_KEY = "monjeton_pin_lockout_until";
 
+// Repli lorsque localStorage est indisponible (navigation privée) :
+// sans cela, le blocage serait annulé immédiatement par le décompte.
+let lockoutUntilMemory = 0;
+
 const readAttempts = (): number => {
   try {
     return Number(localStorage.getItem(ATTEMPTS_KEY)) || 0;
@@ -21,13 +25,12 @@ const readAttempts = (): number => {
 };
 
 const readLockoutRemaining = (): number => {
+  let until = lockoutUntilMemory;
   try {
-    const until = Number(localStorage.getItem(LOCKOUT_UNTIL_KEY)) || 0;
-    const rest = Math.ceil((until - Date.now()) / 1000);
-    return rest > 0 ? rest : 0;
-  } catch {
-    return 0;
-  }
+    until = Math.max(until, Number(localStorage.getItem(LOCKOUT_UNTIL_KEY)) || 0);
+  } catch { /* ignore */ }
+  const rest = Math.ceil((until - Date.now()) / 1000);
+  return rest > 0 ? rest : 0;
 };
 
 const PinLockScreen = () => {
@@ -43,26 +46,38 @@ const PinLockScreen = () => {
   const [blocked, setBlocked] = useState(() => readLockoutRemaining() > 0);
 
   const startLockout = useCallback(() => {
+    const until = Date.now() + LOCKOUT_MS;
+    lockoutUntilMemory = until;
     try {
-      localStorage.setItem(LOCKOUT_UNTIL_KEY, String(Date.now() + LOCKOUT_MS));
+      localStorage.setItem(LOCKOUT_UNTIL_KEY, String(until));
     } catch { /* ignore */ }
+    setLockoutSeconds(LOCKOUT_MS / 1000);
     setBlocked(true);
-    setLockoutSeconds(30);
-    const interval = setInterval(() => {
-      setLockoutSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setBlocked(false);
-          setAttempts(0);
-          try {
-            localStorage.removeItem(LOCKOUT_UNTIL_KEY);
-          } catch { /* ignore */ }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   }, []);
+
+  // Un seul endroit gère le décompte : il démarre quand le blocage est actif,
+  // qu'il vienne d'un échec de saisie ou d'une restauration après rechargement.
+  useEffect(() => {
+    if (!blocked) return;
+    const tick = () => {
+      const rest = readLockoutRemaining();
+      if (rest <= 0) {
+        lockoutUntilMemory = 0;
+        try {
+          localStorage.removeItem(LOCKOUT_UNTIL_KEY);
+          localStorage.removeItem(ATTEMPTS_KEY);
+        } catch { /* ignore */ }
+        setLockoutSeconds(0);
+        setAttempts(0);
+        setBlocked(false);
+        return;
+      }
+      setLockoutSeconds(rest);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [blocked]);
 
   const handleDigit = (d: string) => {
     if (blocked || pin.length >= 4) return;
@@ -72,6 +87,7 @@ const PinLockScreen = () => {
     if (next.length === 4) {
       unlock(next).then((success) => {
         if (success) {
+          lockoutUntilMemory = 0;
           try {
             localStorage.removeItem(ATTEMPTS_KEY);
             localStorage.removeItem(LOCKOUT_UNTIL_KEY);
