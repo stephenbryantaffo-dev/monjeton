@@ -654,7 +654,10 @@ const NewTransaction = () => {
             </button>
           </div>
 
-          <form id="new-tx-form" onSubmit={handleSubmit}>
+          {/* flex flex-col min-h-0 est indispensable : sans ça, la chaîne
+              de contraintes est rompue entre Screen.Content et le clavier,
+              qui déborde alors sous le bouton au lieu de se comprimer. */}
+          <form id="new-tx-form" onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
             {/* Montant : le montant EST l'écran, et il est éditable */}
             <AmountDisplay
               value={amount}
