@@ -12,6 +12,10 @@ const LOCKOUT_MS = 30_000;
 const ATTEMPTS_KEY = "monjeton_pin_attempts";
 const LOCKOUT_UNTIL_KEY = "monjeton_pin_lockout_until";
 
+// Repli lorsque localStorage est indisponible (navigation privée) :
+// sans cela, le blocage serait annulé immédiatement par le décompte.
+let lockoutUntilMemory = 0;
+
 const readAttempts = (): number => {
   try {
     return Number(localStorage.getItem(ATTEMPTS_KEY)) || 0;
@@ -21,13 +25,12 @@ const readAttempts = (): number => {
 };
 
 const readLockoutRemaining = (): number => {
+  let until = lockoutUntilMemory;
   try {
-    const until = Number(localStorage.getItem(LOCKOUT_UNTIL_KEY)) || 0;
-    const rest = Math.ceil((until - Date.now()) / 1000);
-    return rest > 0 ? rest : 0;
-  } catch {
-    return 0;
-  }
+    until = Math.max(until, Number(localStorage.getItem(LOCKOUT_UNTIL_KEY)) || 0);
+  } catch { /* ignore */ }
+  const rest = Math.ceil((until - Date.now()) / 1000);
+  return rest > 0 ? rest : 0;
 };
 
 const PinLockScreen = () => {
