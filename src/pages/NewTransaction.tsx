@@ -560,7 +560,7 @@ const NewTransaction = () => {
             zéro faisait passer la dernière rangée du clavier sous le bouton. */}
         <Screen.Content className="flex flex-col min-h-0">
 
-          <div className="pt-6 pb-4 flex items-center gap-3">
+          <div className="pt-6 pb-4 flex items-center gap-3 w-full">
             <button
               onClick={() => navigate(-1)}
               className="text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1"
@@ -568,6 +568,19 @@ const NewTransaction = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
+            <button
+              type="button"
+              onClick={() => setVoiceSheetOpen(true)}
+              disabled={isProcessing}
+              aria-label="Saisir à la voix"
+              className="ml-auto w-9 h-9 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
+            </button>
           </div>
 
       {/* Déclencheur vocal */}
