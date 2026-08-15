@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { formatMoneySmart } from "@/lib/formatMoney";
+import { supabase } from "@/integrations/supabase/client";
 
 const PIN_STORAGE_KEY = "track_emoney_pin";
 const SALT = "monjeton_2025_salt_";
+
+// Miroir non sensible : sert uniquement à afficher l'écran de verrouillage
+// immédiatement au démarrage, avant la réponse du serveur.
+const PIN_MIRROR_KEY = "monjeton_pin_enabled";
 
 const hashPin = async (pin: string): Promise<string> => {
   const encoder = new TextEncoder();
@@ -20,7 +25,7 @@ interface PrivacyContextType {
   unlock: (pin: string) => Promise<boolean>;
   lock: () => void;
   setPin: (pin: string) => Promise<void>;
-  removePin: () => void;
+  removePin: () => Promise<void>;
   toggleDiscreetMode: () => void;
   formatAmount: (amount: number) => string;
 }
@@ -33,21 +38,71 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
   const [pinEnabled, setPinEnabled] = useState(false);
 
   useEffect(() => {
-    const storedHash = localStorage.getItem(PIN_STORAGE_KEY);
     const discreet = localStorage.getItem("track_emoney_discreet") === "true";
-    setPinEnabled(!!storedHash);
-    setIsLocked(!!storedHash);
     setIsDiscreetMode(discreet);
+
+    // Affichage optimiste : on verrouille tout de suite si le miroir dit
+    // qu'un PIN existe, pour éviter un flash du contenu avant la réponse.
+    const mirror = localStorage.getItem(PIN_MIRROR_KEY) === "true";
+    const legacyHash = localStorage.getItem(PIN_STORAGE_KEY);
+    if (mirror || legacyHash) {
+      setPinEnabled(true);
+      setIsLocked(true);
+    }
+
+    let cancelled = false;
+
+    const sync = async () => {
+      try {
+        const { data, error } = await supabase.rpc("user_pin_status" as any);
+        if (error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        let hasPin = Boolean(row?.has_pin);
+
+        // Migration silencieuse : un PIN existait en local mais pas encore
+        // sur le serveur. On le pousse, puis on efface la copie locale.
+        if (!hasPin && legacyHash) {
+          const { error: setError } = await supabase.rpc("set_user_pin" as any, {
+            _pin_hash: legacyHash,
+          } as any);
+          if (!setError) hasPin = true;
+        }
+        if (hasPin && legacyHash) {
+          localStorage.removeItem(PIN_STORAGE_KEY);
+        }
+
+        if (cancelled) return;
+        localStorage.setItem(PIN_MIRROR_KEY, String(hasPin));
+        setPinEnabled(hasPin);
+        setIsLocked(hasPin);
+      } catch {
+        // Serveur injoignable : on conserve l'état optimiste. Si un PIN
+        // existe, l'app reste verrouillée — c'est le comportement sûr.
+      }
+    };
+
+    sync();
+    return () => { cancelled = true; };
   }, []);
 
+  // La signature ne change pas : les deux écrans (PinLockScreen et
+  // ReceiptsPinLock) continuent de fonctionner sans modification.
   const unlock = async (pin: string): Promise<boolean> => {
-    const storedHash = localStorage.getItem(PIN_STORAGE_KEY);
-    const pinHash = await hashPin(pin);
-    if (pinHash === storedHash) {
-      setIsLocked(false);
-      return true;
+    try {
+      const pinHash = await hashPin(pin);
+      const { data, error } = await supabase.rpc("verify_user_pin" as any, {
+        _pin_hash: pinHash,
+      } as any);
+      if (error) return false;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row?.success) {
+        setIsLocked(false);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     }
-    return false;
   };
 
   const lock = () => {
@@ -56,12 +111,20 @@ export const PrivacyProvider = ({ children }: { children: ReactNode }) => {
 
   const setPin = async (newPin: string) => {
     const pinHash = await hashPin(newPin);
-    localStorage.setItem(PIN_STORAGE_KEY, pinHash);
+    const { error } = await supabase.rpc("set_user_pin" as any, {
+      _pin_hash: pinHash,
+    } as any);
+    if (error) throw error;
+    localStorage.setItem(PIN_MIRROR_KEY, "true");
+    localStorage.removeItem(PIN_STORAGE_KEY);
     setPinEnabled(true);
     setIsLocked(false);
   };
 
-  const removePin = () => {
+  const removePin = async () => {
+    const { error } = await supabase.rpc("clear_user_pin" as any);
+    if (error) throw error;
+    localStorage.removeItem(PIN_MIRROR_KEY);
     localStorage.removeItem(PIN_STORAGE_KEY);
     setPinEnabled(false);
     setIsLocked(false);
