@@ -26,7 +26,9 @@ import { cn } from "@/lib/utils";
  * - /assistant : le "+" recouvrait le bouton d'envoi du message
  * - /categories et /scan : il gênait les actions de la page
  */
-const HIDE_FAB_ON = ["/dashboard", "/debts", "/assistant", "/categories", "/scan"];
+// Le « + » ouvre la saisie d'une transaction : inutile sur la page de
+// saisie elle-même, comme sur les écrans qui ont déjà leur action propre.
+const HIDE_FAB_ON = ["/dashboard", "/debts", "/assistant", "/categories", "/scan", "/transactions/new"];
 
 const navItems = [
   { icon: Home, label: "Accueil", path: "/dashboard" },

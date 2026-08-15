@@ -550,11 +550,10 @@ const NewTransaction = () => {
   };
 
   return (
-    <DashboardLayout showBack={false}>
-      {/* Hauteur bornée à l'écran, mais SANS overflow-hidden : c'est le
-          clavier qui se comprime pour occuper la place restante, au lieu
-          d'être découpé. */}
-      <Screen className="h-[100dvh] max-h-[100dvh]">
+    <DashboardLayout showBack={false} fullHeight>
+      {/* La hauteur est gérée par DashboardLayout en mode fullHeight :
+          l'en-tête et la barre du bas sont déduits une seule fois. */}
+      <Screen className="flex-1 min-h-0">
         {/* Pas de paddingBottom forcé : Screen.Content réserve déjà la place
             de la barre de navigation et du bouton « C'est bon ». La forcer à
             zéro faisait passer la dernière rangée du clavier sous le bouton. */}
@@ -729,8 +728,8 @@ const NewTransaction = () => {
               form="new-tx-form"
               type="submit"
               variant="hero"
-              size="lg"
-              className="w-full"
+              size="default"
+              className="w-full h-11 text-[15px]"
               disabled={loading}
             >
               {loading ? "Un instant…" : "C'est bon"}
