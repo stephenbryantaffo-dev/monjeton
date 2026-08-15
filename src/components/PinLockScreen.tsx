@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Lock } from "lucide-react";
 import { usePrivacy } from "@/contexts/PrivacyContext";
 import { useAuth } from "@/contexts/AuthContext";
