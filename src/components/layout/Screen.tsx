@@ -34,7 +34,9 @@ import { cn } from "@/lib/utils";
 
 // Hauteur visuelle de la LimelightNav (sans safe-area, gérée séparément)
 const BOTTOM_NAV_HEIGHT = 96;
-const STICKY_ACTION_MIN_HEIGHT = 88;
+// Hauteur réservée au-dessus du contenu pour le bouton collé en bas.
+// 56px : le bouton fait 44px plus ses marges resserrées.
+const STICKY_ACTION_MIN_HEIGHT = 56;
 
 interface ScreenContextValue {
   hasBottomNav: boolean;
@@ -133,7 +135,7 @@ Screen.Content = function ScreenContent({
 
   const bottomPadding =
     (hasBottomNav ? BOTTOM_NAV_HEIGHT : 0) +
-    (hasStickyAction ? STICKY_ACTION_MIN_HEIGHT + 14 : 0) +
+    (hasStickyAction ? STICKY_ACTION_MIN_HEIGHT + 6 : 0) +
     16;
 
   return (
@@ -176,8 +178,8 @@ Screen.StickyAction = function ScreenStickyAction({
       className="fixed left-0 right-0 z-40 pointer-events-none"
       style={{
         bottom: hasBottomNav
-          ? "calc(var(--bottom-nav-space) + 14px)"
-          : "calc(env(safe-area-inset-bottom, 0px) + 14px)",
+          ? "calc(var(--bottom-nav-space) + 6px)"
+          : "calc(env(safe-area-inset-bottom, 0px) + 6px)",
       }}
     >
 

@@ -10,17 +10,32 @@ interface DashboardLayoutProps {
   showBack?: boolean;
   backTo?: string;
   headerLeft?: ReactNode;
+  /** Répartit exactement la hauteur de l'écran au lieu d'empiler les
+      réserves du bas. À utiliser sur les pages qui doivent tenir sans
+      défilement, comme la saisie d'une transaction. */
+  fullHeight?: boolean;
 }
 
-const DashboardLayout = ({ children, title, showBack, backTo, headerLeft }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHeight }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
   const shouldShowBack = showBack !== undefined ? showBack : !isDashboard;
 
   return (
-    <div className="min-h-screen gradient-bg pb-24" style={{ paddingBottom: "max(116px, calc(100px + env(safe-area-inset-bottom)))" }}>
-      <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3">
+    <div
+      className={
+        fullHeight
+          ? "h-[100dvh] gradient-bg flex flex-col overflow-hidden"
+          : "min-h-screen gradient-bg pb-24"
+      }
+      style={
+        fullHeight
+          ? undefined
+          : { paddingBottom: "max(116px, calc(100px + env(safe-area-inset-bottom)))" }
+      }
+    >
+      <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3 shrink-0">
         {shouldShowBack && (
           <button
             onClick={() => backTo ? navigate(backTo) : navigate(-1)}
@@ -35,7 +50,9 @@ const DashboardLayout = ({ children, title, showBack, backTo, headerLeft }: Dash
           <NotificationBell />
         </div>
       </header>
-      <main className="px-4 sm:px-5">{children}</main>
+      <main className={fullHeight ? "px-4 sm:px-5 flex-1 min-h-0 flex flex-col" : "px-4 sm:px-5"}>
+        {children}
+      </main>
       <LimelightNav />
     </div>
   );
