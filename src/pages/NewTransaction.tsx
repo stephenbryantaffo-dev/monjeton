@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mic, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AmountKeypad } from "@/components/transaction/AmountKeypad";
@@ -568,19 +568,6 @@ const NewTransaction = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
-            <button
-              type="button"
-              onClick={() => setVoiceSheetOpen(true)}
-              disabled={isProcessing}
-              aria-label="Saisir à la voix"
-              className="ml-auto w-9 h-9 rounded-full flex items-center justify-center shrink-0 gradient-primary text-primary-foreground disabled:opacity-50"
-            >
-              {isProcessing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
-            </button>
           </div>
 
       {/* Transcription bubble */}
