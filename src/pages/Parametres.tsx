@@ -165,8 +165,8 @@ const Parametres = () => {
     toast({ title: "Code PIN activé 🔒" });
   };
 
-  const handleRemovePin = () => {
-    removePin();
+  const handleRemovePin = async () => {
+    await removePin();
     toast({ title: "Code PIN désactivé" });
   };
 
