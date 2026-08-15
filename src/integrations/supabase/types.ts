@@ -2330,6 +2330,30 @@ export type Database = {
           },
         ]
       }
+      user_pins: {
+        Row: {
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -2644,6 +2668,7 @@ export type Database = {
     }
     Functions: {
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      clear_user_pin: { Args: never; Returns: undefined }
       get_invite_by_token: {
         Args: { _token: string }
         Returns: {
@@ -2702,9 +2727,25 @@ export type Database = {
         Args: { p_contribution: number; p_cycle_id: string }
         Returns: undefined
       }
+      set_user_pin: { Args: { _pin_hash: string }; Returns: undefined }
       transfer_caisse_ownership: {
         Args: { _caisse_id: string; _new_owner: string }
         Returns: Json
+      }
+      user_pin_status: {
+        Args: never
+        Returns: {
+          has_pin: boolean
+          locked_seconds: number
+        }[]
+      }
+      verify_user_pin: {
+        Args: { _pin_hash: string }
+        Returns: {
+          attempts: number
+          locked_seconds: number
+          success: boolean
+        }[]
       }
     }
     Enums: {
