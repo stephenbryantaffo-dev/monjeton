@@ -46,26 +46,38 @@ const PinLockScreen = () => {
   const [blocked, setBlocked] = useState(() => readLockoutRemaining() > 0);
 
   const startLockout = useCallback(() => {
+    const until = Date.now() + LOCKOUT_MS;
+    lockoutUntilMemory = until;
     try {
-      localStorage.setItem(LOCKOUT_UNTIL_KEY, String(Date.now() + LOCKOUT_MS));
+      localStorage.setItem(LOCKOUT_UNTIL_KEY, String(until));
     } catch { /* ignore */ }
+    setLockoutSeconds(LOCKOUT_MS / 1000);
     setBlocked(true);
-    setLockoutSeconds(30);
-    const interval = setInterval(() => {
-      setLockoutSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setBlocked(false);
-          setAttempts(0);
-          try {
-            localStorage.removeItem(LOCKOUT_UNTIL_KEY);
-          } catch { /* ignore */ }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   }, []);
+
+  // Un seul endroit gère le décompte : il démarre quand le blocage est actif,
+  // qu'il vienne d'un échec de saisie ou d'une restauration après rechargement.
+  useEffect(() => {
+    if (!blocked) return;
+    const tick = () => {
+      const rest = readLockoutRemaining();
+      if (rest <= 0) {
+        lockoutUntilMemory = 0;
+        try {
+          localStorage.removeItem(LOCKOUT_UNTIL_KEY);
+          localStorage.removeItem(ATTEMPTS_KEY);
+        } catch { /* ignore */ }
+        setLockoutSeconds(0);
+        setAttempts(0);
+        setBlocked(false);
+        return;
+      }
+      setLockoutSeconds(rest);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [blocked]);
 
   const handleDigit = (d: string) => {
     if (blocked || pin.length >= 4) return;
