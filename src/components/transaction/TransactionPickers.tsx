@@ -259,7 +259,7 @@ export function MetaChip({ icon, label, onClick, empty }: ChipProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        "flex min-w-0 items-center gap-2 rounded-full border bg-card px-4 py-3",
+        "inline-flex max-w-full shrink items-center gap-2 rounded-full border bg-card px-4 py-2.5",
         "text-[13px] font-bold transition-colors",
         empty
           ? "border-dashed border-border text-muted-foreground"
@@ -269,7 +269,7 @@ export function MetaChip({ icon, label, onClick, empty }: ChipProps) {
       <span className={cn("flex-none", empty ? "text-muted-foreground" : "text-primary")}>
         {icon}
       </span>
-      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+      <span className="min-w-0 truncate text-left">{label}</span>
     </button>
   );
 }

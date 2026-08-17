@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AmountKeypad } from "@/components/transaction/AmountKeypad";
@@ -550,7 +550,12 @@ const NewTransaction = () => {
   };
 
   return (
-    <DashboardLayout showBack={false} fullHeight>
+    <DashboardLayout
+      fullHeight
+      hideBell
+      showBack
+      title={type === "expense" ? "Nouvelle dépense" : "Nouveau revenu"}
+    >
       {/* La hauteur est gérée par DashboardLayout en mode fullHeight :
           l'en-tête et la barre du bas sont déduits une seule fois. */}
       <Screen className="flex-1 min-h-0">
@@ -558,16 +563,6 @@ const NewTransaction = () => {
             de la barre de navigation et du bouton « C'est bon ». La forcer à
             zéro faisait passer la dernière rangée du clavier sous le bouton. */}
         <Screen.Content className="flex flex-col min-h-0">
-
-          <div className="pt-6 pb-4 flex items-center gap-3 w-full">
-            <button
-              onClick={() => navigate(-1)}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
-          </div>
 
       {/* Transcription bubble */}
       <AnimatePresence>
@@ -645,7 +640,7 @@ const NewTransaction = () => {
       {/* Manual form */}
       {!voiceTransactions && (
         <>
-          <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
+          <div className="flex gap-1 p-1 glass-card rounded-xl mb-3">
             <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>
               Dépense
             </button>
@@ -658,16 +653,21 @@ const NewTransaction = () => {
               de contraintes est rompue entre Screen.Content et le clavier,
               qui déborde alors sous le bouton au lieu de se comprimer. */}
           <form id="new-tx-form" onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
+            <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
+              Montant
+            </p>
             {/* Montant : le montant EST l'écran, et il est éditable */}
             <AmountDisplay
               value={amount}
               onChange={setAmount}
               onCaretChange={setAmountCaret}
-              className="pt-2 pb-1"
+              className="pt-1 pb-1"
             />
 
-            {/* Les trois choix, pré-remplis mais toujours modifiables */}
-            <div className="grid grid-cols-2 gap-2 mt-3">
+            {/* flex-wrap et non une grille : chaque pastille prend la largeur
+                de son texte et l'ensemble se centre, comme dans la maquette.
+                Une grille 2 colonnes les forçait toutes à la demi-largeur. */}
+            <div className="flex flex-wrap justify-center gap-2 mt-3">
               <MetaChip
                 icon={
                   selectedCategory
@@ -709,36 +709,35 @@ const NewTransaction = () => {
               </div>
             )}
 
-            {/* Pavé numérique */}
-            <div className="mt-3 flex-1 min-h-0 flex flex-col">
-              <AmountKeypad
-                value={amount}
-                onChange={setAmount}
-                caret={amountCaret}
-                onCaretChange={setAmountCaret}
-                className="flex-1 min-h-0 mt-5"
-              />
-            </div>
+            {/* mt-auto cale le clavier et le bouton en bas de l'espace restant.
+                Le clavier ne s'étire plus : sa hauteur lui est propre, il ne
+                peut donc plus être écrasé par ce qu'on ajoute au-dessus. */}
+            <AmountKeypad
+              value={amount}
+              onChange={setAmount}
+              caret={amountCaret}
+              onCaretChange={setAmountCaret}
+              className="mt-auto"
+            />
+
+            <Button
+              type="submit"
+              variant="hero"
+              className="mt-2 h-[52px] w-full rounded-2xl text-base font-extrabold"
+              disabled={loading}
+            >
+              {loading ? "Un instant…" : (
+                <>
+                  <Check className="mr-2 h-5 w-5" />
+                  C'est bon
+                </>
+              )}
+            </Button>
 
           </form>
         </>
       )}
         </Screen.Content>
-
-        {!voiceTransactions && (
-          <Screen.StickyAction>
-            <Button
-              form="new-tx-form"
-              type="submit"
-              variant="hero"
-              size="default"
-              className="w-full h-11 text-[15px]"
-              disabled={loading}
-            >
-              {loading ? "Un instant…" : "C'est bon"}
-            </Button>
-          </Screen.StickyAction>
-        )}
 
         <VoiceRecorderSheet
           open={voiceSheetOpen}

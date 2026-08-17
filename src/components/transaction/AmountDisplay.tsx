@@ -129,7 +129,7 @@ export function AmountDisplay({
           aria-label="Montant"
           className="
             bg-transparent border-none outline-none text-center
-            text-[44px] leading-none font-extrabold tracking-[-0.05em]
+            text-[52px] leading-none font-extrabold tracking-[-0.05em]
             text-foreground caret-primary
             flex-1 min-w-0 p-0 m-0
             placeholder:text-muted-foreground/40
