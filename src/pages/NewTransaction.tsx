@@ -664,8 +664,10 @@ const NewTransaction = () => {
               className="pt-1 pb-1"
             />
 
-            {/* Les trois choix, pré-remplis mais toujours modifiables */}
-            <div className="grid grid-cols-2 gap-2 mt-3">
+            {/* flex-wrap et non une grille : chaque pastille prend la largeur
+                de son texte et l'ensemble se centre, comme dans la maquette.
+                Une grille 2 colonnes les forçait toutes à la demi-largeur. */}
+            <div className="flex flex-wrap justify-center gap-2 mt-3">
               <MetaChip
                 icon={
                   selectedCategory
