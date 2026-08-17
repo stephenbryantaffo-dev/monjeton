@@ -75,7 +75,7 @@ export function AmountKeypad({
           onClick={() => press(k)}
           className={cn(
             "rounded-[20px] bg-card border border-border shadow-sm flex items-center justify-center",
-            "h-[clamp(3rem,calc((100svh-506px)/4),4.25rem)]",
+            "h-[clamp(3rem,calc((100svh-522px)/4),4.25rem)]",
             "text-2xl font-bold tracking-tight text-foreground",
             "active:bg-secondary/70 transition-colors",
             k === "000" && "text-base font-extrabold text-muted-foreground"
