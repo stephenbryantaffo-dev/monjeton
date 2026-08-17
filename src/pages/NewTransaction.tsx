@@ -717,7 +717,7 @@ const NewTransaction = () => {
               onChange={setAmount}
               caret={amountCaret}
               onCaretChange={setAmountCaret}
-              className="mt-auto"
+              className="mt-4 sm:mt-5"
             />
 
             <Button

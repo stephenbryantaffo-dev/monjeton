@@ -75,7 +75,7 @@ export function AmountKeypad({
           onClick={() => press(k)}
           className={cn(
             "rounded-[20px] bg-card border border-border shadow-sm flex items-center justify-center",
-            "h-[clamp(3rem,calc((100svh-506px)/4),4.25rem)]",
+            "h-[clamp(3rem,calc((100svh-522px)/4),4.25rem)]",
             "text-2xl font-bold tracking-tight text-foreground",
             "active:bg-secondary/70 transition-colors",
             k === "000" && "text-base font-extrabold text-muted-foreground"
@@ -94,7 +94,7 @@ export function AmountKeypad({
           e.preventDefault();
           eraseAll();
         }}
-        className="rounded-[20px] bg-primary/20 border border-transparent flex items-center justify-center active:bg-primary/30 transition-colors h-[clamp(3rem,calc((100svh-506px)/4),4.25rem)]"
+        className="rounded-[20px] bg-primary/20 border border-transparent flex items-center justify-center active:bg-primary/30 transition-colors h-[clamp(3rem,calc((100svh-522px)/4),4.25rem)]"
         aria-label="Effacer le chiffre avant le curseur"
       >
         <Delete className="w-6 h-6 text-primary" />
