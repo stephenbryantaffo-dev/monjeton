@@ -723,7 +723,7 @@ const NewTransaction = () => {
             <Button
               type="submit"
               variant="hero"
-              className="mt-2 h-[52px] w-full rounded-2xl text-base font-extrabold"
+              className="mt-4 h-[52px] w-full rounded-2xl text-base font-extrabold"
               disabled={loading}
             >
               {loading ? "Un instant…" : (
