@@ -14,9 +14,12 @@ interface DashboardLayoutProps {
       réserves du bas. À utiliser sur les pages qui doivent tenir sans
       défilement, comme la saisie d'une transaction. */
   fullHeight?: boolean;
+  /** Masque la cloche de notifications de l'en-tête. Utile sur les écrans
+      de saisie, où elle n'a pas de rôle et consomme de la place. */
+  hideBell?: boolean;
 }
 
-const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHeight }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHeight, hideBell }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
@@ -35,7 +38,7 @@ const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHe
           : { paddingBottom: "max(116px, calc(100px + env(safe-area-inset-bottom)))" }
       }
     >
-      <header className="px-4 sm:px-5 pt-6 pb-4 flex items-center gap-3 shrink-0">
+      <header className="px-4 sm:px-5 pt-3 pb-2 flex items-center gap-3 shrink-0">
         {shouldShowBack && (
           <button
             onClick={() => backTo ? navigate(backTo) : navigate(-1)}
@@ -46,9 +49,11 @@ const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHe
         )}
         {headerLeft && <div className="flex-shrink-0">{headerLeft}</div>}
         {title && <h1 className="text-xl sm:text-2xl font-bold text-foreground flex-1 min-w-0 truncate">{title}</h1>}
-        <div className="ml-auto flex-shrink-0">
-          <NotificationBell />
-        </div>
+        {!hideBell && (
+          <div className="ml-auto flex-shrink-0">
+            <NotificationBell />
+          </div>
+        )}
       </header>
       <main className={fullHeight ? "px-4 sm:px-5 flex-1 min-h-0 flex flex-col" : "px-4 sm:px-5"}>
         {children}
@@ -59,3 +64,4 @@ const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHe
 };
 
 export default DashboardLayout;
+
