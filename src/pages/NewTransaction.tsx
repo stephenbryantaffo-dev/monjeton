@@ -709,36 +709,35 @@ const NewTransaction = () => {
               </div>
             )}
 
-            {/* Pavé numérique */}
-            <div className="mt-3 flex-1 min-h-0 flex flex-col">
-              <AmountKeypad
-                value={amount}
-                onChange={setAmount}
-                caret={amountCaret}
-                onCaretChange={setAmountCaret}
-                className="flex-1 min-h-0 mt-5"
-              />
-            </div>
+            {/* mt-auto cale le clavier et le bouton en bas de l'espace restant.
+                Le clavier ne s'étire plus : sa hauteur lui est propre, il ne
+                peut donc plus être écrasé par ce qu'on ajoute au-dessus. */}
+            <AmountKeypad
+              value={amount}
+              onChange={setAmount}
+              caret={amountCaret}
+              onCaretChange={setAmountCaret}
+              className="mt-auto"
+            />
+
+            <Button
+              type="submit"
+              variant="hero"
+              className="mt-2 h-[52px] w-full rounded-2xl text-base font-extrabold"
+              disabled={loading}
+            >
+              {loading ? "Un instant…" : (
+                <>
+                  <Check className="mr-2 h-5 w-5" />
+                  C'est bon
+                </>
+              )}
+            </Button>
 
           </form>
         </>
       )}
         </Screen.Content>
-
-        {!voiceTransactions && (
-          <Screen.StickyAction>
-            <Button
-              form="new-tx-form"
-              type="submit"
-              variant="hero"
-              size="default"
-              className="w-full h-11 text-[15px]"
-              disabled={loading}
-            >
-              {loading ? "Un instant…" : "C'est bon"}
-            </Button>
-          </Screen.StickyAction>
-        )}
 
         <VoiceRecorderSheet
           open={voiceSheetOpen}
