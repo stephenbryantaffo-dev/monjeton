@@ -640,7 +640,7 @@ const NewTransaction = () => {
       {/* Manual form */}
       {!voiceTransactions && (
         <>
-          <div className="flex gap-1 p-1 glass-card rounded-xl mb-6">
+          <div className="flex gap-1 p-1 glass-card rounded-xl mb-3">
             <button onClick={() => setType("expense")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${type === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>
               Dépense
             </button>
@@ -653,12 +653,15 @@ const NewTransaction = () => {
               de contraintes est rompue entre Screen.Content et le clavier,
               qui déborde alors sous le bouton au lieu de se comprimer. */}
           <form id="new-tx-form" onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
+            <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
+              Montant
+            </p>
             {/* Montant : le montant EST l'écran, et il est éditable */}
             <AmountDisplay
               value={amount}
               onChange={setAmount}
               onCaretChange={setAmountCaret}
-              className="pt-2 pb-1"
+              className="pt-1 pb-1"
             />
 
             {/* Les trois choix, pré-remplis mais toujours modifiables */}
