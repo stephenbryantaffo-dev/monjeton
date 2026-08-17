@@ -550,7 +550,12 @@ const NewTransaction = () => {
   };
 
   return (
-    <DashboardLayout showBack={false} fullHeight>
+    <DashboardLayout
+      fullHeight
+      hideBell
+      showBack
+      title={type === "expense" ? "Nouvelle dépense" : "Nouveau revenu"}
+    >
       {/* La hauteur est gérée par DashboardLayout en mode fullHeight :
           l'en-tête et la barre du bas sont déduits une seule fois. */}
       <Screen className="flex-1 min-h-0">
@@ -558,16 +563,6 @@ const NewTransaction = () => {
             de la barre de navigation et du bouton « C'est bon ». La forcer à
             zéro faisait passer la dernière rangée du clavier sous le bouton. */}
         <Screen.Content className="flex flex-col min-h-0">
-
-          <div className="pt-6 pb-4 flex items-center gap-3 w-full">
-            <button
-              onClick={() => navigate(-1)}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 -ml-1"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nouvelle transaction</h1>
-          </div>
 
       {/* Transcription bubble */}
       <AnimatePresence>
