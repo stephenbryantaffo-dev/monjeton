@@ -94,7 +94,7 @@ export function AmountKeypad({
           e.preventDefault();
           eraseAll();
         }}
-        className="rounded-[20px] bg-primary/20 border border-transparent flex items-center justify-center active:bg-primary/30 transition-colors h-[clamp(3rem,calc((100svh-506px)/4),4.25rem)]"
+        className="rounded-[20px] bg-primary/20 border border-transparent flex items-center justify-center active:bg-primary/30 transition-colors h-[clamp(3rem,calc((100svh-522px)/4),4.25rem)]"
         aria-label="Effacer le chiffre avant le curseur"
       >
         <Delete className="w-6 h-6 text-primary" />
