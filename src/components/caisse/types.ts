@@ -7,6 +7,7 @@ export interface CaisseData {
   frequency: string;
   total_collected: number;
   total_spent: number;
+  total_recettes: number;
   created_at: string;
 }
 
@@ -54,6 +55,32 @@ export interface CaisseDepense {
   note: string | null;
   created_at: string;
 }
+
+export interface CaisseRecette {
+  id: string;
+  caisse_id: string;
+  label: string;
+  source: string;
+  quantite: number | null;
+  prix_unitaire: number | null;
+  amount: number;
+  recette_date: string;
+  contact: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export const RECETTE_SOURCES = [
+  { id: "billetterie", label: "🎟️ Billetterie" },
+  { id: "sponsor", label: "🤝 Sponsor" },
+  { id: "don", label: "🎁 Don" },
+  { id: "vente_sur_place", label: "🛍️ Vente sur place" },
+  { id: "autre", label: "📦 Autre" },
+] as const;
+
+export const RECETTE_SOURCE_LABELS: Record<string, string> = Object.fromEntries(
+  RECETTE_SOURCES.map((s) => [s.id, s.label])
+);
 
 export const FREQ_LABELS_CAISSE: Record<string, string> = {
   weekly: "Hebdomadaire",
