@@ -567,6 +567,56 @@ export type Database = {
           },
         ]
       }
+      caisse_recettes: {
+        Row: {
+          amount: number
+          caisse_id: string
+          contact: string | null
+          created_at: string
+          id: string
+          label: string
+          note: string | null
+          prix_unitaire: number | null
+          quantite: number | null
+          recette_date: string
+          source: string
+        }
+        Insert: {
+          amount: number
+          caisse_id: string
+          contact?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          note?: string | null
+          prix_unitaire?: number | null
+          quantite?: number | null
+          recette_date?: string
+          source?: string
+        }
+        Update: {
+          amount?: number
+          caisse_id?: string
+          contact?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          note?: string | null
+          prix_unitaire?: number | null
+          quantite?: number | null
+          recette_date?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caisse_recettes_caisse_id_fkey"
+            columns: ["caisse_id"]
+            isOneToOne: false
+            referencedRelation: "caisses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caisses: {
         Row: {
           contribution_amount: number
@@ -576,6 +626,7 @@ export type Database = {
           id: string
           name: string
           total_collected: number
+          total_recettes: number
           total_spent: number
           user_id: string
         }
@@ -587,6 +638,7 @@ export type Database = {
           id?: string
           name: string
           total_collected?: number
+          total_recettes?: number
           total_spent?: number
           user_id: string
         }
@@ -598,6 +650,7 @@ export type Database = {
           id?: string
           name?: string
           total_collected?: number
+          total_recettes?: number
           total_spent?: number
           user_id?: string
         }
