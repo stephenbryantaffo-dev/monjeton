@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, CheckCircle, UserMinus, X, FileDown, RefreshCw, Link2, Users, Landmark } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, UserPlus, MoreVertical, XCircle, PauseCircle, Ticket, CheckCircle, UserMinus, X, FileDown, RefreshCw, Link2, Users, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -15,7 +15,8 @@ import { ListItemSkeleton } from "@/components/DashboardSkeleton";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import CreateCaisseModal from "./CreateCaisseModal";
 import InviteCaisseModal from "./InviteCaisseModal";
-import { CaisseData, CaisseMember, CaisseCotisation, CaisseDepense, CaisseMemberHistory, DEPENSE_CATEGORIES, DEPENSE_CAT_LABELS } from "./types";
+import { CaisseData, CaisseMember, CaisseCotisation, CaisseDepense, CaisseRecette, CaisseMemberHistory, DEPENSE_CATEGORIES, DEPENSE_CAT_LABELS, RECETTE_SOURCE_LABELS } from "./types";
+import AddRecetteModal from "./AddRecetteModal";
 import { generateCaissePdf } from "./generateCaissePdf";
 import { DatePickerField } from "@/components/ui/DatePickerField";
 
@@ -67,11 +68,13 @@ const CaisseView = () => {
   const [members, setMembers] = useState<CaisseMember[]>([]);
   const [cotisations, setCotisations] = useState<CaisseCotisation[]>([]);
   const [depenses, setDepenses] = useState<CaisseDepense[]>([]);
+  const [recettes, setRecettes] = useState<CaisseRecette[]>([]);
   const [memberHistory, setMemberHistory] = useState<CaisseMemberHistory[]>([]);
 
   // Dialogs
   const [showCotisation, setShowCotisation] = useState(false);
   const [showDepense, setShowDepense] = useState(false);
+  const [showRecette, setShowRecette] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
 
   // Member actions
@@ -150,15 +153,17 @@ const CaisseView = () => {
   }, [user]);
 
   const loadDetail = useCallback(async (caisse: CaisseData) => {
-    const [mRes, cRes, dRes, hRes] = await Promise.all([
+    const [mRes, cRes, dRes, rRes, hRes] = await Promise.all([
       supabase.from("caisse_members" as any).select("*").eq("caisse_id", caisse.id),
       supabase.from("caisse_cotisations" as any).select("*").eq("caisse_id", caisse.id).order("created_at", { ascending: false }),
       supabase.from("caisse_depenses" as any).select("*").eq("caisse_id", caisse.id).order("created_at", { ascending: false }),
+      supabase.from("caisse_recettes" as any).select("*").eq("caisse_id", caisse.id).order("created_at", { ascending: false }),
       supabase.from("caisse_member_history" as any).select("*").eq("caisse_id", caisse.id).order("created_at", { ascending: false }).limit(20),
     ]);
     setMembers((mRes.data || []) as unknown as CaisseMember[]);
     setCotisations((cRes.data || []) as unknown as CaisseCotisation[]);
     setDepenses((dRes.data || []) as unknown as CaisseDepense[]);
+    setRecettes((rRes.data || []) as unknown as CaisseRecette[]);
     setMemberHistory((hRes.data || []) as unknown as CaisseMemberHistory[]);
   }, []);
 
@@ -219,7 +224,13 @@ const CaisseView = () => {
   const hasPaidThisCycle = (memberId: string) =>
     cotisations.some((c) => c.member_id === memberId && c.cycle_label === (cycleLabel || defaultCycleLabel) && c.status === "confirmed");
 
-  const soldeDisponible = selected ? (selected.total_collected - selected.total_spent) : 0;
+  // Les entrées viennent de deux sources : les cotisations des membres et les
+  // recettes extérieures (billetterie, sponsors). Le résultat de l'événement,
+  // lui, ne compte QUE les recettes extérieures face aux dépenses : les
+  // cotisations sont de l'apport interne, pas du chiffre d'affaires.
+  const totalEntrees = selected ? (selected.total_collected + (selected.total_recettes ?? 0)) : 0;
+  const soldeDisponible = selected ? (totalEntrees - selected.total_spent) : 0;
+  const resultatEvenement = selected ? ((selected.total_recettes ?? 0) - selected.total_spent) : 0;
 
   const removedCount = members.filter(m => m.status === 'removed').length;
   const displayedMembers = showRemoved ? members : members.filter(m => m.status !== 'removed');
@@ -562,6 +573,34 @@ const CaisseView = () => {
         </div>
       </div>
 
+      {/* BILAN DE L'ÉVÉNEMENT */}
+      <div className="glass-card rounded-2xl p-4 mb-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3">Bilan de l'événement</h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Recettes extérieures</span>
+            <span className="text-sm font-bold text-primary tabular-nums">{fmt(selected.total_recettes ?? 0)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Dépenses</span>
+            <span className="text-sm font-bold text-destructive tabular-nums">{fmt(selected.total_spent)}</span>
+          </div>
+          <div className="border-t border-border pt-2 flex items-center justify-between">
+            <span className="text-xs font-semibold text-foreground uppercase">Résultat</span>
+            <span className={`text-base font-bold tabular-nums ${resultatEvenement >= 0 ? "text-primary" : "text-destructive"}`}>
+              {resultatEvenement > 0 ? "+" : ""}{fmt(resultatEvenement)}
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          {resultatEvenement > 0
+            ? "L'événement est rentable."
+            : resultatEvenement < 0
+              ? `L'événement est déficitaire de ${fmt(Math.abs(resultatEvenement))} FCFA.`
+              : "L'événement est à l'équilibre."}
+        </p>
+      </div>
+
       {/* COLLABORATORS — "Suivi par" */}
       {collaborators.length > 0 && (
         <div className="glass-card rounded-2xl p-4 mb-4">
@@ -599,6 +638,11 @@ const CaisseView = () => {
               <ArrowUpRight className="w-5 h-5 text-destructive" />
               <span className="text-xs font-medium text-foreground">Dépense</span>
             </button>
+            <button onClick={() => setShowRecette(true)}
+              className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-primary/30">
+              <Ticket className="w-5 h-5 text-primary" />
+              <span className="text-xs font-medium text-foreground">Recette</span>
+            </button>
             <button onClick={() => setShowAddMember(true)}
               className="flex-1 glass-card rounded-xl p-3.5 flex flex-col items-center gap-1 border border-border">
               <UserPlus className="w-5 h-5 text-muted-foreground" />
@@ -612,6 +656,7 @@ const CaisseView = () => {
             cotisations: cotisations.filter(c => c.status === "confirmed"),
             cancelledCotisations: cotisations.filter(c => c.status === "cancelled"),
             depenses,
+            recettes,
             memberHistory,
             soldeDisponible,
           })}
@@ -620,6 +665,13 @@ const CaisseView = () => {
           <span className="text-xs font-medium text-foreground">PDF</span>
         </button>
       </div>
+
+      <AddRecetteModal
+        open={showRecette}
+        onOpenChange={setShowRecette}
+        caisseId={selected.id}
+        onSaved={refreshDetail}
+      />
 
       <InviteCaisseModal
         open={inviteOpen}
@@ -706,6 +758,33 @@ const CaisseView = () => {
           );
         })}
       </div>
+
+      {/* RECETTES */}
+      {recettes.length > 0 && (
+        <>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Recettes ({recettes.length})</h3>
+          <div className="space-y-2 mb-6">
+            {recettes.map((r, i) => (
+              <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}>
+                <div className="glass-card rounded-xl p-3.5 flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                    <Ticket className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{r.label}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {RECETTE_SOURCE_LABELS[r.source] || r.source}
+                      {r.quantite && r.prix_unitaire ? ` · ${r.quantite} billets × ${fmt(Number(r.prix_unitaire))} F` : ""}
+                      {` · ${new Date(r.recette_date).toLocaleDateString("fr-FR")}`}
+                    </p>
+                  </div>
+                  <span className="text-sm font-bold tabular-nums text-primary flex-shrink-0">+{fmt(Number(r.amount))}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* MOVEMENTS HISTORY */}
       {allMovements.length > 0 && (
