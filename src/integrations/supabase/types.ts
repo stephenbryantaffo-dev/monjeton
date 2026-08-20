@@ -578,6 +578,7 @@ export type Database = {
           note: string | null
           prix_unitaire: number | null
           quantite: number | null
+          quantite_prevue: number | null
           recette_date: string
           source: string
         }
@@ -591,6 +592,7 @@ export type Database = {
           note?: string | null
           prix_unitaire?: number | null
           quantite?: number | null
+          quantite_prevue?: number | null
           recette_date?: string
           source?: string
         }
@@ -604,6 +606,7 @@ export type Database = {
           note?: string | null
           prix_unitaire?: number | null
           quantite?: number | null
+          quantite_prevue?: number | null
           recette_date?: string
           source?: string
         }
