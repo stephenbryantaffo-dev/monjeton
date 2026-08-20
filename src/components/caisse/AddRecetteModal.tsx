@@ -129,6 +129,9 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
               <>
                 <Input readOnly value={autoAmount.toLocaleString("fr-FR")} className="bg-secondary border-border mt-1 text-primary font-bold" />
                 <p className="text-xs text-muted-foreground mt-1">{qte} × {pu.toLocaleString("fr-FR")} F — calculé automatiquement</p>
+                {fillRate !== null && (
+                  <p className="text-xs text-primary mt-1">Taux de remplissage : {fillRate}% ({qte}/{qtePrevue})</p>
+                )}
               </>
             ) : (
               <MoneyInput value={amount} onChange={(n) => setAmount(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
