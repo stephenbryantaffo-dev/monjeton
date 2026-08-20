@@ -117,6 +117,10 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
                 <Label>Prix unitaire</Label>
                 <MoneyInput value={prixUnitaire} onChange={(n) => setPrixUnitaire(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
               </div>
+              <div>
+                <Label>Quantité prévue (optionnel)</Label>
+                <Input inputMode="numeric" value={quantitePrevue} onChange={(e) => setQuantitePrevue(e.target.value.replace(/\D/g, ""))} placeholder="Ex: 200" className="bg-secondary border-border mt-1" />
+              </div>
             </div>
           )}
           <div>
