@@ -57,6 +57,10 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
 
   const save = async () => {
     if (!label.trim() || !finalAmount || finalAmount <= 0 || saving) return;
+    if (overSold) {
+      toast({ title: "Quantité invalide", description: "Tu ne peux pas vendre plus de billets que prévu.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from("caisse_recettes" as any).insert({
