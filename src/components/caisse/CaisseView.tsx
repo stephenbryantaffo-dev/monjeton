@@ -232,6 +232,14 @@ const CaisseView = () => {
   const soldeDisponible = selected ? (totalEntrees - selected.total_spent) : 0;
   const resultatEvenement = selected ? ((selected.total_recettes ?? 0) - selected.total_spent) : 0;
 
+  // Agrégat billetterie : uniquement les lignes de source "billetterie".
+  const billetterieLignes = recettes.filter((r) => r.source === "billetterie");
+  const billetsVendus = billetterieLignes.reduce((s, r) => s + Number(r.quantite || 0), 0);
+  const billetsPrevus = billetterieLignes.reduce((s, r) => s + Number(r.quantite_prevue || 0), 0);
+  const recetteBilletterie = billetterieLignes.reduce((s, r) => s + Number(r.amount), 0);
+  const tauxRemplissage = billetsPrevus > 0 ? Math.round((billetsVendus / billetsPrevus) * 100) : null;
+  const prixMoyenBillet = billetsVendus > 0 ? Math.round(recetteBilletterie / billetsVendus) : null;
+
   const removedCount = members.filter(m => m.status === 'removed').length;
   const displayedMembers = showRemoved ? members : members.filter(m => m.status !== 'removed');
 
