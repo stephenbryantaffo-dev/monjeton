@@ -30,10 +30,14 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
   const [saving, setSaving] = useState(false);
 
   const showQuantite = source === "billetterie" || source === "vente";
+  const showQuantitePrevue = source === "billetterie";
   const qte = Number(quantite);
-  const qtePrevue = quantitePrevue ? Number(quantitePrevue) : null;
+  const qtePrevue = showQuantitePrevue && quantitePrevue ? Number(quantitePrevue) : null;
   const pu = Number(prixUnitaire);
+  // Le montant se calcule TOUJOURS sur la quantité vendue : seuls les billets
+  // réellement vendus rapportent de l'argent.
   const autoAmount = showQuantite && qte > 0 && pu > 0 ? qte * pu : null;
+  const overSold = qtePrevue !== null && qtePrevue > 0 && qte > qtePrevue;
   const finalAmount = autoAmount ?? Number(amount);
 
   useEffect(() => {
@@ -53,6 +57,10 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
 
   const save = async () => {
     if (!label.trim() || !finalAmount || finalAmount <= 0 || saving) return;
+    if (overSold) {
+      toast({ title: "Quantité invalide", description: "Tu ne peux pas vendre plus de billets que prévu.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from("caisse_recettes" as any).insert({
@@ -117,11 +125,16 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
                 <Label>Prix unitaire</Label>
                 <MoneyInput value={prixUnitaire} onChange={(n) => setPrixUnitaire(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
               </div>
-              <div>
-                <Label>Quantité prévue (optionnel)</Label>
-                <Input inputMode="numeric" value={quantitePrevue} onChange={(e) => setQuantitePrevue(e.target.value.replace(/\D/g, ""))} placeholder="Ex: 200" className="bg-secondary border-border mt-1" />
-              </div>
+              {showQuantitePrevue && (
+                <div>
+                  <Label>Quantité prévue (optionnel)</Label>
+                  <Input inputMode="numeric" value={quantitePrevue} onChange={(e) => setQuantitePrevue(e.target.value.replace(/\D/g, ""))} placeholder="Ex: 200" className="bg-secondary border-border mt-1" />
+                </div>
+              )}
             </div>
+          )}
+          {overSold && (
+            <p className="text-xs text-destructive">Tu ne peux pas vendre plus de billets que prévu.</p>
           )}
           <div>
             <Label>Montant (F CFA)</Label>
@@ -151,7 +164,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 glass">Annuler</Button>
-            <Button onClick={save} disabled={saving || !label.trim() || !finalAmount || finalAmount <= 0}
+            <Button onClick={save} disabled={saving || overSold || !label.trim() || !finalAmount || finalAmount <= 0}
               className="flex-1 gradient-primary text-primary-foreground">
               Enregistrer la recette
             </Button>
