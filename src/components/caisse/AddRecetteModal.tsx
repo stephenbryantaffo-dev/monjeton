@@ -21,6 +21,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
   const [label, setLabel] = useState("");
   const [source, setSource] = useState("billetterie");
   const [quantite, setQuantite] = useState("");
+  const [quantitePrevue, setQuantitePrevue] = useState("");
   const [prixUnitaire, setPrixUnitaire] = useState("");
   const [amount, setAmount] = useState("");
   const [recetteDate, setRecetteDate] = useState(new Date().toISOString().split("T")[0]);
@@ -28,8 +29,9 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const showQuantite = source === "billetterie" || source === "vente_sur_place";
+  const showQuantite = source === "billetterie" || source === "vente";
   const qte = Number(quantite);
+  const qtePrevue = quantitePrevue ? Number(quantitePrevue) : null;
   const pu = Number(prixUnitaire);
   const autoAmount = showQuantite && qte > 0 && pu > 0 ? qte * pu : null;
   const finalAmount = autoAmount ?? Number(amount);
