@@ -30,10 +30,14 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
   const [saving, setSaving] = useState(false);
 
   const showQuantite = source === "billetterie" || source === "vente";
+  const showQuantitePrevue = source === "billetterie";
   const qte = Number(quantite);
-  const qtePrevue = quantitePrevue ? Number(quantitePrevue) : null;
+  const qtePrevue = showQuantitePrevue && quantitePrevue ? Number(quantitePrevue) : null;
   const pu = Number(prixUnitaire);
+  // Le montant se calcule TOUJOURS sur la quantité vendue : seuls les billets
+  // réellement vendus rapportent de l'argent.
   const autoAmount = showQuantite && qte > 0 && pu > 0 ? qte * pu : null;
+  const overSold = qtePrevue !== null && qtePrevue > 0 && qte > qtePrevue;
   const finalAmount = autoAmount ?? Number(amount);
 
   useEffect(() => {
