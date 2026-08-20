@@ -775,6 +775,7 @@ const CaisseView = () => {
                     <p className="text-xs text-muted-foreground truncate">
                       {RECETTE_SOURCE_LABELS[r.source] || r.source}
                       {r.quantite && r.prix_unitaire ? ` · ${r.quantite} billets × ${fmt(Number(r.prix_unitaire))} F` : ""}
+                      {r.quantite_prevue && r.quantite ? ` · remplissage ${Math.round((Number(r.quantite) / Number(r.quantite_prevue)) * 100)}%` : ""}
                       {` · ${new Date(r.recette_date).toLocaleDateString("fr-FR")}`}
                     </p>
                   </div>
