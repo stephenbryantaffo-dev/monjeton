@@ -278,9 +278,9 @@ tr:nth-child(even) td{background:#f9f9f9}
   <div class="sec">
     <div class="sec-title">Recettes (${recettes.length})</div>
     ${recettes.length > 0 ? `<table>
-      <thead><tr><th>Date</th><th>Libellé</th><th>Montant</th><th>Source</th><th>Détail</th><th>Contact</th></tr></thead>
+      <thead><tr><th>Date</th><th>Libellé</th><th>Montant</th><th>Source</th><th>Détail</th><th>Qté prévue</th><th>Remplissage</th><th>Contact</th></tr></thead>
       <tbody>${recetteRows}
-        <tr class="total"><td colspan="2">TOTAL RECETTES</td><td class="ra">${fmt(totalRecettes)}</td><td colspan="3"></td></tr>
+        <tr class="total"><td colspan="2">TOTAL RECETTES</td><td class="ra">${fmt(totalRecettes)}</td><td colspan="5"></td></tr>
       </tbody>
     </table>` : `<p style="color:#888;font-size:12px;padding:10px 0">Aucune recette enregistrée</p>`}
   </div>
