@@ -113,12 +113,17 @@ export const generateCaissePdf = (data: CaissePdfData) => {
     .map((r) => {
       const srcLabel = RECETTE_SOURCE_LABELS[r.source] || r.source || "—";
       const detail = r.quantite && r.prix_unitaire ? `${r.quantite} × ${fmt(Number(r.prix_unitaire))}` : "—";
+      const fillRate = r.quantite && r.quantite_prevue && Number(r.quantite_prevue) > 0
+        ? `${Math.round((Number(r.quantite) / Number(r.quantite_prevue)) * 100)}%`
+        : "—";
       return `<tr>
         <td>${new Date(r.recette_date).toLocaleDateString("fr-FR")}</td>
         <td>${esc(r.label)}</td>
         <td class="ra green bold">+${fmt(r.amount)}</td>
         <td>${esc(srcLabel)}</td>
         <td>${esc(detail)}</td>
+        <td>${esc(r.quantite_prevue != null ? String(r.quantite_prevue) : "—")}</td>
+        <td>${esc(fillRate)}</td>
         <td>${esc(r.contact || "—")}</td>
       </tr>`;
     })
@@ -273,9 +278,9 @@ tr:nth-child(even) td{background:#f9f9f9}
   <div class="sec">
     <div class="sec-title">Recettes (${recettes.length})</div>
     ${recettes.length > 0 ? `<table>
-      <thead><tr><th>Date</th><th>Libellé</th><th>Montant</th><th>Source</th><th>Détail</th><th>Contact</th></tr></thead>
+      <thead><tr><th>Date</th><th>Libellé</th><th>Montant</th><th>Source</th><th>Détail</th><th>Qté prévue</th><th>Remplissage</th><th>Contact</th></tr></thead>
       <tbody>${recetteRows}
-        <tr class="total"><td colspan="2">TOTAL RECETTES</td><td class="ra">${fmt(totalRecettes)}</td><td colspan="3"></td></tr>
+        <tr class="total"><td colspan="2">TOTAL RECETTES</td><td class="ra">${fmt(totalRecettes)}</td><td colspan="5"></td></tr>
       </tbody>
     </table>` : `<p style="color:#888;font-size:12px;padding:10px 0">Aucune recette enregistrée</p>`}
   </div>

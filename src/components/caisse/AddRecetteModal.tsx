@@ -21,6 +21,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
   const [label, setLabel] = useState("");
   const [source, setSource] = useState("billetterie");
   const [quantite, setQuantite] = useState("");
+  const [quantitePrevue, setQuantitePrevue] = useState("");
   const [prixUnitaire, setPrixUnitaire] = useState("");
   const [amount, setAmount] = useState("");
   const [recetteDate, setRecetteDate] = useState(new Date().toISOString().split("T")[0]);
@@ -28,8 +29,9 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const showQuantite = source === "billetterie" || source === "vente_sur_place";
+  const showQuantite = source === "billetterie" || source === "vente";
   const qte = Number(quantite);
+  const qtePrevue = quantitePrevue ? Number(quantitePrevue) : null;
   const pu = Number(prixUnitaire);
   const autoAmount = showQuantite && qte > 0 && pu > 0 ? qte * pu : null;
   const finalAmount = autoAmount ?? Number(amount);
@@ -39,12 +41,15 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
     setLabel("");
     setSource("billetterie");
     setQuantite("");
+    setQuantitePrevue("");
     setPrixUnitaire("");
     setAmount("");
     setRecetteDate(new Date().toISOString().split("T")[0]);
     setContact("");
     setNote("");
   }, [open]);
+
+  const fillRate = qte > 0 && qtePrevue && qtePrevue > 0 ? Math.round((qte / qtePrevue) * 100) : null;
 
   const save = async () => {
     if (!label.trim() || !finalAmount || finalAmount <= 0 || saving) return;
@@ -55,6 +60,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
         label: label.trim(),
         source,
         quantite: autoAmount !== null ? qte : null,
+        quantite_prevue: showQuantite && qtePrevue && qtePrevue > 0 ? qtePrevue : null,
         prix_unitaire: autoAmount !== null ? pu : null,
         amount: finalAmount,
         recette_date: recetteDate,
@@ -111,6 +117,10 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
                 <Label>Prix unitaire</Label>
                 <MoneyInput value={prixUnitaire} onChange={(n) => setPrixUnitaire(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />
               </div>
+              <div>
+                <Label>Quantité prévue (optionnel)</Label>
+                <Input inputMode="numeric" value={quantitePrevue} onChange={(e) => setQuantitePrevue(e.target.value.replace(/\D/g, ""))} placeholder="Ex: 200" className="bg-secondary border-border mt-1" />
+              </div>
             </div>
           )}
           <div>
@@ -119,6 +129,9 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
               <>
                 <Input readOnly value={autoAmount.toLocaleString("fr-FR")} className="bg-secondary border-border mt-1 text-primary font-bold" />
                 <p className="text-xs text-muted-foreground mt-1">{qte} × {pu.toLocaleString("fr-FR")} F — calculé automatiquement</p>
+                {fillRate !== null && (
+                  <p className="text-xs text-primary mt-1">Taux de remplissage : {fillRate}% ({qte}/{qtePrevue})</p>
+                )}
               </>
             ) : (
               <MoneyInput value={amount} onChange={(n) => setAmount(n ? String(n) : "")} showCurrency={false} className="mt-1 [&>input]:bg-secondary [&>input]:border-border" />

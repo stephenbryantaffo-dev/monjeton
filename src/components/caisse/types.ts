@@ -62,6 +62,7 @@ export interface CaisseRecette {
   label: string;
   source: string;
   quantite: number | null;
+  quantite_prevue: number | null;
   prix_unitaire: number | null;
   amount: number;
   recette_date: string;
@@ -74,7 +75,7 @@ export const RECETTE_SOURCES = [
   { id: "billetterie", label: "🎟️ Billetterie" },
   { id: "sponsor", label: "🤝 Sponsor" },
   { id: "don", label: "🎁 Don" },
-  { id: "vente_sur_place", label: "🛍️ Vente sur place" },
+  { id: "vente", label: "🛍️ Vente sur place" },
   { id: "autre", label: "📦 Autre" },
 ] as const;
 
