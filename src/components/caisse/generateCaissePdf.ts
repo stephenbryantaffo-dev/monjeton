@@ -46,6 +46,13 @@ export const generateCaissePdf = (data: CaissePdfData) => {
   const totalRecettes = Number((caisse as any).total_recettes ?? 0);
   const resultatEvenement = totalRecettes - Number(caisse.total_spent);
 
+  const billetterieLignes = recettes.filter((r) => r.source === "billetterie");
+  const billetsVendus = billetterieLignes.reduce((s, r) => s + Number(r.quantite || 0), 0);
+  const billetsPrevus = billetterieLignes.reduce((s, r) => s + Number((r as any).quantite_prevue || 0), 0);
+  const recetteBilletterie = billetterieLignes.reduce((s, r) => s + Number(r.amount), 0);
+  const tauxRemplissage = billetsPrevus > 0 ? Math.round((billetsVendus / billetsPrevus) * 100) : null;
+  const prixMoyenBillet = billetsVendus > 0 ? Math.round(recetteBilletterie / billetsVendus) : null;
+
   const activeMembers = members.filter(m => m.status === "active");
   const inactiveMembers = members.filter(m => m.status !== "active");
 
