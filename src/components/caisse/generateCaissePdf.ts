@@ -113,12 +113,17 @@ export const generateCaissePdf = (data: CaissePdfData) => {
     .map((r) => {
       const srcLabel = RECETTE_SOURCE_LABELS[r.source] || r.source || "—";
       const detail = r.quantite && r.prix_unitaire ? `${r.quantite} × ${fmt(Number(r.prix_unitaire))}` : "—";
+      const fillRate = r.quantite && r.quantite_prevue && Number(r.quantite_prevue) > 0
+        ? `${Math.round((Number(r.quantite) / Number(r.quantite_prevue)) * 100)}%`
+        : "—";
       return `<tr>
         <td>${new Date(r.recette_date).toLocaleDateString("fr-FR")}</td>
         <td>${esc(r.label)}</td>
         <td class="ra green bold">+${fmt(r.amount)}</td>
         <td>${esc(srcLabel)}</td>
         <td>${esc(detail)}</td>
+        <td>${esc(r.quantite_prevue != null ? String(r.quantite_prevue) : "—")}</td>
+        <td>${esc(fillRate)}</td>
         <td>${esc(r.contact || "—")}</td>
       </tr>`;
     })
