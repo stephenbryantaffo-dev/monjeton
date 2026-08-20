@@ -164,7 +164,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 glass">Annuler</Button>
-            <Button onClick={save} disabled={saving || !label.trim() || !finalAmount || finalAmount <= 0}
+            <Button onClick={save} disabled={saving || overSold || !label.trim() || !finalAmount || finalAmount <= 0}
               className="flex-1 gradient-primary text-primary-foreground">
               Enregistrer la recette
             </Button>
