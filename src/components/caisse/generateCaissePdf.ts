@@ -296,6 +296,12 @@ tr:nth-child(even) td{background:#f9f9f9}
     <div class="sec-title">Bilan de l'événement</div>
     <table>
       <tbody>
+        ${billetterieLignes.length > 0 ? `
+        <tr><td>Billets vendus</td><td class="ra bold">${billetsVendus.toLocaleString("fr-FR")}${billetsPrevus > 0 ? ` / ${billetsPrevus.toLocaleString("fr-FR")}` : ""}</td></tr>
+        ${tauxRemplissage !== null ? `<tr><td>Taux de remplissage</td><td class="ra bold">${tauxRemplissage} %</td></tr>` : ""}
+        <tr><td>Recette billetterie</td><td class="ra green bold">${fmt(recetteBilletterie)}</td></tr>
+        ${prixMoyenBillet !== null ? `<tr><td>Prix moyen du billet</td><td class="ra bold">${fmt(prixMoyenBillet)}</td></tr>` : ""}
+        ` : ""}
         <tr><td>Recettes extérieures</td><td class="ra green bold">${fmt(totalRecettes)}</td></tr>
         <tr><td>Dépenses</td><td class="ra red bold">-${fmt(caisse.total_spent)}</td></tr>
         <tr class="total"><td>RÉSULTAT</td><td class="ra" style="color:${resultatEvenement >= 0 ? "#5FD41F" : "#e74c3c"}">${resultatEvenement > 0 ? "+" : ""}${fmt(resultatEvenement)}</td></tr>
