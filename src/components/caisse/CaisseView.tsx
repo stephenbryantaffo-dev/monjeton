@@ -584,6 +584,35 @@ const CaisseView = () => {
       {/* BILAN DE L'ÉVÉNEMENT */}
       <div className="glass-card rounded-2xl p-4 mb-4">
         <h3 className="text-sm font-semibold text-foreground mb-3">Bilan de l'événement</h3>
+
+        {billetterieLignes.length > 0 && (
+          <div className="glass rounded-xl p-3 mb-3 space-y-2">
+            <p className="text-xs font-semibold text-foreground">🎟️ Billetterie</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Billets vendus</span>
+              <span className="text-sm font-bold text-foreground tabular-nums">
+                {billetsVendus.toLocaleString("fr-FR")}{billetsPrevus > 0 ? ` / ${billetsPrevus.toLocaleString("fr-FR")}` : ""}
+              </span>
+            </div>
+            {tauxRemplissage !== null && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Taux de remplissage</span>
+                <span className="text-sm font-bold text-primary tabular-nums">{tauxRemplissage} %</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Recette billetterie</span>
+              <span className="text-sm font-bold text-primary tabular-nums">{fmt(recetteBilletterie)}</span>
+            </div>
+            {prixMoyenBillet !== null && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Prix moyen du billet</span>
+                <span className="text-sm font-bold text-foreground tabular-nums">{fmt(prixMoyenBillet)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Recettes extérieures</span>
