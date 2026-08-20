@@ -60,6 +60,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
         label: label.trim(),
         source,
         quantite: autoAmount !== null ? qte : null,
+        quantite_prevue: showQuantite && qtePrevue && qtePrevue > 0 ? qtePrevue : null,
         prix_unitaire: autoAmount !== null ? pu : null,
         amount: finalAmount,
         recette_date: recetteDate,
