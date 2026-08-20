@@ -41,12 +41,15 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
     setLabel("");
     setSource("billetterie");
     setQuantite("");
+    setQuantitePrevue("");
     setPrixUnitaire("");
     setAmount("");
     setRecetteDate(new Date().toISOString().split("T")[0]);
     setContact("");
     setNote("");
   }, [open]);
+
+  const fillRate = qte > 0 && qtePrevue && qtePrevue > 0 ? Math.round((qte / qtePrevue) * 100) : null;
 
   const save = async () => {
     if (!label.trim() || !finalAmount || finalAmount <= 0 || saving) return;
