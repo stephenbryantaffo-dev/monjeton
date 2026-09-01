@@ -1,13 +1,22 @@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Mic, Loader2, Plus } from "lucide-react";
+import { VoiceWaveform } from "@/components/transaction/VoiceWaveform";
 
 /**
  * Écran plein d'enregistrement vocal.
  *
  * Composant PUREMENT présentationnel : il ne touche pas à MediaRecorder.
  * Toute la mécanique d'enregistrement reste dans NewTransaction.tsx.
+ * Le stream micro n'est lu que par la waveform (visualisation), jamais coupé ici.
  */
+
+/** Formate des secondes en m:ss (0:03, 1:24…). */
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 type Props = {
   open: boolean;
@@ -18,6 +27,8 @@ type Props = {
   isProcessing: boolean;
   /** Secondes écoulées. */
   elapsed: number;
+  /** Flux micro actif, pour la visualisation de la voix. */
+  stream: MediaStream | null;
   /** Mots confirmés par la reconnaissance locale. */
   transcriptFinal: string;
   /** Mots encore incertains. */
