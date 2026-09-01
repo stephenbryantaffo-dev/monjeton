@@ -745,6 +745,7 @@ const NewTransaction = () => {
           isPaused={isPaused}
           isProcessing={isProcessing}
           elapsed={elapsed}
+          stream={activeStream}
           transcriptFinal={live.final}
           transcriptPartial={live.partial}
           transcriptSupported={live.supported}
