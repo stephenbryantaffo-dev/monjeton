@@ -57,9 +57,10 @@ export default function VoiceConfirmationDialog({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="glass-card rounded-2xl p-4 mb-6 space-y-4"
+      className="glass-card rounded-2xl p-4 flex flex-col flex-1 min-h-0 pb-nav overflow-hidden"
     >
-      <div className="flex items-center gap-2">
+      {/* En-tête fixe */}
+      <div className="flex items-center gap-2 shrink-0 mb-3">
         <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
           <Check className="w-4 h-4 text-primary-foreground" />
         </div>
@@ -68,128 +69,142 @@ export default function VoiceConfirmationDialog({
         </p>
       </div>
 
-      <div className="space-y-2">
-        {transactions.map((tx, i) => (
-          <motion.div
-            key={i}
-            layout
-            className="bg-secondary/50 rounded-xl p-3 space-y-2"
-          >
-            {editingIndex === i ? (
-              // Edit mode
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <MoneyInput
-                    value={tx.amount}
-                    onChange={(n) => updateTx(i, { amount: n })}
-                    showCurrency={false}
-                    className="flex-1 [&>input]:bg-background [&>input]:border-border [&>input]:text-sm"
-                    placeholder="Montant"
-                  />
-                  <select
-                    value={tx.currency}
-                    onChange={e => updateTx(i, { currency: e.target.value })}
-                    className="bg-background border border-border rounded-md px-2 text-sm text-foreground"
-                  >
-                    <option value="XOF">FCFA</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="NGN">NGN</option>
-                    <option value="GHS">GHS</option>
-                  </select>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {filteredCategories(tx.type).map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => updateTx(i, { category: c.name, categoryId: c.id })}
-                      className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                        tx.category.toLowerCase() === c.name.toLowerCase()
-                          ? "gradient-primary text-primary-foreground"
-                          : "bg-background text-muted-foreground"
-                      }`}
+      {/* Liste défilable entre l'en-tête et le bouton */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2 pr-1"
+        style={{ paddingBottom: "calc(var(--bottom-nav-space) + 88px)" }}
+      >
+        <AnimatePresence initial={false}>
+          {transactions.map((tx, i) => (
+            <motion.div
+              key={i}
+              layout
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="bg-secondary/50 rounded-xl p-3 space-y-2"
+            >
+              {editingIndex === i ? (
+                // Edit mode
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <MoneyInput
+                      value={tx.amount}
+                      onChange={(n) => updateTx(i, { amount: n })}
+                      showCurrency={false}
+                      className="flex-1 [&>input]:bg-background [&>input]:border-border [&>input]:text-sm"
+                      placeholder="Montant"
+                    />
+                    <select
+                      value={tx.currency}
+                      onChange={e => updateTx(i, { currency: e.target.value })}
+                      className="bg-background border border-border rounded-md px-2 text-sm text-foreground"
                     >
-                      {c.name}
+                      <option value="XOF">FCFA</option>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                      <option value="NGN">NGN</option>
+                      <option value="GHS">GHS</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {filteredCategories(tx.type).map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => updateTx(i, { category: c.name, categoryId: c.id })}
+                        className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                          tx.category.toLowerCase() === c.name.toLowerCase()
+                            ? "gradient-primary text-primary-foreground"
+                            : "bg-background text-muted-foreground"
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={tx.type}
+                      onChange={e => updateTx(i, { type: e.target.value as "expense" | "income" })}
+                      className="bg-background border border-border rounded-md px-2 text-sm text-foreground"
+                    >
+                      <option value="expense">Dépense</option>
+                      <option value="income">Revenu</option>
+                    </select>
+                    <Input
+                      value={tx.note}
+                      onChange={e => updateTx(i, { note: e.target.value })}
+                      className="bg-background border-border text-sm flex-1"
+                      placeholder="Description"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <DatePickerField value={tx.date || ""} onChange={v => updateTx(i, { date: v || null })} className="bg-background border-border text-sm flex-[0.8]" />
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)} className="text-primary text-xs">
+                    ✓ Terminé
+                  </Button>
+                </div>
+              ) : (
+                // Display mode
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                       <span className={`text-sm font-bold ${tx.type === "income" ? "text-primary" : "text-foreground"}`}>
+                         {tx.type === "income" ? "+" : "-"}{formatMoneySmart(tx.amount)} {tx.currency === "XOF" ? "FCFA" : tx.currency}
+                       </span>
+                       <span className="text-xs text-muted-foreground">→ {tx.category}</span>
+                       {tx.date && <span className="text-xs text-muted-foreground">📅 {tx.date}</span>}
+                     </div>
+                    {tx.note && <p className="text-xs text-muted-foreground truncate">{tx.note}</p>}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setEditingIndex(i)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-background transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
                     </button>
-                  ))}
+                    <button
+                      onClick={() => removeTx(i)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-background transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <select
-                    value={tx.type}
-                    onChange={e => updateTx(i, { type: e.target.value as "expense" | "income" })}
-                    className="bg-background border border-border rounded-md px-2 text-sm text-foreground"
-                  >
-                    <option value="expense">Dépense</option>
-                    <option value="income">Revenu</option>
-                  </select>
-                  <Input
-                    value={tx.note}
-                    onChange={e => updateTx(i, { note: e.target.value })}
-                    className="bg-background border-border text-sm flex-1"
-                    placeholder="Description"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <DatePickerField value={tx.date || ""} onChange={v => updateTx(i, { date: v || null })} className="bg-background border-border text-sm flex-[0.8]" />
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)} className="text-primary text-xs">
-                  ✓ Terminé
-                </Button>
-              </div>
-            ) : (
-              // Display mode
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                     <span className={`text-sm font-bold ${tx.type === "income" ? "text-primary" : "text-foreground"}`}>
-                       {tx.type === "income" ? "+" : "-"}{formatMoneySmart(tx.amount)} {tx.currency === "XOF" ? "FCFA" : tx.currency}
-                     </span>
-                     <span className="text-xs text-muted-foreground">→ {tx.category}</span>
-                     {tx.date && <span className="text-xs text-muted-foreground">📅 {tx.date}</span>}
-                   </div>
-                  {tx.note && <p className="text-xs text-muted-foreground truncate">{tx.note}</p>}
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setEditingIndex(i)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-background transition-colors"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => removeTx(i)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-background transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        ))}
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {transactions.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-2">Toutes les transactions ont été supprimées</p>
+        )}
       </div>
 
-      {transactions.length === 0 ? (
-        <p className="text-xs text-muted-foreground text-center py-2">Toutes les transactions ont été supprimées</p>
-      ) : (
-        <div className="flex gap-2">
-          <Button
-            variant="hero"
-            size="sm"
-            className="flex-1"
-            onClick={() => onConfirm(transactions)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Enregistrement...</>
-            ) : (
-              <><Check className="w-4 h-4 mr-1" /> Confirmer ({transactions.length})</>
-            )}
-          </Button>
-          <Button variant="glass" size="sm" onClick={onCancel} disabled={isSubmitting}>
-            Annuler
-          </Button>
+      {/* Bandeau fixe en bas, toujours visible au-dessus de la navigation */}
+      {transactions.length > 0 && (
+        <div className="shrink-0 pt-3 border-t border-border/60">
+          <div className="flex gap-2">
+            <Button
+              variant="hero"
+              size="sm"
+              className="flex-1"
+              onClick={() => onConfirm(transactions)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Enregistrement...</>
+              ) : (
+                <><Check className="w-4 h-4 mr-1" /> Confirmer ({transactions.length})</>
+              )}
+            </Button>
+            <Button variant="glass" size="sm" onClick={onCancel} disabled={isSubmitting}>
+              Annuler
+            </Button>
+          </div>
         </div>
       )}
     </motion.div>
