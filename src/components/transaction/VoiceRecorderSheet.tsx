@@ -44,10 +44,14 @@ type Props = {
   onWriteInstead: () => void;
 };
 
+export function VoiceWaveformRecorderSheetPlaceholder() { return null; }
+
 export function VoiceRecorderSheet({
   open,
   isRecording,
   isProcessing,
+  elapsed,
+  stream,
   transcriptFinal,
   transcriptPartial,
   onStart,
