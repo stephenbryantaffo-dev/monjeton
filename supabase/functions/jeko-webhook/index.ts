@@ -20,7 +20,6 @@ function checkIpRateLimit(ip: string): { allowed: boolean; retryAfter: number } 
   }
   arr.push(now);
   ipHits.set(ip, arr);
-  // Cleanup occasionnel pour éviter la croissance mémoire
   if (ipHits.size > 1000) {
     for (const [k, v] of ipHits) {
       const fresh = v.filter((t) => now - t < IP_WINDOW_MS);
@@ -53,6 +52,8 @@ async function verifyHmac(rawBody: string, signature: string, secret: string): P
     return false;
   }
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -94,7 +95,6 @@ Deno.serve(async (req) => {
     }
 
     const parsed = JSON.parse(rawBody);
-    console.log('Jèko webhook received, bytes:', rawBody.length);
 
     // La doc se contredit : tantôt champs à la racine, tantôt sous .data.
     const tx = parsed?.data ?? parsed;
@@ -104,18 +104,21 @@ Deno.serve(async (req) => {
     const isPayment = txType === 'PaymentRequest' || txType.toLowerCase() === 'payment';
 
     const phoneRaw = tx?.counterpartIdentifier ?? '';
-    const txnId = tx?.id ?? '';
+    const txnId = String(tx?.id ?? '');
     const paymentLinkId = tx?.transactionDetails?.paymentLinkId ?? '';
-    const reference = tx?.transactionDetails?.reference ?? '';
+    const reference = String(tx?.transactionDetails?.reference ?? '');
 
     // MONTANT : centimes vs XOF direct
     const rawAmount = Number(tx?.amount?.amount ?? 0);
     const amountXof = rawAmount >= 100000 ? Math.round(rawAmount / 100) : rawAmount;
 
-    console.log('Parsed →', { status, txType, hasPhone: !!phoneRaw, paymentLinkId });
+    console.log('Webhook OK →', { status, txType, txnId, hasRef: !!reference });
 
     if (!isPayment || status !== 'success') {
       return json({ received: true, action: 'ignored', status, txType });
+    }
+    if (!txnId) {
+      return json({ received: true, action: 'ignored', reason: 'no_txn_id' });
     }
 
     const PRO_ID = 'd616710c-47fb-4afc-b0e2-e9fe3e0b29ab';
@@ -132,45 +135,61 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // MATCHING USER par téléphone
-    const digits = String(phoneRaw).replace(/[^0-9]/g, '');
-    const variants = new Set([
-      digits,
-      digits.replace(/^225/, ''),
-      '225' + digits.replace(/^225/, ''),
-    ]);
+    // ─── IDEMPOTENCE : une seule activation par transaction ───
+    // L'insert échoue silencieusement si txn_id existe déjà (contrainte UNIQUE).
+    const { data: inserted, error: insErr } = await supabase
+      .from('jeko_payments')
+      .insert({
+        txn_id: txnId,
+        phone: phoneRaw,
+        amount: amountXof,
+        raw_amount: rawAmount,
+        plan_name: planName,
+        payment_link_id: paymentLinkId,
+        reference,
+        raw_payload: parsed,
+      })
+      .select('id')
+      .maybeSingle();
 
+    if (insErr || !inserted) {
+      // txn_id déjà connu → transaction déjà traitée, on confirme sans rien refaire
+      console.log('Duplicate txn ignored:', txnId);
+      return json({ received: true, action: 'already_processed', txn_id: txnId });
+    }
+
+    // ─── MATCHING USER : reference (user_id) d'abord, téléphone en repli ───
     let userId: string | null = null;
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, phone')
-      .not('phone', 'is', null);
-    const match = profiles?.find((p) => {
-      const pd = String(p.phone ?? '').replace(/[^0-9]/g, '');
-      if (!pd) return false;
-      for (const v of variants) {
-        if (v && (pd === v || pd.endsWith(v) || v.endsWith(pd))) return true;
+    if (UUID_RE.test(reference)) {
+      userId = reference.toLowerCase();
+    } else {
+      // Paiements via anciens liens statiques : repli sur le numéro de téléphone
+      const digits = String(phoneRaw).replace(/[^0-9]/g, '');
+      if (digits) {
+        const variants = new Set([
+          digits,
+          digits.replace(/^225/, ''),
+          '225' + digits.replace(/^225/, ''),
+        ]);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, phone')
+          .not('phone', 'is', null);
+        const match = profiles?.find((p) => {
+          const pd = String(p.phone ?? '').replace(/[^0-9]/g, '');
+          if (!pd) return false;
+          for (const v of variants) {
+            if (v && (pd === v || pd.endsWith(v) || v.endsWith(pd))) return true;
+          }
+          return false;
+        });
+        if (match?.user_id) userId = match.user_id;
       }
-      return false;
-    });
-    if (match?.user_id) userId = match.user_id;
-
-    // LOG TOUJOURS (réconciliation manuelle si non matché)
-    await supabase.from('jeko_payments').insert({
-      txn_id: txnId,
-      phone: phoneRaw,
-      amount: amountXof,
-      raw_amount: rawAmount,
-      plan_name: planName,
-      payment_link_id: paymentLinkId,
-      reference,
-      matched_user_id: userId,
-      raw_payload: parsed,
-    });
+    }
 
     if (!userId) {
-      console.error(`⚠️ PAIEMENT NON MATCHÉ - à réconcilier manuellement (txn_id: ${txnId}, plan: ${planName})`);
-      return json({ received: true, note: 'logged, user unmatched: ' + phoneRaw });
+      console.error(`⚠️ PAIEMENT NON MATCHÉ - réconciliation manuelle requise (txn_id: ${txnId}, plan: ${planName})`);
+      return json({ received: true, note: 'logged, user unmatched' });
     }
 
     const now = new Date();
@@ -193,8 +212,13 @@ Deno.serve(async (req) => {
     );
     if (upErr) throw upErr;
 
+    await supabase
+      .from('jeko_payments')
+      .update({ matched_user_id: userId, activated: true })
+      .eq('txn_id', txnId);
+
     console.log(`✅ Activated ${planName} (txn_id: ${txnId})`);
-    return json({ success: true, plan: planName, userId });
+    return json({ success: true, plan: planName });
   } catch (e) {
     console.error('Webhook fatal:', e);
     return json({ error: String(e) }, 500);
