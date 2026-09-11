@@ -542,6 +542,7 @@ const Dashboard = () => {
       }
     >
       <SubscriptionRenewBanner />
+      <PaidButNoProBanner />
       <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {/* Header contextuel : salutation + phrase pertinente selon l'heure et l'état du budget */}
