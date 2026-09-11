@@ -1227,6 +1227,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          id: string
+          payer_email: string | null
+          payer_phone: string | null
+          plan_name: string
+          status: string
+          txn_id: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          payer_email?: string | null
+          payer_phone?: string | null
+          plan_name?: string
+          status?: string
+          txn_id: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          payer_email?: string | null
+          payer_phone?: string | null
+          plan_name?: string
+          status?: string
+          txn_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pending_pro_emails: {
         Row: {
           applied_at: string | null
@@ -2726,6 +2765,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_pending_payment: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       clear_user_pin: { Args: never; Returns: undefined }
       get_invite_by_token: {
