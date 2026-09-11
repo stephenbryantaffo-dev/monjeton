@@ -1091,6 +1091,7 @@ export type Database = {
       }
       jeko_payments: {
         Row: {
+          activated: boolean
           amount: number | null
           created_at: string
           id: string
@@ -1104,6 +1105,7 @@ export type Database = {
           txn_id: string | null
         }
         Insert: {
+          activated?: boolean
           amount?: number | null
           created_at?: string
           id?: string
@@ -1117,6 +1119,7 @@ export type Database = {
           txn_id?: string | null
         }
         Update: {
+          activated?: boolean
           amount?: number | null
           created_at?: string
           id?: string
