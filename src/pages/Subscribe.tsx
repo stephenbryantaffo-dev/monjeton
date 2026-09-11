@@ -21,6 +21,10 @@ const Subscribe = () => {
   const { isAdmin, user } = useAuth();
   const { country, setCountry } = useCountry();
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [guestPlan, setGuestPlan] = useState<"pro" | "max" | null>(null);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestError, setGuestError] = useState<string | null>(null);
+  const [guestLoading, setGuestLoading] = useState(false);
   useEffect(() => {
     if (!user) return;
     supabase
