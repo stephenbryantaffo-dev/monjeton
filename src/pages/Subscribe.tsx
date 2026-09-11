@@ -8,7 +8,7 @@ import { COUNTRIES } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { openJekoPro, openJekoMax, openJekoProGuest, openJekoMaxGuest } from "@/lib/jeko";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
