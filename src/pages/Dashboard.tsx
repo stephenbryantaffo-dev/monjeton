@@ -8,6 +8,7 @@ const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import SubscriptionRenewBanner from "@/components/SubscriptionRenewBanner";
+import PaidButNoProBanner from "@/components/PaidButNoProBanner";
 import DashboardPredictions from "@/components/DashboardPredictions";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
