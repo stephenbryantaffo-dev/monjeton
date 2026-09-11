@@ -12,6 +12,22 @@ const PLANS: Record<string, { amountCents: number; label: string }> = {
 
 const ALLOWED_METHODS = new Set(['wave', 'orange', 'mtn', 'moov', 'djamo']);
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// Limite mémoire pour les paiements invités (non authentifiés) : 5 / 10 min / IP
+const guestHits = new Map<string, number[]>();
+function guestRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const arr = (guestHits.get(ip) ?? []).filter((t) => now - t < 600_000);
+  if (arr.length >= 5) {
+    guestHits.set(ip, arr);
+    return true;
+  }
+  arr.push(now);
+  guestHits.set(ip, arr);
+  return false;
+}
+
 // storeId dérivé du lien de paiement existant (mis en cache en mémoire)
 let cachedStoreId: string | null = null;
 async function getStoreId(): Promise<string> {
