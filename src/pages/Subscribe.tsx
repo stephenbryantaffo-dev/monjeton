@@ -6,7 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCountry } from "@/contexts/CountryContext";
 import { COUNTRIES } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { openJekoPro, openJekoMax } from "@/lib/jeko";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { openJekoPro, openJekoMax, openJekoProGuest, openJekoMaxGuest } from "@/lib/jeko";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-monjeton.webp";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -21,6 +23,10 @@ const Subscribe = () => {
   const { isAdmin, user } = useAuth();
   const { country, setCountry } = useCountry();
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [guestPlan, setGuestPlan] = useState<"pro" | "max" | null>(null);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestError, setGuestError] = useState<string | null>(null);
+  const [guestLoading, setGuestLoading] = useState(false);
   useEffect(() => {
     if (!user) return;
     supabase
@@ -65,11 +71,30 @@ const Subscribe = () => {
 
   const handleSubscribe = (plan: "pro" | "max") => {
     if (!user) {
-      // Forcer signup d'abord pour que l'email Jèko corresponde au compte
-      window.location.href = "/signup";
+      // Paiement possible sans compte : on demande l'e-mail pour rattacher
+      // le paiement au compte créé ensuite.
+      setGuestPlan(plan);
       return;
     }
     plan === "pro" ? openJekoPro() : openJekoMax();
+  };
+
+  const submitGuest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = guestEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setGuestError("Entre une adresse e-mail valide.");
+      return;
+    }
+    setGuestError(null);
+    setGuestLoading(true);
+    try {
+      guestPlan === "pro" ? await openJekoProGuest(email) : await openJekoMaxGuest(email);
+      setGuestPlan(null);
+      setGuestEmail("");
+    } finally {
+      setGuestLoading(false);
+    }
   };
 
   return (
@@ -173,6 +198,33 @@ const Subscribe = () => {
           </p>
         </div>
       </main>
+
+      <Dialog open={guestPlan !== null} onOpenChange={(o) => !o && setGuestPlan(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ton adresse e-mail</DialogTitle>
+            <DialogDescription>
+              Utilise la même adresse pour créer ton compte : ton plan sera activé
+              automatiquement à l'inscription.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitGuest} className="space-y-3">
+            <Input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              required
+              placeholder="ton@email.com"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+            />
+            {guestError && <p className="text-xs text-destructive">{guestError}</p>}
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={guestLoading}>
+              {guestLoading ? "Ouverture du paiement…" : "Continuer vers le paiement"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

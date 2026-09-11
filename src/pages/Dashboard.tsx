@@ -8,6 +8,7 @@ const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 import DashboardTontineWidget from "@/components/DashboardTontineWidget";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import SubscriptionRenewBanner from "@/components/SubscriptionRenewBanner";
+import PaidButNoProBanner from "@/components/PaidButNoProBanner";
 import DashboardPredictions from "@/components/DashboardPredictions";
 import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions";
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
@@ -542,6 +543,7 @@ const Dashboard = () => {
       }
     >
       <SubscriptionRenewBanner />
+      <PaidButNoProBanner />
       <div className="pt-4 sm:pt-6 pb-4 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {/* Header contextuel : salutation + phrase pertinente selon l'heure et l'état du budget */}

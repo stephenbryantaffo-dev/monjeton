@@ -32,11 +32,15 @@ type JekoPlan = "pro" | "ultra";
  * (le webhook active ensuite le bon compte automatiquement), puis ouvre la
  * page de paiement. En cas d'échec, repli sur le lien de paiement statique.
  */
-async function startJekoCheckout(plan: JekoPlan, fallbackUrl: string): Promise<void> {
+async function startJekoCheckout(
+  plan: JekoPlan,
+  fallbackUrl: string,
+  guestEmail?: string
+): Promise<void> {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    if (!token) throw new Error("no session");
+    if (!token && !guestEmail) throw new Error("no session");
 
     const res = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jeko-create-payment`,
@@ -44,9 +48,10 @@ async function startJekoCheckout(plan: JekoPlan, fallbackUrl: string): Promise<v
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify(token ? { plan } : { plan, email: guestEmail }),
       }
     );
     if (!res.ok) throw new Error(`jeko-create-payment ${res.status}`);
@@ -63,3 +68,9 @@ async function startJekoCheckout(plan: JekoPlan, fallbackUrl: string): Promise<v
 
 export const openJekoPro = () => startJekoCheckout("pro", JEKO_PRO_URL);
 export const openJekoMax = () => startJekoCheckout("ultra", JEKO_MAX_URL);
+
+/** Paiement sans compte : l'e-mail sert à rattacher le paiement à l'inscription. */
+export const openJekoProGuest = (email: string) =>
+  startJekoCheckout("pro", JEKO_PRO_URL, email);
+export const openJekoMaxGuest = (email: string) =>
+  startJekoCheckout("ultra", JEKO_MAX_URL, email);

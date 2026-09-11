@@ -135,6 +135,26 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // ─── Paiement AVANT création de compte : reference = "guest:<email>" ───
+    if (reference.toLowerCase().startsWith('guest:')) {
+      const guestEmail = reference.slice(6).trim().toLowerCase();
+      const { error: gErr } = await supabase.from('payments').upsert(
+        {
+          txn_id: txnId,
+          user_id: null,
+          payer_email: guestEmail,
+          payer_phone: String(phoneRaw),
+          amount: rawAmount,
+          plan_name: planName,
+          status: 'paid',
+        },
+        { onConflict: 'txn_id', ignoreDuplicates: true }
+      );
+      if (gErr) throw gErr;
+      console.log(`Guest payment recorded (txn_id: ${txnId})`);
+      return json({ received: true, action: 'guest_payment_recorded' });
+    }
+
     // ─── IDEMPOTENCE : une seule activation par transaction ───
     // L'insert échoue silencieusement si txn_id existe déjà (contrainte UNIQUE).
     const { data: inserted, error: insErr } = await supabase
@@ -216,6 +236,19 @@ Deno.serve(async (req) => {
       .from('jeko_payments')
       .update({ matched_user_id: userId, activated: true })
       .eq('txn_id', txnId);
+
+    await supabase.from('payments').upsert(
+      {
+        txn_id: txnId,
+        user_id: userId,
+        payer_phone: String(phoneRaw),
+        amount: rawAmount,
+        plan_name: planName,
+        status: 'claimed',
+        claimed_at: now.toISOString(),
+      },
+      { onConflict: 'txn_id' }
+    );
 
     console.log(`✅ Activated ${planName} (txn_id: ${txnId})`);
     return json({ success: true, plan: planName });
