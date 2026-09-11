@@ -66,5 +66,7 @@ async function startJekoCheckout(
   await openJekoCheckout(fallbackUrl);
 }
 
-export const openJekoPro = () => startJekoCheckout("pro", JEKO_PRO_URL);
-export const openJekoMax = () => startJekoCheckout("ultra", JEKO_MAX_URL);
+export const openJekoPro = (guestEmail?: string) =>
+  startJekoCheckout("pro", JEKO_PRO_URL, guestEmail);
+export const openJekoMax = (guestEmail?: string) =>
+  startJekoCheckout("ultra", JEKO_MAX_URL, guestEmail);
