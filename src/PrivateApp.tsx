@@ -8,6 +8,7 @@ import AdminRoute from "@/components/AdminRoute";
 import OnboardingGuard from "@/components/OnboardingGuard";
 import PinLockScreen from "@/components/PinLockScreen";
 import CurrencyRateLoader from "@/components/CurrencyRateLoader";
+import ProCelebrationModal from "@/components/ProCelebrationModal";
 import NotFound from "./pages/NotFound";
 
 const Login = lazy(() => import("./pages/Login"));
@@ -53,6 +54,7 @@ const InnerRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <CurrencyRateLoader />
+      <ProCelebrationModal />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
