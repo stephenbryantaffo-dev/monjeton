@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const claimedRef = useRef(false);
 
 
   const fetchProfile = async (userId: string) => {
