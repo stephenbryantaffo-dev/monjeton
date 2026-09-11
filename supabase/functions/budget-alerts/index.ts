@@ -38,11 +38,18 @@ Deno.serve(async (req) => {
   const now = new Date();
   const month = monthKey(now);
   const monthStart = `${month}-01`;
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth() + 1;
+  const nextMonthStart = m === 12
+    ? `${y + 1}-01-01`
+    : `${y}-${String(m + 1).padStart(2, "0")}-01`;
 
-  // Budgets actifs (colonnes déduites : user_id, amount / limit, category_id/name).
+  // Plafonds par catégorie du mois en cours.
   const { data: budgets, error } = await supabase
-    .from("budgets")
-    .select("id, user_id, amount, category, name")
+    .from("category_budgets")
+    .select("id, user_id, category_id, budget_amount, categories(name)")
+    .eq("month", m)
+    .eq("year", y)
     .limit(5000);
 
   if (error) {
@@ -57,18 +64,19 @@ Deno.serve(async (req) => {
   let skipped = 0;
 
   for (const b of budgets || []) {
-    const limit = Number(b.amount || 0);
+    const limit = Number(b.budget_amount || 0);
     if (limit <= 0) continue;
 
-    // Somme des dépenses du mois pour ce budget (par catégorie).
+    // Somme des dépenses du mois pour cette catégorie.
     let spent = 0;
     const { data: tx } = await supabase
       .from("transactions")
-      .select("amount, type")
+      .select("amount")
       .eq("user_id", b.user_id)
       .eq("type", "expense")
+      .eq("category_id", b.category_id)
       .gte("date", monthStart)
-      .filter("category", "eq", b.category);
+      .lt("date", nextMonthStart);
     spent = (tx || []).reduce((s, t) => s + Number(t.amount || 0), 0);
 
     const pct = Math.round((spent / limit) * 100);
@@ -78,7 +86,8 @@ Deno.serve(async (req) => {
 
     const severity =
       crossed === 100 ? "Critique" : crossed === 90 ? "Alerte" : "Attention";
-    const label = b.name || b.category || "budget";
+    const label = (b as any).categories?.name || "budget";
+
 
     const result = await sendPushWithGuard(supabase, {
       userId: b.user_id,
