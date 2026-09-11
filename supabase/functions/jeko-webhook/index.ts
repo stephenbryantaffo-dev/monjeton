@@ -237,6 +237,19 @@ Deno.serve(async (req) => {
       .update({ matched_user_id: userId, activated: true })
       .eq('txn_id', txnId);
 
+    await supabase.from('payments').upsert(
+      {
+        txn_id: txnId,
+        user_id: userId,
+        payer_phone: String(phoneRaw),
+        amount: rawAmount,
+        plan_name: planName,
+        status: 'claimed',
+        claimed_at: now.toISOString(),
+      },
+      { onConflict: 'txn_id' }
+    );
+
     console.log(`✅ Activated ${planName} (txn_id: ${txnId})`);
     return json({ success: true, plan: planName });
   } catch (e) {
