@@ -108,13 +108,16 @@ Deno.serve(async (req) => {
         storeId,
         amountCents: plan.amountCents,
         currency: 'XOF',
-        // La référence porte l'user_id : le webhook l'utilise pour activer le bon compte
-        reference: userId,
+        // La référence porte l'user_id, ou "guest:<email>" si l'acheteur
+        // n'a pas encore de compte (le paiement sera réclamé à l'inscription)
+        reference,
         paymentDetails: {
           type: 'redirect',
           data: {
             ...(paymentMethod ? { paymentMethod } : {}),
-            successUrl: `${origin}/payment-pending?payment=success&plan=${planKey}`,
+            successUrl: reference.startsWith('guest:')
+              ? `${origin}/signup?paid=1&plan=${planKey}`
+              : `${origin}/payment-pending?payment=success&plan=${planKey}`,
             errorUrl: `${origin}/subscribe?payment=error`,
           },
         },
@@ -126,7 +129,7 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Payment request created for plan ${planKey}`);
-    return json({ redirectUrl: paymentRequest.redirectUrl, reference: userId });
+    return json({ redirectUrl: paymentRequest.redirectUrl });
   } catch (e) {
     console.error('jeko-create-payment fatal:', e);
     return json({ error: 'Payment creation failed' }, 500);
