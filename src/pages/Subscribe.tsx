@@ -196,6 +196,33 @@ const Subscribe = () => {
           </p>
         </div>
       </main>
+
+      <Dialog open={guestPlan !== null} onOpenChange={(o) => !o && setGuestPlan(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ton adresse e-mail</DialogTitle>
+            <DialogDescription>
+              Utilise la même adresse pour créer ton compte : ton plan sera activé
+              automatiquement à l'inscription.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitGuest} className="space-y-3">
+            <Input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              required
+              placeholder="ton@email.com"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+            />
+            {guestError && <p className="text-xs text-destructive">{guestError}</p>}
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={guestLoading}>
+              {guestLoading ? "Ouverture du paiement…" : "Continuer vers le paiement"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
