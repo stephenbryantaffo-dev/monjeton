@@ -89,7 +89,7 @@ const Subscribe = () => {
     setGuestError(null);
     setGuestLoading(true);
     try {
-      guestPlan === "pro" ? await openJekoPro(email) : await openJekoMax(email);
+      guestPlan === "pro" ? await openJekoProGuest(email) : await openJekoMaxGuest(email);
       setGuestPlan(null);
       setGuestEmail("");
     } finally {
