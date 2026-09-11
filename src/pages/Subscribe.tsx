@@ -65,11 +65,30 @@ const Subscribe = () => {
 
   const handleSubscribe = (plan: "pro" | "max") => {
     if (!user) {
-      // Forcer signup d'abord pour que l'email Jèko corresponde au compte
-      window.location.href = "/signup";
+      // Paiement possible sans compte : on demande l'e-mail pour rattacher
+      // le paiement au compte créé ensuite.
+      setGuestPlan(plan);
       return;
     }
     plan === "pro" ? openJekoPro() : openJekoMax();
+  };
+
+  const submitGuest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = guestEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setGuestError("Entre une adresse e-mail valide.");
+      return;
+    }
+    setGuestError(null);
+    setGuestLoading(true);
+    try {
+      guestPlan === "pro" ? await openJekoPro(email) : await openJekoMax(email);
+      setGuestPlan(null);
+      setGuestEmail("");
+    } finally {
+      setGuestLoading(false);
+    }
   };
 
   return (
