@@ -41,6 +41,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setProfile(null);
     }
     setIsAdmin(roleRes.data === true);
+
+    // Rattache un éventuel paiement effectué avant la création du compte.
+    if (!claimedRef.current) {
+      claimedRef.current = true;
+      supabase.rpc("claim_pending_payment").then(({ error }) => {
+        if (error) console.warn("claim_pending_payment", error.message);
+      });
+    }
   };
 
 
