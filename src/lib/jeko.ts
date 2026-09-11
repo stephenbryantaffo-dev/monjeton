@@ -66,7 +66,11 @@ async function startJekoCheckout(
   await openJekoCheckout(fallbackUrl);
 }
 
-export const openJekoPro = (guestEmail?: string) =>
-  startJekoCheckout("pro", JEKO_PRO_URL, guestEmail);
-export const openJekoMax = (guestEmail?: string) =>
-  startJekoCheckout("ultra", JEKO_MAX_URL, guestEmail);
+export const openJekoPro = () => startJekoCheckout("pro", JEKO_PRO_URL);
+export const openJekoMax = () => startJekoCheckout("ultra", JEKO_MAX_URL);
+
+/** Paiement sans compte : l'e-mail sert à rattacher le paiement à l'inscription. */
+export const openJekoProGuest = (email: string) =>
+  startJekoCheckout("pro", JEKO_PRO_URL, email);
+export const openJekoMaxGuest = (email: string) =>
+  startJekoCheckout("ultra", JEKO_MAX_URL, email);
