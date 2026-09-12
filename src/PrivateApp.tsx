@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,7 @@ const Signup = lazy(() => import("./pages/Signup"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Pricing = lazy(() => import("./pages/Pricing"));
-const Subscribe = lazy(() => import("./pages/Subscribe"));
+
 const Transactions = lazy(() => import("./pages/Transactions"));
 const NewTransaction = lazy(() => import("./pages/NewTransaction"));
 const Categories = lazy(() => import("./pages/Categories"));
@@ -61,7 +61,8 @@ const InnerRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/subscribe" element={<Subscribe />} />
+        {/* Ancienne page de paiement : le paiement se fait désormais dans la modale des tarifs */}
+        <Route path="/subscribe" element={<Navigate to="/pricing" replace />} />
         <Route path="/install" element={<Install />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment-pending" element={<PaymentPending />} />
