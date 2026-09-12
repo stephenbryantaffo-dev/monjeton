@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
   try {
     // ─── Validation de l'entrée ───
-    let body: { plan?: unknown; paymentMethod?: unknown; email?: unknown } = {};
+    let body: { plan?: unknown; paymentMethod?: unknown; email?: unknown; phone?: unknown } = {};
     try {
       body = await req.json();
     } catch {
@@ -102,6 +102,14 @@ Deno.serve(async (req) => {
       return json({ error: 'paymentMethod requis (wave | orange | mtn | moov | djamo)' }, 400);
     }
 
+    // Numéro Mobile Money (facultatif, collecté dans la modale de paiement)
+    if (body.phone != null) {
+      const phone = String(body.phone).replace(/[\s.-]/g, '');
+      if (!/^\+?\d{8,15}$/.test(phone)) {
+        return json({ error: 'Numéro Mobile Money invalide' }, 400);
+      }
+    }
+
     const origin = req.headers.get('origin') || 'https://monjeton.app';
 
     // ─── Création de la demande de paiement Jèko ───
@@ -123,7 +131,7 @@ Deno.serve(async (req) => {
             successUrl: reference.startsWith('guest:')
               ? `${origin}/signup?paid=1&plan=${planKey}`
               : `${origin}/payment-pending?payment=success&plan=${planKey}`,
-            errorUrl: `${origin}/subscribe?payment=error`,
+            errorUrl: `${origin}/pricing?payment=error`,
           },
         },
       }),
