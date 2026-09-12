@@ -139,7 +139,7 @@ const PaymentPending = () => {
                 </p>
               </div>
               <Button
-                onClick={() => navigate("/register")}
+                onClick={() => navigate("/signup")}
                 size="lg"
                 className="w-full gradient-primary text-primary-foreground"
               >
