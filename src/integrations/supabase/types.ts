@@ -2765,6 +2765,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_activate_payment: {
+        Args: { _email: string; _txn_id: string }
+        Returns: Json
+      }
       claim_pending_payment: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       clear_user_pin: { Args: never; Returns: undefined }
