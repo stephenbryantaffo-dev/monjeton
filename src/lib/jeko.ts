@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 // Liens de paiement Jèko (Mon Jeton) — repli si la création dynamique échoue
@@ -28,19 +29,24 @@ export async function openJekoCheckout(url: string): Promise<void> {
 type JekoPlan = "pro" | "ultra";
 
 /**
- * Crée une demande de paiement Jèko côté serveur avec le user_id en référence
- * (le webhook active ensuite le bon compte automatiquement), puis ouvre la
- * page de paiement. En cas d'échec, repli sur le lien de paiement statique.
+ * Crée une demande de paiement Jèko côté serveur avec le user_id (ou
+ * "guest:<email>") en référence : c'est ce qui permet au webhook d'activer
+ * le bon compte. Sans cette référence, le paiement arrive orphelin, donc on
+ * n'ouvre JAMAIS le lien statique en repli — on affiche une erreur.
  */
 async function startJekoCheckout(
   plan: JekoPlan,
-  fallbackUrl: string,
+  _fallbackUrl: string,
   guestEmail?: string
 ): Promise<void> {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    if (!token && !guestEmail) throw new Error("no session");
+    if (!token && !guestEmail) {
+      // Visiteur non connecté : on passe par la page qui demande l'e-mail
+      window.location.href = "/subscribe";
+      return;
+    }
 
     const res = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jeko-create-payment`,
@@ -61,9 +67,11 @@ async function startJekoCheckout(
     await openJekoCheckout(String(json.redirectUrl));
     return;
   } catch (e) {
-    console.warn("Paiement dynamique indisponible, repli sur le lien statique", e);
+    console.error("Création du paiement Jèko impossible", e);
+    toast.error("Paiement indisponible pour le moment", {
+      description: "Réessaie dans un instant. Aucun montant n'a été débité.",
+    });
   }
-  await openJekoCheckout(fallbackUrl);
 }
 
 export const openJekoPro = () => startJekoCheckout("pro", JEKO_PRO_URL);

@@ -208,6 +208,20 @@ Deno.serve(async (req) => {
     }
 
     if (!userId) {
+      // Paiement orphelin (lien statique sans référence, téléphone inconnu) :
+      // on l'enregistre quand même pour qu'il puisse être réclamé plus tard.
+      const { error: orphanErr } = await supabase.from('payments').upsert(
+        {
+          txn_id: txnId,
+          user_id: null,
+          payer_phone: String(phoneRaw),
+          amount: rawAmount,
+          plan_name: planName,
+          status: 'paid',
+        },
+        { onConflict: 'txn_id', ignoreDuplicates: true }
+      );
+      if (orphanErr) console.error('Orphan payment insert failed', orphanErr);
       console.error(`⚠️ PAIEMENT NON MATCHÉ - réconciliation manuelle requise (txn_id: ${txnId}, plan: ${planName})`);
       return json({ received: true, note: 'logged, user unmatched' });
     }
