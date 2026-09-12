@@ -106,7 +106,9 @@ Deno.serve(async (req) => {
     const phoneRaw = tx?.counterpartIdentifier ?? '';
     const txnId = String(tx?.id ?? '');
     const paymentLinkId = tx?.transactionDetails?.paymentLinkId ?? '';
-    const reference = String(tx?.transactionDetails?.reference ?? '');
+    // La référence porte un suffixe d'unicité "|<timestamp>" (Jèko refuse deux
+    // demandes avec la même référence) → on ne garde que la partie identifiante.
+    const reference = String(tx?.transactionDetails?.reference ?? '').split('|')[0].trim();
 
     // MONTANT : centimes vs XOF direct
     const rawAmount = Number(tx?.amount?.amount ?? 0);

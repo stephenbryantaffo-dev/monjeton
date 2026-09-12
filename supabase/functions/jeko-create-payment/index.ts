@@ -114,7 +114,8 @@ Deno.serve(async (req) => {
         currency: 'XOF',
         // La référence porte l'user_id, ou "guest:<email>" si l'acheteur
         // n'a pas encore de compte (le paiement sera réclamé à l'inscription)
-        reference,
+        // Suffixe d'unicité : Jèko renvoie 409 si la référence a déjà servi
+        reference: `${reference}|${Date.now()}`,
         paymentDetails: {
           type: 'redirect',
           data: {
