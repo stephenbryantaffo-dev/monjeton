@@ -39,6 +39,7 @@ const PaymentPending = lazy(() => import("./pages/PaymentPending"));
 const SubscriptionManage = lazy(() => import("./pages/SubscriptionManage"));
 const RejoindreCaisse = lazy(() => import("./pages/RejoindreCaisse"));
 const ActivatePro = lazy(() => import("./pages/ActivatePro"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 const PageLoader = () => (
   <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -56,6 +57,7 @@ const InnerRoutes = () => {
       <CurrencyRateLoader />
       <ProCelebrationModal />
       <Routes>
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/pricing" element={<Pricing />} />
