@@ -39,6 +39,7 @@ const JekoCheckoutDialog = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    (window as any).__jekoCheckoutMounted = true;
     const onOpen = async (e: Event) => {
       const detail = (e as CustomEvent).detail as { plan?: PlanKey };
       if (detail?.plan !== "pro" && detail?.plan !== "ultra") return;
@@ -50,7 +51,10 @@ const JekoCheckoutDialog = () => {
       setIsLoggedIn(!!data.session);
     };
     window.addEventListener("jeko:open-checkout", onOpen);
-    return () => window.removeEventListener("jeko:open-checkout", onOpen);
+    return () => {
+      (window as any).__jekoCheckoutMounted = false;
+      window.removeEventListener("jeko:open-checkout", onOpen);
+    };
   }, []);
 
   const close = useCallback(() => {
