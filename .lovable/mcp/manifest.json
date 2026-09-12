@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "sdk_version": "2.0.4",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://xmganxsmfvcbuffeelej.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "mon-jeton",
+      "version": "0.1.0",
+      "title": "MON JETON"
+    },
+    "tools": [
+      {
+        "name": "list_transactions",
+        "title": "Lister les transactions",
+        "description": "Liste les transactions (dépenses et revenus) de l'utilisateur connecté, filtrables par période et par type.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date de début (AAAA-MM-JJ)."
+            },
+            "to": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date de fin (AAAA-MM-JJ)."
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "expense",
+                "income"
+              ],
+              "description": "Filtrer par type."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Nombre maximum de lignes."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_transaction",
+        "title": "Ajouter une transaction",
+        "description": "Enregistre une dépense ou un revenu pour l'utilisateur connecté. La catégorie et le portefeuille sont optionnels et retrouvés par leur nom.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Montant (entier positif, devise du compte)."
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "expense",
+                "income"
+              ],
+              "default": "expense",
+              "description": "Dépense ou revenu."
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Libellé ou note."
+            },
+            "date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date (AAAA-MM-JJ), aujourd'hui par défaut."
+            },
+            "category": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Nom d'une catégorie existante."
+            },
+            "wallet": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Nom d'un portefeuille existant."
+            }
+          },
+          "required": [
+            "amount"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_financial_summary",
+        "title": "Résumé financier du mois",
+        "description": "Retourne les revenus, dépenses, solde et le détail par catégorie pour un mois donné (mois courant par défaut).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "month": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12,
+              "description": "Mois (1-12)."
+            },
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100,
+              "description": "Année."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_budgets",
+        "title": "Budgets du mois",
+        "description": "Liste les budgets par catégorie du mois demandé avec le montant déjà dépensé et le reste disponible.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "month": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12,
+              "description": "Mois (1-12)."
+            },
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100,
+              "description": "Année."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_wallets_and_categories",
+        "title": "Portefeuilles et catégories",
+        "description": "Liste les portefeuilles et les catégories de l'utilisateur connecté, utiles pour renseigner une nouvelle transaction.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "all",
+                "wallets",
+                "categories"
+              ],
+              "default": "all",
+              "description": "Ce qu'il faut retourner."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
