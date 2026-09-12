@@ -16,7 +16,7 @@ export default defineTool({
     const supabase = supabaseForUser(ctx);
     const want = kind ?? "all";
 
-    const result: { wallets?: unknown[]; categories?: unknown[] } = {};
+    const result: { wallets?: any[]; categories?: any[] } = {};
 
     if (want === "all" || want === "wallets") {
       const { data, error } = await supabase
