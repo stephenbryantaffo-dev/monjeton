@@ -28,6 +28,7 @@ const Assistant = lazy(() => import("./pages/Assistant"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Parametres = lazy(() => import("./pages/Parametres"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AdminPayments = lazy(() => import("./pages/AdminPayments"));
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Tontine = lazy(() => import("./pages/Tontine"));
 const Scan = lazy(() => import("./pages/Scan"));
@@ -87,6 +88,7 @@ const InnerRoutes = () => {
         <Route path="/rejoindre-caisse/:token" element={<RejoindreCaisse />} />
         <Route path="/activer" element={<ActivatePro />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+        <Route path="/admin/paiements" element={<AdminRoute><AdminPayments /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
