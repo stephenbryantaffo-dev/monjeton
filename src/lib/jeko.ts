@@ -66,9 +66,11 @@ async function startJekoCheckout(
     await openJekoCheckout(String(json.redirectUrl));
     return;
   } catch (e) {
-    console.warn("Paiement dynamique indisponible, repli sur le lien statique", e);
+    console.error("Création du paiement Jèko impossible", e);
+    toast.error("Paiement indisponible pour le moment", {
+      description: "Réessaie dans un instant. Aucun montant n'a été débité.",
+    });
   }
-  await openJekoCheckout(fallbackUrl);
 }
 
 export const openJekoPro = () => startJekoCheckout("pro", JEKO_PRO_URL);
