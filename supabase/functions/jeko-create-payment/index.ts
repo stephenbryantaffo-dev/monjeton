@@ -93,10 +93,14 @@ Deno.serve(async (req) => {
     const planKey = String(body.plan ?? 'pro').toLowerCase();
     const plan = PLANS[planKey];
     if (!plan) return json({ error: 'Plan invalide (pro | ultra)' }, 400);
+    // Jèko EXIGE paymentMethod sur les demandes de type "redirect"
     const paymentMethod =
       typeof body.paymentMethod === 'string' && ALLOWED_METHODS.has(body.paymentMethod)
         ? body.paymentMethod
-        : undefined;
+        : null;
+    if (!paymentMethod) {
+      return json({ error: 'paymentMethod requis (wave | orange | mtn | moov | djamo)' }, 400);
+    }
 
     const origin = req.headers.get('origin') || 'https://monjeton.app';
 
@@ -114,7 +118,7 @@ Deno.serve(async (req) => {
         paymentDetails: {
           type: 'redirect',
           data: {
-            ...(paymentMethod ? { paymentMethod } : {}),
+            paymentMethod,
             successUrl: reference.startsWith('guest:')
               ? `${origin}/signup?paid=1&plan=${planKey}`
               : `${origin}/payment-pending?payment=success&plan=${planKey}`,
@@ -131,7 +135,8 @@ Deno.serve(async (req) => {
     console.log(`Payment request created for plan ${planKey}`);
     return json({ redirectUrl: paymentRequest.redirectUrl });
   } catch (e) {
-    console.error('jeko-create-payment fatal:', e);
+    // On logue le message exact renvoyé par Jèko (sans données personnelles)
+    console.error('jeko-create-payment fatal:', e instanceof Error ? e.message : String(e));
     return json({ error: 'Payment creation failed' }, 500);
   }
 });
