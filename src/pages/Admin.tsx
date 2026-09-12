@@ -48,6 +48,13 @@ const Admin = () => {
 
   return (
     <DashboardLayout title="Admin">
+      <a
+        href="/admin/paiements"
+        className="glass-card rounded-2xl p-4 mb-3 flex items-center gap-3 block"
+      >
+        <CreditCard className="w-5 h-5 text-primary" />
+        <span className="text-sm font-medium text-foreground">Paiements reçus</span>
+      </a>
       {error ? (
         <div className="glass-card rounded-2xl p-6 text-center">
           <p className="text-destructive font-medium">⚠️ {error}</p>
