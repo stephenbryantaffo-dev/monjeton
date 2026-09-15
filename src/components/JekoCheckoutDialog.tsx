@@ -121,7 +121,10 @@ const JekoCheckoutDialog = () => {
 
   return (
     <Dialog open={plan !== null} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent
+        className="max-w-sm"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         {current && (
           <>
             <DialogHeader>
