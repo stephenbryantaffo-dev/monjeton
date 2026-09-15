@@ -20,7 +20,19 @@ export async function openJekoCheckout(url: string): Promise<void> {
     // fallback web
     console.warn("Capacitor Browser indisponible, fallback web", e);
   }
-  window.open(url, "_blank", "noopener,noreferrer");
+
+  // Sur le web, la redirection se fait dans l'onglet courant : window.open()
+  // est bloqué par les navigateurs mobiles et les iframes d'aperçu quand
+  // l'appel survient après un await (le "geste utilisateur" a expiré).
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = url;
+      return;
+    }
+  } catch {
+    /* iframe cross-origin : on redirige la fenêtre courante */
+  }
+  window.location.href = url;
 }
 
 type JekoPlan = "pro" | "ultra";
