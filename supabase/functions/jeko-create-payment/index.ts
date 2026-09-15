@@ -110,7 +110,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    const origin = req.headers.get('origin') || 'https://monjeton.app';
+    // Jèko exige des URLs de retour HTTPS absolues : on ignore les origines
+    // non-HTTPS (localhost, capacitor://, file://) au profit du domaine prod.
+    const rawOrigin = req.headers.get('origin') ?? '';
+    const origin = rawOrigin.startsWith('https://') ? rawOrigin : 'https://monjeton.app';
 
     // ─── Création de la demande de paiement Jèko ───
     const storeId = await getStoreId();
