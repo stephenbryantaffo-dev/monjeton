@@ -1,4 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { parseJekoTransaction } from '../_shared/jeko-parse.ts';
+import { processJekoTransaction } from '../_shared/jeko-payment-processor.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,105 +98,34 @@ Deno.serve(async (req) => {
     const parsed = JSON.parse(rawBody);
     console.log('Jèko webhook received, bytes:', rawBody.length);
 
-    // La doc se contredit : tantôt champs à la racine, tantôt sous .data.
-    const tx = parsed?.data ?? parsed;
-
-    const status = String(tx?.status ?? '').toLowerCase();
-    const txType = String(tx?.transactionType ?? '');
-    const isPayment = txType === 'PaymentRequest' || txType.toLowerCase() === 'payment';
-
-    const phoneRaw = tx?.counterpartIdentifier ?? '';
-    const txnId = tx?.id ?? '';
-    const paymentLinkId = tx?.transactionDetails?.paymentLinkId ?? '';
-    const reference = tx?.transactionDetails?.reference ?? '';
-
-    // MONTANT : centimes vs XOF direct
-    const rawAmount = Number(tx?.amount?.amount ?? 0);
-    const amountXof = rawAmount >= 100000 ? Math.round(rawAmount / 100) : rawAmount;
-
-    console.log('Parsed →', { status, txType, hasPhone: !!phoneRaw, paymentLinkId });
-
-    if (!isPayment || status !== 'success') {
-      return json({ received: true, action: 'ignored', status, txType });
-    }
-
-    const PRO_ID = 'd616710c-47fb-4afc-b0e2-e9fe3e0b29ab';
-    const MAX_ID = 'e7715547-b693-40dd-b06e-9bbb63a90961';
-    let planName = 'Pro';
-    let priceXof = 2000;
-    if (String(paymentLinkId).includes(MAX_ID) || amountXof >= 5000) {
-      planName = 'Ultra Pro';
-      priceXof = 5000;
-    }
+    const tx = parseJekoTransaction(parsed);
+    console.log('Parsed →', {
+      status: tx.status,
+      txType: tx.txType,
+      hasPhone: !!tx.phoneRaw,
+      paymentLinkId: tx.paymentLinkId,
+    });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // MATCHING USER par téléphone
-    const digits = String(phoneRaw).replace(/[^0-9]/g, '');
-    const variants = new Set([
-      digits,
-      digits.replace(/^225/, ''),
-      '225' + digits.replace(/^225/, ''),
-    ]);
+    const outcome = await processJekoTransaction(supabase, tx, parsed, 'webhook');
 
-    let userId: string | null = null;
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, phone')
-      .not('phone', 'is', null);
-    const match = profiles?.find((p) => {
-      const pd = String(p.phone ?? '').replace(/[^0-9]/g, '');
-      if (!pd) return false;
-      for (const v of variants) {
-        if (v && (pd === v || pd.endsWith(v) || v.endsWith(pd))) return true;
-      }
-      return false;
-    });
-    if (match?.user_id) userId = match.user_id;
-
-    // LOG TOUJOURS (réconciliation manuelle si non matché)
-    await supabase.from('jeko_payments').insert({
-      txn_id: txnId,
-      phone: phoneRaw,
-      amount: amountXof,
-      raw_amount: rawAmount,
-      plan_name: planName,
-      payment_link_id: paymentLinkId,
-      reference,
-      matched_user_id: userId,
-      raw_payload: parsed,
-    });
-
-    if (!userId) {
-      console.error(`⚠️ PAIEMENT NON MATCHÉ - à réconcilier manuellement (txn_id: ${txnId}, plan: ${planName})`);
-      return json({ received: true, note: 'logged, user unmatched: ' + phoneRaw });
+    if (outcome.action === 'ignored') {
+      return json({ received: true, action: 'ignored', status: tx.status, txType: tx.txType });
+    }
+    if (outcome.action === 'duplicate') {
+      return json({ received: true, action: 'duplicate', txnId: tx.txnId });
+    }
+    if (outcome.action === 'unmatched') {
+      console.error(`⚠️ PAIEMENT NON MATCHÉ - à réconcilier manuellement (txn_id: ${tx.txnId}, plan: ${tx.planName})`);
+      return json({ received: true, note: 'logged, user unmatched: ' + tx.phoneRaw });
     }
 
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const graceUntil = new Date(expiresAt.getTime() + 3 * 24 * 60 * 60 * 1000);
-
-    const { error: upErr } = await supabase.from('subscriptions').upsert(
-      {
-        user_id: userId,
-        status: 'active',
-        plan_name: planName,
-        price_xof: priceXof,
-        activated_at: now.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        grace_until: graceUntil.toISOString(),
-        last_reminder_sent: null,
-        updated_at: now.toISOString(),
-      },
-      { onConflict: 'user_id' }
-    );
-    if (upErr) throw upErr;
-
-    console.log(`✅ Activated ${planName} (txn_id: ${txnId})`);
-    return json({ success: true, plan: planName, userId });
+    console.log(`✅ Activated ${tx.planName} (txn_id: ${tx.txnId})`);
+    return json({ success: true, plan: tx.planName, userId: outcome.userId });
   } catch (e) {
     console.error('Webhook fatal:', e);
     return json({ error: String(e) }, 500);
