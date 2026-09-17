@@ -1,46 +1,89 @@
-// Generated from Lovable CDN asset pointers.
+import asset0 from '../../../assets/landing/audience-entrepreneur-256.avif.asset.json';
+import asset1 from '../../../assets/landing/audience-entrepreneur-256.webp.asset.json';
+import asset2 from '../../../assets/landing/audience-entrepreneur-432.avif.asset.json';
+import asset3 from '../../../assets/landing/audience-entrepreneur-432.webp.asset.json';
+import asset4 from '../../../assets/landing/audience-family-256.avif.asset.json';
+import asset5 from '../../../assets/landing/audience-family-256.webp.asset.json';
+import asset6 from '../../../assets/landing/audience-family-432.avif.asset.json';
+import asset7 from '../../../assets/landing/audience-family-432.webp.asset.json';
+import asset8 from '../../../assets/landing/audience-merchant-256.avif.asset.json';
+import asset9 from '../../../assets/landing/audience-merchant-256.webp.asset.json';
+import asset10 from '../../../assets/landing/audience-merchant-432.avif.asset.json';
+import asset11 from '../../../assets/landing/audience-merchant-432.webp.asset.json';
+import asset12 from '../../../assets/landing/audience-youth-256.avif.asset.json';
+import asset13 from '../../../assets/landing/audience-youth-256.webp.asset.json';
+import asset14 from '../../../assets/landing/audience-youth-432.avif.asset.json';
+import asset15 from '../../../assets/landing/audience-youth-432.webp.asset.json';
+import asset16 from '../../../assets/landing/character-debts-320.avif.asset.json';
+import asset17 from '../../../assets/landing/character-debts-320.webp.asset.json';
+import asset18 from '../../../assets/landing/character-debts-640.avif.asset.json';
+import asset19 from '../../../assets/landing/character-debts-640.webp.asset.json';
+import asset20 from '../../../assets/landing/character-female-320.avif.asset.json';
+import asset21 from '../../../assets/landing/character-female-320.webp.asset.json';
+import asset22 from '../../../assets/landing/character-female-640.avif.asset.json';
+import asset23 from '../../../assets/landing/character-female-640.webp.asset.json';
+import asset24 from '../../../assets/landing/character-male-320.avif.asset.json';
+import asset25 from '../../../assets/landing/character-male-320.webp.asset.json';
+import asset26 from '../../../assets/landing/character-male-640.avif.asset.json';
+import asset27 from '../../../assets/landing/character-male-640.webp.asset.json';
+import asset28 from '../../../assets/landing/character-savings-320.avif.asset.json';
+import asset29 from '../../../assets/landing/character-savings-320.webp.asset.json';
+import asset30 from '../../../assets/landing/character-savings-640.avif.asset.json';
+import asset31 from '../../../assets/landing/character-savings-640.webp.asset.json';
+import asset32 from '../../../assets/landing/character-scan-320.avif.asset.json';
+import asset33 from '../../../assets/landing/character-scan-320.webp.asset.json';
+import asset34 from '../../../assets/landing/character-scan-640.avif.asset.json';
+import asset35 from '../../../assets/landing/character-scan-640.webp.asset.json';
+import asset36 from '../../../assets/landing/manrope-0.woff2.asset.json';
+import asset37 from '../../../assets/landing/manrope-1.woff2.asset.json';
+import asset38 from '../../../assets/landing/manrope-2.woff2.asset.json';
+import asset39 from '../../../assets/landing/manrope-3.woff2.asset.json';
+import asset40 from '../../../assets/landing/manrope-4.woff2.asset.json';
+import asset41 from '../../../assets/landing/moov-money.webp.asset.json';
+import asset42 from '../../../assets/landing/push-ci.webp.asset.json';
+
 export const landingAssetUrls = {
-  "audience-entrepreneur-256.avif": "/__l5e/assets-v1/ff090ee5-3991-4806-8ef3-ac2eb871b9dd/audience-entrepreneur-256.avif",
-  "audience-entrepreneur-256.webp": "/__l5e/assets-v1/e92167af-350a-4ff9-8cc5-561d3cab3c90/audience-entrepreneur-256.webp",
-  "audience-entrepreneur-432.avif": "/__l5e/assets-v1/83f76015-363b-4a0f-99ec-c0cc1e7931a5/audience-entrepreneur-432.avif",
-  "audience-entrepreneur-432.webp": "/__l5e/assets-v1/14dd61af-eb51-40a5-8e1a-e61521a906db/audience-entrepreneur-432.webp",
-  "audience-family-256.avif": "/__l5e/assets-v1/c1273184-89fb-45eb-a2b6-142b3b4fca70/audience-family-256.avif",
-  "audience-family-256.webp": "/__l5e/assets-v1/7a3d9c46-4c92-4641-9847-a277b84d3d60/audience-family-256.webp",
-  "audience-family-432.avif": "/__l5e/assets-v1/5470ef77-26d1-4fd5-bd2b-c659374b2370/audience-family-432.avif",
-  "audience-family-432.webp": "/__l5e/assets-v1/eccd443b-620f-43e5-81fd-77fad2faaa8e/audience-family-432.webp",
-  "audience-merchant-256.avif": "/__l5e/assets-v1/d42b3689-035f-4e17-980e-9123bb5398ed/audience-merchant-256.avif",
-  "audience-merchant-256.webp": "/__l5e/assets-v1/50acb0a2-6a20-4283-bde3-702626f3c8a2/audience-merchant-256.webp",
-  "audience-merchant-432.avif": "/__l5e/assets-v1/677b1420-7a8c-4a53-9053-f01adebba55b/audience-merchant-432.avif",
-  "audience-merchant-432.webp": "/__l5e/assets-v1/9db8f5c2-f793-456a-b3c4-67fca6be7982/audience-merchant-432.webp",
-  "audience-youth-256.avif": "/__l5e/assets-v1/23df4572-6a94-4179-953a-10bba9d020cf/audience-youth-256.avif",
-  "audience-youth-256.webp": "/__l5e/assets-v1/fa787dd8-0c52-4367-884e-98f51139ca9c/audience-youth-256.webp",
-  "audience-youth-432.avif": "/__l5e/assets-v1/931db677-d2d5-4ca6-baea-a7eb64edb58a/audience-youth-432.avif",
-  "audience-youth-432.webp": "/__l5e/assets-v1/ff6653ac-12f6-43b5-b42b-2bf9cb1069a3/audience-youth-432.webp",
-  "character-debts-320.avif": "/__l5e/assets-v1/f39c0336-5dbf-4826-b899-0c290c437327/character-debts-320.avif",
-  "character-debts-320.webp": "/__l5e/assets-v1/d65d2858-2aaf-4009-b5cf-1a7492c049f1/character-debts-320.webp",
-  "character-debts-640.avif": "/__l5e/assets-v1/d18216cc-f1e1-49f4-a243-8b84f6e6a38b/character-debts-640.avif",
-  "character-debts-640.webp": "/__l5e/assets-v1/6fa421a1-5e6e-462f-98a0-5bc43f31d248/character-debts-640.webp",
-  "character-female-320.avif": "/__l5e/assets-v1/dc49ea7e-57f6-45e7-95e5-9d3ad75a3657/character-female-320.avif",
-  "character-female-320.webp": "/__l5e/assets-v1/ab0a08bf-4b34-445f-9842-b506d7bad3b9/character-female-320.webp",
-  "character-female-640.avif": "/__l5e/assets-v1/55b6af10-1aa8-4362-9586-2bf9f34ad80b/character-female-640.avif",
-  "character-female-640.webp": "/__l5e/assets-v1/744df9f1-917b-4214-b499-9304d3ebfb95/character-female-640.webp",
-  "character-male-320.avif": "/__l5e/assets-v1/a58b88ea-3b4b-43b9-9c2c-5c24572c8ac9/character-male-320.avif",
-  "character-male-320.webp": "/__l5e/assets-v1/9080c3d8-30d0-48f6-b6db-a30afa5da1c3/character-male-320.webp",
-  "character-male-640.avif": "/__l5e/assets-v1/088b90bc-0b99-4dcd-9b38-57cb4a2ef4ab/character-male-640.avif",
-  "character-male-640.webp": "/__l5e/assets-v1/81049553-8d61-41fa-a6db-92da0534788d/character-male-640.webp",
-  "character-savings-320.avif": "/__l5e/assets-v1/d37c54c4-79ac-4c71-b2a4-20a7ec002889/character-savings-320.avif",
-  "character-savings-320.webp": "/__l5e/assets-v1/65483a30-6652-4fd9-871d-26c796529fe0/character-savings-320.webp",
-  "character-savings-640.avif": "/__l5e/assets-v1/6d007ee2-2fef-4a62-b884-3104c3e709f6/character-savings-640.avif",
-  "character-savings-640.webp": "/__l5e/assets-v1/45f3e65d-a595-436e-bda0-3e839189e642/character-savings-640.webp",
-  "character-scan-320.avif": "/__l5e/assets-v1/03afc210-70c5-4ca6-8584-058b7e3d6192/character-scan-320.avif",
-  "character-scan-320.webp": "/__l5e/assets-v1/6badc96a-e7eb-47aa-90fa-f49602e278fc/character-scan-320.webp",
-  "character-scan-640.avif": "/__l5e/assets-v1/48b2dc7d-4f52-45bb-9bd7-7dce9663ce58/character-scan-640.avif",
-  "character-scan-640.webp": "/__l5e/assets-v1/e5c60a50-9b87-4d20-86b8-11efd6fdcfb0/character-scan-640.webp",
-  "manrope-0.woff2": "/__l5e/assets-v1/58905e12-3a93-4c83-92cc-5eaca9fe5a21/manrope-0.woff2",
-  "manrope-1.woff2": "/__l5e/assets-v1/d09d8428-9f43-49ae-8555-5e939968d130/manrope-1.woff2",
-  "manrope-2.woff2": "/__l5e/assets-v1/4aec6ad3-d272-4b86-9f78-7968e212072d/manrope-2.woff2",
-  "manrope-3.woff2": "/__l5e/assets-v1/fcdde7bd-4b2c-487d-830d-57bdb23503dc/manrope-3.woff2",
-  "manrope-4.woff2": "/__l5e/assets-v1/12d0897f-da6f-44bb-a78c-6c62c19e9037/manrope-4.woff2",
-  "moov-money.webp": "/__l5e/assets-v1/a2603ba8-92a6-4028-b232-03680ea2a089/moov-money.webp",
-  "push-ci.webp": "/__l5e/assets-v1/250e2145-1dbf-41a4-8ee6-854ac9524fc9/push-ci.webp",
+  'audience-entrepreneur-256.avif': asset0.url,
+  'audience-entrepreneur-256.webp': asset1.url,
+  'audience-entrepreneur-432.avif': asset2.url,
+  'audience-entrepreneur-432.webp': asset3.url,
+  'audience-family-256.avif': asset4.url,
+  'audience-family-256.webp': asset5.url,
+  'audience-family-432.avif': asset6.url,
+  'audience-family-432.webp': asset7.url,
+  'audience-merchant-256.avif': asset8.url,
+  'audience-merchant-256.webp': asset9.url,
+  'audience-merchant-432.avif': asset10.url,
+  'audience-merchant-432.webp': asset11.url,
+  'audience-youth-256.avif': asset12.url,
+  'audience-youth-256.webp': asset13.url,
+  'audience-youth-432.avif': asset14.url,
+  'audience-youth-432.webp': asset15.url,
+  'character-debts-320.avif': asset16.url,
+  'character-debts-320.webp': asset17.url,
+  'character-debts-640.avif': asset18.url,
+  'character-debts-640.webp': asset19.url,
+  'character-female-320.avif': asset20.url,
+  'character-female-320.webp': asset21.url,
+  'character-female-640.avif': asset22.url,
+  'character-female-640.webp': asset23.url,
+  'character-male-320.avif': asset24.url,
+  'character-male-320.webp': asset25.url,
+  'character-male-640.avif': asset26.url,
+  'character-male-640.webp': asset27.url,
+  'character-savings-320.avif': asset28.url,
+  'character-savings-320.webp': asset29.url,
+  'character-savings-640.avif': asset30.url,
+  'character-savings-640.webp': asset31.url,
+  'character-scan-320.avif': asset32.url,
+  'character-scan-320.webp': asset33.url,
+  'character-scan-640.avif': asset34.url,
+  'character-scan-640.webp': asset35.url,
+  'manrope-0.woff2': asset36.url,
+  'manrope-1.woff2': asset37.url,
+  'manrope-2.woff2': asset38.url,
+  'manrope-3.woff2': asset39.url,
+  'manrope-4.woff2': asset40.url,
+  'moov-money.webp': asset41.url,
+  'push-ci.webp': asset42.url,
 } as const;
