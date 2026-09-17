@@ -1,0 +1,109 @@
+/* Mon Jeton : fond #14171C et grille 44 px du site de référence. */
+.monjeton-landing{--ink:#14171c;--paper:#eaf4ea;--muted:#a7b3ae;--line:#7cff3a20;color-scheme:dark}
+.monjeton-landing{background:var(--ink);isolation:isolate}
+.site-grid,.site-grain{position:fixed;inset:0;pointer-events:none;z-index:0}
+.site-grid{background-image:linear-gradient(#7cff3a0d 1px,transparent 1px),linear-gradient(90deg,#7cff3a0d 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(90% 70% at 50% 30%,#000 0%,transparent 80%)}
+.site-grain{opacity:.024;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.7' d='M0 0h256v256H0z'/%3E%3C/svg%3E")}
+.header{background:transparent}
+.monjeton-landing main{position:relative;z-index:1}
+.monjeton-landing main>section,.monjeton-landing main>footer,#fonctionnalites{position:relative;z-index:1}
+.section-dark,.testimonials-section,.pricing-section{background:transparent;color:var(--paper)}
+.hero:before{content:'';position:absolute;inset:0 -3% 0 34%;pointer-events:none;background:radial-gradient(ellipse at 70% 38%,#7cff3a16,transparent 65%);z-index:-1}
+.ambient-layer{position:absolute;inset:0;overflow:clip;z-index:0;pointer-events:none;user-select:none}
+.fcfa-mote{position:absolute;color:var(--lime);font-size:var(--size);font-weight:700;letter-spacing:-.025em;opacity:var(--opacity);filter:blur(1px);animation:currency-drift var(--duration) ease-in-out infinite;animation-delay:var(--delay);will-change:transform}
+@keyframes currency-drift{0%,100%{transform:translate3d(-8px,-24px,0) rotate(-3deg)}50%{transform:translate3d(10px,25px,0) rotate(3deg)}}
+.has-scroll-path{position:relative;isolation:isolate}
+.has-scroll-path>.container,.has-scroll-path>.center-heading,.has-scroll-path>.audiences-grid,.has-scroll-path>.life-bottom{position:relative;z-index:1}
+.scroll-atmosphere{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:0}
+.scroll-atmosphere path{fill:none;stroke-width:1.2;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.scroll-atmosphere .scroll-path{stroke-dasharray:1;stroke-dashoffset:1}
+.scroll-atmosphere .path-ghost{opacity:.13}
+.section-green:before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 25% 46%,#7cff3a1c 0%,#30533a16 33%,transparent 68%)}
+#dettes:before{background:radial-gradient(ellipse at 24% 49%,#7cff3a20, #3dff9a07 40%,transparent 72%)}
+.showcase .showcase-backdrop{background:radial-gradient(ellipse at 50% 45%,#7cff3a17,transparent 72%);border:0;box-shadow:none;border-radius:0}
+.section-green .showcase-stage:before{content:'';position:absolute;inset:20px -50px;background:radial-gradient(ellipse,#7cff3a13,transparent 69%);pointer-events:none;z-index:-2}
+.showcase-float{background:linear-gradient(135deg,#273229e8,#17211de8);border-color:#7cff3a30;backdrop-filter:blur(18px);box-shadow:inset 0 1px #ffffff0d,0 10px 26px #0003;color:var(--paper)}
+.showcase-float div{color:#a5b5a7}.showcase-float strong{color:#eaf7e5}.showcase-float>.icon,.showcase-float>[data-icon]{color:var(--lime)}
+/* Même fond graphite sous le bandeau : seule une lumière verte le souligne. */
+.payment-section{background:radial-gradient(ellipse at 50% 50%,#7cff3a12,transparent 73%) var(--ink);color:var(--paper);border-block:1px solid #7cff3a16}
+.payment-heading-row h2{color:#a8b8a5}.payment-motion-toggle{color:#c4d8ba;border-color:#7cff3a35}.payment-motion-toggle:hover{background:#7cff3a15}
+.payment-logo-group .djamo-logo{filter:none}.payment-logo-group .mtn-logo{color:#edf6e9}.payment-logo-group .mtn-logo img{filter:brightness(0) invert(1)}
+.logo-on-dark{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.logo-on-dark:after,.orange-on-dark:before{content:'';position:absolute;inset:0;background:#edf6e9;pointer-events:none;mask-position:center;mask-repeat:no-repeat;mask-size:contain}
+.orange-on-dark:before{mask-image:url('/assets/orange-money.svg');clip-path:inset(0 75% 0 0)}
+.orange-on-dark:after{mask-image:url('/assets/orange-money.svg');clip-path:inset(0 0 0 55%)}
+.wave-on-dark:after{mask-image:url('/assets/wave.png');clip-path:inset(0 0 0 45%)}
+/* Le ticket reste du papier : l'interface qui l'entoure devient sombre. */
+.light-app-screen{background:#141c17;color:#eaf4e7}
+.light-app-screen .island{background:#050804}.light-app-screen .home-indicator{background:#d7e7d1}
+.light-app-screen .app-chip{background:#283d1b;border-color:#496235;color:#b8f28e}
+.light-app-screen .phone-demo-label{color:#a5b39b}.light-app-screen .phone-feedback{color:#a9f27c}
+.receipt-viewport{background:radial-gradient(ellipse at 50% 50%,#2e4832,#19271f);border-color:#52694a}
+.scan-fields{background:#203024;border-color:#3d5238}.scan-fields span{color:#a8bba0}.scan-fields strong{color:#eaf6e3}
+.debt-segments{background:#253128}.debt-segments button{color:#b5c3ad}.debt-segments button[aria-selected=true]{background:#7cff3a;color:#13250a}
+.debt-overview>span{color:#a4b99a}.debt-overview>strong{color:#e9f5e5}
+.person-debt{border-color:#344631}.person-debt .person-initial{background:#2c4225;color:#c6e6af}
+.person-debt small{color:#a4b398}.person-debt>b{color:#c1f294}
+.debt-draft{background:#253a22;border-color:#426137;color:#d0e4c0}
+/* Verre teinté : reflets fins, contraste franc, pas de halo néon permanent. */
+.button{position:relative;background:linear-gradient(155deg,#a0ff66 0%,#7cff3a 47%,#6ee52f 100%);border:1px solid #caffaa70;box-shadow:inset 0 1px 0 #ffffff80,inset 0 -2px 0 #39731b25,0 5px 18px #0002;border-radius:16px;transition:transform .22s,box-shadow .22s,background .22s}
+.button:hover{background:linear-gradient(155deg,#b7ff8b,#89ff4d 65%,#7cef3d);box-shadow:inset 0 1px #ffffffb0,0 8px 22px #7cff3a14;transform:translateY(-2px)}
+.button:active{transform:translateY(0);box-shadow:inset 0 2px 5px #24481520}
+.hero-actions .hero-pro,.price-card:not(.price-pro) .price-button{background:linear-gradient(135deg,#c8ffc511,#14201955);backdrop-filter:blur(16px);border-color:#7cff3a66;color:#a1ff68;box-shadow:inset 0 1px #ddffda24,0 5px 18px #0002}
+.hero-actions .hero-pro:hover,.price-card:not(.price-pro) .price-button:hover{background:linear-gradient(135deg,#baff981c,#20322088);border-color:#7cff3aaa}
+.hero-actions .text-button{padding:14px 13px;border:1px solid #d6f6d01c;border-radius:16px;background:linear-gradient(130deg,#ffffff08,#ffffff01);box-shadow:inset 0 1px #ffffff08;text-decoration:none}
+.hero-actions .text-button:hover{background:#b8ff910d;border-color:#7cff3a50}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible,summary:focus-visible{outline:2px solid var(--lime);outline-offset:5px}
+/* Scène 3D interactive : le téléphone reste utilisable et s'immobilise au clavier. */
+.hero-stage{perspective:1100px}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ .hero-stage .phone{transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,-5deg)) rotateZ(1deg);animation:phone-breathe 7s ease-in-out infinite;transition:transform .65s cubic-bezier(.2,.7,.2,1);box-shadow:4px 2px 0 #4d5745,7px 3px 0 #252f24,0 0 0 1px #53604b,inset 0 0 0 3px #77816b,14px 30px 50px -18px #000b}
+ .hero-stage:hover .phone{transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) rotateZ(.3deg);animation-play-state:paused}
+ .hero-stage:focus-within .phone{transform:none;animation:none;translate:0 0}
+ .hero-stage .hero-character{translate:var(--avatar-x,0px) var(--avatar-y,0px);transition:translate .7s cubic-bezier(.2,.7,.2,1)}
+ .hero-stage .stage-backdrop{transform:rotateY(var(--backdrop-y,0deg));transform-origin:center;transition:transform .7s}
+ .app-bar-chart i{transform-origin:bottom;animation:chart-arrive .8s cubic-bezier(.2,.8,.2,1) both}.app-bar-chart i:nth-child(2n){animation-delay:.08s}.app-bar-chart i:nth-child(3n){animation-delay:.16s}
+}
+@keyframes phone-breathe{0%,100%{translate:0 0}50%{translate:0 -7px}}
+@keyframes chart-arrive{from{transform:scaleY(.15)}to{transform:scaleY(1)}}
+/* Des scènes lisibles, pas des pictogrammes abstraits. */
+.audiences-grid article{position:relative;padding:21px 24px 28px;border-radius:22px;background:linear-gradient(145deg,#29332865,#171e22b3);border:1px solid #7cff3a23;box-shadow:inset 0 1px #ffffff06}
+.audience-visual{height:206px;display:flex;align-items:center;justify-content:center;position:relative;margin:0 -10px 16px}
+.audience-visual:before{content:'';position:absolute;inset:20% 0 0;background:radial-gradient(ellipse,#7cff3a18,transparent 67%);z-index:-1}
+.audience-visual img{width:216px;height:216px;max-width:none;object-fit:contain;filter:drop-shadow(0 10px 9px #0003)}
+.audiences-grid h3{margin-top:0;font-size:19px;line-height:1.35}.audiences-grid p{color:#aebbb1;font-size:13px;line-height:1.85}
+/* Témoignages et abonnements : même univers graphite que l'accueil. */
+.testimonials-section{border-block:1px solid #7cff3a12}
+.testimonials-section .section-tag{color:#b4d69c;background:#26391c;border-color:#42672b}
+.testimonials-grid figure{background:linear-gradient(135deg,#ffffff05,#1b242799);border:1px solid #7cff3a24;border-radius:20px;box-shadow:inset 0 1px #ffffff06}
+.testimonials-grid .stars{color:#7cff3a}.testimonials-grid blockquote{color:#d6e4d8}
+.testimonials-grid figcaption>span{background:#2c4125;color:#c9efb4}.testimonials-grid figcaption small{color:#a1b49d}
+.pricing-section .section-heading{display:block;text-align:center;margin:0 auto 50px}
+.pricing-section .section-heading .eyebrow{justify-content:center;color:var(--lime);margin-bottom:20px}
+.pricing-section .section-heading h2 br{display:none}.pricing-section .section-heading>p{max-width:none;color:#aab8ad;margin:23px auto 0}
+.pricing-grid{gap:22px;border:0;overflow:visible;background:transparent}
+.price-card,.price-card:last-child{position:relative;display:flex;flex-direction:column;padding:32px 28px;border:1px solid #7cff3a2b;border-radius:23px;background:linear-gradient(135deg,#ffffff06,#1b2224aa);box-shadow:inset 0 1px #ffffff05}
+.price-pro{border-color:#7cff3a;background:linear-gradient(150deg,#7cff3a0c,#1c2722a6 50%,#141c20);box-shadow:0 0 36px #7cff3a08,inset 0 1px #d0ffb520}
+.price-pro:before{content:'Le plus populaire';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;background:var(--lime);color:#14210d;padding:5px 15px;border-radius:20px;white-space:nowrap}
+.plan-heading{align-items:flex-start;flex-direction:column;gap:9px}.plan-heading h3{color:var(--lime);font-size:20px}.plan-heading>span{color:#a6b79f;font-size:11px}
+.price{font-size:43px;margin-top:25px;color:#eef7ec}.price>span{font-size:11px;color:#a4b39f}.plan-note{color:#a4b39f;font-size:11px}
+.price-card ul{order:1;margin-top:28px;margin-bottom:30px;gap:15px}.price-card li{font-size:13px;color:#dce9d6;line-height:1.65;padding-left:25px}.price-card li:before{color:var(--lime)}
+.price-card .price-button{order:2;margin-top:auto;min-height:49px;border-radius:14px;font-size:12px;justify-content:center}
+.price-pro .price-button{color:#13210e;background:linear-gradient(155deg,#a0ff66,#7cff3a 55%,#6ee52f);border-color:#caffaa70}.price-pro .price-button:hover{background:#97ff60}
+.faq-section,.faqs details,.faqs details:last-child{border-color:#7cff3a24}.faq-section .eyebrow{color:#a0bd8e}.faqs details p{color:#aebdaf}.faq-section .inline-link{color:#bbdfa6}
+.effects-toggle{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:10px;border:1px solid #7cff3a2b;background:#ffffff04;color:#b6c5ae;font-size:11px;margin:0 0 16px}
+.effects-toggle:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lime)}
+.effects-toggle[aria-pressed=true]:before{background:#82917d}
+.effects-paused .fcfa-mote,.effects-paused .hero-stage .phone{animation-play-state:paused!important}
+.effects-paused .hero-stage .phone{transform:none!important;translate:0 0!important}.effects-paused .hero-character{translate:0 0!important}.effects-paused .stage-backdrop{transform:none!important}
+.effects-paused .scroll-path{stroke-dashoffset:0!important}
+@media(max-width:1150px){.price-card,.price-card:last-child{padding:28px 22px}.price{font-size:36px}.pricing-grid{gap:16px}.audiences-grid article{padding-inline:18px}.audience-visual{height:183px}.audience-visual img{width:192px;height:192px}}
+@media(max-width:860px){.audience-visual{height:195px}.audience-visual img{width:208px;height:208px}.audiences-grid article{padding:25px}.pricing-grid{gap:12px}.price-card,.price-card:last-child{padding:28px 17px}.price{font-size:31px}.price>span{font-size:9px}.price-card li{font-size:12px}.price-card .price-button{font-size:10px;padding-inline:10px}.pricing-section .section-heading h2{font-size:40px}}
+@media(max-width:580px){
+ .fcfa-mote:nth-child(even){display:none}.fcfa-mote{font-size:24px;opacity:.035}.hero:before{inset:20% -5% 0 0}.hero-actions .text-button{padding:11px;border-radius:13px}.hero-actions{column-gap:10px}
+ .section-green:before{background:radial-gradient(ellipse at 48% 71%,#7cff3a17,transparent 67%)}.section-green .showcase-stage:before{inset:0 -20px}.scroll-atmosphere{opacity:.65}
+ .audiences-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.audiences-grid article{padding:15px 13px 21px;border-radius:17px}.audience-visual{height:160px;margin:0 -9px 13px}.audience-visual img{width:170px;height:170px}.audiences-grid h3{font-size:16px;letter-spacing:-.04em}.audiences-grid p{font-size:12px;line-height:1.8;margin-top:10px}
+ .pricing-section .section-heading h2{font-size:31px}.pricing-section .section-heading h2 br{display:block}.pricing-grid{gap:28px}.price-card,.price-card:last-child{padding:29px 26px;border-radius:21px}.plan-heading{flex-direction:row;align-items:center}.price{font-size:42px}.price>span{font-size:11px}.price-card li{font-size:14px}.price-card .price-button{font-size:12px}.price-card ul{margin-bottom:27px}
+}
+@media(max-width:360px){.audiences-grid article{padding-inline:11px}.audience-visual{height:143px}.audience-visual img{height:152px;width:152px}.audiences-grid h3{font-size:14px}.audiences-grid p{font-size:11px}.price-card,.price-card:last-child{padding-inline:21px}}
+@media(prefers-reduced-motion:reduce){.fcfa-mote,.hero-stage .phone,.app-bar-chart i{animation:none!important}.hero-stage .phone,.hero-stage .stage-backdrop{transform:none!important;translate:0 0!important}.hero-stage .hero-character{translate:0 0!important}.scroll-atmosphere .scroll-path{stroke-dashoffset:0}.effects-toggle{display:none}}
