@@ -50,7 +50,13 @@ export default function ArchiveLanding() {
     const menu=root.querySelector<HTMLElement>(".menu-button"), navigation=root.querySelector<HTMLElement>("#navigation");
     const closeMenu=()=>{navigation?.classList.remove("open");menu?.setAttribute("aria-expanded","false");menu?.setAttribute("aria-label","Ouvrir le menu");};
     on(menu,"click",(() => {const open=navigation?.classList.toggle("open") ?? false;menu?.setAttribute("aria-expanded",String(open));menu?.setAttribute("aria-label",open?"Fermer le menu":"Ouvrir le menu");}) as EventListener);
-    const navLinks=Array.from(navigation?.querySelectorAll<HTMLAnchorElement>("[data-nav-section]") ?? []);\n    const setActiveNav=(section:string)=>navLinks.forEach(link=>{const active=link.dataset.navSection===section;link.classList.toggle("is-active",active);if(active)link.setAttribute("aria-current","page");else link.removeAttribute("aria-current");});\n    navLinks.forEach(a=>on(a,"click",(()=>{setActiveNav(a.dataset.navSection||"contenu");closeMenu();}) as EventListener));\n    const observedSections=navLinks.map(link=>root.querySelector<HTMLElement>(`#${link.dataset.navSection}`)).filter((section):section is HTMLElement=>Boolean(section));\n    const sectionObserver=new IntersectionObserver(entries=>{const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(visible)setActiveNav(visible.target.id);},{rootMargin:"-18% 0px -62%",threshold:[0,.1,.35,.6]});\n    observedSections.forEach(section=>sectionObserver.observe(section));\n    cleanups.push(()=>sectionObserver.disconnect());
+    const navLinks=Array.from(navigation?.querySelectorAll<HTMLAnchorElement>("[data-nav-section]") ?? []);
+    const setActiveNav=(section:string)=>navLinks.forEach(link=>{const active=link.dataset.navSection===section;link.classList.toggle("is-active",active);if(active)link.setAttribute("aria-current","page");else link.removeAttribute("aria-current");});
+    navLinks.forEach(a=>on(a,"click",(()=>{setActiveNav(a.dataset.navSection||"contenu");closeMenu();}) as EventListener));
+    const observedSections=navLinks.map(link=>root.querySelector<HTMLElement>(`#${link.dataset.navSection}`)).filter((section):section is HTMLElement=>Boolean(section));
+    const sectionObserver=new IntersectionObserver(entries=>{const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(visible)setActiveNav(visible.target.id);},{rootMargin:"-18% 0px -62%",threshold:[0,.1,.35,.6]});
+    observedSections.forEach(section=>sectionObserver.observe(section));
+    cleanups.push(()=>sectionObserver.disconnect());
 
     root.querySelectorAll<HTMLElement>("[data-jeko-plan]").forEach(link=>on(link,"click",((event:Event)=>{event.preventDefault();link.dataset.jekoPlan==="ultra"?openJekoMax():openJekoPro();}) as EventListener));
     if (isIOSNative()) root.querySelector("#tarifs")?.remove();
