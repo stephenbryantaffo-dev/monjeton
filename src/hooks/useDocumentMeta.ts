@@ -46,7 +46,7 @@ export function useDocumentMeta({ title, description, path, ogImage, noIndex }: 
       upsertMeta('meta[name="robots"]', { name: "robots", content: "noindex, nofollow" });
       // Retire toute canonical publique posée par une page précédente.
       document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.remove();
-et      document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.remove();
+      document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.remove();
     } else {
       upsertLink("canonical", url);
       upsertMeta('meta[property="og:url"]', { property: "og:url", content: url });
@@ -62,6 +62,6 @@ et      document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]')?
     }
 
     upsertMeta('meta[name="twitter:title"]', { name: "twitter:title", content: title });
-    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: title === description ? description : description });
+    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: description });
   }, [title, description, path, ogImage, noIndex]);
 }
