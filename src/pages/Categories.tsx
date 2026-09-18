@@ -228,8 +228,19 @@ const Categories = () => {
 
   const handleAdd = async () => {
     if (!newName.trim() || !user) return;
+    const dup = findMatchingCategory(newName, categories as any[], newType);
+    if (dup) {
+      const exact = normalizeCategoryName(dup.name) === normalizeCategoryName(newName);
+      setAddError(
+        exact
+          ? `« ${dup.name} » existe déjà.`
+          : `Trop proche de « ${dup.name} ». Utilise cette catégorie ou choisis un autre nom.`,
+      );
+      return;
+    }
+    setAddError("");
     await supabase.from("categories").insert({
-      user_id: user.id, name: newName, type: newType, color: newColor, icon: newIcon,
+      user_id: user.id, name: newName.trim(), type: newType, color: newColor, icon: newIcon,
     });
     toast({ title: "Catégorie ajoutée ✅" });
     setNewName("");
@@ -240,9 +251,78 @@ const Categories = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const count = txCounts[id] || 0;
+    if (count > 0) {
+      toast({
+        title: "Suppression impossible",
+        description: `Cette catégorie contient ${count} transaction${count > 1 ? "s" : ""}. Fusionne-la avec une autre catégorie d'abord.`,
+        variant: "destructive",
+      });
+      return;
+    }
     await supabase.from("categories").delete().eq("id", id);
     toast({ title: "Catégorie supprimée" });
     fetchCategories();
+    fetchTxCounts();
+  };
+
+  const openMerge = (group: any[]) => {
+    // Cible par défaut : la catégorie qui a le plus de transactions
+    const target = [...group].sort((a, b) => (txCounts[b.id] || 0) - (txCounts[a.id] || 0))[0];
+    setMergeTargetId(target?.id || null);
+    setMergeGroup(group);
+  };
+
+  const handleMerge = async () => {
+    if (!user || !mergeGroup || !mergeTargetId) return;
+    const sources = mergeGroup.filter((c) => c.id !== mergeTargetId);
+    if (sources.length === 0) return;
+    setMerging(true);
+    try {
+      for (const src of sources) {
+        // 1. Réaffecter les transactions
+        const { error: txErr } = await supabase
+          .from("transactions")
+          .update({ category_id: mergeTargetId })
+          .eq("user_id", user.id)
+          .eq("category_id", src.id);
+        if (txErr) throw txErr;
+
+        // 2. Les budgets de la catégorie vidée sont supprimés (le budget de la
+        //    catégorie conservée fait foi)
+        await supabase
+          .from("category_budgets")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("category_id", src.id);
+
+        // 3. Vérifier que la catégorie est bien vide avant suppression
+        const { count } = await supabase
+          .from("transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("category_id", src.id);
+        if ((count || 0) > 0) {
+          throw new Error(`« ${src.name} » contient encore des transactions.`);
+        }
+
+        const { error: delErr } = await supabase
+          .from("categories")
+          .delete()
+          .eq("id", src.id)
+          .eq("user_id", user.id);
+        if (delErr) throw delErr;
+      }
+      toast({ title: "Catégories fusionnées ✅" });
+      setMergeGroup(null);
+      await fetchCategories();
+      await fetchMonthlySpend();
+      await fetchTxCounts();
+    } catch (e: any) {
+      toast({ title: "Fusion impossible", description: e?.message || "Erreur", variant: "destructive" });
+    } finally {
+      setMerging(false);
+    }
   };
 
   const openEdit = (cat: any) => {
