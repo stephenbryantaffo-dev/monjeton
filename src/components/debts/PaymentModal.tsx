@@ -158,7 +158,7 @@ export const PaymentModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="glass-card border-border mx-4 rounded-2xl">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border mx-4 rounded-2xl">
         <DialogTitle className="text-base font-black">
           Enregistrer un paiement
         </DialogTitle>

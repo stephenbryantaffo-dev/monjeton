@@ -1246,7 +1246,7 @@ const Assistant = () => {
                   )}
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[320px] sm:w-[380px] flex flex-col">
+              <SheetContent aria-describedby={undefined} side="left" className="w-[320px] sm:w-[380px] flex flex-col">
                 <SheetHeader>
                   <SheetTitle className="flex items-center justify-between">
                     <span>Mes conversations</span>

@@ -1462,7 +1462,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Payment Dialog ─── */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader><DialogTitle>Cotisation — {payMember?.name}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
@@ -1499,7 +1499,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Edit Payment Dialog ─── */}
       <Dialog open={editPayOpen} onOpenChange={(o) => { if (!o) { setEditPayOpen(false); setEditingPayment(null); } }}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader><DialogTitle>Modifier la cotisation</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
@@ -1532,7 +1532,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Expense Dialog ─── */}
       <Dialog open={expOpen} onOpenChange={(o) => { setExpOpen(o); if (!o) { setExpItemId(null); setExpCat("autre"); } }}>
-        <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nouvelle dépense</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
@@ -1602,7 +1602,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Add member Dialog ─── */}
       <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader><DialogTitle>Nouveau membre</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <Input value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} placeholder="Nom" className="glass" />
@@ -1616,7 +1616,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Cloture confirm ─── */}
       <Dialog open={clotureOpen} onOpenChange={setClotureOpen}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader><DialogTitle>Clôturer ce projet ?</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">
             Le projet sera marqué comme terminé. Tu pourras toujours consulter le bilan et l'exporter en PDF.
@@ -1632,7 +1632,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Bilan dialog ─── */}
       <Dialog open={bilanOpen} onOpenChange={setBilanOpen}>
-        <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>📋 Bilan final — {tontine.name}</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
             <div className="grid grid-cols-3 gap-2">
@@ -1682,7 +1682,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
 
       {/* ─── Postes de dépense Dialog ─── */}
       <Dialog open={itemsViewOpen} onOpenChange={(o) => { setItemsViewOpen(o); if (!o) { setEditingItemId(null); } }}>
-        <DialogContent className="glass-card border-border max-w-2xl max-h-[90vh] overflow-y-auto pb-28">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border max-w-2xl max-h-[90vh] overflow-y-auto pb-28">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ListChecks className="w-5 h-5 text-primary" /> Postes de dépense
@@ -1894,7 +1894,7 @@ const ProjectCaisseView = ({ tontine, onBack, onUpdated, currentRole: currentRol
       </Dialog>
 
       <Dialog open={!!payItemTarget} onOpenChange={(o) => { if (!o) { setPayItemTarget(null); setPayItemAmount(""); } }}>
-        <DialogContent className="glass-card border-border max-w-md">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border max-w-md">
           <DialogHeader>
             <DialogTitle>Marquer comme payé</DialogTitle>
           </DialogHeader>

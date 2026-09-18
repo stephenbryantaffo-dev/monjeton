@@ -1345,7 +1345,7 @@ const TontinePage = () => {
 
       {/* ─── ADD MEMBER MODAL ─── */}
       <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle>Ajouter un membre</DialogTitle>
           </DialogHeader>
@@ -1388,7 +1388,7 @@ const TontinePage = () => {
 
       {/* ─── MEMBER ACTIONS SHEET ─── */}
       <Sheet open={memberActionOpen} onOpenChange={setMemberActionOpen}>
-        <SheetContent side="bottom" className="glass-card border-border !inset-auto !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100vw-2rem)] !max-w-md !rounded-3xl !border max-h-[85vh] overflow-y-auto data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+        <SheetContent aria-describedby={undefined} side="bottom" className="glass-card border-border !inset-auto !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100vw-2rem)] !max-w-md !rounded-3xl !border max-h-[85vh] overflow-y-auto data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
           {actionMember && (
             <>
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
@@ -1567,7 +1567,7 @@ const TontinePage = () => {
 
       {/* ─── CONFIRMATION RETRAIT ─── */}
       <Dialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle>Retirer {actionMember?.name} ?</DialogTitle>
           </DialogHeader>
@@ -1612,7 +1612,7 @@ const TontinePage = () => {
 
       {/* ─── PAYMENT MODAL ─── */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle className="truncate">Paiement — {payMember?.name}</DialogTitle>
           </DialogHeader>
@@ -1643,7 +1643,7 @@ const TontinePage = () => {
 
       {/* ─── CONFIRM CLOTURE DIALOG ─── */}
       <Dialog open={showCloture} onOpenChange={setShowCloture}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle>Clôturer cette tontine ?</DialogTitle>
           </DialogHeader>

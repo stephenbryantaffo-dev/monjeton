@@ -83,7 +83,7 @@ const CreateCaisseModal = ({ open, onOpenChange, onCreated }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
-      <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{step === "info" ? "Nouvelle caisse commune" : "Ajouter les membres"}</DialogTitle>
         </DialogHeader>

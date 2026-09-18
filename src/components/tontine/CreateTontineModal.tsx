@@ -224,7 +224,7 @@ const CreateTontineModal = ({ open, onOpenChange, onCreated }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
-      <DialogContent className="glass-card border-border max-h-[90vh] overflow-y-auto">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{step === 1 ? (isProject ? "Ton événement" : "Ta tontine") : "Qui participe ?"}</DialogTitle>
         </DialogHeader>

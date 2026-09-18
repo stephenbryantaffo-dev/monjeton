@@ -97,7 +97,7 @@ const AddRecetteModal = ({ open, onOpenChange, caisseId, onSaved }: AddRecetteMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Enregistrer une recette</DialogTitle></DialogHeader>
         <div className="space-y-4 pt-2">
           <div>
