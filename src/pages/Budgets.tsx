@@ -1212,7 +1212,7 @@ const Budgets = () => {
                             style={{ backgroundColor: cb.category.color }}
                           />
                         )}
-                        <span className="font-medium text-foreground text-sm truncate">{cb.category?.name || "—"}</span>
+                        <span className="font-medium text-foreground text-sm truncate">{cb.category?.name || "Non catégorisée"}</span>
                         {trendIcon}
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">

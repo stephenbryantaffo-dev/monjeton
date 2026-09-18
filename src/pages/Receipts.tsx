@@ -1409,7 +1409,7 @@ const Receipts = () => {
                       },
                       {
                         label: "Catégorie",
-                        value: fullscreenScan.parsed_category || "—",
+                        value: fullscreenScan.parsed_category || "Non catégorisée",
                       },
                       {
                         label: "Type",
