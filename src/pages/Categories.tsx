@@ -521,6 +521,46 @@ const Categories = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Merge Dialog */}
+      <Dialog open={!!mergeGroup} onOpenChange={(o) => { if (!o) setMergeGroup(null); }}>
+        <DialogContent aria-describedby={undefined} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Fusionner ces catégories</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Choisis la catégorie à conserver. Les transactions des autres y seront déplacées, puis
+              les catégories vidées seront supprimées. Cette action est définitive.
+            </p>
+            {(mergeGroup || []).map((c: any) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setMergeTargetId(c.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${
+                  mergeTargetId === c.id ? "border-primary bg-secondary/60" : "border-border"
+                }`}
+              >
+                <CatIcon iconName={c.icon} color={c.color || "hsl(200,70%,50%)"} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground truncate"><UserText>{c.name}</UserText></p>
+                  <p className="text-xs text-muted-foreground">
+                    {txCounts[c.id] || 0} transaction{(txCounts[c.id] || 0) > 1 ? "s" : ""}
+                  </p>
+                </div>
+                {mergeTargetId === c.id && <span className="text-xs text-primary">À conserver</span>}
+              </button>
+            ))}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setMergeGroup(null)}>Annuler</Button>
+            <Button onClick={handleMerge} disabled={merging || !mergeTargetId} className="gradient-primary text-primary-foreground">
+              {merging ? "Fusion..." : "Confirmer la fusion"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
