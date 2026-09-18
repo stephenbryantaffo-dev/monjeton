@@ -326,7 +326,15 @@ CATÉGORIES DE L'UTILISATEUR (liste fermée) : ${userCategoryList}
       currency: tx.currency || userCurrency,
       date: sanitizeDate(tx.date || new Date().toISOString().split('T')[0]),
       type: tx.type === 'income' ? 'income' : 'expense',
-      category_suggestion: tx.category_suggestion || 'Autre',
+      category_suggestion: (() => {
+        const rawCat = String(tx.category_suggestion || 'Autre').slice(0, 100);
+        const match = findMatchingCategory(
+          rawCat,
+          userCategories,
+          tx.type === 'income' ? 'income' : 'expense',
+        );
+        return match ? match.name : rawCat;
+      })(),
       note: String(tx.note || '').slice(0, 200),
       confidence: Math.max(0, Math.min(1, Number(tx.confidence) || 0.5)),
       raw_text: String(tx.raw_text || '').slice(0, 500),
