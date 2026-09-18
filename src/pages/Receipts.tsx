@@ -882,7 +882,7 @@ const Receipts = () => {
 
         {/* Edit Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="glass-card border-border">
+          <DialogContent aria-describedby={undefined} className="glass-card border-border">
             <DialogTitle>Modifier le reçu</DialogTitle>
             <p className="text-xs text-muted-foreground -mt-2 mb-4">
               Toute modification sera tracée dans l'historique
@@ -1436,7 +1436,7 @@ const Receipts = () => {
 
       {/* ━━━ Duplicate management dialog ━━━ */}
       <Dialog open={dupViewOpen} onOpenChange={(o) => !o && setDupViewOpen(false)}>
-        <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent aria-describedby={undefined} className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0">
           <div className="sticky top-0 z-10 bg-background border-b border-border p-4">
             <DialogTitle className="text-lg font-semibold text-foreground">
               {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} à vérifier
@@ -1523,7 +1523,7 @@ const Receipts = () => {
 
       {/* Confirm "delete all duplicates" */}
       <Dialog open={dupConfirmAll} onOpenChange={(o) => !o && setDupConfirmAll(false)}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogTitle>Supprimer {duplicates.length} doublon{duplicates.length > 1 ? "s" : ""} ?</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Le reçu le plus ancien de chaque paire sera conservé. Action irréversible.

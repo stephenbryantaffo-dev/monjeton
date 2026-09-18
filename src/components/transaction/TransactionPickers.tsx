@@ -34,7 +34,7 @@ export function CategorySheet({
 }: CategorySheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl border-border max-h-[80vh] overflow-y-auto">
+      <SheetContent aria-describedby={undefined} side="bottom" className="rounded-t-3xl border-border max-h-[80vh] overflow-y-auto">
         <SheetHeader className="text-left mb-4">
           <SheetTitle className="text-lg font-extrabold tracking-tight">
             Catégorie
@@ -98,7 +98,7 @@ export function WalletSheet({
 }: WalletSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl border-border max-h-[80vh] overflow-y-auto">
+      <SheetContent aria-describedby={undefined} side="bottom" className="rounded-t-3xl border-border max-h-[80vh] overflow-y-auto">
         <SheetHeader className="text-left mb-4">
           <SheetTitle className="text-lg font-extrabold tracking-tight">
             Moyen de paiement
@@ -190,7 +190,7 @@ export function DateSheet({ open, onOpenChange, value, onSelect }: DateSheetProp
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl border-border">
+      <SheetContent aria-describedby={undefined} side="bottom" className="rounded-t-3xl border-border">
         <SheetHeader className="text-left mb-4">
           <SheetTitle className="text-lg font-extrabold tracking-tight">
             Date

@@ -1145,7 +1145,7 @@ const Budgets = () => {
                   <Plus className="w-4 h-4 mr-1" /> Ajouter
                 </Button>
               </DialogTrigger>
-              <DialogContent className="glass-card border-border">
+              <DialogContent aria-describedby={undefined} className="glass-card border-border">
                 <DialogHeader>
                   <DialogTitle>Budget par catégorie</DialogTitle>
                 </DialogHeader>

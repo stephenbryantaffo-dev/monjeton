@@ -557,7 +557,7 @@ const Debts = () => {
 
       {/* NEW DEBT DIALOG */}
       <Dialog open={showNew} onOpenChange={(v) => !v && setShowNew(false)}>
-        <DialogContent className="glass-card border-border mx-4 rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border mx-4 rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogTitle className="text-base font-black">
             Nouvelle dette
           </DialogTitle>
