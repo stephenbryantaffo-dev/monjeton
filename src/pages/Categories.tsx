@@ -418,6 +418,33 @@ const Categories = () => {
         </TabsList>
       </Tabs>
 
+      {!loading && similarGroups.length > 0 && (
+        <div className="glass-card rounded-2xl p-4 mb-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">Catégories qui se ressemblent</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Rien n'est fusionné automatiquement : vérifie et choisis toi-même.
+          </p>
+          {similarGroups.map((group, gi) => (
+            <div key={gi} className="flex items-center gap-2 rounded-xl bg-secondary/40 p-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-foreground truncate">
+                  {group.map((c: any) => c.name).join("  ·  ")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {group.map((c: any) => `${c.name} : ${txCounts[c.id] || 0} transaction${(txCounts[c.id] || 0) > 1 ? "s" : ""}`).join(" — ")}
+                </p>
+              </div>
+              <Button variant="glass" size="sm" onClick={() => openMerge(group as any[])}>
+                <Merge className="w-3.5 h-3.5" /> Fusionner
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-3 mb-4">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => <GridItemSkeleton key={i} />)
