@@ -138,6 +138,11 @@ const Categories = () => {
   const [editIcon, setEditIcon] = useState("Wallet");
   const [editError, setEditError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [txCounts, setTxCounts] = useState<Record<string, number>>({});
+  const [mergeGroup, setMergeGroup] = useState<any[] | null>(null);
+  const [mergeTargetId, setMergeTargetId] = useState<string | null>(null);
+  const [merging, setMerging] = useState(false);
 
   const createDefaults = async () => {
     if (!user) return;
