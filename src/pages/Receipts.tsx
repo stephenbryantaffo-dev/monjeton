@@ -744,7 +744,7 @@ const Receipts = () => {
               },
               {
                 label: "Catégorie",
-                value: isDiscreetMode ? MASK : selectedScan.parsed_category,
+                value: isDiscreetMode ? MASK : (selectedScan.parsed_category || "Non catégorisée"),
               },
               { label: "Date", value: selectedScan.parsed_date },
               {

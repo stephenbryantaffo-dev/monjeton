@@ -511,6 +511,14 @@ const Transactions = () => {
           </Button>
         )}
       </div>
+      <CategorySheet
+        open={!!catEditTx}
+        onOpenChange={(v) => { if (!v) setCatEditTx(null); }}
+        categories={categories}
+        value={catEditTx?.category_id || ""}
+        onSelect={handleSetCategory}
+        type={catEditTx?.type === "income" ? "income" : "expense"}
+      />
     </DashboardLayout>
   );
 };
