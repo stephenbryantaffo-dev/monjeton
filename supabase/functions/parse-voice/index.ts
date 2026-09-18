@@ -229,7 +229,10 @@ RÈGLES D'EXTRACTION AVANCÉES :
           parsed = { transactions: [{
             amount: Math.max(0, Math.min(Number(result.amount) || 0, 999_999_999_999)),
             type: result.type === "income" ? "income" : "expense",
-            category: String(result.category || "").slice(0, 100),
+            category: snapCategory(
+              String(result.category || "").slice(0, 100),
+              result.type === "income" ? "income" : "expense",
+            ),
             wallet: result.wallet ? String(result.wallet).slice(0, 100) : null,
             note: String(result.note || "").replace(/[<>]/g, "").slice(0, 500),
             currency: ALLOWED_CURRENCIES.includes(String(result.currency || "").toUpperCase())
