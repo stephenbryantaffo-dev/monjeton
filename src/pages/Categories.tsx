@@ -195,10 +195,28 @@ const Categories = () => {
     setMonthlySpend(map);
   };
 
+  const fetchTxCounts = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("transactions")
+      .select("category_id")
+      .eq("user_id", user.id)
+      .not("category_id", "is", null);
+    const map: Record<string, number> = {};
+    for (const t of data || []) {
+      if (!t.category_id) continue;
+      map[t.category_id] = (map[t.category_id] || 0) + 1;
+    }
+    setTxCounts(map);
+  };
+
   useEffect(() => {
     fetchCategories();
     fetchMonthlySpend();
+    fetchTxCounts();
   }, [user]);
+
+  const similarGroups = useMemo(() => findSimilarGroups(categories as any[]), [categories]);
 
   const expenseCats = useMemo(() => categories.filter(c => c.type === "expense"), [categories]);
   const incomeCats = useMemo(() => categories.filter(c => c.type === "income"), [categories]);
