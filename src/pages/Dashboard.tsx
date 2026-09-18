@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
 
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +47,10 @@ const Dashboard = () => {
   const [allTimeEmpty, setAllTimeEmpty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Vrai dès qu'un premier chargement s'est terminé : évite de vider l'écran
+  // à chaque changement de période.
+  const hasLoadedOnceRef = useRef(false);
+
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [newTxCount, setNewTxCount] = useState(0);
@@ -334,8 +338,16 @@ const Dashboard = () => {
     if (!user) return;
     if (activePeriod === "Custom" && !customRange?.from) return;
 
-    setLoading(true);
+    // On n'affiche les squelettes qu'au tout premier chargement. Lors d'un
+    // changement de période, on garde l'écran précédent affiché : sinon, une
+    // requête lente ou bloquée vide complètement le tableau de bord.
+    if (!hasLoadedOnceRef.current) setLoading(true);
     setError(null);
+
+    // Garde-fou : sans délai maximal, une requête qui n'aboutit jamais laisse
+    // l'écran bloqué en chargement (bug signalé sur la période "Mois").
+    const timeout = new AbortController();
+    const timer = setTimeout(() => timeout.abort(), 15000);
 
     try {
     const { data, error: fetchError } = await supabase
@@ -346,7 +358,8 @@ const Dashboard = () => {
       .lte("date", dateRange.end)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(500);
+      .limit(500)
+      .abortSignal(timeout.signal);
 
     if (fetchError) throw fetchError;
     const txs = data || [];
@@ -367,12 +380,26 @@ const Dashboard = () => {
       const count = txs.filter(t => new Date(t.created_at) > new Date(lastVisit)).length;
       setNewTxCount(count);
     }
-    } catch {
-      setError("Impossible de charger. Vérifie ta connexion.");
+    } catch (e) {
+      // On loggue l'erreur réelle : sans ça, ce type de bug est indébogable.
+      console.error("[Dashboard] fetchData a échoué", {
+        period: activePeriod,
+        range: { start: dateRange.start, end: dateRange.end },
+        aborted: timeout.signal.aborted,
+        error: e,
+      });
+      setError(
+        timeout.signal.aborted
+          ? "Le chargement a pris trop de temps. Réessaie."
+          : "Impossible de charger. Vérifie ta connexion."
+      );
     } finally {
+      clearTimeout(timer);
+      hasLoadedOnceRef.current = true;
       setLoading(false);
     }
   }, [user, activePeriod, customRange, dateRange.start, dateRange.end]);
+
 
   useEffect(() => {
     fetchData();
