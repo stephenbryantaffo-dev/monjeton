@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
 
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +47,10 @@ const Dashboard = () => {
   const [allTimeEmpty, setAllTimeEmpty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Vrai dès qu'un premier chargement s'est terminé : évite de vider l'écran
+  // à chaque changement de période.
+  const hasLoadedOnceRef = useRef(false);
+
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [newTxCount, setNewTxCount] = useState(0);
