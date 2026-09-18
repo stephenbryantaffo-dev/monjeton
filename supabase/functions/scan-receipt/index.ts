@@ -3,6 +3,7 @@ import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { getCurrencyCtx } from "../_shared/currency-context.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { findMatchingCategory } from "../_shared/categoryMatch.ts";
 
 const ScanReceiptSchema = z.object({
   image: z.string().min(100, "Image trop petite").max(15_000_000, "Image trop volumineuse"),
