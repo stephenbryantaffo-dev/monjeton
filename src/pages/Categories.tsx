@@ -342,6 +342,12 @@ const Categories = () => {
       return;
     }
     if (!editId) return;
+    const others = (categories as any[]).filter((c) => c.id !== editId);
+    const dup = findMatchingCategory(result.data.name, others, result.data.type);
+    if (dup) {
+      setEditError(`Trop proche de « ${dup.name} ». Utilise la fusion pour regrouper ces deux catégories.`);
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("categories").update({
       name: result.data.name, type: result.data.type, color: result.data.color, icon: result.data.icon || null,
