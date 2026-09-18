@@ -167,7 +167,9 @@ const Transactions = () => {
     }
 
     // Category filter
-    if (filterCategory !== "all") {
+    if (filterCategory === "none") {
+      result = result.filter(t => !t.category_id);
+    } else if (filterCategory !== "all") {
       result = result.filter(t => t.category_id === filterCategory);
     }
 
@@ -301,7 +303,20 @@ const Transactions = () => {
             <UserText>{t.note || t.categories?.name || "Transaction"}</UserText>
           </p>
           <p className="text-xs text-muted-foreground truncate">
-            <UserText>{t.categories?.name}</UserText>
+            {t.categories?.name ? (
+              <UserText>{t.categories.name}</UserText>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCatEditTx(t)}
+                className="inline-flex items-center gap-1 italic text-muted-foreground underline underline-offset-2"
+              >
+                <span className="[&_svg]:w-3.5 [&_svg]:h-3.5 inline-flex">
+                  {getCatIcon("", t.type)}
+                </span>
+                Non catégorisée
+              </button>
+            )}
             {!groupedByDay && ` · ${new Date(t.date).toLocaleDateString("fr-FR")}`}
           </p>
         </div>
@@ -386,6 +401,7 @@ const Transactions = () => {
               <SelectTrigger className="bg-secondary border-border text-sm"><SelectValue placeholder="Catégorie" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
+                <SelectItem value="none">Non catégorisées</SelectItem>
                 {categories.map(c => <SelectItem key={c.id} value={c.id}><UserText>{c.name}</UserText></SelectItem>)}
               </SelectContent>
             </Select>
