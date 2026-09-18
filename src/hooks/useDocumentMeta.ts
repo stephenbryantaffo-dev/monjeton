@@ -7,6 +7,11 @@ interface Meta {
   description: string;
   path: string; // route path, e.g. "/login"
   ogImage?: string;
+  /**
+   * Pages privées (connexion requise) : aucune balise canonical publique,
+   * aucune balise og:url, et robots "noindex, nofollow".
+   */
+  noIndex?: boolean;
 }
 
 function upsertMeta(selector: string, attrs: Record<string, string>) {
@@ -32,23 +37,31 @@ function upsertLink(rel: string, href: string) {
  * Sets per-route <title>, meta description, canonical and og:* tags.
  * Lightweight alternative to react-helmet-async (no provider needed).
  */
-export function useDocumentMeta({ title, description, path, ogImage }: Meta) {
+export function useDocumentMeta({ title, description, path, ogImage, noIndex }: Meta) {
   useEffect(() => {
     const url = `${SITE_URL}${path}`;
     document.title = title;
 
+    if (noIndex) {
+      upsertMeta('meta[name="robots"]', { name: "robots", content: "noindex, nofollow" });
+      // Retire toute canonical publique posée par une page précédente.
+      document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.remove();
+et      document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.remove();
+    } else {
+      upsertLink("canonical", url);
+      upsertMeta('meta[property="og:url"]', { property: "og:url", content: url });
+    }
+
     upsertMeta('meta[name="description"]', { name: "description", content: description });
-    upsertLink("canonical", url);
 
     upsertMeta('meta[property="og:title"]', { property: "og:title", content: title });
     upsertMeta('meta[property="og:description"]', { property: "og:description", content: description });
-    upsertMeta('meta[property="og:url"]', { property: "og:url", content: url });
     upsertMeta('meta[property="og:type"]', { property: "og:type", content: "website" });
     if (ogImage) {
       upsertMeta('meta[property="og:image"]', { property: "og:image", content: ogImage });
     }
 
     upsertMeta('meta[name="twitter:title"]', { name: "twitter:title", content: title });
-    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: description });
-  }, [title, description, path, ogImage]);
+    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: title === description ? description : description });
+  }, [title, description, path, ogImage, noIndex]);
 }
