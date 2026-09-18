@@ -19,6 +19,7 @@ import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import { syncAllAutoBudgets } from "@/lib/autoBudget";
+import { findMatchingCategory } from "@/lib/categoryMatch";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -478,6 +479,17 @@ const Budgets = () => {
   const upsertCategoryBudgetFromSuggestion = async (s: AISuggestion) => {
     if (!user) return false;
     let categoryId = s.category_id;
+    if (!categoryId) {
+      // Éviter les doublons : on réutilise une catégorie proche si elle existe
+      const { data: existingCats } = await supabase
+        .from("categories")
+        .select("id, name, type")
+        .eq("user_id", user.id);
+      const near = findMatchingCategory(s.categorie, (existingCats || []) as any[], "expense");
+      if (near?.id) {
+        categoryId = near.id;
+      }
+    }
     if (!categoryId) {
       const { data: newCat, error: createErr } = await supabase
         .from("categories")

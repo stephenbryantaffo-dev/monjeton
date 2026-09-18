@@ -3,6 +3,7 @@ import { z } from "npm:zod@3.25.76";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { getCurrencyCtx } from "../_shared/currency-context.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { findMatchingCategory } from "../_shared/categoryMatch.ts";
 
 const ScanReceiptSchema = z.object({
   image: z.string().min(100, "Image trop petite").max(15_000_000, "Image trop volumineuse"),
@@ -58,6 +59,21 @@ serve(async (req) => {
       } catch {}
     }
     const ctx = getCurrencyCtx(userCurrency);
+
+    // Liste fermée des catégories de l'utilisateur : l'IA doit choisir dedans
+    // en priorité, et on rapproche ensuite le résultat pour éviter les
+    // doublons ("Santé et bien-être" alors que "Santé" existe déjà).
+    let userCategories: { name: string; type: string }[] = [];
+    if (userIdFromToken) {
+      try {
+        const { data: cats } = await supabaseAuth
+          .from('categories')
+          .select('name, type')
+          .eq('user_id', userIdFromToken);
+        userCategories = (cats || []).map((c: any) => ({ name: String(c.name), type: String(c.type) }));
+      } catch {}
+    }
+    const userCategoryList = userCategories.map((c) => c.name).join(', ');
 
     const rawBody = await req.json().catch(() => null);
     const parsed = ScanReceiptSchema.safeParse(rawBody);
@@ -187,7 +203,22 @@ DATE FORMATS ACCEPTED:
 
 Return ONLY the JSON, no other text.`;
 
-    const prompt = safeScanType === "screenshot" ? promptScreenshot : promptReceipt;
+    const categoryConstraint = userCategoryList
+      ? `\n\nCATÉGORIES DE L'UTILISATEUR (liste fermée) : ${userCategoryList}
+- "category" DOIT être exactement l'un de ces noms, copié à l'identique.
+- N'invente jamais une variante ("Santé et bien-être" si "Santé" existe).
+- Si rien ne convient vraiment, utilise "Autre".`
+      : "";
+
+    const prompt = (safeScanType === "screenshot" ? promptScreenshot : promptReceipt) + categoryConstraint;
+
+    // Rapprochement final : si l'IA renvoie malgré tout une variante proche,
+    // on la ramène sur la catégorie existante de l'utilisateur.
+    const snapCategory = (raw: string | null, type: "expense" | "income"): string | null => {
+      if (!raw) return raw;
+      const match = findMatchingCategory(raw, userCategories, type);
+      return match ? match.name : raw;
+    };
 
     // Garde-fou date : rejet si > 6 mois dans le passé ou dans le futur
     const sanitizeDate = (dateStr: string): string => {
@@ -274,7 +305,10 @@ Return ONLY the JSON, no other text.`;
           merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
           type: raw.type === "income" ? "income" : "expense",
           wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
-          category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+          category: snapCategory(
+            raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+            raw.type === "income" ? "income" : "expense",
+          ),
           items,
         };
       }
