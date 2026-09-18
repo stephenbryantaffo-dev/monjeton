@@ -59,6 +59,21 @@ serve(async (req) => {
     }
     const ctx = getCurrencyCtx(userCurrency);
 
+    // Liste fermée des catégories de l'utilisateur : l'IA doit choisir dedans
+    // en priorité, et on rapproche ensuite le résultat pour éviter les
+    // doublons ("Santé et bien-être" alors que "Santé" existe déjà).
+    let userCategories: { name: string; type: string }[] = [];
+    if (userIdFromToken) {
+      try {
+        const { data: cats } = await supabaseAuth
+          .from('categories')
+          .select('name, type')
+          .eq('user_id', userIdFromToken);
+        userCategories = (cats || []).map((c: any) => ({ name: String(c.name), type: String(c.type) }));
+      } catch {}
+    }
+    const userCategoryList = userCategories.map((c) => c.name).join(', ');
+
     const rawBody = await req.json().catch(() => null);
     const parsed = ScanReceiptSchema.safeParse(rawBody);
     if (!parsed.success) {
