@@ -18,6 +18,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 import { formatMoneySmart } from "@/lib/formatMoney";
+import { findMatchingCategory, findSimilarGroups, normalizeCategoryName } from "@/lib/categoryMatch";
+import { Merge, AlertTriangle } from "lucide-react";
 
 const COLOR_PALETTE = [
   "hsl(var(--primary))",
