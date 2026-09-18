@@ -479,6 +479,17 @@ const Budgets = () => {
     if (!user) return false;
     let categoryId = s.category_id;
     if (!categoryId) {
+      // Éviter les doublons : on réutilise une catégorie proche si elle existe
+      const { data: existingCats } = await supabase
+        .from("categories")
+        .select("id, name, type")
+        .eq("user_id", user.id);
+      const near = findMatchingCategory(s.categorie, (existingCats || []) as any[], "expense");
+      if (near?.id) {
+        categoryId = near.id;
+      }
+    }
+    if (!categoryId) {
       const { data: newCat, error: createErr } = await supabase
         .from("categories")
         .insert({
