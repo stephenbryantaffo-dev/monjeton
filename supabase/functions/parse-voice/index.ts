@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
+import { findMatchingCategory } from "../_shared/categoryMatch.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
@@ -192,6 +193,14 @@ RÈGLES D'EXTRACTION AVANCÉES :
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
+
+    // Rapprochement avec les catégories existantes de l'utilisateur :
+    // on ne renvoie jamais une variante proche ("Santé et bien-être" quand
+    // "Santé" existe déjà), ce qui évite la création de doublons.
+    const snapCategory = (raw: string, type: "expense" | "income"): string => {
+      const match = findMatchingCategory(raw, categories as any[], type);
+      return match ? String(match.name) : raw;
+    };
 
     let parsed: any = { transactions: [] };
     try {
