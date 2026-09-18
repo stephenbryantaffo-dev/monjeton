@@ -897,7 +897,12 @@ const Dashboard = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{t.note || (t.categories as any)?.name || "Transaction"}</p>
-                          <p className="text-xs text-muted-foreground">{(t.categories as any)?.name} · {new Date(t.date).toLocaleDateString("fr-FR")}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(t.categories as any)?.name
+                              ? (t.categories as any).name
+                              : <span className="italic">Non catégorisée</span>}
+                            {" · "}{new Date(t.date).toLocaleDateString("fr-FR")}
+                          </p>
                         </div>
                         <span className={`text-sm font-semibold whitespace-nowrap tabular-nums flex-shrink-0 ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
                           {t.type === "income" ? "+" : "-"}{formatAmount(Number(t.amount))}
