@@ -152,6 +152,7 @@ const SubscriptionManage = () => {
     description:
       "Gère ton abonnement Mon Jeton : plan actuel, usage du mois, renouvellement et historique des paiements Jèko.",
     path: "/settings/subscription",
+    noIndex: true,
   });
 
   const { user } = useAuth();

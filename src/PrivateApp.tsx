@@ -1,8 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivacyProvider, usePrivacy } from "@/contexts/PrivacyContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import OnboardingGuard from "@/components/OnboardingGuard";
@@ -48,6 +49,21 @@ const PageLoader = () => (
   </div>
 );
 
+/**
+ * Enveloppe des pages privées : met à jour le titre de l'onglet
+ * ("<Page> — Mon Jeton") et interdit l'indexation (robots noindex,
+ * aucune canonical publique).
+ */
+const PrivatePage = ({ title, path, children }: { title: string; path: string; children: ReactNode }) => {
+  useDocumentMeta({
+    title,
+    description: "Espace privé de l'application Mon Jeton. Connecte-toi pour accéder à cette page.",
+    path,
+    noIndex: true,
+  });
+  return <>{children}</>;
+};
+
 const InnerRoutes = () => {
   const { isLocked } = usePrivacy();
   const { user } = useAuth();
@@ -67,26 +83,26 @@ const InnerRoutes = () => {
         <Route path="/install" element={<Install />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment-pending" element={<PaymentPending />} />
-        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><OnboardingGuard><Dashboard /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/transactions" element={<ProtectedRoute><OnboardingGuard><Transactions /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/transactions/new" element={<ProtectedRoute><OnboardingGuard><NewTransaction /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/categories" element={<ProtectedRoute><OnboardingGuard><Categories /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/wallets" element={<ProtectedRoute><OnboardingGuard><Wallets /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><OnboardingGuard><Reports /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/savings" element={<ProtectedRoute><OnboardingGuard><Savings /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/debts" element={<ProtectedRoute><OnboardingGuard><Debts /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/assistant" element={<ProtectedRoute><OnboardingGuard><Assistant /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><OnboardingGuard><Settings /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/parametres" element={<ProtectedRoute><OnboardingGuard><Parametres /></OnboardingGuard></ProtectedRoute>} />
+        <Route path="/onboarding" element={<PrivatePage title="Configuration — Mon Jeton" path="/onboarding"><ProtectedRoute><Onboarding /></ProtectedRoute></PrivatePage>} />
+        <Route path="/dashboard" element={<PrivatePage title="Tableau de bord — Mon Jeton" path="/dashboard"><ProtectedRoute><OnboardingGuard><Dashboard /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/transactions" element={<PrivatePage title="Transactions — Mon Jeton" path="/transactions"><ProtectedRoute><OnboardingGuard><Transactions /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/transactions/new" element={<PrivatePage title="Nouvelle transaction — Mon Jeton" path="/transactions/new"><ProtectedRoute><OnboardingGuard><NewTransaction /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/categories" element={<PrivatePage title="Catégories — Mon Jeton" path="/categories"><ProtectedRoute><OnboardingGuard><Categories /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/wallets" element={<PrivatePage title="Portefeuilles — Mon Jeton" path="/wallets"><ProtectedRoute><OnboardingGuard><Wallets /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/reports" element={<PrivatePage title="Rapports — Mon Jeton" path="/reports"><ProtectedRoute><OnboardingGuard><Reports /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/savings" element={<PrivatePage title="Épargne — Mon Jeton" path="/savings"><ProtectedRoute><OnboardingGuard><Savings /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/debts" element={<PrivatePage title="Dettes — Mon Jeton" path="/debts"><ProtectedRoute><OnboardingGuard><Debts /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/assistant" element={<PrivatePage title="Assistant — Mon Jeton" path="/assistant"><ProtectedRoute><OnboardingGuard><Assistant /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/settings" element={<PrivatePage title="Mon espace — Mon Jeton" path="/settings"><ProtectedRoute><OnboardingGuard><Settings /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/parametres" element={<PrivatePage title="Paramètres — Mon Jeton" path="/parametres"><ProtectedRoute><OnboardingGuard><Parametres /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
         <Route path="/settings/subscription" element={<ProtectedRoute><OnboardingGuard><SubscriptionManage /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/budgets" element={<ProtectedRoute><OnboardingGuard><Budgets /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/tontine" element={<ProtectedRoute><OnboardingGuard><Tontine /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/scan" element={<ProtectedRoute><OnboardingGuard><Scan /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/brvm" element={<ProtectedRoute><OnboardingGuard><BRVMSimulator /></OnboardingGuard></ProtectedRoute>} />
-        <Route path="/receipts" element={<ProtectedRoute><OnboardingGuard><Receipts /></OnboardingGuard></ProtectedRoute>} />
+        <Route path="/budgets" element={<PrivatePage title="Budgets — Mon Jeton" path="/budgets"><ProtectedRoute><OnboardingGuard><Budgets /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/tontine" element={<PrivatePage title="Tontines — Mon Jeton" path="/tontine"><ProtectedRoute><OnboardingGuard><Tontine /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/scan" element={<PrivatePage title="Scan intelligent — Mon Jeton" path="/scan"><ProtectedRoute><OnboardingGuard><Scan /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/brvm" element={<PrivatePage title="BRVM — Mon Jeton" path="/brvm"><ProtectedRoute><OnboardingGuard><BRVMSimulator /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
+        <Route path="/receipts" element={<PrivatePage title="Reçus — Mon Jeton" path="/receipts"><ProtectedRoute><OnboardingGuard><Receipts /></OnboardingGuard></ProtectedRoute></PrivatePage>} />
         <Route path="/rejoindre-caisse/:token" element={<RejoindreCaisse />} />
-        <Route path="/activer" element={<ActivatePro />} />
+        <Route path="/activer" element={<PrivatePage title="Activer Pro — Mon Jeton" path="/activer"><ActivatePro /></PrivatePage>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/admin/paiements" element={<AdminRoute><AdminPayments /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
