@@ -211,10 +211,11 @@ RÈGLES D'EXTRACTION AVANCÉES :
           // Validate & sanitize each transaction
           parsed.transactions = result.transactions.map((tx: any) => {
             const dateStr = tx.date && /^\d{4}-\d{2}-\d{2}$/.test(String(tx.date)) ? String(tx.date) : null;
+            const txType = tx.type === "income" ? "income" : "expense";
             return {
               amount: Math.max(0, Math.min(Number(tx.amount) || 0, 999_999_999_999)),
-              type: tx.type === "income" ? "income" : "expense",
-              category: String(tx.category || "").slice(0, 100),
+              type: txType,
+              category: snapCategory(String(tx.category || "").slice(0, 100), txType),
               wallet: tx.wallet ? String(tx.wallet).slice(0, 100) : null,
               note: String(tx.note || "").replace(/[<>]/g, "").slice(0, 500),
               currency: ALLOWED_CURRENCIES.includes(String(tx.currency || "").toUpperCase()) 
