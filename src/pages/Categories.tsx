@@ -456,7 +456,8 @@ const Categories = () => {
 
       {showAdd ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 space-y-3">
-          <Input placeholder="Nom de la catégorie" value={newName} onChange={(e) => setNewName(e.target.value)} className="bg-secondary border-border" />
+          <Input placeholder="Nom de la catégorie" value={newName} onChange={(e) => { setNewName(e.target.value); setAddError(""); }} className="bg-secondary border-border" />
+          {addError && <p className="text-xs text-destructive">{addError}</p>}
           <div className="flex gap-2">
             <button onClick={() => setNewType("expense")} className={`flex-1 py-2 rounded-lg text-sm ${newType === "expense" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground"}`}>Dépense</button>
             <button onClick={() => setNewType("income")} className={`flex-1 py-2 rounded-lg text-sm ${newType === "income" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"}`}>Revenu</button>
