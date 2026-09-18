@@ -41,6 +41,8 @@ const DashboardLayout = ({ children, title, showBack, backTo, headerLeft, fullHe
       <header className="px-4 sm:px-5 pt-3 pb-2 flex items-center gap-3 shrink-0">
         {shouldShowBack && (
           <button
+            type="button"
+            aria-label="Retour"
             onClick={() => backTo ? navigate(backTo) : navigate(-1)}
             className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 hover:bg-secondary/80 transition-colors"
           >
