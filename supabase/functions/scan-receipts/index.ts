@@ -223,7 +223,12 @@ Si aucune transaction détectée :
   "transactions": [],
   "global_confidence": 0,
   "warnings": ["Aucune transaction lisible dans cette image"]
-}`;
+}${userCategoryList ? `
+
+CATÉGORIES DE L'UTILISATEUR (liste fermée) : ${userCategoryList}
+- "category_suggestion" DOIT être exactement l'un de ces noms, copié à l'identique.
+- N'invente jamais une variante ("Santé et bien-être" si "Santé" existe).
+- Si rien ne convient vraiment, utilise "Autre".` : ''}`;
 
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
