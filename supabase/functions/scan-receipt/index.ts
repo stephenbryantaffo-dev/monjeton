@@ -305,7 +305,10 @@ Return ONLY the JSON, no other text.`;
           merchant: String(raw.merchant || "").replace(/[<>]/g, "").slice(0, 200),
           type: raw.type === "income" ? "income" : "expense",
           wallet: raw.wallet ? String(raw.wallet).replace(/[<>]/g, "").slice(0, 100) : null,
-          category: raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+          category: snapCategory(
+            raw.category ? String(raw.category).replace(/[<>]/g, "").slice(0, 100) : null,
+            raw.type === "income" ? "income" : "expense",
+          ),
           items,
         };
       }
