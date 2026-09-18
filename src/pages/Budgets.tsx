@@ -19,6 +19,7 @@ import { calculatePredictions, type SpendingPrediction } from "@/lib/predictions
 import { checkBudgetAlerts, type BudgetAlert } from "@/lib/budgetAlerts";
 import BudgetAlertBanner from "@/components/BudgetAlertBanner";
 import { syncAllAutoBudgets } from "@/lib/autoBudget";
+import { findMatchingCategory } from "@/lib/categoryMatch";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
