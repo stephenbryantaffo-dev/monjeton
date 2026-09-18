@@ -203,7 +203,22 @@ DATE FORMATS ACCEPTED:
 
 Return ONLY the JSON, no other text.`;
 
-    const prompt = safeScanType === "screenshot" ? promptScreenshot : promptReceipt;
+    const categoryConstraint = userCategoryList
+      ? `\n\nCATÉGORIES DE L'UTILISATEUR (liste fermée) : ${userCategoryList}
+- "category" DOIT être exactement l'un de ces noms, copié à l'identique.
+- N'invente jamais une variante ("Santé et bien-être" si "Santé" existe).
+- Si rien ne convient vraiment, utilise "Autre".`
+      : "";
+
+    const prompt = (safeScanType === "screenshot" ? promptScreenshot : promptReceipt) + categoryConstraint;
+
+    // Rapprochement final : si l'IA renvoie malgré tout une variante proche,
+    // on la ramène sur la catégorie existante de l'utilisateur.
+    const snapCategory = (raw: string | null, type: "expense" | "income"): string | null => {
+      if (!raw) return raw;
+      const match = findMatchingCategory(raw, userCategories, type);
+      return match ? match.name : raw;
+    };
 
     // Garde-fou date : rejet si > 6 mois dans le passé ou dans le futur
     const sanitizeDate = (dateStr: string): string => {
