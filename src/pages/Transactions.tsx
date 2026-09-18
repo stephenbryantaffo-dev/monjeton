@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
+import { CategorySheet } from "@/components/transaction/TransactionPickers";
 
 const Transactions = () => {
   const { user } = useAuth();
@@ -58,7 +59,7 @@ const Transactions = () => {
             .order("date", { ascending: false })
             .order("created_at", { ascending: false })
             .range(from, from + PAGE_SIZE - 1),
-          supabase.from("categories").select("id, name").eq("user_id", user.id),
+          supabase.from("categories").select("id, name, icon, color").eq("user_id", user.id),
           supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
         ]);
       if (txErr) throw txErr;
@@ -99,6 +100,38 @@ const Transactions = () => {
         description: "Réessaie dans quelques secondes",
         variant: "destructive",
       });
+    }
+  };
+
+  /** Correction rapide d'une transaction sans catégorie, depuis la liste. */
+  const [catEditTx, setCatEditTx] = useState<any | null>(null);
+
+  const handleSetCategory = async (catId: string) => {
+    const tx = catEditTx;
+    if (!tx) return;
+    const cat = categories.find((c) => c.id === catId);
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ category_id: catId })
+        .eq("id", tx.id);
+      if (error) throw error;
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === tx.id
+            ? { ...t, category_id: catId, categories: cat ? { name: cat.name, icon: cat.icon, color: cat.color } : t.categories }
+            : t
+        )
+      );
+      toast({ title: "Catégorie enregistrée" });
+    } catch {
+      toast({
+        title: "Impossible d'enregistrer la catégorie",
+        description: "Réessaie dans quelques secondes",
+        variant: "destructive",
+      });
+    } finally {
+      setCatEditTx(null);
     }
   };
 
