@@ -3,6 +3,7 @@ import { z } from 'npm:zod@3.25.76';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 import { getCurrencyCtx } from '../_shared/currency-context.ts';
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { findMatchingCategory } from "../_shared/categoryMatch.ts";
 
 const ScanReceiptsSchema = z.object({
   imageBase64: z.string().min(100, 'Image trop petite').max(15_000_000, 'Image > 10 Mo refusée'),
@@ -66,6 +67,17 @@ Deno.serve(async (req) => {
       }
     } catch {}
     const ctx = getCurrencyCtx(userCurrency);
+
+    // Liste fermée des catégories de l'utilisateur (priorité absolue)
+    let userCategories: { name: string; type: string }[] = [];
+    try {
+      const { data: cats } = await supabase
+        .from('categories')
+        .select('name, type')
+        .eq('user_id', user.id);
+      userCategories = (cats || []).map((c: any) => ({ name: String(c.name), type: String(c.type) }));
+    } catch {}
+    const userCategoryList = userCategories.map((c) => c.name).join(', ');
 
     const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();
