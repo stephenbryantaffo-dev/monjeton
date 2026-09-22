@@ -28,16 +28,22 @@ function guestRateLimited(ip: string): boolean {
   return false;
 }
 
-// storeId dérivé du lien de paiement existant (mis en cache en mémoire)
+// Repli : storeId réel dérivé du lien de paiement existant (mis en cache en mémoire)
 let cachedStoreId: string | null = null;
-async function getStoreId(): Promise<string> {
-  const configuredStoreId = Deno.env.get('JEKO_STORE_ID')?.trim();
-  if (configuredStoreId) return configuredStoreId;
+async function fetchRealStoreId(): Promise<string> {
   if (cachedStoreId) return cachedStoreId;
   const link = await jekoFetch(`/payment_links/${PRO_LINK_ID}`);
   if (!link?.storeId) throw new Error('Jèko: storeId introuvable sur le lien de paiement');
   cachedStoreId = String(link.storeId);
   return cachedStoreId;
+}
+
+// Création de la demande de paiement — le storeId est passé en paramètre
+async function createPaymentRequest(storeId: string, payload: Record<string, unknown>) {
+  return jekoFetch('/payment_requests', {
+    method: 'POST',
+    body: JSON.stringify({ ...payload, storeId }),
+  });
 }
 
 Deno.serve(async (req) => {
