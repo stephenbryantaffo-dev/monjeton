@@ -21,12 +21,8 @@ const PaidButNoProBanner = () => {
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("subscriptions")
-      .select("status")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .maybeSingle()
-      .then(({ data }) => setIsPro(!!data));
+      .rpc("has_active_pro", { _user_id: user.id })
+      .then(({ data }) => setIsPro(data === true));
   }, [user]);
 
   if (isIOSNative()) return null;

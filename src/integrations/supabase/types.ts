@@ -2792,6 +2792,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      has_active_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
