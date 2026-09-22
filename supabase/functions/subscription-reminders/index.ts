@@ -94,9 +94,7 @@ Deno.serve(async (req) => {
   const stats = { processed: 0, reminded: 0, pushed: 0, expired: 0, errors: 0, cleaned: 0 };
   const staleEndpoints: string[] = [];
 
-  async function pushToUser(userId: string, title: string, body: string, planName: string) {
-    const isUltra = (planName || "").toLowerCase().includes("ultra");
-    const targetUrl = isUltra ? JEKO_MAX_URL : JEKO_PRO_URL;
+  async function pushToUser(userId: string, title: string, body: string, _planName?: string) {
     const { data: subs } = await supabase
       .from("push_subscriptions")
       .select("endpoint, p256dh, auth")
@@ -108,11 +106,11 @@ Deno.serve(async (req) => {
     const payload = JSON.stringify({
       title,
       body,
-      url: "/settings/subscription",
+      url: RENEW_PATH,
       tag: "subscription-reminder",
       icon: "/pwa-icon-192.svg",
       badge: "/pwa-icon-192.svg",
-      data: { url: "/settings/subscription", paymentUrl: targetUrl },
+      data: { url: RENEW_PATH, paymentUrl: RENEW_URL },
     });
 
     let sent = 0;
