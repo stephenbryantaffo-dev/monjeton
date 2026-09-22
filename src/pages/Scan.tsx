@@ -103,14 +103,14 @@ const Scan = () => {
     if (!user) return;
     Promise.all([
       supabase.from("receipt_scans").select("parsed_amount, status").eq("user_id", user.id).eq("status", "confirmed"),
-      supabase.from("subscriptions").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+      supabase.rpc("has_active_pro", { _user_id: user.id }),
       supabase.from("categories").select("id, name, type").eq("user_id", user.id),
       supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
     ]).then(([histRes, subRes, catRes, walRes]) => {
       const confirmed = histRes.data || [];
       setTotalConfirmed(confirmed.length);
       setTotalAmount(confirmed.reduce((s: number, r: any) => s + (r.parsed_amount || 0), 0));
-      setIsPremium(!!subRes.data || isAdmin);
+      setIsPremium(subRes.data === true || isAdmin);
       setCategories(catRes.data || []);
       setWallets(walRes.data || []);
     });
