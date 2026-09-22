@@ -8,3 +8,7 @@
 - [x] Vérifier le bandeau sombre animé, les interactions, le mobile et les routes existantes.
 
 - [x] Optimiser les médias de la landing sans perte visible.
+
+- [x] Simplifier la fenêtre de paiement et remplacer les émojis par les logos.
+- [x] Précharger et accélérer la création du paiement Jèko avec `JEKO_STORE_ID`.
+- [x] Déployer et vérifier le parcours de paiement mis à jour.

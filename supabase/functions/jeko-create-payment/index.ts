@@ -31,6 +31,8 @@ function guestRateLimited(ip: string): boolean {
 // storeId dérivé du lien de paiement existant (mis en cache en mémoire)
 let cachedStoreId: string | null = null;
 async function getStoreId(): Promise<string> {
+  const configuredStoreId = Deno.env.get('JEKO_STORE_ID')?.trim();
+  if (configuredStoreId) return configuredStoreId;
   if (cachedStoreId) return cachedStoreId;
   const link = await jekoFetch(`/payment_links/${PRO_LINK_ID}`);
   if (!link?.storeId) throw new Error('Jèko: storeId introuvable sur le lien de paiement');
@@ -49,7 +51,7 @@ Deno.serve(async (req) => {
 
   try {
     // ─── Validation de l'entrée ───
-    let body: { plan?: unknown; paymentMethod?: unknown; email?: unknown; phone?: unknown } = {};
+    let body: { plan?: unknown; paymentMethod?: unknown; email?: unknown } = {};
     try {
       body = await req.json();
     } catch {
@@ -100,14 +102,6 @@ Deno.serve(async (req) => {
         : null;
     if (!paymentMethod) {
       return json({ error: 'paymentMethod requis (wave | orange | mtn | moov | djamo)' }, 400);
-    }
-
-    // Numéro Mobile Money (facultatif, collecté dans la modale de paiement)
-    if (body.phone != null) {
-      const phone = String(body.phone).replace(/[\s.-]/g, '');
-      if (!/^\+?\d{8,15}$/.test(phone)) {
-        return json({ error: 'Numéro Mobile Money invalide' }, 400);
-      }
     }
 
     // Jèko exige des URLs de retour HTTPS absolues : on ignore les origines
