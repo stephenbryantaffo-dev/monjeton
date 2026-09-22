@@ -24,8 +24,11 @@ const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:contact@monjeton.app";
 const CRON_TOKEN_ENV = Deno.env.get("REMINDERS_CRON_TOKEN") || "";
 
-const JEKO_PRO_URL = "https://pay.jeko.africa/pl/d616710c-47fb-4afc-b0e2-e9fe3e0b29ab";
-const JEKO_MAX_URL = "https://pay.jeko.africa/pl/e7715547-b693-40dd-b06e-9bbb63a90961";
+// Le renouvellement passe désormais par l'app (/settings/subscription) qui appelle
+// jeko-create-payment avec la référence = user_id (rattachement automatique).
+const APP_URL = Deno.env.get("APP_URL") || "https://monjeton.app";
+const RENEW_PATH = "/settings/subscription";
+const RENEW_URL = `${APP_URL}${RENEW_PATH}`;
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
