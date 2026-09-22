@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,16 +13,15 @@ const PLANS: Record<PlanKey, { name: string; price: number; label: string }> = {
   ultra: { name: "Plan Ultra Pro", price: 5000, label: "5 000 F" },
 };
 
-const METHODS: { id: JekoMethod; label: string; emoji: string }[] = [
-  { id: "wave", label: "Wave", emoji: "🌊" },
-  { id: "orange", label: "Orange Money", emoji: "🟠" },
-  { id: "mtn", label: "MTN MoMo", emoji: "🟡" },
-  { id: "moov", label: "Moov Money", emoji: "🔵" },
-  { id: "djamo", label: "Djamo", emoji: "💳" },
+const METHODS: { id: JekoMethod; label: string; logo: string }[] = [
+  { id: "wave", label: "Wave", logo: "/assets/wave.png" },
+  { id: "orange", label: "Orange Money", logo: "/assets/orange-money.svg" },
+  { id: "mtn", label: "MTN MoMo", logo: "/assets/mtn-momo.png" },
+  { id: "moov", label: "Moov Money", logo: "/assets/moov.png" },
+  { id: "djamo", label: "Djamo", logo: "/assets/djamo.svg" },
 ];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const PHONE_RE = /^\+?\d{8,15}$/;
 
 /**
  * Modale unique de paiement : le plan est choisi sur la page des tarifs,
@@ -33,7 +33,6 @@ const JekoCheckoutDialog = () => {
   const [plan, setPlan] = useState<PlanKey | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<JekoMethod | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +46,10 @@ const JekoCheckoutDialog = () => {
       setError(null);
       setMethod(null);
       setLoading(false);
+      void fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jeko-create-payment`, {
+        method: "OPTIONS",
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      }).catch(() => undefined);
       const { data } = await supabase.auth.getSession();
       setIsLoggedIn(!!data.session);
     };
@@ -61,7 +64,6 @@ const JekoCheckoutDialog = () => {
     if (loading) return;
     setPlan(null);
     setEmail("");
-    setPhone("");
     setMethod(null);
     setError(null);
   }, [loading]);
@@ -69,14 +71,9 @@ const JekoCheckoutDialog = () => {
   const pay = async () => {
     if (!plan || !method) return;
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.replace(/[\s.-]/g, "");
 
     if (!isLoggedIn && !EMAIL_RE.test(cleanEmail)) {
       setError("Entre une adresse e-mail valide.");
-      return;
-    }
-    if (!PHONE_RE.test(cleanPhone)) {
-      setError("Entre un numéro Mobile Money valide (ex. 2250701234567).");
       return;
     }
 
@@ -97,7 +94,6 @@ const JekoCheckoutDialog = () => {
           body: JSON.stringify({
             plan,
             paymentMethod: method,
-            phone: cleanPhone,
             ...(token ? {} : { email: cleanEmail }),
           }),
         }
@@ -130,7 +126,8 @@ const JekoCheckoutDialog = () => {
             <DialogHeader>
               <DialogTitle>{current.name} — {current.label}/mois</DialogTitle>
               <DialogDescription>
-                Paiement sécurisé via Jèko. Activation sous 2 minutes.
+                Paiement par Mobile Money depuis la Côte d'Ivoire.
+                <span className="mt-1 block">Paiement sécurisé via Jèko. Activation immédiate après le paiement.</span>
               </DialogDescription>
             </DialogHeader>
 
@@ -157,21 +154,6 @@ const JekoCheckoutDialog = () => {
               )}
 
               <div className="space-y-1.5">
-                <label htmlFor="jeko-phone" className="text-xs font-medium text-muted-foreground">
-                  Ton numéro Mobile Money
-                </label>
-                <Input
-                  id="jeko-phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="225 07 01 23 45 67"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
                 <p className="text-xs font-medium text-muted-foreground">Moyen de paiement</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {METHODS.map((m) => (
@@ -179,6 +161,7 @@ const JekoCheckoutDialog = () => {
                       key={m.id}
                       type="button"
                       onClick={() => setMethod(m.id)}
+                      disabled={loading}
                       aria-pressed={method === m.id}
                       className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-sm font-medium transition ${
                         method === m.id
@@ -186,7 +169,7 @@ const JekoCheckoutDialog = () => {
                           : "border-border bg-secondary text-foreground hover:border-primary/60 hover:bg-secondary/70"
                       }`}
                     >
-                      <span className="text-lg">{m.emoji}</span>
+                      <img src={m.logo} alt={m.label} className="h-6 w-6 shrink-0 object-contain" />
                       <span className="truncate">{m.label}</span>
                     </button>
                   ))}
@@ -206,7 +189,12 @@ const JekoCheckoutDialog = () => {
                 className="w-full"
                 disabled={loading || !method}
               >
-                {loading ? "Ouverture du paiement…" : `Payer ${current.label}`}
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" aria-hidden="true" />
+                    Redirection vers Jèko…
+                  </>
+                ) : `Payer ${current.label}`}
               </Button>
             </div>
           </>
