@@ -2793,6 +2793,24 @@ export type Database = {
         }
       }
       has_active_pro: { Args: { _user_id: string }; Returns: boolean }
+      free_limit: {
+        Args: { _feature: string }
+        Returns: number
+      }
+      consume_feature: {
+        Args: { _feature: string; _user_id: string }
+        Returns: Json
+      }
+      monthly_usage: {
+        Args: { _user_id?: string }
+        Returns: {
+          feature: string
+          free_limit: number
+          resets_at: string
+          unlimited: boolean
+          used: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -7,6 +7,7 @@ import { ChevronRight, Camera, Upload, Receipt, ScanLine } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { compressReceipt, fileToBase64 } from "@/lib/imageCompression";
+import { consumeFeature, fetchMonthlyUsage, limitReachedMessage, formatResetDate } from "@/lib/freePlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -64,6 +65,7 @@ const Scan = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
   const [scansRemaining, setScansRemaining] = useState(FREE_SCAN_LIMIT);
+  const [resetLabel, setResetLabel] = useState<string>("");
   const [history, setHistory] = useState<any[]>([]);
   const [scanResult, setScanResult] = useState<ParsedResult | null>(null);
   const [multiScanResult, setMultiScanResult] = useState<MultiScanResult | null>(null);
@@ -115,21 +117,32 @@ const Scan = () => {
       setWallets(walRes.data || []);
     });
     fetchHistory();
-    const scanData = getScanCount();
-    setScansRemaining(FREE_SCAN_LIMIT - scanData.count);
+    // Compteur serveur : partagé entre appareils, non réinitialisable en vidant
+    // les données du navigateur. Le compteur local ne sert plus que de repli.
+    fetchMonthlyUsage(user.id).then((usage) => {
+      const scan = usage?.scan;
+      if (scan && scan.limit != null) {
+        setScansRemaining(Math.max(0, scan.limit - scan.used));
+        setResetLabel(formatResetDate(scan.resetsAt));
+      } else {
+        setScansRemaining(FREE_SCAN_LIMIT - getScanCount().count);
+      }
+    });
   }, [user, fetchHistory, isAdmin]);
 
   const scanImage = async (file: File) => {
     if (!user) return;
 
     if (!isPremium) {
-      const scanData = getScanCount();
-      if (scanData.count >= FREE_SCAN_LIMIT) {
-        toast({
-          title: "Limite atteinte",
-          description: `Vous avez utilisé vos ${FREE_SCAN_LIMIT} scans gratuits ce mois. Passez à PRO pour un accès illimité.`,
-          variant: "destructive",
-        });
+      // Décompte côté serveur : c'est lui qui fait foi.
+      const quota = await consumeFeature(user.id, "scan");
+      if (quota.limit != null) {
+        setScansRemaining(Math.max(0, quota.limit - quota.used));
+        setResetLabel(formatResetDate(quota.resetsAt));
+      }
+      if (!quota.allowed) {
+        const msg = limitReachedMessage("scan", quota);
+        toast({ title: msg.title, description: msg.description, variant: "destructive" });
         return;
       }
     }
@@ -215,10 +228,7 @@ const Scan = () => {
         return;
       }
 
-      if (!isPremium) {
-        incrementScanCount();
-        setScansRemaining((prev) => prev - 1);
-      }
+      // Le crédit a déjà été décompté côté serveur avant l'appel au scan.
 
       // Routage automatique : 1 tx => ScanResultCard, 2+ => MultiReceiptValidator
       if (txs.length === 1) {
@@ -383,7 +393,9 @@ const Scan = () => {
           <span className="text-sm text-muted-foreground">
             {scansRemaining > 0
               ? `${scansRemaining} scan${scansRemaining > 1 ? "s" : ""} restant${scansRemaining > 1 ? "s" : ""} ce mois`
-              : "Limite de scans atteinte ce mois"}
+              : resetLabel
+                ? `Limite atteinte — nouveaux scans le ${resetLabel}`
+                : "Limite de scans atteinte ce mois"}
           </span>
           {scansRemaining <= 0 && !isIOSNative() && (
             <Button onClick={() => openJekoPro()} size="sm" className="gradient-primary text-primary-foreground">
