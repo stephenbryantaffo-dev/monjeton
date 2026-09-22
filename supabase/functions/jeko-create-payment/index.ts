@@ -28,16 +28,22 @@ function guestRateLimited(ip: string): boolean {
   return false;
 }
 
-// storeId dérivé du lien de paiement existant (mis en cache en mémoire)
+// Repli : storeId réel dérivé du lien de paiement existant (mis en cache en mémoire)
 let cachedStoreId: string | null = null;
-async function getStoreId(): Promise<string> {
-  const configuredStoreId = Deno.env.get('JEKO_STORE_ID')?.trim();
-  if (configuredStoreId) return configuredStoreId;
+async function fetchRealStoreId(): Promise<string> {
   if (cachedStoreId) return cachedStoreId;
   const link = await jekoFetch(`/payment_links/${PRO_LINK_ID}`);
   if (!link?.storeId) throw new Error('Jèko: storeId introuvable sur le lien de paiement');
   cachedStoreId = String(link.storeId);
   return cachedStoreId;
+}
+
+// Création de la demande de paiement — le storeId est passé en paramètre
+async function createPaymentRequest(storeId: string, payload: Record<string, unknown>) {
+  return jekoFetch('/payment_requests', {
+    method: 'POST',
+    body: JSON.stringify({ ...payload, storeId }),
+  });
 }
 
 Deno.serve(async (req) => {
@@ -110,32 +116,63 @@ Deno.serve(async (req) => {
     const origin = rawOrigin.startsWith('https://') ? rawOrigin : 'https://monjeton.app';
 
     // ─── Création de la demande de paiement Jèko ───
-    const storeId = await getStoreId();
-    const paymentRequest = await jekoFetch('/payment_requests', {
-      method: 'POST',
-      body: JSON.stringify({
-        storeId,
-        amountCents: plan.amountCents,
-        currency: 'XOF',
-        // La référence porte l'user_id, ou "guest:<email>" si l'acheteur
-        // n'a pas encore de compte (le paiement sera réclamé à l'inscription)
-        // Suffixe d'unicité : Jèko renvoie 409 si la référence a déjà servi
-        reference: `${reference}|${Date.now()}`,
-        paymentDetails: {
-          type: 'redirect',
-          data: {
-            paymentMethod,
-            successUrl: reference.startsWith('guest:')
-              ? `${origin}/signup?paid=1&plan=${planKey}`
-              : `${origin}/payment-pending?payment=success&plan=${planKey}`,
-            errorUrl: `${origin}/pricing?payment=error`,
-          },
+    // Filet de sécurité : on essaie d'abord avec le storeId du secret
+    // JEKO_STORE_ID ; en cas d'échec Jèko, on récupère le storeId réel via le
+    // lien de paiement et on retente UNE seule fois (jamais plus, pour ne pas
+    // créer deux demandes de paiement).
+    const payload = {
+      amountCents: plan.amountCents,
+      currency: 'XOF',
+      // La référence porte l'user_id, ou "guest:<email>" si l'acheteur
+      // n'a pas encore de compte (le paiement sera réclamé à l'inscription)
+      // Suffixe d'unicité : Jèko renvoie 409 si la référence a déjà servi
+      reference: `${reference}|${Date.now()}`,
+      paymentDetails: {
+        type: 'redirect',
+        data: {
+          paymentMethod,
+          successUrl: reference.startsWith('guest:')
+            ? `${origin}/signup?paid=1&plan=${planKey}`
+            : `${origin}/payment-pending?payment=success&plan=${planKey}`,
+          errorUrl: `${origin}/pricing?payment=error`,
         },
-      }),
-    });
+      },
+    };
 
-    if (!paymentRequest?.redirectUrl) {
-      throw new Error('Jèko: redirectUrl manquante dans la réponse');
+    const secretStoreId = Deno.env.get('JEKO_STORE_ID')?.trim() || null;
+    let paymentRequest: { redirectUrl?: string } | null = null;
+    let firstError: unknown = null;
+
+    if (secretStoreId) {
+      try {
+        paymentRequest = await createPaymentRequest(secretStoreId, payload);
+        if (!paymentRequest?.redirectUrl) {
+          throw new Error('Jèko: redirectUrl manquante dans la réponse');
+        }
+      } catch (err) {
+        firstError = err;
+        console.error(
+          'jeko-create-payment: échec avec le storeId du secret JEKO_STORE_ID:',
+          err instanceof Error ? err.message : String(err)
+        );
+        paymentRequest = null;
+      }
+    }
+
+    if (!paymentRequest) {
+      const realStoreId = await fetchRealStoreId();
+      // Si le storeId retrouvé est identique à celui du secret, retenter ne
+      // servirait à rien : on renvoie l'erreur d'origine.
+      if (secretStoreId && realStoreId === secretStoreId) {
+        throw firstError ?? new Error('Jèko: création du paiement impossible');
+      }
+      if (secretStoreId) {
+        console.warn('JEKO_STORE_ID invalide, repli utilisé — corrige la valeur du secret.');
+      }
+      paymentRequest = await createPaymentRequest(realStoreId, payload);
+      if (!paymentRequest?.redirectUrl) {
+        throw new Error('Jèko: redirectUrl manquante dans la réponse');
+      }
     }
 
     console.log(`Payment request created for plan ${planKey}`);
