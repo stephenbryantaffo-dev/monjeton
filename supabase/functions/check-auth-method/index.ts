@@ -30,9 +30,7 @@ Deno.serve(async (req) => {
 
     // Basic email shape check (no info leak)
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      // build: marqueur temporaire pour vérifier si un push GitHub redéploie
-      // les fonctions serveur. À retirer une fois le test terminé.
-      return new Response(JSON.stringify({ exists: false, method: null, build: "gh-sync-test-1" }), {
+      return new Response(JSON.stringify({ exists: false, method: null }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
