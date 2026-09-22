@@ -9,6 +9,6 @@
 
 - [x] Optimiser les médias de la landing sans perte visible.
 
-- [ ] Simplifier la fenêtre de paiement et remplacer les émojis par les logos.
-- [ ] Précharger et accélérer la création du paiement Jèko avec `JEKO_STORE_ID`.
-- [ ] Déployer et vérifier le parcours de paiement mis à jour.
+- [x] Simplifier la fenêtre de paiement et remplacer les émojis par les logos.
+- [x] Précharger et accélérer la création du paiement Jèko avec `JEKO_STORE_ID`.
+- [x] Déployer et vérifier le parcours de paiement mis à jour.

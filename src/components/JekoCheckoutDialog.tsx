@@ -48,7 +48,6 @@ const JekoCheckoutDialog = () => {
       setLoading(false);
       void fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jeko-create-payment`, {
         method: "OPTIONS",
-        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
       }).catch(() => undefined);
       const { data } = await supabase.auth.getSession();
       setIsLoggedIn(!!data.session);
