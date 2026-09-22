@@ -8,6 +8,7 @@ import { CountryProvider } from "@/contexts/CountryContext";
 import { AppLangProvider } from "@/lib/appTranslation";
 import { AutoTranslate } from "@/components/AutoTranslate";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import JekoCheckoutDialog from "@/components/JekoCheckoutDialog";
 import { lazy, Suspense } from "react";
 
 // Landing eager for instant first paint on "/"
@@ -58,6 +59,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <JekoCheckoutDialog />
           <AppLangProvider>
             <AutoTranslate>
               <BrowserRouter>

@@ -59,7 +59,7 @@ export function VoiceRecorderSheet({
 }: Props) {
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onCancel()}>
-      <SheetContent
+      <SheetContent aria-describedby={undefined}
         side="bottom"
         className="h-[100dvh] max-h-[100dvh] rounded-none flex flex-col items-center justify-center px-6"
       >

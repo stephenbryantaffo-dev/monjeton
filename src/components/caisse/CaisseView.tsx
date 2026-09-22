@@ -867,7 +867,7 @@ const CaisseView = () => {
 
       {/* ─── MEMBER ACTIONS SHEET ─── */}
       <Sheet open={showMemberActions} onOpenChange={setShowMemberActions}>
-        <SheetContent side="bottom" className="bg-card border-border !inset-auto !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100vw-2rem)] !max-w-md !rounded-3xl !border max-h-[85vh] overflow-y-auto data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+        <SheetContent aria-describedby={undefined} side="bottom" className="bg-card border-border !inset-auto !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100vw-2rem)] !max-w-md !rounded-3xl !border max-h-[85vh] overflow-y-auto data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
           <SheetHeader className="mb-4">
             <SheetTitle className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
@@ -950,7 +950,7 @@ const CaisseView = () => {
 
       {/* ─── CANCEL COTISATION DIALOG ─── */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle>Annuler la cotisation de {selectedMember?.name}</DialogTitle>
           </DialogHeader>
@@ -974,7 +974,7 @@ const CaisseView = () => {
 
       {/* ─── REMOVE MEMBER DIALOG ─── */}
       <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle className="text-destructive">Retirer {selectedMember?.name} de la caisse ?</DialogTitle>
           </DialogHeader>
@@ -1005,7 +1005,7 @@ const CaisseView = () => {
 
       {/* ─── COTISATION DIALOG ─── */}
       <Dialog open={showCotisation} onOpenChange={setShowCotisation}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader><DialogTitle>Enregistrer une cotisation</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
@@ -1041,7 +1041,7 @@ const CaisseView = () => {
 
       {/* ─── DEPENSE DIALOG ─── */}
       <Dialog open={showDepense} onOpenChange={setShowDepense}>
-        <DialogContent className="glass-card border-border max-h-[85vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Enregistrer une dépense</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
@@ -1091,7 +1091,7 @@ const CaisseView = () => {
 
       {/* ─── ADD MEMBER DIALOG ─── */}
       <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader><DialogTitle>Ajouter un membre</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div>

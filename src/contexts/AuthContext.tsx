@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode, useCallback } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { initSessionMonitor } from "@/lib/security";
@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const claimedRef = useRef(false);
 
 
   const fetchProfile = async (userId: string) => {
@@ -41,6 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setProfile(null);
     }
     setIsAdmin(roleRes.data === true);
+
+    // Rattache un éventuel paiement effectué avant la création du compte.
+    if (!claimedRef.current) {
+      claimedRef.current = true;
+      supabase.rpc("claim_pending_payment").then(({ error }) => {
+        if (error) console.warn("claim_pending_payment", error.message);
+      });
+    }
   };
 
 

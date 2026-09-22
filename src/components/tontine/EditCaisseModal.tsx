@@ -133,7 +133,7 @@ const EditCaisseModal = ({ open, onClose, tontine, onUpdated }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-card border-border p-0 max-h-[90vh] flex flex-col">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border p-0 max-h-[90vh] flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>✏️ Modifier la caisse</DialogTitle>
         </DialogHeader>

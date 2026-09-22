@@ -250,7 +250,7 @@ const CyclesTab = ({ tontines }: Props) => {
 
       {/* Payment Modal */}
       <Dialog open={payModalOpen} onOpenChange={setPayModalOpen}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle>Enregistrer paiement — {payMember?.name}</DialogTitle>
           </DialogHeader>

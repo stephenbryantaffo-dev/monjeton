@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "npm:zod@3.25.76";
+import { findMatchingCategory } from "../_shared/categoryMatch.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
@@ -193,6 +194,14 @@ RÈGLES D'EXTRACTION AVANCÉES :
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
+    // Rapprochement avec les catégories existantes de l'utilisateur :
+    // on ne renvoie jamais une variante proche ("Santé et bien-être" quand
+    // "Santé" existe déjà), ce qui évite la création de doublons.
+    const snapCategory = (raw: string, type: "expense" | "income"): string => {
+      const match = findMatchingCategory(raw, categories as any[], type);
+      return match ? String(match.name) : raw;
+    };
+
     let parsed: any = { transactions: [] };
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -202,10 +211,11 @@ RÈGLES D'EXTRACTION AVANCÉES :
           // Validate & sanitize each transaction
           parsed.transactions = result.transactions.map((tx: any) => {
             const dateStr = tx.date && /^\d{4}-\d{2}-\d{2}$/.test(String(tx.date)) ? String(tx.date) : null;
+            const txType = tx.type === "income" ? "income" : "expense";
             return {
               amount: Math.max(0, Math.min(Number(tx.amount) || 0, 999_999_999_999)),
-              type: tx.type === "income" ? "income" : "expense",
-              category: String(tx.category || "").slice(0, 100),
+              type: txType,
+              category: snapCategory(String(tx.category || "").slice(0, 100), txType),
               wallet: tx.wallet ? String(tx.wallet).slice(0, 100) : null,
               note: String(tx.note || "").replace(/[<>]/g, "").slice(0, 500),
               currency: ALLOWED_CURRENCIES.includes(String(tx.currency || "").toUpperCase()) 
@@ -219,7 +229,10 @@ RÈGLES D'EXTRACTION AVANCÉES :
           parsed = { transactions: [{
             amount: Math.max(0, Math.min(Number(result.amount) || 0, 999_999_999_999)),
             type: result.type === "income" ? "income" : "expense",
-            category: String(result.category || "").slice(0, 100),
+            category: snapCategory(
+              String(result.category || "").slice(0, 100),
+              result.type === "income" ? "income" : "expense",
+            ),
             wallet: result.wallet ? String(result.wallet).slice(0, 100) : null,
             note: String(result.note || "").replace(/[<>]/g, "").slice(0, 500),
             currency: ALLOWED_CURRENCIES.includes(String(result.currency || "").toUpperCase())

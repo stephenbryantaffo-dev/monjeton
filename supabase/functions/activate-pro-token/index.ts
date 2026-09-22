@@ -2,15 +2,17 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 import { getCorsHeaders } from "../_shared/cors.ts";
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
 
   try {
     // Auth
@@ -30,6 +32,8 @@ Deno.serve(async (req) => {
       return json({ ok: false, reason: 'unauthorized' }, 401);
     }
     const userId = claimsData.claims.sub as string;
+    const userEmail = String((claimsData.claims as any)?.email ?? '').trim().toLowerCase();
+
 
     // Rate limit per user
     const rl = await checkRateLimit(userId, 'activate-pro-token', 10, 60);
@@ -64,6 +68,17 @@ Deno.serve(async (req) => {
     if (new Date(row.expires_at).getTime() < Date.now()) {
       return json({ ok: false, reason: 'expired' }, 410);
     }
+
+    // Le jeton appartient a son acheteur : l'email doit correspondre (insensible a la casse)
+    const tokenEmail = String(row.email ?? '').trim().toLowerCase();
+    if (tokenEmail && tokenEmail !== userEmail) {
+      console.warn('[activate-pro-token] email_mismatch', {
+        user_id: userId,
+        token_id: row.id,
+      });
+      return json({ ok: false, reason: 'email_mismatch' }, 403);
+    }
+
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);

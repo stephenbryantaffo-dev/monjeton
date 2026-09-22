@@ -1091,6 +1091,7 @@ export type Database = {
       }
       jeko_payments: {
         Row: {
+          activated: boolean
           amount: number | null
           created_at: string
           id: string
@@ -1104,6 +1105,7 @@ export type Database = {
           txn_id: string | null
         }
         Insert: {
+          activated?: boolean
           amount?: number | null
           created_at?: string
           id?: string
@@ -1117,6 +1119,7 @@ export type Database = {
           txn_id?: string | null
         }
         Update: {
+          activated?: boolean
           amount?: number | null
           created_at?: string
           id?: string
@@ -1221,6 +1224,45 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          id: string
+          payer_email: string | null
+          payer_phone: string | null
+          plan_name: string
+          status: string
+          txn_id: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          payer_email?: string | null
+          payer_phone?: string | null
+          plan_name?: string
+          status?: string
+          txn_id: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          payer_email?: string | null
+          payer_phone?: string | null
+          plan_name?: string
+          status?: string
+          txn_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2723,6 +2765,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_activate_payment: {
+        Args: { _email: string; _txn_id: string }
+        Returns: Json
+      }
+      claim_pending_payment: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       clear_user_pin: { Args: never; Returns: undefined }
       get_invite_by_token: {
@@ -2744,6 +2791,25 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      has_active_pro: { Args: { _user_id: string }; Returns: boolean }
+      free_limit: {
+        Args: { _feature: string }
+        Returns: number
+      }
+      consume_feature: {
+        Args: { _feature: string; _user_id: string }
+        Returns: Json
+      }
+      monthly_usage: {
+        Args: { _user_id?: string }
+        Returns: {
+          feature: string
+          free_limit: number
+          resets_at: string
+          unlimited: boolean
+          used: number
+        }[]
       }
       has_role: {
         Args: {
@@ -2822,12 +2888,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2851,11 +2917,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2876,11 +2942,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2901,11 +2967,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2918,11 +2984,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

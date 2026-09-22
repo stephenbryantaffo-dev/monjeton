@@ -343,7 +343,7 @@ const Wallets = () => {
 
       {/* Transfer Dialog */}
       <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
-        <DialogContent className="glass-card border-border">
+        <DialogContent aria-describedby={undefined} className="glass-card border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ArrowRightLeft className="w-5 h-5 text-primary" />

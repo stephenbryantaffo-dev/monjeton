@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { consumeFeature, isFreePlanLimitError, limitReachedMessage } from "@/lib/freePlan";
 
 type Attachment = {
   name: string;
@@ -284,12 +285,16 @@ const Assistant = () => {
     if (!user) return;
     const convId = await ensureConversation(role === "user" ? content : undefined);
     if (!convId) return;
-    await supabase.from("assistant_messages").insert({
+    const { error: saveErr } = await supabase.from("assistant_messages").insert({
       user_id: user.id,
       conversation_id: convId,
       message_role: role,
       content,
     });
+    if (saveErr && isFreePlanLimitError(saveErr)) {
+      const msg = limitReachedMessage("chat");
+      toast({ title: msg.title, description: msg.description, variant: "destructive" });
+    }
   };
 
   const startNewConversation = () => {
@@ -851,6 +856,26 @@ const Assistant = () => {
   const handleSend = async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isLoading) return;
+
+    // Quota du plan gratuit : décompté côté serveur avant tout appel à l'IA.
+    if (user) {
+      const quota = await consumeFeature(user.id, "chat");
+      if (!quota.allowed) {
+        const msg = limitReachedMessage("chat", quota);
+        toast({ title: msg.title, description: msg.description, variant: "destructive" });
+        return;
+      }
+      if (!quota.unlimited && quota.limit != null) {
+        const left = Math.max(0, quota.limit - quota.used);
+        if (left > 0 && left <= 3) {
+          toast({
+            title: `Encore ${left} message${left > 1 ? "s" : ""} ce mois`,
+            description: "Passe au Pro pour discuter sans limite avec l'assistant.",
+          });
+        }
+      }
+    }
+
     const userMsg: Message = {
       role: "user",
       content: text || (attachments.length > 0 ? "Fichier envoyé" : ""),
@@ -1246,7 +1271,7 @@ const Assistant = () => {
                   )}
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[320px] sm:w-[380px] flex flex-col">
+              <SheetContent aria-describedby={undefined} side="left" className="w-[320px] sm:w-[380px] flex flex-col">
                 <SheetHeader>
                   <SheetTitle className="flex items-center justify-between">
                     <span>Mes conversations</span>

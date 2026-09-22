@@ -640,7 +640,7 @@ const Savings = () => {
           if (!o) resetForm();
         }}
       >
-        <DialogContent className="p-0 max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent aria-describedby={undefined} className="p-0 max-w-md max-h-[90vh] overflow-hidden flex flex-col">
           <Screen hasBottomNav={false} className="flex-1 min-h-0">
             <Screen.Header className="px-5 pt-5 pb-3 border-b border-border">
               <DialogHeader>

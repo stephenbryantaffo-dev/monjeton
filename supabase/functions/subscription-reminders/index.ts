@@ -24,8 +24,11 @@ const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:contact@monjeton.app";
 const CRON_TOKEN_ENV = Deno.env.get("REMINDERS_CRON_TOKEN") || "";
 
-const JEKO_PRO_URL = "https://pay.jeko.africa/pl/d616710c-47fb-4afc-b0e2-e9fe3e0b29ab";
-const JEKO_MAX_URL = "https://pay.jeko.africa/pl/e7715547-b693-40dd-b06e-9bbb63a90961";
+// Le renouvellement passe désormais par l'app (/settings/subscription) qui appelle
+// jeko-create-payment avec la référence = user_id (rattachement automatique).
+const APP_URL = Deno.env.get("APP_URL") || "https://monjeton.app";
+const RENEW_PATH = "/settings/subscription";
+const RENEW_URL = `${APP_URL}${RENEW_PATH}`;
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
@@ -91,9 +94,7 @@ Deno.serve(async (req) => {
   const stats = { processed: 0, reminded: 0, pushed: 0, expired: 0, errors: 0, cleaned: 0 };
   const staleEndpoints: string[] = [];
 
-  async function pushToUser(userId: string, title: string, body: string, planName: string) {
-    const isUltra = (planName || "").toLowerCase().includes("ultra");
-    const targetUrl = isUltra ? JEKO_MAX_URL : JEKO_PRO_URL;
+  async function pushToUser(userId: string, title: string, body: string, _planName?: string) {
     const { data: subs } = await supabase
       .from("push_subscriptions")
       .select("endpoint, p256dh, auth")
@@ -105,11 +106,11 @@ Deno.serve(async (req) => {
     const payload = JSON.stringify({
       title,
       body,
-      url: "/settings/subscription",
+      url: RENEW_PATH,
       tag: "subscription-reminder",
       icon: "/pwa-icon-192.svg",
       badge: "/pwa-icon-192.svg",
-      data: { url: "/settings/subscription", paymentUrl: targetUrl },
+      data: { url: RENEW_PATH, paymentUrl: RENEW_URL },
     });
 
     let sent = 0;
@@ -129,7 +130,53 @@ Deno.serve(async (req) => {
     return sent;
   }
 
+  // Rétrogradations désactivables via ?downgrade=0 (le temps de prévenir les users).
+  const downgradeEnabled = (url.searchParams.get("downgrade") ?? "1") !== "0";
+
   try {
+    // 1) RÉTROGRADATIONS — une seule requête UPDATE groupée.
+    if (downgradeEnabled) {
+      const { data: toExpire, error: expErr } = await supabase
+        .from("subscriptions")
+        .update({
+          status: "expired",
+          plan_name: "Gratuit",
+          price_xof: 0,
+          last_reminder_sent: "expired",
+          updated_at: now.toISOString(),
+        })
+        .eq("status", "active")
+        .not("expires_at", "is", null)
+        .or(
+          `grace_until.lt.${now.toISOString()},and(grace_until.is.null,expires_at.lt.${now.toISOString()})`,
+        )
+        .select("user_id, plan_name");
+
+      if (expErr) throw expErr;
+
+      stats.expired = toExpire?.length ?? 0;
+
+      if (toExpire && toExpire.length > 0) {
+        await supabase.from("notifications").insert(
+          toExpire.map((s) => ({
+            user_id: s.user_id,
+            type: "subscription_expired",
+            title: "Abonnement expiré",
+            message:
+              "Ton abonnement a expiré. Tu es repassé en plan Gratuit. Renouvelle quand tu veux.",
+          })),
+        );
+        for (const s of toExpire) {
+          stats.pushed += await pushToUser(
+            s.user_id,
+            "Abonnement expiré",
+            "Ton abonnement a expiré. Renouvelle en 1 clic.",
+          );
+        }
+      }
+    }
+
+    // 2) RAPPELS — sur les abonnements encore actifs.
     const { data: subs, error } = await supabase
       .from("subscriptions")
       .select("id, user_id, status, plan_name, expires_at, grace_until, last_reminder_sent")
@@ -146,36 +193,9 @@ Deno.serve(async (req) => {
           ? new Date(sub.grace_until as string)
           : new Date(expiresAt.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-        // Expired past grace -> downgrade
-        if (now > graceUntil) {
-          await supabase
-            .from("subscriptions")
-            .update({
-              status: "expired",
-              plan_name: "Gratuit",
-              price_xof: 0,
-              last_reminder_sent: "expired",
-              updated_at: now.toISOString(),
-            })
-            .eq("id", sub.id);
+        // Déjà hors grâce (rétrogradation désactivée) : on ne renvoie pas de rappel.
+        if (now > graceUntil) continue;
 
-          await supabase.from("notifications").insert({
-            user_id: sub.user_id,
-            type: "subscription_expired",
-            title: "Abonnement expiré",
-            message: `Ton abonnement ${sub.plan_name || "Pro"} a expiré. Tu es repassé en plan Gratuit. Renouvelle quand tu veux.`,
-          });
-
-          const pushed = await pushToUser(
-            sub.user_id,
-            "Abonnement expiré",
-            `Ton plan ${sub.plan_name || "Pro"} a expiré. Renouvelle en 1 clic.`,
-            sub.plan_name || "Pro",
-          );
-          stats.pushed += pushed;
-          stats.expired++;
-          continue;
-        }
 
         const msLeft = expiresAt.getTime() - now.getTime();
         const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));

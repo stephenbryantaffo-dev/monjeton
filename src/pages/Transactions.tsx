@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { ListItemSkeleton } from "@/components/DashboardSkeleton";
+import { CategorySheet } from "@/components/transaction/TransactionPickers";
 
 const Transactions = () => {
   const { user } = useAuth();
@@ -58,7 +59,7 @@ const Transactions = () => {
             .order("date", { ascending: false })
             .order("created_at", { ascending: false })
             .range(from, from + PAGE_SIZE - 1),
-          supabase.from("categories").select("id, name").eq("user_id", user.id),
+          supabase.from("categories").select("id, name, icon, color").eq("user_id", user.id),
           supabase.from("wallets").select("id, wallet_name").eq("user_id", user.id),
         ]);
       if (txErr) throw txErr;
@@ -102,6 +103,38 @@ const Transactions = () => {
     }
   };
 
+  /** Correction rapide d'une transaction sans catégorie, depuis la liste. */
+  const [catEditTx, setCatEditTx] = useState<any | null>(null);
+
+  const handleSetCategory = async (catId: string) => {
+    const tx = catEditTx;
+    if (!tx) return;
+    const cat = categories.find((c) => c.id === catId);
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ category_id: catId })
+        .eq("id", tx.id);
+      if (error) throw error;
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === tx.id
+            ? { ...t, category_id: catId, categories: cat ? { name: cat.name, icon: cat.icon, color: cat.color } : t.categories }
+            : t
+        )
+      );
+      toast({ title: "Catégorie enregistrée" });
+    } catch {
+      toast({
+        title: "Impossible d'enregistrer la catégorie",
+        description: "Réessaie dans quelques secondes",
+        variant: "destructive",
+      });
+    } finally {
+      setCatEditTx(null);
+    }
+  };
+
   const clearFilters = () => {
     setFilterCategory("all");
     setFilterWallet("all");
@@ -134,7 +167,9 @@ const Transactions = () => {
     }
 
     // Category filter
-    if (filterCategory !== "all") {
+    if (filterCategory === "none") {
+      result = result.filter(t => !t.category_id);
+    } else if (filterCategory !== "all") {
       result = result.filter(t => t.category_id === filterCategory);
     }
 
@@ -268,7 +303,20 @@ const Transactions = () => {
             <UserText>{t.note || t.categories?.name || "Transaction"}</UserText>
           </p>
           <p className="text-xs text-muted-foreground truncate">
-            <UserText>{t.categories?.name}</UserText>
+            {t.categories?.name ? (
+              <UserText>{t.categories.name}</UserText>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCatEditTx(t)}
+                className="inline-flex items-center gap-1 italic text-muted-foreground underline underline-offset-2"
+              >
+                <span className="[&_svg]:w-3.5 [&_svg]:h-3.5 inline-flex">
+                  {getCatIcon("", t.type)}
+                </span>
+                Non catégorisée
+              </button>
+            )}
             {!groupedByDay && ` · ${new Date(t.date).toLocaleDateString("fr-FR")}`}
           </p>
         </div>
@@ -353,6 +401,7 @@ const Transactions = () => {
               <SelectTrigger className="bg-secondary border-border text-sm"><SelectValue placeholder="Catégorie" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
+                <SelectItem value="none">Non catégorisées</SelectItem>
                 {categories.map(c => <SelectItem key={c.id} value={c.id}><UserText>{c.name}</UserText></SelectItem>)}
               </SelectContent>
             </Select>
@@ -462,6 +511,14 @@ const Transactions = () => {
           </Button>
         )}
       </div>
+      <CategorySheet
+        open={!!catEditTx}
+        onOpenChange={(v) => { if (!v) setCatEditTx(null); }}
+        categories={categories}
+        value={catEditTx?.category_id || ""}
+        onSelect={handleSetCategory}
+        type={catEditTx?.type === "income" ? "income" : "expense"}
+      />
     </DashboardLayout>
   );
 };

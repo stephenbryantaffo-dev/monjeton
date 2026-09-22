@@ -1,9 +1,9 @@
-// Liens de paiement Jèko (Mon Jeton)
-export const JEKO_PRO_URL = "https://pay.jeko.africa/pl/d616710c-47fb-4afc-b0e2-e9fe3e0b29ab";
-export const JEKO_MAX_URL = "https://pay.jeko.africa/pl/e7715547-b693-40dd-b06e-9bbb63a90961";
+import { toast } from "sonner";
+
+export type JekoMethod = "wave" | "orange" | "mtn" | "moov" | "djamo";
 
 /**
- * Ouvre un lien de paiement Jèko.
+ * Ouvre une URL de paiement Jèko.
  * - Sur Capacitor (iOS/Android natif), utilise le Browser plugin (in-app browser).
  * - Sur le web, ouvre un nouvel onglet.
  */
@@ -20,8 +20,46 @@ export async function openJekoCheckout(url: string): Promise<void> {
     // fallback web
     console.warn("Capacitor Browser indisponible, fallback web", e);
   }
-  window.open(url, "_blank", "noopener,noreferrer");
+
+  // Sur le web, la redirection se fait dans l'onglet courant : window.open()
+  // est bloqué par les navigateurs mobiles et les iframes d'aperçu quand
+  // l'appel survient après un await (le "geste utilisateur" a expiré).
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = url;
+      return;
+    }
+  } catch {
+    /* iframe cross-origin : on redirige la fenêtre courante */
+  }
+  window.location.href = url;
 }
 
-export const openJekoPro = () => openJekoCheckout(JEKO_PRO_URL);
-export const openJekoMax = () => openJekoCheckout(JEKO_MAX_URL);
+type JekoPlan = "pro" | "ultra";
+
+/**
+ * Ouvre la modale de paiement (<JekoCheckoutDialog />, montée dans App.tsx).
+ * Le plan est déjà choisi sur la page des tarifs — la modale recueille
+ * uniquement l'e-mail (invité), le numéro Mobile Money et le moyen de
+ * paiement, puis crée la demande Jèko. AUCUN repli vers un lien statique :
+ * sans référence client, le paiement arriverait orphelin.
+ */
+function openCheckout(plan: JekoPlan): void {
+  if (typeof window === "undefined") return;
+  if (!(window as any).__jekoCheckoutMounted) {
+    // Sécurité : la modale doit être montée, sinon on prévient au lieu de
+    // perdre le paiement.
+    toast.error("Le paiement est momentanément indisponible", {
+      description: "Réessaie dans quelques instants. Aucun montant n'a été débité.",
+    });
+    return;
+  }
+  window.dispatchEvent(new CustomEvent("jeko:open-checkout", { detail: { plan } }));
+}
+
+export const openJekoPro = () => openCheckout("pro");
+export const openJekoMax = () => openCheckout("ultra");
+
+/** Paiement sans compte : l'e-mail est demandé dans la modale. */
+export const openJekoProGuest = () => openCheckout("pro");
+export const openJekoMaxGuest = () => openCheckout("ultra");

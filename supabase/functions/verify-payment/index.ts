@@ -38,29 +38,36 @@ Deno.serve(async (req) => {
     const rl = await checkRateLimit(userId, 'verify-payment', 10, 60);
     if (!rl.allowed) return rateLimitResponse('verify-payment', rl.retryAfter, corsHeaders);
 
-    // Cherche la sub active la plus récente
-    const { data: sub, error: subError } = await supabase
-      .from("subscriptions")
-      .select("status, plan_name")
-      .eq("user_id", userId)
-      .eq("status", "active")
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Accès Pro réel : actif ET non expiré (grâce prise en compte)
+    const { data: hasActivePro, error: rpcError } = await supabase.rpc("has_active_pro", {
+      _user_id: userId,
+    });
 
-    if (subError) {
-      console.error("verify-payment query error", subError);
+    if (rpcError) {
+      console.error("verify-payment rpc error", rpcError);
       return new Response(JSON.stringify({ error: "Query failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const hasAccess = !!sub;
+    let plan: string | null = null;
+    if (hasActivePro === true) {
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("plan_name")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      plan = sub?.plan_name ?? null;
+    }
+
     return new Response(
       JSON.stringify({
-        hasAccess,
-        plan: sub?.plan_name ?? null,
+        hasAccess: hasActivePro === true,
+        plan,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

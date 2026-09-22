@@ -39,12 +39,20 @@ const Pricing = () => {
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("subscriptions")
-      .select("plan_name, status")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .maybeSingle()
-      .then(({ data }) => setCurrentPlan(data?.plan_name ?? null));
+      .rpc("has_active_pro", { _user_id: user.id })
+      .then(async ({ data: active }) => {
+        if (active !== true) {
+          setCurrentPlan(null);
+          return;
+        }
+        const { data } = await supabase
+          .from("subscriptions")
+          .select("plan_name")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .maybeSingle();
+        setCurrentPlan(data?.plan_name ?? null);
+      });
   }, [user]);
   const isPro = currentPlan === "Pro";
   const isUltra = currentPlan === "Ultra Pro";

@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can join workspace with valid invite" ON public.workspace_members;

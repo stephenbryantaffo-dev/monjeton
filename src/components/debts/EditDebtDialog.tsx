@@ -102,7 +102,7 @@ export const EditDebtDialog = ({ debt, userId, open, onClose, onSaved }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="glass-card border-border mx-4 rounded-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border mx-4 rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="text-lg font-black">Modifier la dette</DialogTitle>
         <div className="space-y-3 mt-2">
           <div>
@@ -221,7 +221,7 @@ export const ReloanDialog = ({ debt, userId, open, onClose, onSaved }: ReloanPro
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="glass-card border-border mx-4 rounded-2xl">
+      <DialogContent aria-describedby={undefined} className="glass-card border-border mx-4 rounded-2xl">
         <DialogTitle className="text-lg font-black">
           Re-prêter à {debt.person_name || "ce contact"}
         </DialogTitle>

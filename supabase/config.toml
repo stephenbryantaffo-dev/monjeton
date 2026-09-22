@@ -52,3 +52,9 @@ verify_jwt = false
 
 
 
+
+[functions.jeko-create-payment]
+verify_jwt = false
+
+[functions.activate-pro-token]
+verify_jwt = false
