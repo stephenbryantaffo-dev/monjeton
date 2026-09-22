@@ -69,6 +69,17 @@ Deno.serve(async (req) => {
       return json({ ok: false, reason: 'expired' }, 410);
     }
 
+    // Le jeton appartient a son acheteur : l'email doit correspondre (insensible a la casse)
+    const tokenEmail = String(row.email ?? '').trim().toLowerCase();
+    if (tokenEmail && tokenEmail !== userEmail) {
+      console.warn('[activate-pro-token] email_mismatch', {
+        user_id: userId,
+        token_id: row.id,
+      });
+      return json({ ok: false, reason: 'email_mismatch' }, 403);
+    }
+
+
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const graceUntil = new Date(expiresAt.getTime() + 3 * 24 * 60 * 60 * 1000);
