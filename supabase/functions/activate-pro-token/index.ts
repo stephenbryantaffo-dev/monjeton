@@ -32,6 +32,8 @@ Deno.serve(async (req) => {
       return json({ ok: false, reason: 'unauthorized' }, 401);
     }
     const userId = claimsData.claims.sub as string;
+    const userEmail = String((claimsData.claims as any)?.email ?? '').trim().toLowerCase();
+
 
     // Rate limit per user
     const rl = await checkRateLimit(userId, 'activate-pro-token', 10, 60);
